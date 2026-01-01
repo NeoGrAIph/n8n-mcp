@@ -21,8 +21,17 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_autofix_workflow: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   n8n_test_workflow: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   n8n_executions: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  n8n_executions_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_executions_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_executions_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   n8n_health_check: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   n8n_workflow_versions: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  n8n_workflow_versions_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_workflow_versions_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_workflow_versions_rollback: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  n8n_workflow_versions_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  n8n_workflow_versions_prune: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  n8n_workflow_versions_truncate: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   n8n_deploy_template: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
 };
 

@@ -21,7 +21,16 @@ import {
   n8nAutofixWorkflowDoc,
   n8nTestWorkflowDoc,
   n8nExecutionsDoc,
+  n8nExecutionsGetDoc,
+  n8nExecutionsListDoc,
+  n8nExecutionsDeleteDoc,
   n8nWorkflowVersionsDoc,
+  n8nWorkflowVersionsListDoc,
+  n8nWorkflowVersionsGetDoc,
+  n8nWorkflowVersionsRollbackDoc,
+  n8nWorkflowVersionsDeleteDoc,
+  n8nWorkflowVersionsPruneDoc,
+  n8nWorkflowVersionsTruncateDoc,
   n8nDeployTemplateDoc
 } from './workflow_management';
 
@@ -59,7 +68,16 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_autofix_workflow: n8nAutofixWorkflowDoc,
   n8n_test_workflow: n8nTestWorkflowDoc,
   n8n_executions: n8nExecutionsDoc,
+  n8n_executions_get: n8nExecutionsGetDoc,
+  n8n_executions_list: n8nExecutionsListDoc,
+  n8n_executions_delete: n8nExecutionsDeleteDoc,
   n8n_workflow_versions: n8nWorkflowVersionsDoc,
+  n8n_workflow_versions_list: n8nWorkflowVersionsListDoc,
+  n8n_workflow_versions_get: n8nWorkflowVersionsGetDoc,
+  n8n_workflow_versions_rollback: n8nWorkflowVersionsRollbackDoc,
+  n8n_workflow_versions_delete: n8nWorkflowVersionsDeleteDoc,
+  n8n_workflow_versions_prune: n8nWorkflowVersionsPruneDoc,
+  n8n_workflow_versions_truncate: n8nWorkflowVersionsTruncateDoc,
   n8n_deploy_template: n8nDeployTemplateDoc
 };
 

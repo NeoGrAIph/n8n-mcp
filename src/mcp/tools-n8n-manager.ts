@@ -412,6 +412,102 @@ export const n8nManagementTools: ToolDefinition[] = [
       required: ['action']
     }
   },
+  {
+    name: 'n8n_executions_get',
+    description: `Get workflow execution details by ID. Use mode to control detail level.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'Execution ID (required)'
+        },
+        mode: {
+          type: 'string',
+          enum: ['preview', 'summary', 'filtered', 'full', 'error'],
+          description: 'Detail level: preview, summary (default), filtered, full, or error'
+        },
+        nodeNames: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'For mode=filtered: filter to specific nodes by name'
+        },
+        itemsLimit: {
+          type: 'integer',
+          description: 'For mode=filtered: items per node (0=structure, 2=default, -1=unlimited)'
+        },
+        includeInputData: {
+          type: 'boolean',
+          description: 'Include input data in addition to output (default: false)'
+        },
+        errorItemsLimit: {
+          type: 'integer',
+          description: 'For mode=error: sample items from upstream node (default: 2, max: 100)'
+        },
+        includeStackTrace: {
+          type: 'boolean',
+          description: 'For mode=error: include full stack trace (default: false, shows truncated)'
+        },
+        includeExecutionPath: {
+          type: 'boolean',
+          description: 'For mode=error: include execution path leading to error (default: true)'
+        },
+        fetchWorkflow: {
+          type: 'boolean',
+          description: 'For mode=error: fetch workflow for accurate upstream detection (default: true)'
+        }
+      },
+      required: ['id']
+    }
+  },
+  {
+    name: 'n8n_executions_list',
+    description: `List workflow executions with filters and pagination.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'integer',
+          description: 'Number of executions to return (1-100, default: 100)'
+        },
+        cursor: {
+          type: 'string',
+          description: 'Pagination cursor from previous response'
+        },
+        workflowId: {
+          type: 'string',
+          description: 'Filter by workflow ID'
+        },
+        projectId: {
+          type: 'string',
+          description: 'Filter by project ID (enterprise feature)'
+        },
+        status: {
+          type: 'string',
+          enum: ['success', 'error', 'waiting'],
+          description: 'Filter by execution status'
+        },
+        includeData: {
+          type: 'boolean',
+          description: 'Include execution data (default: false)'
+        }
+      }
+    }
+  },
+  {
+    name: 'n8n_executions_delete',
+    description: `Delete an execution record by ID.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'Execution ID (required)'
+        }
+      },
+      required: ['id']
+    }
+  },
 
   // System Tools
   {
@@ -485,6 +581,119 @@ export const n8nManagementTools: ToolDefinition[] = [
         }
       },
       required: ['mode']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_list',
+    description: `List version history for a workflow.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID (required)'
+        },
+        limit: {
+          type: 'integer',
+          default: 10,
+          description: 'Max versions to return'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_get',
+    description: `Get details for a specific workflow version by version ID.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        versionId: {
+          type: 'integer',
+          description: 'Version ID (required)'
+        }
+      },
+      required: ['versionId']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_rollback',
+    description: `Rollback a workflow to a previous version.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID (required)'
+        },
+        versionId: {
+          type: 'integer',
+          description: 'Specific version ID to rollback to (optional)'
+        },
+        validateBefore: {
+          type: 'boolean',
+          default: true,
+          description: 'Validate workflow structure before rollback'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_delete',
+    description: `Delete workflow versions (single or all) for a workflow.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID (required)'
+        },
+        versionId: {
+          type: 'integer',
+          description: 'Specific version ID to delete (optional)'
+        },
+        deleteAll: {
+          type: 'boolean',
+          default: false,
+          description: 'Delete all versions for this workflow (delete mode only)'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_prune',
+    description: `Prune workflow versions to keep only the most recent N.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID (required)'
+        },
+        maxVersions: {
+          type: 'integer',
+          default: 10,
+          description: 'Keep N most recent versions'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_workflow_versions_truncate',
+    description: `Truncate all workflow versions (global). Requires explicit confirmation.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        confirmTruncate: {
+          type: 'boolean',
+          default: false,
+          description: 'REQUIRED: Must be true to truncate all versions'
+        }
+      },
+      required: ['confirmTruncate']
     }
   },
 

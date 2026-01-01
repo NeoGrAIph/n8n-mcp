@@ -911,6 +911,33 @@ export class N8NDocumentationMCPServer {
           ? { valid: true, errors: [] }
           : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
         break;
+      case 'n8n_executions_get':
+      case 'n8n_executions_delete':
+        validationResult = args.id
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'id', message: 'id is required' }] };
+        break;
+      case 'n8n_executions_list':
+        validationResult = { valid: true, errors: [] };
+        break;
+      case 'n8n_workflow_versions_list':
+      case 'n8n_workflow_versions_rollback':
+      case 'n8n_workflow_versions_delete':
+      case 'n8n_workflow_versions_prune':
+        validationResult = args.workflowId
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+        break;
+      case 'n8n_workflow_versions_get':
+        validationResult = args.versionId !== undefined
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'versionId', message: 'versionId is required' }] };
+        break;
+      case 'n8n_workflow_versions_truncate':
+        validationResult = args.confirmTruncate === true
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'confirmTruncate', message: 'confirmTruncate must be true' }] };
+        break;
       case 'n8n_deploy_template':
         // Requires templateId parameter
         validationResult = args.templateId !== undefined
@@ -1234,6 +1261,14 @@ export class N8NDocumentationMCPServer {
       case 'n8n_test_workflow':
         this.validateToolParams(name, args, ['workflowId']);
         return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
+      case 'n8n_executions_get':
+        this.validateToolParams(name, args, ['id']);
+        return n8nHandlers.handleGetExecution(args, this.instanceContext);
+      case 'n8n_executions_list':
+        return n8nHandlers.handleListExecutions(args, this.instanceContext);
+      case 'n8n_executions_delete':
+        this.validateToolParams(name, args, ['id']);
+        return n8nHandlers.handleDeleteExecution(args, this.instanceContext);
       case 'n8n_executions': {
         this.validateToolParams(name, args, ['action']);
         const execAction = args.action;
@@ -1260,6 +1295,27 @@ export class N8NDocumentationMCPServer {
           return n8nHandlers.handleDiagnostic({ params: { arguments: args } }, this.instanceContext);
         }
         return n8nHandlers.handleHealthCheck(this.instanceContext);
+      case 'n8n_workflow_versions_list':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'list' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_get':
+        this.validateToolParams(name, args, ['versionId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'get' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_rollback':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'rollback' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_delete':
+        this.validateToolParams(name, args, ['workflowId']);
+        if (!args.versionId && !args.deleteAll) {
+          throw new Error('versionId is required unless deleteAll=true');
+        }
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'delete' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_prune':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'prune' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_truncate':
+        this.validateToolParams(name, args, ['confirmTruncate']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'truncate' }, this.repository!, this.instanceContext);
       case 'n8n_workflow_versions':
         this.validateToolParams(name, args, ['mode']);
         return n8nHandlers.handleWorkflowVersions(args, this.repository!, this.instanceContext);
