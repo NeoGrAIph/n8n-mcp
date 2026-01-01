@@ -12,13 +12,13 @@ export const n8nDeployTemplateDoc: ToolDocumentation = {
       'Auto-fixes expression format issues after deployment',
       'Workflow created inactive - configure credentials in n8n UI first',
       'Returns list of required credentials and fixes applied',
-      'Use search_templates to find template IDs'
+      'Use n8n_search_templates to find template IDs'
     ]
   },
   full: {
     description: 'Deploys a workflow template from n8n.io directly to your n8n instance. This tool deploys first, then automatically fixes common issues like missing expression prefixes (=) and outdated typeVersions. Templates are stored locally and fetched from the database. The workflow is always created in an inactive state, allowing you to configure credentials before activation.',
     parameters: {
-      templateId: { type: 'number', required: true, description: 'Template ID from n8n.io (find via search_templates)' },
+      templateId: { type: 'number', required: true, description: 'Template ID from n8n.io (find via n8n_search_templates)' },
       name: { type: 'string', description: 'Custom workflow name (default: template name)' },
       autoUpgradeVersions: { type: 'boolean', description: 'Upgrade node typeVersions to latest supported (default: true)' },
       autoFix: { type: 'boolean', description: 'Auto-apply fixes after deployment for expression format issues, missing = prefix, etc. (default: true)' },
@@ -48,11 +48,11 @@ n8n_deploy_template({
       'Quickly deploy pre-built workflow templates',
       'Set up common automation patterns',
       'Bootstrap new projects with proven workflows',
-      'Deploy templates found via search_templates'
+      'Deploy templates found via n8n_search_templates'
     ],
     performance: 'Network-dependent - Typically 300-800ms (template fetch + workflow creation + autofix)',
     bestPractices: [
-      'Use search_templates to find templates by use case',
+      'Use n8n_search_templates to find templates by use case',
       'Review required credentials in the response',
       'Check autoFixStatus in response - "success", "failed", or "skipped"',
       'Check fixesApplied in response to see what was automatically corrected',
@@ -66,6 +66,6 @@ n8n_deploy_template({
       'Template database must be populated - run npm run fetch:templates if templates not found',
       'Some issues may not be auto-fixable (e.g., missing required fields that need user input)'
     ],
-    relatedTools: ['search_templates', 'get_template', 'n8n_create_workflow', 'n8n_autofix_workflow']
+    relatedTools: ['n8n_search_templates', 'n8n_get_template', 'n8n_create_workflow', 'n8n_autofix_workflow']
   }
 };

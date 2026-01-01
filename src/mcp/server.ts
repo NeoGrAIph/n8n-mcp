@@ -600,7 +600,7 @@ export class N8NDocumentationMCPServer {
       tools = withToolAnnotations(tools);
       
       // Log validation tools' input schemas for debugging
-      const validationTools = tools.filter(t => t.name.startsWith('validate_'));
+      const validationTools = tools.filter(t => t.name.startsWith('n8n_validate_'));
       validationTools.forEach(tool => {
         logger.info('Validation tool schema', {
           toolName: tool.name,
@@ -704,7 +704,7 @@ export class N8NDocumentationMCPServer {
         
         try {
           // For validation tools, check if we should use structured content
-          if (name.startsWith('validate_') && typeof result === 'object' && result !== null) {
+          if (name.startsWith('n8n_validate_') && typeof result === 'object' && result !== null) {
             // Clean up the result to ensure it matches the expected structured output
             const cleanResult = this.sanitizeValidationResult(result, name);
             structuredContent = cleanResult;
@@ -735,7 +735,7 @@ export class N8NDocumentationMCPServer {
         };
         
         // For validation tools, also include structuredContent for typed output
-        if (name.startsWith('validate_') && structuredContent !== null) {
+        if (name.startsWith('n8n_validate_') && structuredContent !== null) {
           mcpResponse.structuredContent = structuredContent;
         }
         
@@ -775,7 +775,7 @@ export class N8NDocumentationMCPServer {
         }
         
         // For n8n schema errors, add specific guidance
-        if (name.startsWith('validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
+        if (name.startsWith('n8n_validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
           helpfulMessage += '\n\nFor validation tools:\n- nodeType should be a string (e.g., "nodes-base.webhook")\n- config should be an object (e.g., {})';
         }
         
@@ -803,19 +803,18 @@ export class N8NDocumentationMCPServer {
     const sanitized = { ...result };
 
     // Ensure required fields exist with proper types and filter to schema-defined fields only
-    if (toolName === 'validate_node_minimal') {
-      // Filter to only schema-defined fields
-      const filtered = {
-        nodeType: String(sanitized.nodeType || ''),
-        displayName: String(sanitized.displayName || ''),
-        valid: Boolean(sanitized.valid),
-        missingRequiredFields: Array.isArray(sanitized.missingRequiredFields) 
-          ? sanitized.missingRequiredFields.map(String) 
-          : []
-      };
-      return filtered;
-    } else if (toolName === 'validate_node_operation') {
-      // Ensure summary exists
+    if (toolName === 'n8n_validate_node') {
+      // Minimal mode shape (missingRequiredFields) vs full mode shape (errors/warnings)
+      if (Array.isArray(sanitized.missingRequiredFields)) {
+        const filtered = {
+          nodeType: String(sanitized.nodeType || ''),
+          displayName: String(sanitized.displayName || ''),
+          valid: Boolean(sanitized.valid),
+          missingRequiredFields: sanitized.missingRequiredFields.map(String)
+        };
+        return filtered;
+      }
+
       let summary = sanitized.summary;
       if (!summary || typeof summary !== 'object') {
         summary = {
@@ -825,8 +824,7 @@ export class N8NDocumentationMCPServer {
           suggestionCount: Array.isArray(sanitized.suggestions) ? sanitized.suggestions.length : 0
         };
       }
-      
-      // Filter to only schema-defined fields
+
       const filtered = {
         nodeType: String(sanitized.nodeType || ''),
         workflowNodeType: String(sanitized.workflowNodeType || sanitized.nodeType || ''),
@@ -838,7 +836,7 @@ export class N8NDocumentationMCPServer {
         summary: summary
       };
       return filtered;
-    } else if (toolName.startsWith('validate_workflow')) {
+    } else if (toolName.startsWith('n8n_validate_workflow_json')) {
       sanitized.valid = Boolean(sanitized.valid);
       
       // Ensure arrays exist
@@ -846,7 +844,7 @@ export class N8NDocumentationMCPServer {
       sanitized.warnings = Array.isArray(sanitized.warnings) ? sanitized.warnings : [];
       
       // Ensure statistics/summary exists
-      if (toolName === 'validate_workflow') {
+      if (toolName === 'n8n_validate_workflow_json') {
         if (!sanitized.summary || typeof sanitized.summary !== 'object') {
           sanitized.summary = {
             totalNodes: 0,
@@ -885,14 +883,14 @@ export class N8NDocumentationMCPServer {
       let validationResult;
       
       switch (toolName) {
-        case 'validate_node':
+        case 'n8n_validate_node':
           // Consolidated tool handles both modes - validate as operation for now
           validationResult = ToolValidation.validateNodeOperation(args);
           break;
-        case 'validate_workflow':
+        case 'n8n_validate_workflow_json':
           validationResult = ToolValidation.validateWorkflow(args);
           break;
-      case 'search_nodes':
+      case 'n8n_search_nodes':
         validationResult = ToolValidation.validateSearchNodes(args);
         break;
       case 'n8n_create_workflow':
@@ -1088,15 +1086,15 @@ export class N8NDocumentationMCPServer {
     }
 
     switch (name) {
-      case 'tools_documentation':
+      case 'n8n_tools_documentation':
         // No required parameters
         return this.getToolsDocumentation(args.topic, args.depth);
-      case 'search_nodes':
+      case 'n8n_search_nodes':
         this.validateToolParams(name, args, ['query']);
         // Convert limit to number if provided, otherwise use default
         const limit = args.limit !== undefined ? Number(args.limit) || 20 : 20;
         return this.searchNodes(args.query, limit, { mode: args.mode, includeExamples: args.includeExamples });
-      case 'get_node':
+      case 'n8n_get_node':
         this.validateToolParams(name, args, ['nodeType']);
         // Handle consolidated modes: docs, search_properties
         if (args.mode === 'docs') {
@@ -1118,11 +1116,11 @@ export class N8NDocumentationMCPServer {
           args.fromVersion,
           args.toVersion
         );
-      case 'validate_node':
+      case 'n8n_validate_node':
         this.validateToolParams(name, args, ['nodeType', 'config']);
         // Ensure config is an object
         if (typeof args.config !== 'object' || args.config === null) {
-          logger.warn(`validate_node called with invalid config type: ${typeof args.config}`);
+          logger.warn(`n8n_validate_node called with invalid config type: ${typeof args.config}`);
           const validationMode = args.mode || 'full';
           if (validationMode === 'minimal') {
             return {
@@ -1150,7 +1148,7 @@ export class N8NDocumentationMCPServer {
             suggestions: [
               '🔧 RECOVERY: Invalid config detected. Fix with:',
               '   • Ensure config is an object: { "resource": "...", "operation": "..." }',
-              '   • Use get_node to see required fields for this node type',
+              '   • Use n8n_get_node to see required fields for this node type',
               '   • Check if the node type is correct before configuring it'
             ],
             summary: {
@@ -1167,12 +1165,12 @@ export class N8NDocumentationMCPServer {
           return this.validateNodeMinimal(args.nodeType, args.config);
         }
         return this.validateNodeConfig(args.nodeType, args.config, 'operation', args.profile);
-      case 'get_template':
+      case 'n8n_get_template':
         this.validateToolParams(name, args, ['templateId']);
         const templateId = Number(args.templateId);
         const templateMode = args.mode || 'full';
         return this.getTemplate(templateId, templateMode);
-      case 'search_templates': {
+      case 'n8n_search_templates': {
         // Consolidated tool with searchMode parameter
         const searchMode = args.searchMode || 'keyword';
         const searchLimit = Math.min(Math.max(Number(args.limit) || 20, 1), 100);
@@ -1207,7 +1205,7 @@ export class N8NDocumentationMCPServer {
             return this.searchTemplates(args.query, searchLimit, searchOffset, searchFields);
         }
       }
-      case 'validate_workflow':
+      case 'n8n_validate_workflow_json':
         this.validateToolParams(name, args, ['workflow']);
         return this.validateWorkflow(args.workflow, args.options);
 
@@ -2314,7 +2312,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         action: op.action,
         resource: op.resource
       })),
-      // Examples removed - use validate_node_operation for working configurations
+      // Examples removed - use n8n_validate_node for working configurations
       metadata: {
         totalProperties: allProperties.length,
         isAITool: node.isAITool ?? false,
@@ -2336,7 +2334,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     if (includeExamples) {
       try {
         // Use the already-computed workflowNodeType from result (line 1888)
-        // This ensures consistency with search_nodes behavior (line 1203)
+        // This ensures consistency with n8n_search_nodes behavior (line 1203)
         const examples = this.db!.prepare(`
           SELECT
             parameters_json,
@@ -2426,11 +2424,11 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     const validModes = ['info', 'versions', 'compare', 'breaking', 'migrations'];
 
     if (!validDetailLevels.includes(detail)) {
-      throw new Error(`get_node: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
+      throw new Error(`n8n_get_node: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
     }
 
     if (!validModes.includes(mode)) {
-      throw new Error(`get_node: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
+      throw new Error(`n8n_get_node: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
     }
 
     const normalizedType = NodeTypeNormalizer.normalizeToFullForm(nodeType);
@@ -2557,24 +2555,24 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
 
       case 'compare':
         if (!fromVersion) {
-          throw new Error(`get_node: fromVersion is required for compare mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_get_node: fromVersion is required for compare mode (nodeType: ${nodeType})`);
         }
         return this.compareVersions(nodeType, fromVersion, toVersion);
 
       case 'breaking':
         if (!fromVersion) {
-          throw new Error(`get_node: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_get_node: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
         }
         return this.getBreakingChanges(nodeType, fromVersion, toVersion);
 
       case 'migrations':
         if (!fromVersion || !toVersion) {
-          throw new Error(`get_node: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_get_node: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
         }
         return this.getMigrations(nodeType, fromVersion, toVersion);
 
       default:
-        throw new Error(`get_node: Unknown mode: ${mode} (nodeType: ${nodeType})`);
+        throw new Error(`n8n_get_node: Unknown mode: ${mode} (nodeType: ${nodeType})`);
     }
   }
 
@@ -3375,7 +3373,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     return {
       ...result,
       tip: result.items.length > 0 ? 
-        `Use get_template(templateId) to get full workflow details. Total: ${result.total} templates available.` :
+        `Use n8n_get_template(templateId) to get full workflow details. Total: ${result.total} templates available.` :
         "No templates found. Run 'npm run fetch:templates' to update template database"
     };
   }
@@ -3409,7 +3407,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     if (!template) {
       return {
         error: `Template ${templateId} not found`,
-        tip: "Use list_templates, list_node_templates or search_templates to find available templates"
+        tip: "Use list_templates, list_node_templates or n8n_search_templates to find available templates"
       };
     }
     
@@ -3457,7 +3455,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         ...result,
         message: `No templates found for task: ${task}`,
         availableTasks,
-        tip: "Try a different task or use search_templates for custom searches"
+        tip: "Try a different task or use n8n_search_templates for custom searches"
       };
     }
     

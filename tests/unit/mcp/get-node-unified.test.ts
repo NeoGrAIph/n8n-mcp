@@ -3,12 +3,12 @@ import { N8NDocumentationMCPServer } from '../../../src/mcp/server';
 import { TypeStructureService } from '../../../src/services/type-structure-service';
 
 /**
- * Comprehensive unit tests for unified get_node tool (v2.24.0)
+ * Comprehensive unit tests for unified n8n_get_node tool (v2.24.0)
  * Tests all detail levels, version modes, parameter validation, and helper methods
- * Target: >80% coverage of get_node functionality
+ * Target: >80% coverage of n8n_get_node functionality
  */
 
-describe('Unified get_node Tool', () => {
+describe('Unified n8n_get_node Tool', () => {
   let server: N8NDocumentationMCPServer;
 
   beforeEach(async () => {

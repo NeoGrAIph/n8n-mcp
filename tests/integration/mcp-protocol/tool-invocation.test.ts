@@ -30,9 +30,9 @@ describe('MCP Tool Invocation', () => {
   });
 
   describe('Node Discovery Tools', () => {
-    describe('search_nodes', () => {
+    describe('n8n_search_nodes', () => {
       it('should search nodes by keyword', async () => {
-        const response = await client.callTool({ name: 'search_nodes', arguments: {
+        const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'webhook'
         }});
 
@@ -47,7 +47,7 @@ describe('MCP Tool Invocation', () => {
 
       it('should support different search modes', async () => {
         // OR mode
-        const orResponse = await client.callTool({ name: 'search_nodes', arguments: {
+        const orResponse = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'http request',
           mode: 'OR'
         }});
@@ -56,7 +56,7 @@ describe('MCP Tool Invocation', () => {
         expect(orNodes.length).toBeGreaterThan(0);
 
         // AND mode
-        const andResponse = await client.callTool({ name: 'search_nodes', arguments: {
+        const andResponse = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'http request',
           mode: 'AND'
         }});
@@ -65,7 +65,7 @@ describe('MCP Tool Invocation', () => {
         expect(andNodes.length).toBeLessThanOrEqual(orNodes.length);
 
         // FUZZY mode - use less typo-heavy search
-        const fuzzyResponse = await client.callTool({ name: 'search_nodes', arguments: {
+        const fuzzyResponse = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'http req', // Partial match should work
           mode: 'FUZZY'
         }});
@@ -75,7 +75,7 @@ describe('MCP Tool Invocation', () => {
       });
 
       it('should respect result limit', async () => {
-        const response = await client.callTool({ name: 'search_nodes', arguments: {
+        const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'node',
           limit: 3
         }});
@@ -86,9 +86,9 @@ describe('MCP Tool Invocation', () => {
       });
     });
 
-    describe('get_node', () => {
+    describe('n8n_get_node', () => {
       it('should get complete node information', async () => {
-        const response = await client.callTool({ name: 'get_node', arguments: {
+        const response = await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'nodes-base.httpRequest',
           detail: 'full'
         }});
@@ -104,7 +104,7 @@ describe('MCP Tool Invocation', () => {
 
       it('should handle non-existent nodes', async () => {
         try {
-          await client.callTool({ name: 'get_node', arguments: {
+          await client.callTool({ name: 'n8n_get_node', arguments: {
             nodeType: 'nodes-base.nonExistent'
           }});
           expect.fail('Should have thrown an error');
@@ -115,7 +115,7 @@ describe('MCP Tool Invocation', () => {
 
       it('should handle invalid node type format', async () => {
         try {
-          await client.callTool({ name: 'get_node', arguments: {
+          await client.callTool({ name: 'n8n_get_node', arguments: {
             nodeType: 'invalidFormat'
           }});
           expect.fail('Should have thrown an error');
@@ -125,9 +125,9 @@ describe('MCP Tool Invocation', () => {
       });
     });
 
-    describe('get_node with different detail levels', () => {
+    describe('n8n_get_node with different detail levels', () => {
       it('should return standard detail by default', async () => {
-        const response = await client.callTool({ name: 'get_node', arguments: {
+        const response = await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'nodes-base.httpRequest'
         }});
 
@@ -140,7 +140,7 @@ describe('MCP Tool Invocation', () => {
         expect(nodeInfo).toHaveProperty('commonProperties');
 
         // Should be smaller than full detail
-        const fullResponse = await client.callTool({ name: 'get_node', arguments: {
+        const fullResponse = await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'nodes-base.httpRequest',
           detail: 'full'
         }});
@@ -151,10 +151,10 @@ describe('MCP Tool Invocation', () => {
   });
 
   describe('Validation Tools', () => {
-    // v2.26.0: validate_node_operation consolidated into validate_node with mode parameter
-    describe('validate_node', () => {
+    // v2.26.0: n8n_validate_node_operation consolidated into n8n_validate_node with mode parameter
+    describe('n8n_validate_node', () => {
       it('should validate valid node configuration', async () => {
-        const response = await client.callTool({ name: 'validate_node', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_node', arguments: {
           nodeType: 'nodes-base.httpRequest',
           config: {
             method: 'GET',
@@ -170,7 +170,7 @@ describe('MCP Tool Invocation', () => {
       });
 
       it('should detect missing required fields', async () => {
-        const response = await client.callTool({ name: 'validate_node', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_node', arguments: {
           nodeType: 'nodes-base.httpRequest',
           config: {
             method: 'GET'
@@ -189,7 +189,7 @@ describe('MCP Tool Invocation', () => {
         const profiles = ['minimal', 'runtime', 'ai-friendly', 'strict'];
 
         for (const profile of profiles) {
-          const response = await client.callTool({ name: 'validate_node', arguments: {
+          const response = await client.callTool({ name: 'n8n_validate_node', arguments: {
             nodeType: 'nodes-base.httpRequest',
             config: { method: 'GET', url: 'https://api.example.com' },
             mode: 'full',
@@ -202,7 +202,7 @@ describe('MCP Tool Invocation', () => {
       });
     });
 
-    describe('validate_workflow', () => {
+    describe('n8n_validate_workflow_json', () => {
       it('should validate complete workflow', async () => {
         const workflow = {
           nodes: [
@@ -233,7 +233,7 @@ describe('MCP Tool Invocation', () => {
           }
         };
 
-        const response = await client.callTool({ name: 'validate_workflow', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
           workflow
         }});
 
@@ -262,7 +262,7 @@ describe('MCP Tool Invocation', () => {
           }
         };
 
-        const response = await client.callTool({ name: 'validate_workflow', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
           workflow
         }});
 
@@ -309,7 +309,7 @@ describe('MCP Tool Invocation', () => {
           }
         };
 
-        const response = await client.callTool({ name: 'validate_workflow', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
           workflow,
           options: {
             validateExpressions: true
@@ -335,25 +335,25 @@ describe('MCP Tool Invocation', () => {
   });
 
   describe('Documentation Tools', () => {
-    describe('tools_documentation', () => {
+    describe('n8n_tools_documentation', () => {
       it('should get quick start guide', async () => {
-        const response = await client.callTool({ name: 'tools_documentation', arguments: {} });
+        const response = await client.callTool({ name: 'n8n_tools_documentation', arguments: {} });
 
         expect(((response as any).content[0]).type).toBe('text');
         expect(((response as any).content[0]).text).toContain('n8n MCP Tools');
       });
 
       it('should get specific tool documentation', async () => {
-        const response = await client.callTool({ name: 'tools_documentation', arguments: {
-          topic: 'search_nodes'
+        const response = await client.callTool({ name: 'n8n_tools_documentation', arguments: {
+          topic: 'n8n_search_nodes'
         }});
 
-        expect(((response as any).content[0]).text).toContain('search_nodes');
+        expect(((response as any).content[0]).text).toContain('n8n_search_nodes');
         expect(((response as any).content[0]).text).toContain('Text search');
       });
 
       it('should get comprehensive documentation', async () => {
-        const response = await client.callTool({ name: 'tools_documentation', arguments: {
+        const response = await client.callTool({ name: 'n8n_tools_documentation', arguments: {
           depth: 'full'
         }});
 
@@ -363,7 +363,7 @@ describe('MCP Tool Invocation', () => {
       });
 
       it('should handle invalid topics gracefully', async () => {
-        const response = await client.callTool({ name: 'tools_documentation', arguments: {
+        const response = await client.callTool({ name: 'n8n_tools_documentation', arguments: {
           topic: 'nonexistent_tool'
         }});
 
@@ -373,12 +373,12 @@ describe('MCP Tool Invocation', () => {
   });
 
   // AI Tools section removed - list_ai_tools and get_node_as_tool_info were removed in v2.25.0
-  // Use search_nodes with query for finding AI-capable nodes
+  // Use n8n_search_nodes with query for finding AI-capable nodes
 
   describe('Complex Tool Interactions', () => {
     it('should handle tool chaining', async () => {
       // Search for nodes
-      const searchResponse = await client.callTool({ name: 'search_nodes', arguments: {
+      const searchResponse = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'slack'
       }});
       const searchResult = JSON.parse(((searchResponse as any).content[0]).text);
@@ -386,7 +386,7 @@ describe('MCP Tool Invocation', () => {
       
       // Get info for first result
       const firstNode = nodes[0];
-      const infoResponse = await client.callTool({ name: 'get_node', arguments: {
+      const infoResponse = await client.callTool({ name: 'n8n_get_node', arguments: {
         nodeType: firstNode.nodeType
       }});
       
@@ -395,10 +395,10 @@ describe('MCP Tool Invocation', () => {
 
     it('should handle parallel tool calls', async () => {
       const toolCalls = [
-        { name: 'search_nodes', arguments: { query: 'http' } },
-        { name: 'tools_documentation', arguments: {} },
-        { name: 'get_node', arguments: { nodeType: 'nodes-base.httpRequest' } },
-        { name: 'search_nodes', arguments: { query: 'webhook' } }
+        { name: 'n8n_search_nodes', arguments: { query: 'http' } },
+        { name: 'n8n_tools_documentation', arguments: {} },
+        { name: 'n8n_get_node', arguments: { nodeType: 'nodes-base.httpRequest' } },
+        { name: 'n8n_search_nodes', arguments: { query: 'webhook' } }
       ];
 
       const promises = toolCalls.map(call =>
@@ -419,9 +419,9 @@ describe('MCP Tool Invocation', () => {
       const nodeType = 'nodes-base.httpRequest';
       
       const [fullInfo, essentials, searchResult] = await Promise.all([
-        client.callTool({ name: 'get_node', arguments: { nodeType } }),
-        client.callTool({ name: 'get_node', arguments: { nodeType } }),
-        client.callTool({ name: 'search_nodes', arguments: { query: 'httpRequest' } })
+        client.callTool({ name: 'n8n_get_node', arguments: { nodeType } }),
+        client.callTool({ name: 'n8n_get_node', arguments: { nodeType } }),
+        client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'httpRequest' } })
       ]);
 
       const full = JSON.parse(((fullInfo as any).content[0]).text);

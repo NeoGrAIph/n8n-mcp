@@ -10,13 +10,13 @@ import {
 // Mock the tool-docs import
 vi.mock('@/mcp/tool-docs', () => ({
   toolsDocumentation: {
-    search_nodes: {
-      name: 'search_nodes',
+    n8n_search_nodes: {
+      name: 'n8n_search_nodes',
       category: 'discovery',
       essentials: {
         description: 'Search nodes by keywords',
         keyParameters: ['query', 'mode', 'limit'],
-        example: 'search_nodes({query: "slack"})',
+        example: 'n8n_search_nodes({query: "slack"})',
         performance: 'Instant (<10ms)',
         tips: ['Use single words for precision', 'Try FUZZY mode for typos']
       },
@@ -42,23 +42,23 @@ vi.mock('@/mcp/tool-docs', () => ({
         },
         returns: 'Array of matching nodes with metadata',
         examples: [
-          'search_nodes({query: "webhook"})',
-          'search_nodes({query: "http request", mode: "AND"})'
+          'n8n_search_nodes({query: "webhook"})',
+          'n8n_search_nodes({query: "http request", mode: "AND"})'
         ],
         useCases: ['Finding integration nodes', 'Discovering available triggers'],
         performance: 'Instant - uses in-memory index',
         bestPractices: ['Start with single words', 'Use FUZZY for uncertain names'],
         pitfalls: ['Overly specific queries may return no results'],
-        relatedTools: ['get_node', 'get_node_documentation']
+        relatedTools: ['n8n_get_node', 'get_node_documentation']
       }
     },
-    validate_workflow: {
-      name: 'validate_workflow',
+    n8n_validate_workflow_json: {
+      name: 'n8n_validate_workflow_json',
       category: 'validation',
       essentials: {
         description: 'Validate complete workflow structure',
         keyParameters: ['workflow', 'options'],
-        example: 'validate_workflow(workflow)',
+        example: 'n8n_validate_workflow_json(workflow)',
         performance: 'Moderate (100-500ms)',
         tips: ['Run before deployment', 'Check all validation types']
       },
@@ -76,12 +76,12 @@ vi.mock('@/mcp/tool-docs', () => ({
           }
         },
         returns: 'Validation results with errors and warnings',
-        examples: ['validate_workflow(workflow)'],
+        examples: ['n8n_validate_workflow_json(workflow)'],
         useCases: ['Pre-deployment checks', 'CI/CD validation'],
         performance: 'Depends on workflow complexity',
         bestPractices: ['Validate before saving', 'Fix errors first'],
         pitfalls: ['Large workflows may take time'],
-        relatedTools: ['validate_node']
+        relatedTools: ['n8n_validate_node']
       }
     },
     get_node_essentials: {
@@ -125,35 +125,35 @@ describe('tools-documentation', () => {
   describe('getToolDocumentation', () => {
     describe('essentials mode', () => {
       it('should return essential documentation for existing tool', () => {
-        const doc = getToolDocumentation('search_nodes', 'essentials');
+        const doc = getToolDocumentation('n8n_search_nodes', 'essentials');
         
-        expect(doc).toContain('# search_nodes');
+        expect(doc).toContain('# n8n_search_nodes');
         expect(doc).toContain('Search nodes by keywords');
-        expect(doc).toContain('**Example**: search_nodes({query: "slack"})');
+        expect(doc).toContain('**Example**: n8n_search_nodes({query: "slack"})');
         expect(doc).toContain('**Key parameters**: query, mode, limit');
         expect(doc).toContain('**Performance**: Instant (<10ms)');
         expect(doc).toContain('- Use single words for precision');
         expect(doc).toContain('- Try FUZZY mode for typos');
-        expect(doc).toContain('For full documentation, use: tools_documentation({topic: "search_nodes", depth: "full"})');
+        expect(doc).toContain('For full documentation, use: n8n_tools_documentation({topic: "n8n_search_nodes", depth: "full"})');
       });
 
       it('should return error message for unknown tool', () => {
         const doc = getToolDocumentation('unknown_tool', 'essentials');
-        expect(doc).toBe("Tool 'unknown_tool' not found. Use tools_documentation() to see available tools.");
+        expect(doc).toBe("Tool 'unknown_tool' not found. Use n8n_tools_documentation() to see available tools.");
       });
 
       it('should use essentials as default depth', () => {
-        const docDefault = getToolDocumentation('search_nodes');
-        const docEssentials = getToolDocumentation('search_nodes', 'essentials');
+        const docDefault = getToolDocumentation('n8n_search_nodes');
+        const docEssentials = getToolDocumentation('n8n_search_nodes', 'essentials');
         expect(docDefault).toBe(docEssentials);
       });
     });
 
     describe('full mode', () => {
       it('should return complete documentation for existing tool', () => {
-        const doc = getToolDocumentation('search_nodes', 'full');
+        const doc = getToolDocumentation('n8n_search_nodes', 'full');
         
-        expect(doc).toContain('# search_nodes');
+        expect(doc).toContain('# n8n_search_nodes');
         expect(doc).toContain('Full-text search across all n8n nodes');
         expect(doc).toContain('## Parameters');
         expect(doc).toContain('- **query** (string, required): Search terms');
@@ -162,7 +162,7 @@ describe('tools-documentation', () => {
         expect(doc).toContain('## Returns');
         expect(doc).toContain('Array of matching nodes with metadata');
         expect(doc).toContain('## Examples');
-        expect(doc).toContain('search_nodes({query: "webhook"})');
+        expect(doc).toContain('n8n_search_nodes({query: "webhook"})');
         expect(doc).toContain('## Common Use Cases');
         expect(doc).toContain('- Finding integration nodes');
         expect(doc).toContain('## Performance');
@@ -172,7 +172,7 @@ describe('tools-documentation', () => {
         expect(doc).toContain('## Common Pitfalls');
         expect(doc).toContain('- Overly specific queries');
         expect(doc).toContain('## Related Tools');
-        expect(doc).toContain('- get_node');
+        expect(doc).toContain('- n8n_get_node');
       });
     });
 
@@ -228,7 +228,7 @@ describe('tools-documentation', () => {
         expect(overview).toContain('**Validation Tools**');
         expect(overview).toContain('## Performance Characteristics');
         expect(overview).toContain('- Instant (<10ms)');
-        expect(overview).toContain('tools_documentation({topic: "tool_name", depth: "full"})');
+        expect(overview).toContain('n8n_tools_documentation({topic: "tool_name", depth: "full"})');
       });
 
       it('should use essentials as default', () => {
@@ -245,9 +245,9 @@ describe('tools-documentation', () => {
         expect(overview).toContain('# n8n MCP Tools - Complete Reference');
         expect(overview).toContain('## All Available Tools by Category');
         expect(overview).toContain('### Discovery');
-        expect(overview).toContain('- **search_nodes**: Search nodes by keywords');
+        expect(overview).toContain('- **n8n_search_nodes**: Search nodes by keywords');
         expect(overview).toContain('### Validation');
-        expect(overview).toContain('- **validate_workflow**: Validate complete workflow structure');
+        expect(overview).toContain('- **n8n_validate_workflow_json**: Validate complete workflow structure');
         expect(overview).toContain('## Usage Notes');
       });
     });
@@ -256,12 +256,12 @@ describe('tools-documentation', () => {
   describe('searchToolDocumentation', () => {
     it('should find tools matching keyword in name', () => {
       const results = searchToolDocumentation('search');
-      expect(results).toContain('search_nodes');
+      expect(results).toContain('n8n_search_nodes');
     });
 
     it('should find tools matching keyword in description', () => {
       const results = searchToolDocumentation('workflow');
-      expect(results).toContain('validate_workflow');
+      expect(results).toContain('n8n_validate_workflow_json');
     });
 
     it('should be case insensitive', () => {
@@ -284,12 +284,12 @@ describe('tools-documentation', () => {
   describe('getToolsByCategory', () => {
     it('should return tools for discovery category', () => {
       const tools = getToolsByCategory('discovery');
-      expect(tools).toContain('search_nodes');
+      expect(tools).toContain('n8n_search_nodes');
     });
 
     it('should return tools for validation category', () => {
       const tools = getToolsByCategory('validation');
-      expect(tools).toContain('validate_workflow');
+      expect(tools).toContain('n8n_validate_workflow_json');
     });
 
     it('should return tools for configuration category', () => {
@@ -327,7 +327,7 @@ describe('tools-documentation', () => {
     it('should handle missing tool gracefully', () => {
       const doc = getToolDocumentation('missing_tool');
       expect(doc).toContain("Tool 'missing_tool' not found");
-      expect(doc).toContain('Use tools_documentation()');
+      expect(doc).toContain('Use n8n_tools_documentation()');
     });
 
     it('should handle empty search query', () => {
@@ -339,7 +339,7 @@ describe('tools-documentation', () => {
 
   describe('Documentation Quality', () => {
     it('should format parameters correctly in full mode', () => {
-      const doc = getToolDocumentation('search_nodes', 'full');
+      const doc = getToolDocumentation('n8n_search_nodes', 'full');
       
       // Check parameter formatting
       expect(doc).toMatch(/- \*\*query\*\* \(string, required\): Search terms/);
@@ -348,13 +348,13 @@ describe('tools-documentation', () => {
     });
 
     it('should include code blocks for examples', () => {
-      const doc = getToolDocumentation('search_nodes', 'full');
+      const doc = getToolDocumentation('n8n_search_nodes', 'full');
       expect(doc).toContain('```javascript');
       expect(doc).toContain('```');
     });
 
     it('should have consistent section headers', () => {
-      const doc = getToolDocumentation('search_nodes', 'full');
+      const doc = getToolDocumentation('n8n_search_nodes', 'full');
       const expectedSections = [
         '## Parameters',
         '## Returns',

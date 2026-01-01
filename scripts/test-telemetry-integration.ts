@@ -17,13 +17,13 @@ async function testIntegration() {
 
   // Track tool usage
   console.log('Tracking tool usage...');
-  telemetry.trackToolUsage('search_nodes', true, 150);
+  telemetry.trackToolUsage('n8n_search_nodes', true, 150);
   telemetry.trackToolUsage('get_node_info', true, 75);
-  telemetry.trackToolUsage('validate_workflow', false, 200);
+  telemetry.trackToolUsage('n8n_validate_workflow_json', false, 200);
 
   // Track errors
   console.log('Tracking errors...');
-  telemetry.trackError('ValidationError', 'workflow_validation', 'validate_workflow', 'Required field missing: nodes array is empty');
+  telemetry.trackError('ValidationError', 'workflow_validation', 'n8n_validate_workflow_json', 'Required field missing: nodes array is empty');
 
   // Track a test workflow
   console.log('Tracking workflow creation...');

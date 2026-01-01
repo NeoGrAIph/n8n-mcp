@@ -918,10 +918,10 @@ ERROR: AUTH_TOKEN or AUTH_TOKEN_FILE is required for HTTP mode
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > validateToolParams > Edge Cases > should handle special characters in parameter names 25ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > get_node_info > should require nodeType parameter 25ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > get_node_info > should succeed with valid nodeType 23ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > search_nodes > should require query parameter 25ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > search_nodes > should succeed with valid query 26ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > search_nodes > should handle optional limit parameter 23ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > search_nodes > should reject invalid limit value 26ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_search_nodes > should require query parameter 25ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_search_nodes > should succeed with valid query 26ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_search_nodes > should handle optional limit parameter 23ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_search_nodes > should reject invalid limit value 26ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > validate_node_operation > should require nodeType and config parameters 25ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > validate_node_operation > should require nodeType parameter when config is provided 24ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > validate_node_operation > should require config parameter when nodeType is provided 26ms
@@ -931,8 +931,8 @@ ERROR: AUTH_TOKEN or AUTH_TOKEN_FILE is required for HTTP mode
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > search_node_properties > should handle optional maxResults parameter 26ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > list_node_templates > should require nodeTypes parameter 24ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > list_node_templates > should succeed with valid nodeTypes array 25ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > get_template > should require templateId parameter 27ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > get_template > should succeed with valid templateId 26ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_get_template > should require templateId parameter 27ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tool-Specific Parameter Validation > n8n_get_template > should succeed with valid templateId 26ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > limit parameter conversion > should reject string limit values 24ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > limit parameter conversion > should reject invalid string limit values 27ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > limit parameter conversion > should use default when limit is undefined 27ms
@@ -943,7 +943,7 @@ ERROR: AUTH_TOKEN or AUTH_TOKEN_FILE is required for HTTP mode
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > templateLimit parameter conversion > should reject invalid string limit values 24ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > templateId parameter handling > should pass through numeric templateId 27ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Numeric Parameter Conversion > templateId parameter handling > should convert string templateId to number 27ms
- ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tools with No Required Parameters > should allow tools_documentation with no parameters 27ms
+ ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tools with No Required Parameters > should allow n8n_tools_documentation with no parameters 27ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tools with No Required Parameters > should allow list_nodes with no parameters 25ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tools with No Required Parameters > should allow list_ai_tools with no parameters 27ms
  ✓ tests/unit/mcp/parameter-validation.test.ts > Parameter Validation > Tools with No Required Parameters > should allow get_database_statistics with no parameters 28ms
@@ -1078,9 +1078,9 @@ Resource similarity service error: Error: Service error
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > list_nodes > should filter nodes by category 116ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > list_nodes > should limit results 102ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > list_nodes > should filter by package 131ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > search_nodes > should search nodes by keyword 107ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > search_nodes > should support different search modes 113ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > search_nodes > should respect result limit 101ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > n8n_search_nodes > should search nodes by keyword 107ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > n8n_search_nodes > should support different search modes 113ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > n8n_search_nodes > should respect result limit 101ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > get_node_info > should get complete node information 109ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > get_node_info > should handle non-existent nodes 113ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Node Discovery Tools > get_node_info > should handle invalid node type format 109ms
@@ -1088,13 +1088,13 @@ Resource similarity service error: Error: Service error
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_node_operation > should validate valid node configuration 108ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_node_operation > should detect missing required fields 109ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_node_operation > should support different validation profiles 116ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_workflow > should validate complete workflow 111ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_workflow > should detect connection errors 113ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > validate_workflow > should validate expressions 110ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > tools_documentation > should get quick start guide 124ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > tools_documentation > should get specific tool documentation 103ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > tools_documentation > should get comprehensive documentation 113ms
- ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > tools_documentation > should handle invalid topics gracefully 151ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > n8n_validate_workflow_json > should validate complete workflow 111ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > n8n_validate_workflow_json > should detect connection errors 113ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Validation Tools > n8n_validate_workflow_json > should validate expressions 110ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > n8n_tools_documentation > should get quick start guide 124ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > n8n_tools_documentation > should get specific tool documentation 103ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > n8n_tools_documentation > should get comprehensive documentation 113ms
+ ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Documentation Tools > n8n_tools_documentation > should handle invalid topics gracefully 151ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > AI Tools > list_ai_tools > should list AI-capable nodes 112ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > AI Tools > get_node_as_tool_info > should provide AI tool usage information 108ms
  ✓ tests/integration/mcp-protocol/tool-invocation.test.ts > MCP Tool Invocation > Task Templates > list_tasks > should list all available tasks 112ms
@@ -1376,12 +1376,12 @@ Resource similarity service error: Error: Service error
  ✓ tests/integration/mcp-protocol/error-handling.test.ts > MCP Error Handling > Error Message Quality > should provide helpful error messages 111ms
  ✓ tests/integration/mcp-protocol/error-handling.test.ts > MCP Error Handling > Error Message Quality > should indicate missing required parameters 107ms
  ✓ tests/integration/mcp-protocol/error-handling.test.ts > MCP Error Handling > Error Message Quality > should provide context for validation errors 112ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should detect incorrect error output configuration via MCP 123ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should validate correct error output configuration via MCP 117ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should detect onError and connection mismatches via MCP 113ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should handle large workflows with complex error patterns via MCP 135ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should handle edge cases gracefully via MCP 109ms
- ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > validate_workflow tool - Error Output Configuration > should validate with different validation profiles via MCP 109ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should detect incorrect error output configuration via MCP 123ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should validate correct error output configuration via MCP 117ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should detect onError and connection mismatches via MCP 113ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should handle large workflows with complex error patterns via MCP 135ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should handle edge cases gracefully via MCP 109ms
+ ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > n8n_validate_workflow_json tool - Error Output Configuration > should validate with different validation profiles via MCP 109ms
  ✓ tests/integration/mcp-protocol/workflow-error-validation.test.ts > MCP Workflow Error Output Validation Integration > Error Message Format Consistency > should format error messages consistently across different scenarios 111ms
  ✓ tests/unit/__mocks__/n8n-nodes-base.test.ts > n8n-nodes-base mock > getNodeTypes > should return node types registry 32ms
  ✓ tests/unit/__mocks__/n8n-nodes-base.test.ts > n8n-nodes-base mock > getNodeTypes > should retrieve webhook node 30ms
@@ -1421,9 +1421,9 @@ Resource similarity service error: Error: Service error
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Tool Structure Validation > should have all required properties for each tool 35ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Tool Structure Validation > should have unique tool names 33ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Tool Structure Validation > should have valid JSON Schema for all inputSchemas 39ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > tools_documentation > should exist 39ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > tools_documentation > should have correct schema 34ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > tools_documentation > should have helpful description 32ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_tools_documentation > should exist 39ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_tools_documentation > should have correct schema 34ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_tools_documentation > should have helpful description 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > list_nodes > should exist 33ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > list_nodes > should have correct schema properties 30ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > list_nodes > should have correct defaults 33ms
@@ -1431,14 +1431,14 @@ Resource similarity service error: Error: Service error
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_node_info > should exist 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_node_info > should have nodeType as required parameter 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_node_info > should mention performance implications in description 31ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > search_nodes > should exist 33ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > search_nodes > should have query as required parameter 32ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > search_nodes > should have mode enum with correct values 38ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > search_nodes > should have limit with default value 38ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > validate_workflow > should exist 31ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > validate_workflow > should have workflow as required parameter 34ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > validate_workflow > should have options with correct validation settings 33ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > validate_workflow > should have correct profile enum values 32ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_search_nodes > should exist 33ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_search_nodes > should have query as required parameter 32ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_search_nodes > should have mode enum with correct values 38ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_search_nodes > should have limit with default value 38ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_validate_workflow_json > should exist 31ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_validate_workflow_json > should have workflow as required parameter 34ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_validate_workflow_json > should have options with correct validation settings 33ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > n8n_validate_workflow_json > should have correct profile enum values 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_templates_for_task > should exist 33ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_templates_for_task > should have task as required parameter 31ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > Individual Tool Validation > get_templates_for_task > should have correct task enum values 35ms
@@ -1454,9 +1454,9 @@ Resource similarity service error: Error: Service error
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > list_templates > should exist and be properly defined 33ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > list_templates > should have correct parameters 36ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > list_templates > should have no required parameters 33ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > get_template (enhanced) > should exist and support mode parameter 32ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > get_template (enhanced) > should have mode parameter with correct values 32ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > get_template (enhanced) > should require templateId parameter 29ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > n8n_get_template (enhanced) > should exist and support mode parameter 32ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > n8n_get_template (enhanced) > should have mode parameter with correct values 32ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > n8n_get_template (enhanced) > should require templateId parameter 29ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > search_templates_by_metadata > should exist in the tools array 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > search_templates_by_metadata > should have proper description 34ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > search_templates_by_metadata > should have correct input schema structure 32ms
@@ -1469,22 +1469,22 @@ Resource similarity service error: Error: Service error
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > search_templates_by_metadata > should have appropriate additionalProperties setting 29ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > list_node_templates > should support limit parameter 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > list_node_templates > should support offset parameter 32ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > search_templates > should support limit parameter 34ms
- ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > search_templates > should support offset parameter 33ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > n8n_search_templates > should support limit parameter 34ms
+ ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > n8n_search_templates > should support offset parameter 33ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > get_templates_for_task > should support limit parameter 38ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > get_templates_for_task > should support offset parameter 41ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > search_templates_by_metadata > should support limit parameter 32ms
  ✓ tests/unit/mcp/tools.test.ts > n8nDocumentationToolsFinal > New Template Tools > Enhanced pagination support > search_templates_by_metadata > should support offset parameter 32ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > includeExamples parameter > should not include examples when includeExamples is false 37ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > includeExamples parameter > should not include examples when includeExamples is undefined 35ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > includeExamples parameter > should include examples when includeExamples is true 34ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > includeExamples parameter > should handle nodes without examples gracefully 33ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > includeExamples parameter > should limit examples to top 2 per node 32ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > example data structure > should return examples with correct structure when present 34ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > backward compatibility > should maintain backward compatibility when includeExamples not specified 34ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > performance considerations > should not significantly impact performance when includeExamples is false 33ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > error handling > should continue to work even if example fetch fails 34ms
- ✓ tests/unit/mcp/search-nodes-examples.test.ts > search_nodes with includeExamples > error handling > should handle malformed parameters_json gracefully 34ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > includeExamples parameter > should not include examples when includeExamples is false 37ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > includeExamples parameter > should not include examples when includeExamples is undefined 35ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > includeExamples parameter > should include examples when includeExamples is true 34ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > includeExamples parameter > should handle nodes without examples gracefully 33ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > includeExamples parameter > should limit examples to top 2 per node 32ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > example data structure > should return examples with correct structure when present 34ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > backward compatibility > should maintain backward compatibility when includeExamples not specified 34ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > performance considerations > should not significantly impact performance when includeExamples is false 33ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > error handling > should continue to work even if example fetch fails 34ms
+ ✓ tests/unit/mcp/search-nodes-examples.test.ts > n8n_search_nodes with includeExamples > error handling > should handle malformed parameters_json gracefully 34ms
  ✓ tests/unit/mcp/search-nodes-examples.test.ts > searchNodesLIKE with includeExamples > should support includeExamples in LIKE search 35ms
  ✓ tests/unit/mcp/search-nodes-examples.test.ts > searchNodesLIKE with includeExamples > should not include examples when includeExamples is false 33ms
  ✓ tests/unit/mcp/search-nodes-examples.test.ts > searchNodesFTS with includeExamples > should support includeExamples in FTS search 34ms

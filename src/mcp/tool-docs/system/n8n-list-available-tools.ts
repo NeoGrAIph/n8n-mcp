@@ -66,8 +66,8 @@ The tool list is dynamic:
       'Tool list is empty if N8N_API_URL and N8N_API_KEY are not set',
       'Does not validate if tools will actually work - just shows availability',
       'Tool names must be used exactly as returned',
-      'Does not show tool parameters - use tools_documentation for details'
+      'Does not show tool parameters - use n8n_tools_documentation for details'
     ],
-    relatedTools: ['n8n_diagnostic', 'n8n_health_check', 'tools_documentation']
+    relatedTools: ['n8n_diagnostic', 'n8n_health_check', 'n8n_tools_documentation']
   }
 };

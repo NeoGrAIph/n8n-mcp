@@ -216,7 +216,7 @@ export class Validator {
  */
 export class ToolValidation {
   /**
-   * Validate parameters for validate_node_operation tool
+   * Validate parameters for n8n_validate_node tool (mode=full)
    */
   static validateNodeOperation(args: any): ValidationResult {
     const nodeTypeResult = Validator.validateString(args.nodeType, 'nodeType');
@@ -232,7 +232,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for validate_node_minimal tool
+   * Validate parameters for n8n_validate_node tool (mode=minimal)
    */
   static validateNodeMinimal(args: any): ValidationResult {
     const nodeTypeResult = Validator.validateString(args.nodeType, 'nodeType');
@@ -242,7 +242,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for validate_workflow tool
+   * Validate parameters for n8n_validate_workflow_json tool
    */
   static validateWorkflow(args: any): ValidationResult {
     const workflowResult = Validator.validateObject(args.workflow, 'workflow');
@@ -264,7 +264,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for search_nodes tool
+   * Validate parameters for n8n_search_nodes tool
    */
   static validateSearchNodes(args: any): ValidationResult {
     const queryResult = Validator.validateString(args.query, 'query');

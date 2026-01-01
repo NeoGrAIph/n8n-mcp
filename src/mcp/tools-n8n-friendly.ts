@@ -13,9 +13,9 @@ export const n8nFriendlyDescriptions: Record<string, {
   description: string;
   params: Record<string, string>;
 }> = {
-  // Consolidated validation tool (replaces validate_node_operation and validate_node_minimal)
-  validate_node: {
-    description: 'Validate n8n node config. Pass nodeType (string) and config (object). Use mode="full" for comprehensive validation, mode="minimal" for quick check. Example: {"nodeType": "nodes-base.slack", "config": {"resource": "channel", "operation": "create"}}',
+  // Consolidated validation tool (replaces legacy n8n_validate_node_* variants)
+  n8n_validate_node: {
+    description: 'Validate a node configuration against its schema. Provide nodeType and config, and set mode to minimal or full with an optional profile for strictness. Returns a structured validation result with errors, warnings, and suggestions.',
     params: {
       nodeType: 'String value like "nodes-base.slack"',
       config: 'Object value like {"resource": "channel", "operation": "create"} or empty object {}',
@@ -25,8 +25,8 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   // Search tool
-  search_nodes: {
-    description: 'Search nodes. Pass query (string). Example: {"query": "webhook"}',
+  n8n_search_nodes: {
+    description: 'Search the local n8n node catalog by keyword to discover node types. Provide query plus optional limit/mode and includeExamples to control matching and sample configs. Returns a ranked list of node types with basic metadata.',
     params: {
       query: 'String keyword like "webhook" or "database"',
       limit: 'Optional number, default 20'
@@ -34,8 +34,8 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   // Consolidated node info tool (replaces get_node_info, get_node_essentials, get_node_documentation, search_node_properties)
-  get_node: {
-    description: 'Get node info with multiple modes. Pass nodeType (string). Use mode="info" for config, mode="docs" for documentation, mode="search_properties" with propertyQuery for finding fields. Example: {"nodeType": "nodes-base.httpRequest", "detail": "standard"}',
+  n8n_get_node: {
+    description: 'Retrieve detailed metadata for a specific node type. Provide nodeType and optionally detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.',
     params: {
       nodeType: 'String with prefix like "nodes-base.httpRequest"',
       mode: 'Optional string: "info" (default), "docs", "search_properties", "versions", "compare", "breaking", "migrations"',
@@ -45,17 +45,17 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   // Workflow validation
-  validate_workflow: {
-    description: 'Validate workflow structure, connections, and expressions. Pass workflow object. MUST have: {"workflow": {"nodes": [array of node objects], "connections": {object with node connections}}}. Each node needs: name, type, typeVersion, position.',
+  n8n_validate_workflow_json: {
+    description: 'Validate a workflow JSON object locally without calling n8n. Provide workflow with nodes and connections, plus optional options to control validation depth. Returns validity, summary, errors, warnings, and suggestions.',
     params: {
       workflow: 'Object with two required fields: nodes (array) and connections (object). Example: {"nodes": [{"name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [250, 300], "parameters": {}}], "connections": {}}',
       options: 'Optional object. Example: {"validateNodes": true, "validateConnections": true, "validateExpressions": true, "profile": "runtime"}'
     }
   },
 
-  // Consolidated template search (replaces search_templates, list_node_templates, search_templates_by_metadata, get_templates_for_task)
-  search_templates: {
-    description: 'Search workflow templates with multiple modes. Use searchMode="keyword" for text search, searchMode="by_nodes" to find by node types, searchMode="by_task" for task-based templates, searchMode="by_metadata" for filtering. Example: {"query": "chatbot"} or {"searchMode": "by_task", "task": "webhook_processing"}',
+  // Consolidated template search (replaces n8n_search_templates, list_node_templates, search_templates_by_metadata, get_templates_for_task)
+  n8n_search_templates: {
+    description: 'Search the local workflow templates catalog. Choose searchMode and provide matching parameters (query, nodeTypes, task, or metadata filters) plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.',
     params: {
       query: 'For searchMode="keyword": string keyword like "chatbot"',
       searchMode: 'Optional: "keyword" (default), "by_nodes", "by_task", "by_metadata"',
@@ -65,8 +65,8 @@ export const n8nFriendlyDescriptions: Record<string, {
     }
   },
 
-  get_template: {
-    description: 'Get template by ID. Pass templateId (number). Example: {"templateId": 1234}',
+  n8n_get_template: {
+    description: 'Fetch a workflow template from the local template database by templateId. Use mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.',
     params: {
       templateId: 'Number ID like 1234',
       mode: 'Optional: "full" (default), "nodes_only", "structure"'
@@ -74,11 +74,11 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   // Documentation tool
-  tools_documentation: {
-    description: 'Get tool docs. Pass optional depth (string). Example: {"depth": "essentials"} or {}',
+  n8n_tools_documentation: {
+    description: 'Fetch the built-in documentation for n8n MCP tools and guides. Use topic to target a specific tool or "overview" for the index, and set depth to control verbosity. Returns Markdown with usage guidance, examples, and best practices.',
     params: {
       depth: 'Optional string: "essentials" (default) or "full"',
-      topic: 'Optional string tool name like "search_nodes"'
+      topic: 'Optional string tool name like "n8n_search_nodes"'
     }
   }
 };

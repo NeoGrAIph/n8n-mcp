@@ -179,7 +179,7 @@ describe.skipIf(!dbExists)('Database Content Validation', () => {
       const templatesCount = db.prepare('SELECT COUNT(*) as count FROM templates').get();
 
       expect(templatesCount.count,
-        'CRITICAL: Templates table is EMPTY! Templates are required for search_templates MCP tool and real-world examples. ' +
+        'CRITICAL: Templates table is EMPTY! Templates are required for n8n_search_templates MCP tool and real-world examples. ' +
         'Run: npm run fetch:templates OR restore from git history.'
       ).toBeGreaterThan(0);
 

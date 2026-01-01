@@ -8,7 +8,7 @@ async function testHttpSearch() {
   
   console.log('Testing search for "http"...\n');
   
-  const result = await server.executeTool('search_nodes', {
+  const result = await server.executeTool('n8n_search_nodes', {
     query: 'http',
     limit: 50 // Get more results to see where HTTP Request is
   });

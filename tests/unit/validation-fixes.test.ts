@@ -50,7 +50,7 @@ describe('Validation System Fixes', () => {
     delete (process.env as any).NODE_ENV;
   });
 
-  describe('Issue #73: validate_node_minimal crashes without input validation', () => {
+  describe('Issue #73: n8n_validate_node (mode=minimal) crashes without input validation', () => {
     test('should handle empty config in validation schemas', () => {
       // Test the validation schema handles empty config
       const result = ToolValidation.validateNodeMinimal({
@@ -88,7 +88,7 @@ describe('Validation System Fixes', () => {
     });
   });
 
-  describe('Issue #58: validate_node_operation crashes on nested input', () => {
+  describe('Issue #58: n8n_validate_node (mode=full) crashes on nested input', () => {
     test('should handle invalid nodeType gracefully', () => {
       expect(() => {
         EnhancedConfigValidator.validateWithMode(
@@ -373,7 +373,7 @@ describe('Validation System Fixes', () => {
 
   describe('Enhanced Input Validation', () => {
     test('should validate tool parameters with schemas', () => {
-      // Test validate_node_operation parameters
+      // Test n8n_validate_node parameters (mode=full)
       const validationResult = ToolValidation.validateNodeOperation({
         nodeType: 'nodes-base.webhook',
         config: { path: '/test' },
@@ -401,9 +401,9 @@ describe('Validation System Fixes', () => {
         config: null
       });
       
-      const errorMessage = Validator.formatErrors(validationResult, 'validate_node_operation');
+      const errorMessage = Validator.formatErrors(validationResult, 'n8n_validate_node');
       
-      expect(errorMessage).toContain('validate_node_operation: Validation failed:');
+      expect(errorMessage).toContain('n8n_validate_node: Validation failed:');
       expect(errorMessage).toContain('nodeType');
       expect(errorMessage).toContain('config');
     });

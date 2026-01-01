@@ -108,12 +108,12 @@ describe.skip('MCP Telemetry Integration', () => {
           const result = await (mcpServer as any).executeTool(params);
 
           // Track specific telemetry based on tool type
-          if (toolName === 'search_nodes') {
+          if (toolName === 'n8n_search_nodes') {
             const query = params?.arguments?.query || '';
             const totalResults = result?.totalResults || 0;
             const mode = params?.arguments?.mode || 'OR';
             telemetry.trackSearchQuery(query, totalResults, mode);
-          } else if (toolName === 'validate_workflow') {
+          } else if (toolName === 'n8n_validate_workflow_json') {
             const workflow = params?.arguments?.workflow || {};
             const validationPassed = result?.isValid !== false;
             telemetry.trackWorkflowCreation(workflow, validationPassed);
@@ -122,7 +122,7 @@ describe.skip('MCP Telemetry Integration', () => {
                 telemetry.trackValidationDetails(error.nodeType || 'unknown', error.type || 'validation_error', error);
               });
             }
-          } else if (toolName === 'validate_node_operation' || toolName === 'validate_node_minimal') {
+          } else if (toolName === 'n8n_validate_node') {
             const nodeType = params?.arguments?.nodeType || 'unknown';
             const errorType = result?.errors?.[0]?.type || 'validation_error';
             telemetry.trackValidationDetails(nodeType, errorType, result);
@@ -198,7 +198,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const callToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'webhook' }
         }
       };
@@ -217,7 +217,7 @@ describe.skip('MCP Telemetry Integration', () => {
       }
 
       expect(telemetry.trackToolUsage).toHaveBeenCalledWith(
-        'search_nodes',
+        'n8n_search_nodes',
         true,
         expect.any(Number)
       );
@@ -227,7 +227,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const callToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'get_node',
+          name: 'n8n_get_node',
           arguments: { nodeType: 'invalid-node' }
         }
       };
@@ -247,23 +247,23 @@ describe.skip('MCP Telemetry Integration', () => {
         }
       }
 
-      expect(telemetry.trackToolUsage).toHaveBeenCalledWith('get_node', false);
+      expect(telemetry.trackToolUsage).toHaveBeenCalledWith('n8n_get_node', false);
       expect(telemetry.trackError).toHaveBeenCalledWith(
         'Error',
         'Node not found',
-        'get_node'
+        'n8n_get_node'
       );
     });
 
     it('should track tool sequences', async () => {
       // Set up previous tool state
-      (mcpServer as any).previousTool = 'search_nodes';
+      (mcpServer as any).previousTool = 'n8n_search_nodes';
       (mcpServer as any).previousToolTimestamp = Date.now() - 5000;
 
       const callToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'get_node',
+          name: 'n8n_get_node',
           arguments: { nodeType: 'nodes-base.webhook' }
         }
       };
@@ -281,8 +281,8 @@ describe.skip('MCP Telemetry Integration', () => {
       }
 
       expect(telemetry.trackToolSequence).toHaveBeenCalledWith(
-        'search_nodes',
-        'get_node',
+        'n8n_search_nodes',
+        'n8n_get_node',
         expect.any(Number)
       );
     });
@@ -293,7 +293,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const searchRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'webhook', mode: 'OR' }
         }
       };
@@ -321,7 +321,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const zeroResultRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'nonexistent', mode: 'AND' }
         }
       };
@@ -345,7 +345,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const fallbackRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'partial-match', mode: 'OR' }
         }
       };
@@ -385,7 +385,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const validateRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'validate_workflow',
+          name: 'n8n_validate_workflow_json',
           arguments: { workflow }
         }
       };
@@ -418,7 +418,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const validateRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'validate_workflow',
+          name: 'n8n_validate_workflow_json',
           arguments: { workflow }
         }
       };
@@ -464,7 +464,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const validateNodeRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'validate_node_operation',
+          name: 'n8n_validate_node',
           arguments: {
             nodeType: 'nodes-base.httpRequest',
             config: { url: 'https://api.example.com', method: 'GET' }
@@ -488,7 +488,7 @@ describe.skip('MCP Telemetry Integration', () => {
 
       // Should track the validation attempt
       expect(telemetry.trackToolUsage).toHaveBeenCalledWith(
-        'validate_node_operation',
+        'n8n_validate_node',
         true,
         expect.any(Number)
       );
@@ -500,7 +500,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const slowToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'http', limit: 1000 }
         }
       };
@@ -519,7 +519,7 @@ describe.skip('MCP Telemetry Integration', () => {
       }
 
       expect(telemetry.trackToolUsage).toHaveBeenCalledWith(
-        'search_nodes',
+        'n8n_search_nodes',
         true,
         expect.any(Number)
       );
@@ -586,7 +586,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const callToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'webhook' }
         }
       };
@@ -613,7 +613,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const callToolRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'search_nodes',
+          name: 'n8n_search_nodes',
           arguments: { query: 'webhook' }
         }
       };
@@ -657,7 +657,7 @@ describe.skip('MCP Telemetry Integration', () => {
       const validateRequest: CallToolRequest = {
         method: 'tools/call',
         params: {
-          name: 'validate_workflow',
+          name: 'n8n_validate_workflow_json',
           arguments: { workflow: complexWorkflow }
         }
       };
@@ -686,7 +686,7 @@ describe.skip('MCP Telemetry Integration', () => {
 
       expect(telemetry.trackWorkflowCreation).toHaveBeenCalledWith(complexWorkflow, true);
       expect(telemetry.trackToolUsage).toHaveBeenCalledWith(
-        'validate_workflow',
+        'n8n_validate_workflow_json',
         true,
         expect.any(Number)
       );
@@ -712,21 +712,21 @@ describe.skip('MCP Telemetry Integration', () => {
         {
           method: 'tools/call' as const,
           params: {
-            name: 'search_nodes',
+            name: 'n8n_search_nodes',
             arguments: { query: 'webhook' }
           }
         },
         {
           method: 'tools/call' as const,
           params: {
-            name: 'search_nodes',
+            name: 'n8n_search_nodes',
             arguments: { query: 'http' }
           }
         },
         {
           method: 'tools/call' as const,
           params: {
-            name: 'search_nodes',
+            name: 'n8n_search_nodes',
             arguments: { query: 'database' }
           }
         }

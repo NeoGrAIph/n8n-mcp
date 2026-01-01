@@ -35,25 +35,25 @@ import {
 // Combine all tool documentations into a single object
 export const toolsDocumentation: Record<string, ToolDocumentation> = {
   // System tools
-  tools_documentation: toolsDocumentationDoc,
+  n8n_tools_documentation: toolsDocumentationDoc,
   n8n_health_check: n8nHealthCheckDoc,
 
   // Guides
   ai_agents_guide: aiAgentsGuide,
 
   // Discovery tools
-  search_nodes: searchNodesDoc,
+  n8n_search_nodes: searchNodesDoc,
 
   // Configuration tools
-  get_node: getNodeDoc,
+  n8n_get_node: getNodeDoc,
 
   // Validation tools
-  validate_node: validateNodeDoc,
-  validate_workflow: validateWorkflowDoc,
+  n8n_validate_node: validateNodeDoc,
+  n8n_validate_workflow_json: validateWorkflowDoc,
 
   // Template tools
-  get_template: getTemplateDoc,
-  search_templates: searchTemplatesDoc,
+  n8n_get_template: getTemplateDoc,
+  n8n_search_templates: searchTemplatesDoc,
 
   // Workflow Management tools (n8n API)
   n8n_create_workflow: n8nCreateWorkflowDoc,

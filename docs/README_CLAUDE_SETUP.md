@@ -3,7 +3,7 @@
 This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
 
 > ✅ **Using current tool names**  
-> This guide uses the consolidated tool set: `get_node` (detail/mode) + `search_nodes`.
+> This guide uses the consolidated tool set: `n8n_get_node` (detail/mode) + `n8n_search_nodes`.
 
 ## 🎯 Prerequisites
 
@@ -113,18 +113,18 @@ After restarting Claude Desktop:
 
 1. Look for "n8n-docker" or "n8n-documentation" in the MCP servers list
 2. Try asking Claude: "What n8n nodes are available for working with Slack?"
-3. Or use a tool directly: "Use the search_nodes tool to show me trigger nodes"
+3. Or use a tool directly: "Use the n8n_search_nodes tool to show me trigger nodes"
 
 ## 🔧 Available Tools
 
 ### Core Tools
-- **`tools_documentation`** - Get documentation for any MCP tool (start here)
-- **`search_nodes`** - Full-text search across all nodes
-- **`get_node`** - Unified node info (info/docs/search_properties/versions)
-- **`validate_node`** - Validate node configuration (minimal/full)
-- **`validate_workflow`** - Full workflow validation
-- **`search_templates`** - Search workflow templates
-- **`get_template`** - Get template details by ID
+- **`n8n_tools_documentation`** - Get documentation for any MCP tool (start here)
+- **`n8n_search_nodes`** - Full-text search across all nodes
+- **`n8n_get_node`** - Unified node info (info/docs/search_properties/versions)
+- **`n8n_validate_node`** - Validate node configuration (minimal/full)
+- **`n8n_validate_workflow_json`** - Full workflow validation
+- **`n8n_search_templates`** - Search workflow templates
+- **`n8n_get_template`** - Get template details by ID
 
 ### n8n Management Tools (Requires API Configuration)
 - **`n8n_create_workflow`** - Create new workflows
@@ -151,7 +151,7 @@ After restarting Claude Desktop:
 ### Example Questions to Ask Claude:
 - "Show me all n8n nodes for working with databases"
 - "How do I use the HTTP Request node?"
-- "Get the Slack node essentials" (uses get_node with detail: standard)
+- "Get the Slack node essentials" (uses n8n_get_node with detail: standard)
 - "How can I use Google Sheets as an AI tool?"
 - "Validate my workflow before deployment"
 - "Find templates for webhook automation"

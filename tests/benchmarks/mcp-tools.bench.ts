@@ -28,7 +28,7 @@ describe('MCP Tool Performance (Production Database)', () => {
   });
 
   /**
-   * search_nodes - Most frequently used tool for node discovery
+   * n8n_search_nodes - Most frequently used tool for node discovery
    *
    * This measures:
    * - Database FTS5 full-text search
@@ -37,7 +37,7 @@ describe('MCP Tool Performance (Production Database)', () => {
    *
    * Target: <20ms for common queries
    */
-  bench('search_nodes - common query (http)', async () => {
+  bench('n8n_search_nodes - common query (http)', async () => {
     await repository.searchNodes('http', 'OR', 20);
   }, {
     iterations: 100,
@@ -46,7 +46,7 @@ describe('MCP Tool Performance (Production Database)', () => {
     time: 3000
   });
 
-  bench('search_nodes - AI agent query (slack message)', async () => {
+  bench('n8n_search_nodes - AI agent query (slack message)', async () => {
     await repository.searchNodes('slack send message', 'AND', 10);
   }, {
     iterations: 100,
@@ -118,7 +118,7 @@ describe('MCP Tool Performance (Production Database)', () => {
   });
 
   /**
-   * validate_node_operation - Configuration validation
+   * n8n_validate_node (mode=full) - Configuration validation
    *
    * This measures:
    * - Schema lookup
@@ -127,7 +127,7 @@ describe('MCP Tool Performance (Production Database)', () => {
    *
    * Target: <15ms for simple validations
    */
-  bench('validate_node_operation - HTTP Request (minimal)', async () => {
+  bench('n8n_validate_node (mode=full) - HTTP Request (minimal)', async () => {
     const node = await repository.getNodeByType('n8n-nodes-base.httpRequest');
     if (node && node.properties) {
       EnhancedConfigValidator.validateWithMode(
@@ -145,7 +145,7 @@ describe('MCP Tool Performance (Production Database)', () => {
     time: 3000
   });
 
-  bench('validate_node_operation - HTTP Request (with params)', async () => {
+  bench('n8n_validate_node (mode=full) - HTTP Request (with params)', async () => {
     const node = await repository.getNodeByType('n8n-nodes-base.httpRequest');
     if (node && node.properties) {
       EnhancedConfigValidator.validateWithMode(

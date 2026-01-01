@@ -2,13 +2,13 @@ import { ToolAnnotations, ToolDefinition } from '../types';
 
 export const toolAnnotations: Record<string, ToolAnnotations> = {
   // Documentation tools (read-only)
-  tools_documentation: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  search_nodes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  get_node: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  validate_node: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  get_template: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  search_templates: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  validate_workflow: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_tools_documentation: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_search_nodes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_get_node: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_validate_node: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_get_template: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_search_templates: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  n8n_validate_workflow_json: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
 
   // n8n management tools (external system => openWorldHint: true)
   n8n_create_workflow: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },

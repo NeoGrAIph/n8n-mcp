@@ -151,7 +151,7 @@ if (result.preview.valid) {
 
 #### **P1-R5: Proactive node suggestions during workflow creation**
 
-**Observation**: `create_workflow → search_nodes` happens 166 times
+**Observation**: `create_workflow → n8n_search_nodes` happens 166 times
 
 **Opportunity**: Suggest relevant nodes during creation based on:
 - Existing nodes in workflow
@@ -295,7 +295,7 @@ Would you like me to add any of these?
 - **Reduced search iterations**: AI agents discover nodes faster
 - **Better workflows**: Suggestions based on real usage patterns
 - **Educational**: Users learn common patterns
-- **Token savings**: Fewer search_nodes calls
+- **Token savings**: Fewer n8n_search_nodes calls
 
 **Effort**: 3 days (24 hours)
 **Risk**: Low (adds value without changing core functionality)
@@ -767,14 +767,14 @@ export class NodeNotFoundError extends N8nMcpError {
       code: 'NODE_NOT_FOUND',
       category: 'data',
       developerMessage: `Node type "${nodeType}" not found in database`,
-      userMessage: `Node type "${nodeType}" not found. Use search_nodes to find available nodes.`,
+      userMessage: `Node type "${nodeType}" not found. Use n8n_search_nodes to find available nodes.`,
       context: { nodeType },
       autoFixable: false
     });
   }
 
   getAutoFixDescription(): string {
-    return 'No auto-fix available. Use search_nodes to find the correct node type.';
+    return 'No auto-fix available. Use n8n_search_nodes to find the correct node type.';
   }
 }
 

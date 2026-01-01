@@ -12,7 +12,7 @@ async function testFuzzyFix() {
   
   // Test 1: FUZZY mode with typo
   console.log('Test 1: FUZZY mode with "slak" (typo for "slack")');
-  const fuzzyResult = await server.executeTool('search_nodes', {
+  const fuzzyResult = await server.executeTool('n8n_search_nodes', {
     query: 'slak',
     mode: 'FUZZY',
     limit: 5
@@ -30,7 +30,7 @@ async function testFuzzyFix() {
   
   // Test 2: AND mode with explanation
   console.log('\n\nTest 2: AND mode with "send message"');
-  const andResult = await server.executeTool('search_nodes', {
+  const andResult = await server.executeTool('n8n_search_nodes', {
     query: 'send message',
     mode: 'AND',
     limit: 5
@@ -53,7 +53,7 @@ async function testFuzzyFix() {
   const typos = ['htpp', 'webook', 'slck', 'emial'];
   
   for (const typo of typos) {
-    const result = await server.executeTool('search_nodes', {
+    const result = await server.executeTool('n8n_search_nodes', {
       query: typo,
       mode: 'FUZZY',
       limit: 1

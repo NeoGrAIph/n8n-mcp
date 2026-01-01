@@ -293,7 +293,7 @@ Added comprehensive support for n8n Tool variants - specialized node versions cr
 - `src/services/tool-variant-generator.ts` - **NEW** Tool variant generation service
 - `src/database/node-repository.ts` - Store/retrieve Tool variant fields
 - `src/scripts/rebuild.ts` - Generate Tool variants during rebuild
-- `src/mcp/server.ts` - Add `toolVariantInfo` to get_node responses
+- `src/mcp/server.ts` - Add `toolVariantInfo` to n8n_get_node responses
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
 
@@ -541,9 +541,9 @@ Fixed false positive "AI Agent has no tools connected" warning when tools were p
 
 ### ✨ Enhancements
 
-**get_node: expectedFormat for resourceLocator Properties**
+**n8n_get_node: expectedFormat for resourceLocator Properties**
 
-Added `expectedFormat` field to resourceLocator properties in `get_node` output. This helps AI models understand the correct format for these complex property types.
+Added `expectedFormat` field to resourceLocator properties in `n8n_get_node` output. This helps AI models understand the correct format for these complex property types.
 
 ```json
 {
@@ -557,9 +557,9 @@ Added `expectedFormat` field to resourceLocator properties in `get_node` output.
 }
 ```
 
-**get_node: versionNotice Field**
+**n8n_get_node: versionNotice Field**
 
-Added `versionNotice` field to make typeVersion more prominent in get_node output, reducing the chance of AI models using outdated versions.
+Added `versionNotice` field to make typeVersion more prominent in n8n_get_node output, reducing the chance of AI models using outdated versions.
 
 ```json
 {
@@ -795,7 +795,7 @@ n8n_deploy_template({
   - Cleaned up consolidation comments in index.ts
   - Documentation now starts directly with functional content for better AI agent efficiency
   - Estimated savings: ~128 tokens per full documentation request
-  - Affected tools: `get_node`, `validate_node`, `search_templates`, `n8n_executions`, `n8n_get_workflow`, `n8n_update_partial_workflow`
+  - Affected tools: `n8n_get_node`, `n8n_validate_node`, `n8n_search_templates`, `n8n_executions`, `n8n_get_workflow`, `n8n_update_partial_workflow`
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
 
@@ -819,13 +819,13 @@ n8n_deploy_template({
   - Added missing `n8n_workflow_versions` documentation with all 6 modes (list, get, rollback, delete, prune, truncate)
   - Removed non-existent tools (`n8n_diagnostic`, `n8n_list_available_tools`) from documentation exports
   - Fixed 10+ outdated tool name references:
-    - `get_node_essentials` → `get_node({detail: "standard"})`
-    - `validate_node_operation` → `validate_node()`
+    - `get_node_essentials` → `n8n_get_node({detail: "standard"})`
+    - `validate_node_operation` → `n8n_validate_node()`
     - `get_minimal` → `n8n_get_workflow({mode: "minimal"})`
   - Added missing `mode` and `verbose` parameters to `n8n_health_check` documentation
-  - Added missing `mode` parameter to `get_template` documentation (nodes_only, structure, full)
-  - Updated template count from "399+" to "2,700+" in `get_template`
-  - Updated node count from "525" to "500+" in `search_nodes`
+  - Added missing `mode` parameter to `n8n_get_template` documentation (nodes_only, structure, full)
+  - Updated template count from "399+" to "2,700+" in `n8n_get_template`
+  - Updated node count from "525" to "500+" in `n8n_search_nodes`
   - Fixed `relatedTools` arrays to remove references to non-existent tools
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
@@ -836,10 +836,10 @@ n8n_deploy_template({
 
 - **Tool Documentation Cleanup**: Synchronized `tool-docs/` with v2.26.0 tool consolidation
   - Deleted 23 obsolete documentation files for removed tools (get_node_info, get_node_essentials, validate_node_operation, etc.)
-  - Created consolidated documentation for `get_node` (covers all modes: info, docs, search_properties, versions, compare, breaking, migrations)
-  - Created consolidated documentation for `validate_node` (covers modes: full, minimal; profiles: minimal, runtime, ai-friendly, strict)
+  - Created consolidated documentation for `n8n_get_node` (covers all modes: info, docs, search_properties, versions, compare, breaking, migrations)
+  - Created consolidated documentation for `n8n_validate_node` (covers modes: full, minimal; profiles: minimal, runtime, ai-friendly, strict)
   - Created consolidated documentation for `n8n_executions` (covers actions: get, list, delete)
-  - Updated `search_templates` documentation with all searchModes (keyword, by_nodes, by_task, by_metadata)
+  - Updated `n8n_search_templates` documentation with all searchModes (keyword, by_nodes, by_task, by_metadata)
   - Updated `n8n_get_workflow` documentation with all modes (full, details, structure, minimal)
   - Fixed stale `relatedTools` references pointing to removed tools
   - Updated `tools-documentation.ts` overview to accurately reflect 19 consolidated tools
@@ -866,9 +866,9 @@ Major consolidation of MCP tools from 31 tools to 19 tools, using mode-based par
 
 #### Consolidated Tools
 
-**1. Node Tools - `get_node` Enhanced**
+**1. Node Tools - `n8n_get_node` Enhanced**
 
-The `get_node` tool now supports additional modes:
+The `n8n_get_node` tool now supports additional modes:
 - `mode='docs'`: Replaces `get_node_documentation` - returns readable docs with examples
 - `mode='search_properties'`: Replaces `search_node_properties` - search within node properties
 
@@ -876,17 +876,17 @@ The `get_node` tool now supports additional modes:
 // Old: get_node_documentation
 get_node_documentation({nodeType: "nodes-base.slack"})
 // New: mode='docs'
-get_node({nodeType: "nodes-base.slack", mode: "docs"})
+n8n_get_node({nodeType: "nodes-base.slack", mode: "docs"})
 
 // Old: search_node_properties
 search_node_properties({nodeType: "nodes-base.httpRequest", query: "auth"})
 // New: mode='search_properties'
-get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})
+n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})
 ```
 
-**2. Validation Tools - `validate_node` Unified**
+**2. Validation Tools - `n8n_validate_node` Unified**
 
-Consolidated `validate_node_operation` and `validate_node_minimal` into single `validate_node`:
+Consolidated `validate_node_operation` and `validate_node_minimal` into single `n8n_validate_node`:
 - `mode='full'`: Full validation (replaces `validate_node_operation`)
 - `mode='minimal'`: Quick required fields check (replaces `validate_node_minimal`)
 
@@ -894,18 +894,18 @@ Consolidated `validate_node_operation` and `validate_node_minimal` into single `
 // Old: validate_node_operation
 validate_node_operation({nodeType: "nodes-base.slack", config: {...}})
 // New: mode='full' (default)
-validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "full"})
+n8n_validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "full"})
 
 // Old: validate_node_minimal
 validate_node_minimal({nodeType: "nodes-base.slack", config: {}})
 // New: mode='minimal'
-validate_node({nodeType: "nodes-base.slack", config: {}, mode: "minimal"})
+n8n_validate_node({nodeType: "nodes-base.slack", config: {}, mode: "minimal"})
 ```
 
-**3. Template Tools - `search_templates` Enhanced**
+**3. Template Tools - `n8n_search_templates` Enhanced**
 
 Consolidated `list_node_templates`, `search_templates_by_metadata`, and `get_templates_for_task`:
-- `searchMode='keyword'`: Search by keywords (default, was `search_templates`)
+- `searchMode='keyword'`: Search by keywords (default, was `n8n_search_templates`)
 - `searchMode='by_nodes'`: Search by node types (was `list_node_templates`)
 - `searchMode='by_metadata'`: Search by AI metadata (was `search_templates_by_metadata`)
 - `searchMode='by_task'`: Search by task type (was `get_templates_for_task`)
@@ -914,12 +914,12 @@ Consolidated `list_node_templates`, `search_templates_by_metadata`, and `get_tem
 // Old: list_node_templates
 list_node_templates({nodeTypes: ["n8n-nodes-base.httpRequest"]})
 // New: searchMode='by_nodes'
-search_templates({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest"]})
+n8n_search_templates({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest"]})
 
 // Old: get_templates_for_task
 get_templates_for_task({task: "webhook_processing"})
 // New: searchMode='by_task'
-search_templates({searchMode: "by_task", task: "webhook_processing"})
+n8n_search_templates({searchMode: "by_task", task: "webhook_processing"})
 ```
 
 **4. Workflow Getters - `n8n_get_workflow` Enhanced**
@@ -969,14 +969,14 @@ n8n_executions({action: "delete", id: "456"})
 ### 🗑️ Removed Tools
 
 The following tools have been removed (use consolidated equivalents):
-- `get_node_documentation` → `get_node` with `mode='docs'`
-- `search_node_properties` → `get_node` with `mode='search_properties'`
-- `get_property_dependencies` → Removed (use `validate_node` for dependency info)
-- `validate_node_operation` → `validate_node` with `mode='full'`
-- `validate_node_minimal` → `validate_node` with `mode='minimal'`
-- `list_node_templates` → `search_templates` with `searchMode='by_nodes'`
-- `search_templates_by_metadata` → `search_templates` with `searchMode='by_metadata'`
-- `get_templates_for_task` → `search_templates` with `searchMode='by_task'`
+- `get_node_documentation` → `n8n_get_node` with `mode='docs'`
+- `search_node_properties` → `n8n_get_node` with `mode='search_properties'`
+- `get_property_dependencies` → Removed (use `n8n_validate_node` for dependency info)
+- `validate_node_operation` → `n8n_validate_node` with `mode='full'`
+- `validate_node_minimal` → `n8n_validate_node` with `mode='minimal'`
+- `list_node_templates` → `n8n_search_templates` with `searchMode='by_nodes'`
+- `search_templates_by_metadata` → `n8n_search_templates` with `searchMode='by_metadata'`
+- `get_templates_for_task` → `n8n_search_templates` with `searchMode='by_task'`
 - `n8n_get_workflow_details` → `n8n_get_workflow` with `mode='details'`
 - `n8n_get_workflow_structure` → `n8n_get_workflow` with `mode='structure'`
 - `n8n_get_workflow_minimal` → `n8n_get_workflow` with `mode='minimal'`
@@ -1074,7 +1074,7 @@ Added export/restore functionality for MCP sessions to enable zero-downtime depl
 
 **Unified Node Information Tool**
 
-Introduced `get_node` - a unified tool that consolidates and enhances node information retrieval with multiple detail levels, version history, and type structure metadata.
+Introduced `n8n_get_node` - a unified tool that consolidates and enhances node information retrieval with multiple detail levels, version history, and type structure metadata.
 
 #### What's New
 
@@ -1106,22 +1106,22 @@ Introduced `get_node` - a unified tool that consolidates and enhances node infor
 
 ```javascript
 // Standard detail (recommended for AI agents)
-get_node({nodeType: "nodes-base.httpRequest"})
+n8n_get_node({nodeType: "nodes-base.httpRequest"})
 
 // Standard with type info
-get_node({nodeType: "nodes-base.httpRequest", includeTypeInfo: true})
+n8n_get_node({nodeType: "nodes-base.httpRequest", includeTypeInfo: true})
 
 // Minimal (quick metadata check)
-get_node({nodeType: "nodes-base.httpRequest", detail: "minimal"})
+n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "minimal"})
 
 // Full detail with examples
-get_node({nodeType: "nodes-base.httpRequest", detail: "full", includeExamples: true})
+n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "full", includeExamples: true})
 
 // Version history
-get_node({nodeType: "nodes-base.httpRequest", mode: "versions"})
+n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "versions"})
 
 // Compare versions
-get_node({
+n8n_get_node({
   nodeType: "nodes-base.httpRequest",
   mode: "compare",
   fromVersion: "3.0",
@@ -1152,23 +1152,23 @@ get_node({
 
 **Removed Deprecated Tools**
 
-Immediately removed `get_node_info` and `get_node_essentials` in favor of the unified `get_node` tool:
-- `get_node_info` → Use `get_node` with `detail='full'`
-- `get_node_essentials` → Use `get_node` with `detail='standard'` (default)
+Immediately removed `get_node_info` and `get_node_essentials` in favor of the unified `n8n_get_node` tool:
+- `get_node_info` → Use `n8n_get_node` with `detail='full'`
+- `get_node_essentials` → Use `n8n_get_node` with `detail='standard'` (default)
 
 **Migration:**
 ```javascript
 // Old
 get_node_info({nodeType: "nodes-base.httpRequest"})
 // New
-get_node({nodeType: "nodes-base.httpRequest", detail: "full"})
+n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "full"})
 
 // Old
 get_node_essentials({nodeType: "nodes-base.httpRequest", includeExamples: true})
 // New
-get_node({nodeType: "nodes-base.httpRequest", includeExamples: true})
+n8n_get_node({nodeType: "nodes-base.httpRequest", includeExamples: true})
 // or
-get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
+n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
 ```
 
 ### 📊 Impact
@@ -1193,7 +1193,7 @@ get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExample
 - Enhanced type structure exposure in node information
 
 **Files Modified:**
-- `src/mcp/tools.ts` - Removed get_node_info and get_node_essentials, added get_node
+- `src/mcp/tools.ts` - Removed get_node_info and get_node_essentials, added n8n_get_node
 - `src/mcp/server.ts` - Added unified getNode() implementation with all modes
 - `package.json` - Version bump to 2.24.0
 
@@ -3632,7 +3632,7 @@ PR #343 (merged 2025-10-21) successfully fixed the MCP protocol error -32600 by 
 - Logs warnings when validation responses exceed 1MB (src/http-server.ts:438-442)
 - Includes actual size in logs for debugging
 - Helps identify performance issues and potential problems
-- **Example:** `Validation tool validate_workflow response is very large (1500000 chars). Truncating for HTTP transport safety.`
+- **Example:** `Validation tool n8n_validate_workflow_json response is very large (1500000 chars). Truncating for HTTP transport safety.`
 
 **4. Response Truncation for Safety**
 - Truncates responses larger than 1MB to 999KB + message (src/http-server.ts:443-444)
@@ -5548,7 +5548,7 @@ This release fixes critical bugs that caused ALL AI-specific validation to be si
   - **Root Cause:** Inconsistent `workflowNodeType` construction between result object and examples query
   - **Impact:** Examples existed in database but query used wrong node type (e.g., `n8n-nodes-base.agent` instead of `@n8n/n8n-nodes-langchain.agent`)
   - **Fix:** Use pre-computed `result.workflowNodeType` instead of reconstructing it
-  - **Verification:** Examples now retrieved correctly, matching `search_nodes` behavior
+  - **Verification:** Examples now retrieved correctly, matching `n8n_search_nodes` behavior
 
 #### Added
 
@@ -6409,7 +6409,7 @@ get_node_for_task({ task: "receive_webhook" })
 **After (v2.15.0):**
 ```javascript
 // Option 1: Search nodes with examples
-search_nodes({
+n8n_search_nodes({
   query: "webhook",
   includeExamples: true
 })
@@ -6425,7 +6425,7 @@ get_node_essentials({
 
 ### Added
 
-- **Enhanced `search_nodes` Tool**
+- **Enhanced `n8n_search_nodes` Tool**
   - New parameter: `includeExamples` (boolean, default: false)
   - Returns top 2 real-world configurations per node from popular templates
   - Includes: configuration, template name, view count
@@ -6462,11 +6462,11 @@ get_node_essentials({
 
 ### Fixed
 
-- **`search_nodes` includeExamples Support**
+- **`n8n_search_nodes` includeExamples Support**
   - Fixed `includeExamples` parameter not working due to missing FTS5 table
   - Added example support to `searchNodesLIKE` fallback method
   - Now returns template-based examples in all search scenarios
-  - Affects 100% of search_nodes calls (database lacks nodes_fts table)
+  - Affects 100% of n8n_search_nodes calls (database lacks nodes_fts table)
 
 ### Deprecated
 

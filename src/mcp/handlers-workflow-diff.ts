@@ -234,7 +234,7 @@ export async function handleUpdatePartialWorkflow(
         // Build recovery guidance based on error types
         const recoverySteps = [];
         if (errorTypes.has('operator_issues')) {
-          recoverySteps.push('Operator structure issue detected. Use validate_node_operation to check specific nodes.');
+          recoverySteps.push('Operator structure issue detected. Use n8n_validate_node to check specific nodes.');
           recoverySteps.push('Binary operators (equals, contains, greaterThan, etc.) must NOT have singleValue:true');
           recoverySteps.push('Unary operators (isEmpty, isNotEmpty, true, false) REQUIRE singleValue:true');
         }
@@ -254,7 +254,7 @@ export async function handleUpdatePartialWorkflow(
         if (recoverySteps.length === 0) {
           recoverySteps.push('Review the validation errors listed above');
           recoverySteps.push('Fix issues using updateNode or cleanStaleConnections operations');
-          recoverySteps.push('Run validate_workflow again to verify fixes');
+          recoverySteps.push('Run n8n_validate_workflow_json again to verify fixes');
         }
 
         const errorMessage = structureErrors.length === 1
@@ -511,4 +511,3 @@ async function trackWorkflowMutation(data: any): Promise<void> {
     logger.debug('Telemetry tracking failed:', error);
   }
 }
-

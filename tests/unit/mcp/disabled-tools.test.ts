@@ -73,14 +73,14 @@ describe('Disabled Tools Feature (Issue #410)', () => {
     });
 
     it('should parse multiple disabled tools correctly', () => {
-      process.env.DISABLED_TOOLS = 'n8n_diagnostic,n8n_health_check,search_nodes';
+      process.env.DISABLED_TOOLS = 'n8n_diagnostic,n8n_health_check,n8n_search_nodes';
       server = new TestableN8NMCPServer();
       const disabledTools = server.testGetDisabledTools();
 
       expect(disabledTools.size).toBe(3);
       expect(disabledTools.has('n8n_diagnostic')).toBe(true);
       expect(disabledTools.has('n8n_health_check')).toBe(true);
-      expect(disabledTools.has('search_nodes')).toBe(true);
+      expect(disabledTools.has('n8n_search_nodes')).toBe(true);
     });
 
     it('should trim whitespace from tool names', () => {
@@ -94,14 +94,14 @@ describe('Disabled Tools Feature (Issue #410)', () => {
     });
 
     it('should filter out empty entries from comma-separated list', () => {
-      process.env.DISABLED_TOOLS = 'n8n_diagnostic,,n8n_health_check,,,search_nodes';
+      process.env.DISABLED_TOOLS = 'n8n_diagnostic,,n8n_health_check,,,n8n_search_nodes';
       server = new TestableN8NMCPServer();
       const disabledTools = server.testGetDisabledTools();
 
       expect(disabledTools.size).toBe(3);
       expect(disabledTools.has('n8n_diagnostic')).toBe(true);
       expect(disabledTools.has('n8n_health_check')).toBe(true);
-      expect(disabledTools.has('search_nodes')).toBe(true);
+      expect(disabledTools.has('n8n_search_nodes')).toBe(true);
     });
 
     it('should handle single comma correctly', () => {
@@ -123,23 +123,23 @@ describe('Disabled Tools Feature (Issue #410)', () => {
 
   describe('executeTool() - Disabled Tool Guard', () => {
     it('should throw error when calling disabled tool', async () => {
-      process.env.DISABLED_TOOLS = 'tools_documentation';
+      process.env.DISABLED_TOOLS = 'n8n_tools_documentation';
       server = new TestableN8NMCPServer();
 
       await expect(async () => {
-        await server.testExecuteTool('tools_documentation', {});
-      }).rejects.toThrow("Tool 'tools_documentation' is disabled via DISABLED_TOOLS environment variable");
+        await server.testExecuteTool('n8n_tools_documentation', {});
+      }).rejects.toThrow("Tool 'n8n_tools_documentation' is disabled via DISABLED_TOOLS environment variable");
     });
 
     it('should allow calling enabled tool when others are disabled', async () => {
       process.env.DISABLED_TOOLS = 'n8n_diagnostic,n8n_health_check';
       server = new TestableN8NMCPServer();
 
-      // This should not throw - tools_documentation is not disabled
+      // This should not throw - n8n_tools_documentation is not disabled
       // The tool execution may fail for other reasons (like missing data),
       // but it should NOT fail due to being disabled
       try {
-        await server.testExecuteTool('tools_documentation', {});
+        await server.testExecuteTool('n8n_tools_documentation', {});
       } catch (error: any) {
         // Ensure the error is NOT about the tool being disabled
         expect(error.message).not.toContain('disabled via DISABLED_TOOLS');

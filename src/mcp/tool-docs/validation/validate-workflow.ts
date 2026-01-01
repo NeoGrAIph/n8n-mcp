@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const validateWorkflowDoc: ToolDocumentation = {
-  name: 'validate_workflow',
+  name: 'n8n_validate_workflow_json',
   category: 'validation',
   essentials: {
     description: 'Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy.',
     keyParameters: ['workflow', 'options'],
-    example: 'validate_workflow({workflow: {nodes: [...], connections: {...}}})',
+    example: 'n8n_validate_workflow_json({workflow: {nodes: [...], connections: {...}}})',
     performance: 'Moderate (100-500ms)',
     tips: [
       'Always validate before n8n_create_workflow to catch errors early',
@@ -51,9 +51,9 @@ export const validateWorkflowDoc: ToolDocumentation = {
     },
     returns: 'Object with valid (boolean), errors (array), warnings (array), statistics (object), and suggestions (array)',
     examples: [
-      'validate_workflow({workflow: myWorkflow}) - Full validation with default settings',
-      'validate_workflow({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
-      'validate_workflow({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
+      'n8n_validate_workflow_json({workflow: myWorkflow}) - Full validation with default settings',
+      'n8n_validate_workflow_json({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
+      'n8n_validate_workflow_json({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
     ],
     useCases: [
       'Pre-deployment validation to catch all workflow issues',
@@ -79,6 +79,6 @@ export const validateWorkflowDoc: ToolDocumentation = {
       'Validation cannot catch all runtime errors (e.g., API failures)',
       'Profile setting only affects node validation, not connection/expression checks'
     ],
-    relatedTools: ['validate_node', 'n8n_create_workflow', 'n8n_update_partial_workflow', 'n8n_autofix_workflow']
+    relatedTools: ['n8n_validate_node', 'n8n_create_workflow', 'n8n_update_partial_workflow', 'n8n_autofix_workflow']
   }
 };

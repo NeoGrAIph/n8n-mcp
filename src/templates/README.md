@@ -36,8 +36,8 @@ npm run test:templates
 The following tools are available via MCP:
 
 - `list_node_templates(nodeTypes, limit)` - Find templates using specific nodes
-- `get_template(templateId)` - Get complete workflow JSON
-- `search_templates(query, limit)` - Search by keywords
+- `n8n_get_template(templateId)` - Get complete workflow JSON
+- `n8n_search_templates(query, limit)` - Search by keywords
 - `get_templates_for_task(task)` - Get templates for common tasks
 
 ### Task Categories

@@ -7,7 +7,7 @@ import * as path from 'path';
 
 const toolsByCategory = {
   discovery: [
-    'search_nodes',
+    'n8n_search_nodes',
     'list_nodes', 
     'list_ai_tools',
     'get_database_statistics'
@@ -21,9 +21,9 @@ const toolsByCategory = {
     'get_property_dependencies'
   ],
   validation: [
-    'validate_node_minimal',
-    'validate_node_operation',
-    'validate_workflow',
+    'n8n_validate_node_minimal',
+    'n8n_validate_node_operation',
+    'n8n_validate_workflow_json',
     'validate_workflow_connections',
     'validate_workflow_expressions'
   ],
@@ -31,8 +31,8 @@ const toolsByCategory = {
     'get_node_for_task',
     'list_tasks',
     'list_node_templates',
-    'get_template',
-    'search_templates',
+    'n8n_get_template',
+    'n8n_search_templates',
     'get_templates_for_task'
   ],
   workflow_management: [
@@ -52,7 +52,7 @@ const toolsByCategory = {
     'n8n_delete_execution'
   ],
   system: [
-    'tools_documentation',
+    'n8n_tools_documentation',
     'n8n_diagnostic',
     'n8n_health_check',
     'n8n_list_available_tools'

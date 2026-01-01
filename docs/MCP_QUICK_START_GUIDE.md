@@ -1,6 +1,6 @@
 # MCP Implementation Quick Start Guide
 
-This guide shows how to implement the **consolidated `get_node` tool** with detail levels and property search.
+This guide shows how to implement the **consolidated `n8n_get_node` tool** with detail levels and property search.
 
 ## Immediate Actions (Day 1)
 
@@ -44,13 +44,13 @@ Create `src/data/essential-properties.json`:
 }
 ```
 
-### 2. Implement `get_node` (detail: standard/minimal)
+### 2. Implement `n8n_get_node` (detail: standard/minimal)
 
 Add to `src/mcp/server.ts`:
 
 ```typescript
 // Add to tool implementations
-case "get_node": {
+case "n8n_get_node": {
   const {
     nodeType,
     detail = "standard",
@@ -137,7 +137,7 @@ Add to tool definitions:
 
 ```typescript
 {
-  name: "get_node",
+  name: "n8n_get_node",
   description: "Get node info with detail levels and modes (info/docs/search_properties). Use detail='standard' for essentials.",
   inputSchema: {
     type: "object",
@@ -233,10 +233,10 @@ import { MCPClient } from "../src/mcp/client";
 async function testEssentials() {
   const client = new MCPClient();
 
-  console.log("Testing get_node (standard)...\n");
+  console.log("Testing n8n_get_node (standard)...\n");
 
   // Test HTTP Request node
-  const httpEssentials = await client.call("get_node", {
+  const httpEssentials = await client.call("n8n_get_node", {
     nodeType: "nodes-base.httpRequest",
     detail: "standard",
     includeExamples: true
@@ -248,7 +248,7 @@ async function testEssentials() {
   console.log(`- Total properties: ${httpEssentials.requiredProperties.length + httpEssentials.commonProperties.length}`);
 
   // Compare with full response
-  const fullInfo = await client.call("get_node", {
+  const fullInfo = await client.call("n8n_get_node", {
     nodeType: "nodes-base.httpRequest",
     detail: "full"
   });
@@ -267,7 +267,7 @@ testEssentials().catch(console.error);
 
 ## Day 2-3: Implement search_properties mode
 
-Add a branch inside the `get_node` handler:
+Add a branch inside the `n8n_get_node` handler:
 
 ```typescript
 if (mode === "search_properties") {
@@ -297,9 +297,9 @@ if (mode === "search_properties") {
 }
 ```
 
-## Day 4-5: Implement task templates (via search_templates)
+## Day 4-5: Implement task templates (via n8n_search_templates)
 
-Create `src/data/task-templates.json` and expose task search via `search_templates` (`searchMode: "by_task"`). Example entry:
+Create `src/data/task-templates.json` and expose task search via `n8n_search_templates` (`searchMode: "by_task"`). Example entry:
 
 ```json
 {
@@ -328,7 +328,7 @@ Create `src/data/task-templates.json` and expose task search via `search_templat
 
 ## Testing Checklist
 
-- [ ] Test `get_node` (detail: standard) with HTTP Request node
+- [ ] Test `n8n_get_node` (detail: standard) with HTTP Request node
 - [ ] Verify size reduction is >90%
 - [ ] Test with Webhook, Agent, and Code nodes
 - [ ] Validate examples work correctly
@@ -340,7 +340,7 @@ Create `src/data/task-templates.json` and expose task search via `search_templat
 ## Success Indicators
 
 1. **Immediate (Day 1)**:
-   - `get_node` (detail: standard) returns <5KB for HTTP Request
+   - `n8n_get_node` (detail: standard) returns <5KB for HTTP Request
    - Response includes working examples
    - No errors with top 10 nodes
 

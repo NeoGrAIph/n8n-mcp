@@ -58,7 +58,7 @@ vi.mock('../../../src/database/template-repository', () => ({
 // Mock MCP tools
 vi.mock('../../../src/mcp/tools', () => ({
   n8nDocumentationToolsFinal: [
-    { name: 'search_nodes', description: 'Search n8n nodes', inputSchema: {} },
+    { name: 'n8n_search_nodes', description: 'Search n8n nodes', inputSchema: {} },
     { name: 'get_node_info', description: 'Get node info', inputSchema: {} }
   ],
   n8nManagementTools: [
@@ -114,7 +114,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         const toolNames = result.tools.map((tool: any) => tool.name);
 
         // Should include both documentation and management tools
-        expect(toolNames).toContain('search_nodes');  // Documentation tool
+        expect(toolNames).toContain('n8n_search_nodes');  // Documentation tool
         expect(toolNames).toContain('n8n_create_workflow');  // Management tool
         expect(toolNames.length).toBeGreaterThan(20);  // Should have both sets
       });
@@ -167,7 +167,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         const toolNames = result.tools.map((tool: any) => tool.name);
 
         // Should only include documentation tools
-        expect(toolNames).toContain('search_nodes');
+        expect(toolNames).toContain('n8n_search_nodes');
         expect(toolNames).not.toContain('n8n_create_workflow');
         expect(toolNames.length).toBeLessThan(20);  // Only documentation tools
       });
@@ -250,7 +250,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('search_nodes');
+        expect(toolNames).toContain('n8n_search_nodes');
         expect(toolNames).not.toContain('n8n_create_workflow');
       });
 
@@ -266,7 +266,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('search_nodes');
+        expect(toolNames).toContain('n8n_search_nodes');
         expect(toolNames).not.toContain('n8n_create_workflow');
       });
     });
@@ -301,7 +301,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('search_nodes');
+        expect(toolNames).toContain('n8n_search_nodes');
         expect(toolNames).not.toContain('n8n_create_workflow');
       });
 
@@ -317,7 +317,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('search_nodes');
+        expect(toolNames).toContain('n8n_search_nodes');
         expect(toolNames).not.toContain('n8n_create_workflow');
       });
 

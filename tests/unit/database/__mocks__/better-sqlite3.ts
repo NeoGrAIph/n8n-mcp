@@ -8,7 +8,7 @@ export class MockDatabase {
   constructor() {
     this.data.set('nodes', []);
     this.data.set('templates', []);
-    this.data.set('tools_documentation', []);
+    this.data.set('n8n_tools_documentation', []);
   }
   
   prepare(sql: string) {

@@ -5,8 +5,8 @@ describe('Basic MCP Connection', () => {
   it('should initialize MCP server', async () => {
     const server = new N8NDocumentationMCPServer();
 
-    // Test executeTool directly - tools_documentation returns a string
-    const result = await server.executeTool('tools_documentation', {});
+    // Test executeTool directly - n8n_tools_documentation returns a string
+    const result = await server.executeTool('n8n_tools_documentation', {});
     expect(result).toBeDefined();
     expect(typeof result).toBe('string');
     expect(result).toContain('n8n MCP');
@@ -14,12 +14,12 @@ describe('Basic MCP Connection', () => {
     await server.shutdown();
   });
 
-  it('should execute search_nodes tool', async () => {
+  it('should execute n8n_search_nodes tool', async () => {
     const server = new N8NDocumentationMCPServer();
 
     try {
       // Search for a common node to verify database has content
-      const result = await server.executeTool('search_nodes', { query: 'http', limit: 5 });
+      const result = await server.executeTool('n8n_search_nodes', { query: 'http', limit: 5 });
       expect(result).toBeDefined();
       expect(typeof result).toBe('object');
       expect(result.results).toBeDefined();
@@ -45,10 +45,10 @@ describe('Basic MCP Connection', () => {
 
     try {
       // Search to check if database has nodes
-      const searchResult = await server.executeTool('search_nodes', { query: 'set', limit: 1 });
+      const searchResult = await server.executeTool('n8n_search_nodes', { query: 'set', limit: 1 });
       const hasNodes = searchResult.totalCount > 0;
 
-      const result = await server.executeTool('search_nodes', { query: 'webhook' });
+      const result = await server.executeTool('n8n_search_nodes', { query: 'webhook' });
       expect(result).toBeDefined();
       expect(typeof result).toBe('object');
       expect(result.results).toBeDefined();

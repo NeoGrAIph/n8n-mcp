@@ -3,7 +3,7 @@
 *This interview was conducted to understand how AI assistants experience building n8n workflows with and without the MCP service.*
 
 > Note: This interview references historical tool names (e.g., `get_node_essentials`).  
-> In current versions, use `get_node` with `detail`/`mode` (see README “Tool Name Changes”).
+> In current versions, use `n8n_get_node` with `detail`/`mode` (see README “Tool Name Changes”).
 
 ---
 

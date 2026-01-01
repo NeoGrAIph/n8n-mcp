@@ -434,7 +434,7 @@ export async function startFixedHTTPServer() {
 
                 // Add structuredContent for validation tools (typed output)
                 // Apply 1MB safety limit to prevent memory issues (matches STDIO server behavior)
-                if (toolName.startsWith('validate_')) {
+                if (toolName.startsWith('n8n_validate_')) {
                   const resultSize = responseText.length;
 
                   if (resultSize > 1000000) {

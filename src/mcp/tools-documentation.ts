@@ -11,7 +11,7 @@ export function getToolDocumentation(toolName: string, depth: 'essentials' | 'fu
   
   const tool = toolsDocumentation[toolName];
   if (!tool) {
-    return `Tool '${toolName}' not found. Use tools_documentation() to see available tools.`;
+    return `Tool '${toolName}' not found. Use n8n_tools_documentation() to see available tools.`;
   }
 
   if (depth === 'essentials') {
@@ -29,7 +29,7 @@ ${essentials.description}
 **Tips**:
 ${essentials.tips.map(tip => `- ${tip}`).join('\n')}
 
-For full documentation, use: tools_documentation({topic: "${toolName}", depth: "full"})`;
+For full documentation, use: n8n_tools_documentation({topic: "${toolName}", depth: "full"})`;
   }
 
   // Full documentation
@@ -79,48 +79,48 @@ Inform the user to check their n8n version matches or is compatible with the sup
 
 ## Code Node Configuration
 When working with Code nodes, always start by calling the relevant guide:
-- tools_documentation({topic: "javascript_code_node_guide"}) for JavaScript Code nodes
-- tools_documentation({topic: "python_code_node_guide"}) for Python Code nodes
+- n8n_tools_documentation({topic: "javascript_code_node_guide"}) for JavaScript Code nodes
+- n8n_tools_documentation({topic: "python_code_node_guide"}) for Python Code nodes
 
 ## Standard Workflow Pattern
 
-⚠️ **CRITICAL**: Always call get_node() with detail='standard' FIRST before configuring any node!
+⚠️ **CRITICAL**: Always call n8n_get_node() with detail='standard' FIRST before configuring any node!
 
 1. **Find** the node you need:
-   - search_nodes({query: "slack"}) - Search by keyword
-   - search_nodes({query: "communication"}) - Search by category name
-   - search_nodes({query: "AI langchain"}) - Search for AI-capable nodes
+   - n8n_search_nodes({query: "slack"}) - Search by keyword
+   - n8n_search_nodes({query: "communication"}) - Search by category name
+   - n8n_search_nodes({query: "AI langchain"}) - Search for AI-capable nodes
 
 2. **Configure** the node (ALWAYS START WITH STANDARD DETAIL):
-   - ✅ get_node({nodeType: "nodes-base.slack", detail: "standard"}) - Get essential properties FIRST (~1-2KB, shows required fields)
-   - get_node({nodeType: "nodes-base.slack", detail: "full"}) - Get complete schema only if standard insufficient (~100KB+)
-   - get_node({nodeType: "nodes-base.slack", mode: "docs"}) - Get readable markdown documentation
-   - get_node({nodeType: "nodes-base.slack", mode: "search_properties", propertyQuery: "auth"}) - Find specific properties
+   - ✅ n8n_get_node({nodeType: "nodes-base.slack", detail: "standard"}) - Get essential properties FIRST (~1-2KB, shows required fields)
+   - n8n_get_node({nodeType: "nodes-base.slack", detail: "full"}) - Get complete schema only if standard insufficient (~100KB+)
+   - n8n_get_node({nodeType: "nodes-base.slack", mode: "docs"}) - Get readable markdown documentation
+   - n8n_get_node({nodeType: "nodes-base.slack", mode: "search_properties", propertyQuery: "auth"}) - Find specific properties
 
 3. **Validate** before deployment:
-   - validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "minimal"}) - Quick required fields check
-   - validate_node({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
-   - validate_workflow({workflow: {...}}) - Validate entire workflow
+   - n8n_validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "minimal"}) - Quick required fields check
+   - n8n_validate_node({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
+   - n8n_validate_workflow_json({workflow: {...}}) - Validate entire workflow
 
 ## Tool Categories (19 Tools Total)
 
 **Discovery Tools** (1 tool)
-- search_nodes - Full-text search across all nodes (supports OR, AND, FUZZY modes)
+- n8n_search_nodes - Full-text search across all nodes (supports OR, AND, FUZZY modes)
 
 **Configuration Tools** (1 consolidated tool)
-- get_node - Unified node information tool:
+- n8n_get_node - Unified node information tool:
   - detail='minimal'/'standard'/'full': Progressive detail levels
   - mode='docs': Readable markdown documentation
   - mode='search_properties': Find specific properties
   - mode='versions'/'compare'/'breaking'/'migrations': Version management
 
 **Validation Tools** (2 tools)
-- validate_node - Unified validation with mode='full' or mode='minimal'
-- validate_workflow - Complete workflow validation (nodes, connections, expressions)
+- n8n_validate_node - Unified validation with mode='full' or mode='minimal'
+- n8n_validate_workflow_json - Complete workflow validation (nodes, connections, expressions)
 
 **Template Tools** (2 tools)
-- get_template - Get complete workflow JSON by ID
-- search_templates - Unified template search:
+- n8n_get_template - Get complete workflow JSON by ID
+- n8n_search_templates - Unified template search:
   - searchMode='keyword': Text search (default)
   - searchMode='by_nodes': Find templates using specific nodes
   - searchMode='by_task': Curated task-based templates
@@ -149,13 +149,13 @@ When working with Code nodes, always start by calling the relevant guide:
 - n8n_deploy_template - Deploy templates directly to n8n instance
 
 ## Performance Characteristics
-- Instant (<10ms): search_nodes, get_node (minimal/standard)
-- Fast (<100ms): validate_node, get_template
-- Moderate (100-500ms): validate_workflow, get_node (full detail)
+- Instant (<10ms): n8n_search_nodes, n8n_get_node (minimal/standard)
+- Fast (<100ms): n8n_validate_node, n8n_get_template
+- Moderate (100-500ms): n8n_validate_workflow_json, n8n_get_node (full detail)
 - Network-dependent: All n8n_* tools
 
 For comprehensive documentation on any tool:
-tools_documentation({topic: "tool_name", depth: "full"})`;
+n8n_tools_documentation({topic: "tool_name", depth: "full"})`;
   }
 
   const categories = getAllCategories();
@@ -167,8 +167,8 @@ Run n8n_health_check() to verify your n8n instance compatibility and API connect
 
 ## Code Node Guides
 For Code node configuration, use these comprehensive guides:
-- tools_documentation({topic: "javascript_code_node_guide", depth: "full"}) - JavaScript patterns, n8n variables, error handling
-- tools_documentation({topic: "python_code_node_guide", depth: "full"}) - Python patterns, data access, debugging
+- n8n_tools_documentation({topic: "javascript_code_node_guide", depth: "full"}) - JavaScript patterns, n8n variables, error handling
+- n8n_tools_documentation({topic: "python_code_node_guide", depth: "full"}) - Python patterns, data access, debugging
 
 ## All Available Tools by Category
 
@@ -184,12 +184,12 @@ ${tools.map(toolName => {
 
 ## Usage Notes
 - All node types require the "nodes-base." or "nodes-langchain." prefix
-- Use get_node() with detail='standard' first for most tasks (~95% smaller than detail='full')
+- Use n8n_get_node() with detail='standard' first for most tasks (~95% smaller than detail='full')
 - Validation profiles: minimal (editing), runtime (default), strict (deployment)
 - n8n API tools only available when N8N_API_URL and N8N_API_KEY are configured
 
 For detailed documentation on any tool:
-tools_documentation({topic: "tool_name", depth: "full"})`;
+n8n_tools_documentation({topic: "tool_name", depth: "full"})`;
 }
 
 export function searchToolDocumentation(keyword: string): string[] {
@@ -254,7 +254,7 @@ return allItems.map(item => ({
 - Use async/await for HTTP requests
 - Always return array format
 
-For full guide: tools_documentation({topic: "javascript_code_node_guide", depth: "full"})`;
+For full guide: n8n_tools_documentation({topic: "javascript_code_node_guide", depth: "full"})`;
   }
 
   // Full documentation
@@ -430,8 +430,8 @@ try {
 5. Use descriptive variable names
 
 ## Related Tools
-- get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
-- validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
+- n8n_get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
+- n8n_validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
 - python_code_node_guide (for Python syntax)`;
 }
 
@@ -469,7 +469,7 @@ return [{
 - Use json module for parsing
 - datetime for date handling
 
-For full guide: tools_documentation({topic: "python_code_node_guide", depth: "full"})`;
+For full guide: n8n_tools_documentation({topic: "python_code_node_guide", depth: "full"})`;
   }
 
   // Full documentation
@@ -699,7 +699,7 @@ except json.JSONDecodeError:
 \`\`\`
 
 ## Related Tools
-- get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
-- validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
+- n8n_get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
+- n8n_validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
 - javascript_code_node_guide (for JavaScript syntax)`;
 }

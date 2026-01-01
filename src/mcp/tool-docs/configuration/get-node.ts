@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const getNodeDoc: ToolDocumentation = {
-  name: 'get_node',
+  name: 'n8n_get_node',
   category: 'configuration',
   essentials: {
     description: 'Unified node information tool with progressive detail levels and multiple modes. Get node schema, docs, search properties, or version info.',
     keyParameters: ['nodeType', 'detail', 'mode', 'includeTypeInfo', 'includeExamples'],
-    example: 'get_node({nodeType: "nodes-base.httpRequest", detail: "standard"})',
+    example: 'n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard"})',
     performance: 'Instant (<10ms) for minimal/standard, moderate for full',
     tips: [
       'Use detail="standard" (default) for most tasks - shows required fields',
@@ -83,6 +83,6 @@ export const getNodeDoc: ToolDocumentation = {
       'includeExamples only works with mode=info and detail=standard',
       'Version modes require nodes with multiple versions in database'
     ],
-    relatedTools: ['search_nodes', 'validate_node', 'validate_workflow']
+    relatedTools: ['n8n_search_nodes', 'n8n_validate_node', 'n8n_validate_workflow_json']
   }
 };

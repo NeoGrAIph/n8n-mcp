@@ -56,7 +56,7 @@ This directory contains a comprehensive deep-dive analysis of n8n-mcp usage data
 
 **Excellent Reliability (96-100% success):**
 - n8n_update_partial_workflow: 98.7%
-- search_nodes: 99.8%
+- n8n_search_nodes: 99.8%
 - n8n_create_workflow: 96.1%
 - All workflow management tools: 100%
 
@@ -71,7 +71,7 @@ This directory contains a comprehensive deep-dive analysis of n8n-mcp usage data
 
 **Most Used Tools:**
 1. n8n_update_partial_workflow: 10,177 calls (iterative refinement)
-2. search_nodes: 8,839 calls (node discovery)
+2. n8n_search_nodes: 8,839 calls (node discovery)
 3. n8n_create_workflow: 6,046 calls (workflow creation)
 
 **Most Common Tool Sequences:**

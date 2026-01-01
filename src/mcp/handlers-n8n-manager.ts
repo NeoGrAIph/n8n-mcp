@@ -1012,7 +1012,7 @@ export async function handleValidateWorkflow(
     // Run validation
     const validationResult = await validator.validateWorkflow(workflow, input.options);
     
-    // Format the response (same format as the regular validate_workflow tool)
+    // Format the response (same format as the regular n8n_validate_workflow_json tool)
     const response: WorkflowValidationResponse = {
       valid: validationResult.valid,
       workflowId: workflow.id,
@@ -1679,8 +1679,8 @@ export async function handleHealthCheck(context?: InstanceContext): Promise<McpT
     responseData.nextSteps = [
       '• Create workflow: n8n_create_workflow',
       '• List workflows: n8n_list_workflows',
-      '• Search nodes: search_nodes',
-      '• Browse templates: search_templates'
+      '• Search nodes: n8n_search_nodes',
+      '• Browse templates: n8n_search_templates'
     ];
 
     // Add update warning if outdated
@@ -2029,12 +2029,12 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
           timing: 'Typically 6-14 minutes to build'
         },
         {
-          action: 'search_nodes',
+          action: 'n8n_search_nodes',
           description: 'Discover available nodes',
           timing: 'Fast - explore 500+ nodes'
         },
         {
-          action: 'search_templates',
+          action: 'n8n_search_templates',
           description: 'Browse pre-built workflows',
           timing: 'Find examples quickly'
         }
@@ -2073,9 +2073,9 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       whatYouCanDoNow: {
         documentation: [
           {
-            tool: 'search_nodes',
+            tool: 'n8n_search_nodes',
             description: 'Search 500+ n8n nodes',
-            example: 'search_nodes({query: "slack"})'
+            example: 'n8n_search_nodes({query: "slack"})'
           },
           {
             tool: 'get_node_essentials',
@@ -2083,14 +2083,14 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
             example: 'get_node_essentials({nodeType: "nodes-base.httpRequest"})'
           },
           {
-            tool: 'search_templates',
+            tool: 'n8n_search_templates',
             description: 'Browse workflow templates',
-            example: 'search_templates({query: "chatbot"})'
+            example: 'n8n_search_templates({query: "chatbot"})'
           },
           {
-            tool: 'validate_workflow',
+            tool: 'n8n_validate_workflow_json',
             description: 'Validate workflow JSON',
-            example: 'validate_workflow({workflow: {...}})'
+            example: 'n8n_validate_workflow_json({workflow: {...}})'
           }
         ],
         note: '14 documentation tools available without API configuration'
@@ -2405,7 +2405,7 @@ export async function handleDeployTemplate(
         success: false,
         error: `Template ${input.templateId} not found`,
         details: {
-          hint: 'Use search_templates to find available templates',
+          hint: 'Use n8n_search_templates to find available templates',
           templateUrl: `https://n8n.io/workflows/${input.templateId}`
         }
       };

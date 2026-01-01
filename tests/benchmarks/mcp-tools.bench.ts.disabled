@@ -48,7 +48,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('search_nodes - single word', async () => {
+  bench('n8n_search_nodes - single word', async () => {
     await engine.searchNodes({ query: 'http' });
   }, {
     iterations: 100,
@@ -57,7 +57,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('search_nodes - multiple words', async () => {
+  bench('n8n_search_nodes - multiple words', async () => {
     await engine.searchNodes({ query: 'http request webhook', mode: 'OR' });
   }, {
     iterations: 100,
@@ -93,7 +93,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('validate_node_operation - simple', async () => {
+  bench('n8n_validate_node - simple', async () => {
     await engine.validateNodeOperation({
       nodeType: 'n8n-nodes-base.httpRequest',
       config: {
@@ -109,7 +109,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('validate_node_operation - complex', async () => {
+  bench('n8n_validate_node - complex', async () => {
     await engine.validateNodeOperation({
       nodeType: 'n8n-nodes-base.slack',
       config: {
@@ -127,7 +127,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('validate_node_minimal', async () => {
+  bench('n8n_validate_node', async () => {
     await engine.validateNodeMinimal({
       nodeType: 'n8n-nodes-base.httpRequest',
       config: {}
@@ -178,7 +178,7 @@ describe('MCP Tool Execution Performance', () => {
     time: 3000
   });
 
-  bench('validate_workflow - simple', async () => {
+  bench('n8n_validate_workflow_json - simple', async () => {
     await engine.validateWorkflow({
       workflow: {
         name: 'Test',

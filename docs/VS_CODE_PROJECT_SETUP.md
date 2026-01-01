@@ -3,7 +3,7 @@
 :white_check_mark: This n8n MCP server is compatible with VS Code + GitHub Copilot (Chat in IDE).
 
 > ✅ **Using current tool names**  
-> This guide uses the consolidated tool set: `get_node` (detail/mode) + `search_nodes`.
+> This guide uses the consolidated tool set: `n8n_get_node` (detail/mode) + `n8n_search_nodes`.
 
 ## Preconditions
 
@@ -62,24 +62,24 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
 
 ## Core Workflow Process
 
-1. **ALWAYS start new conversation with**: `tools_documentation()` to understand best practices and available tools.
+1. **ALWAYS start new conversation with**: `n8n_tools_documentation()` to understand best practices and available tools.
 
 2. **Discovery Phase** - Find the right nodes:
    - Think deeply about user request and the logic you are going to build to fulfill it. Ask follow-up questions to clarify the user's intent, if something is unclear. Then, proceed with the rest of your instructions.
-   - `search_nodes({query: 'keyword'})` - Search by functionality
-   - `search_nodes({query: 'trigger'})` - Browse triggers
-   - `search_nodes({query: 'AI'})` - See AI-capable nodes (remember: ANY node can be an AI tool!)
+   - `n8n_search_nodes({query: 'keyword'})` - Search by functionality
+   - `n8n_search_nodes({query: 'trigger'})` - Browse triggers
+   - `n8n_search_nodes({query: 'AI'})` - See AI-capable nodes (remember: ANY node can be an AI tool!)
 
 3. **Configuration Phase** - Get node details efficiently:
-   - `get_node({nodeType, detail: 'standard', includeExamples: true})` - Start here
-   - `get_node({nodeType, mode: 'search_properties', propertyQuery: 'auth'})` - Find specific properties
-   - `search_templates({searchMode: 'by_task', task: 'send_email'})` - Find task templates
-   - `get_node({nodeType, mode: 'docs'})` - Human-readable docs when needed
+   - `n8n_get_node({nodeType, detail: 'standard', includeExamples: true})` - Start here
+   - `n8n_get_node({nodeType, mode: 'search_properties', propertyQuery: 'auth'})` - Find specific properties
+   - `n8n_search_templates({searchMode: 'by_task', task: 'send_email'})` - Find task templates
+   - `n8n_get_node({nodeType, mode: 'docs'})` - Human-readable docs when needed
    - It is good common practice to show a visual representation of the workflow architecture to the user and asking for opinion, before moving forward. 
 
 4. **Pre-Validation Phase** - Validate BEFORE building:
-   - `validate_node({nodeType, config, mode: 'minimal'})` - Quick required fields check
-   - `validate_node({nodeType, config, mode: 'full', profile: 'runtime'})` - Full validation
+   - `n8n_validate_node({nodeType, config, mode: 'minimal'})` - Quick required fields check
+   - `n8n_validate_node({nodeType, config, mode: 'full', profile: 'runtime'})` - Full validation
    - Fix any validation errors before proceeding
 
 5. **Building Phase** - Create the workflow:
@@ -90,7 +90,7 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
    - Build the workflow in an artifact for easy editing downstream (unless the user asked to create in n8n instance)
 
 6. **Workflow Validation Phase** - Validate complete workflow:
-   - `validate_workflow(workflow)` - Complete validation including connections/expressions
+   - `n8n_validate_workflow_json(workflow)` - Complete validation including connections/expressions
    - Fix any issues found before deployment
 
 7. **Deployment Phase** (if n8n API configured):
@@ -105,7 +105,7 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
 - **VALIDATE EARLY AND OFTEN** - Catch errors before they reach deployment
 - **USE DIFF UPDATES** - Use n8n_update_partial_workflow for 80-90% token savings
 - **ANY node can be an AI tool** - not just those with usableAsTool=true
-- **Pre-validate configurations** - Use validate_node (mode: minimal) before building
+- **Pre-validate configurations** - Use n8n_validate_node (mode: minimal) before building
 - **Post-validate workflows** - Always validate complete workflows before deployment
 - **Incremental updates** - Use diff operations for existing workflows
 - **Test thoroughly** - Validate both locally and after deployment to n8n
@@ -113,12 +113,12 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
 ## Validation Strategy
 
 ### Before Building:
-1. validate_node({mode: 'minimal'}) - Check required fields
-2. validate_node({mode: 'full', profile: 'runtime'}) - Full configuration validation
+1. n8n_validate_node({mode: 'minimal'}) - Check required fields
+2. n8n_validate_node({mode: 'full', profile: 'runtime'}) - Full configuration validation
 3. Fix all errors before proceeding
 
 ### After Building:
-1. validate_workflow() - Complete workflow validation (connections + expressions)
+1. n8n_validate_workflow_json() - Complete workflow validation (connections + expressions)
 
 ### After Deployment:
 1. n8n_validate_workflow({id}) - Validate deployed workflow
@@ -138,18 +138,18 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
 ## Example Workflow
 
 ### 1. Discovery & Configuration
-search_nodes({query: 'slack'})
-get_node({nodeType: 'n8n-nodes-base.slack', detail: 'standard', includeExamples: true})
+n8n_search_nodes({query: 'slack'})
+n8n_get_node({nodeType: 'n8n-nodes-base.slack', detail: 'standard', includeExamples: true})
 
 ### 2. Pre-Validation
-validate_node({nodeType: 'n8n-nodes-base.slack', config: {resource:'message', operation:'send'}, mode: 'minimal'})
-validate_node({nodeType: 'n8n-nodes-base.slack', config: fullConfig, mode: 'full', profile: 'runtime'})
+n8n_validate_node({nodeType: 'n8n-nodes-base.slack', config: {resource:'message', operation:'send'}, mode: 'minimal'})
+n8n_validate_node({nodeType: 'n8n-nodes-base.slack', config: fullConfig, mode: 'full', profile: 'runtime'})
 
 ### 3. Build Workflow
 // Create workflow JSON with validated configs
 
 ### 4. Workflow Validation
-validate_workflow(workflowJson)
+n8n_validate_workflow_json(workflowJson)
 
 ### 5. Deploy (if configured)
 n8n_create_workflow(validatedWorkflow)

@@ -11,7 +11,7 @@ export const n8nCreateWorkflowDoc: ToolDocumentation = {
     tips: [
       'Workflow created inactive',
       'Returns ID for future updates',
-      'Validate first with validate_workflow',
+      'Validate first with n8n_validate_workflow_json',
       'Auto-sanitization fixes operator structures and missing metadata during creation'
     ]
   },
@@ -81,7 +81,7 @@ n8n_create_workflow({
     ],
     performance: 'Network-dependent - Typically 100-500ms depending on workflow size',
     bestPractices: [
-      'Validate with validate_workflow first',
+      'Validate with n8n_validate_workflow_json first',
       'Use unique node IDs',
       'Position nodes for readability',
       'Test with n8n_test_workflow'
@@ -95,6 +95,6 @@ n8n_create_workflow({
       '**Auto-sanitization runs on creation**: All nodes sanitized before workflow created (operator structures fixed, missing metadata added)',
       '**Auto-sanitization cannot prevent all failures**: Broken connections or invalid node configurations may still cause creation to fail'
     ],
-    relatedTools: ['validate_workflow', 'n8n_update_partial_workflow', 'n8n_test_workflow']
+    relatedTools: ['n8n_validate_workflow_json', 'n8n_update_partial_workflow', 'n8n_test_workflow']
   }
 };

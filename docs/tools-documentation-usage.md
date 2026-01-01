@@ -1,8 +1,8 @@
 # MCP Tools Documentation Usage Guide
 
-The `tools_documentation` tool provides comprehensive documentation for all MCP tools, making it easy for LLMs to understand how to use the tools effectively.
+The `n8n_tools_documentation` tool provides comprehensive documentation for all MCP tools, making it easy for LLMs to understand how to use the tools effectively.
 
-> ✅ This guide uses the current tool set (`get_node`, `search_nodes`, `validate_node`, etc.).
+> ✅ This guide uses the current tool set (`n8n_get_node`, `n8n_search_nodes`, `n8n_validate_node`, etc.).
 
 ## Basic Usage
 
@@ -10,9 +10,9 @@ The `tools_documentation` tool provides comprehensive documentation for all MCP 
 
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {
-    "tools": ["search_nodes", "get_node"]
+    "tools": ["n8n_search_nodes", "n8n_get_node"]
   }
 }
 ```
@@ -23,7 +23,7 @@ Returns detailed documentation including parameters, examples, and best practice
 
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {
     "search": "validation"
   }
@@ -36,7 +36,7 @@ Finds all tools related to validation, including their descriptions and use case
 
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {
     "category": "workflow_management"
   }
@@ -55,7 +55,7 @@ Available categories:
 
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {}
 }
 ```
@@ -66,7 +66,7 @@ Returns a list of all categories and the tools in each category.
 
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {
     "tools": ["n8n_create_workflow"],
     "includeQuickReference": true
@@ -89,14 +89,14 @@ The tool returns structured documentation with:
 - **Common Pitfalls**: Mistakes to avoid
 - **Related Tools**: Other tools that work well together
 
-## Example: Learning About search_nodes
+## Example: Learning About n8n_search_nodes
 
 Request:
 ```json
 {
-  "name": "tools_documentation",
+  "name": "n8n_tools_documentation",
   "arguments": {
-    "tools": ["search_nodes"]
+    "tools": ["n8n_search_nodes"]
   }
 }
 ```
@@ -120,8 +120,8 @@ Response includes:
 
 The documentation helps build workflows efficiently:
 
-1. **Discovery Phase**: Use `search_nodes` documentation
-2. **Configuration Phase**: Learn from `get_node` examples (detail: standard)
+1. **Discovery Phase**: Use `n8n_search_nodes` documentation
+2. **Configuration Phase**: Learn from `n8n_get_node` examples (detail: standard)
 3. **Validation Phase**: Understand validation tool options and profiles
 4. **Creation Phase**: Follow `n8n_create_workflow` best practices
 5. **Update Phase**: Master `n8n_update_partial_workflow` operations
@@ -130,7 +130,7 @@ The documentation helps build workflows efficiently:
 
 The documentation emphasizes performance:
 - Which tools are fast (standard/minimal) vs slow (full info)
-- Optimal parameters (e.g., limit: 200+ for search_nodes)
+- Optimal parameters (e.g., limit: 200+ for n8n_search_nodes)
 - Caching behavior
 - Token savings with partial updates
 

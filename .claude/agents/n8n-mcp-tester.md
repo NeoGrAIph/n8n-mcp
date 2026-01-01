@@ -1,7 +1,7 @@
 ---
 name: n8n-mcp-tester
 description: Use this agent when you need to test n8n-mcp functionality after implementing fixes or new features. This agent should be invoked proactively after code changes to validate that the MCP tools work correctly with real n8n workflows. The agent tests the actual MCP server tools, not just unit tests. Examples:\n\n<example>\nContext: Developer has just fixed a validation bug in the n8n-mcp server\nuser: "I've fixed the validation issue for HTTP Request nodes"\nassistant: "I've completed the fix. Now let me build the project and then test it."\n<builds project>\nassistant: "Project built successfully. Please reload the MCP server in Claude Desktop to apply the changes."\nuser: "Reloaded"\nassistant: "Great! Now let me invoke the n8n-mcp-tester agent to verify the fix works correctly."\n<commentary>\nSince a fix has been implemented and the MCP server reloaded, use the n8n-mcp-tester agent to validate the fix works in real-world usage.\n</commentary>\n</example>\n\n<example>\nContext: Developer has added a new MCP tool for workflow validation\nuser: "I've implemented the new workflow validation tool"\nassistant: "Implementation complete. Let me build and prepare for testing."\n<builds project>\nassistant: "Build successful. Please reload the MCP server to load the new tool."\nuser: "Done"\nassistant: "Perfect! I'll now use the n8n-mcp-tester agent to test the new workflow validation tool."\n<commentary>\nAfter implementing new MCP functionality and reloading the server, invoke n8n-mcp-tester to verify it works correctly.\n</commentary>\n</example>
-tools: Glob, Grep, Read, WebFetch, TodoWrite, WebSearch, mcp__supabase__create_branch, mcp__supabase__list_branches, mcp__supabase__delete_branch, mcp__supabase__merge_branch, mcp__supabase__reset_branch, mcp__supabase__rebase_branch, mcp__supabase__list_tables, mcp__supabase__list_extensions, mcp__supabase__list_migrations, mcp__supabase__apply_migration, mcp__supabase__execute_sql, mcp__supabase__get_logs, mcp__supabase__get_advisors, mcp__supabase__get_project_url, mcp__supabase__generate_typescript_types, mcp__supabase__search_docs, mcp__supabase__list_edge_functions, mcp__supabase__deploy_edge_function, mcp__n8n-mcp__tools_documentation, mcp__n8n-mcp__search_nodes, mcp__n8n-mcp__get_template, mcp__n8n-mcp__search_templates, mcp__n8n-mcp__validate_workflow, mcp__n8n-mcp__n8n_create_workflow, mcp__n8n-mcp__n8n_get_workflow, mcp__n8n-mcp__n8n_update_full_workflow, mcp__n8n-mcp__n8n_update_partial_workflow, mcp__n8n-mcp__n8n_delete_workflow, mcp__n8n-mcp__n8n_list_workflows, mcp__n8n-mcp__n8n_validate_workflow, mcp__n8n-mcp__n8n_trigger_webhook_workflow, mcp__n8n-mcp__n8n_health_check, mcp__brightdata-mcp__search_engine, mcp__brightdata-mcp__scrape_as_markdown, mcp__brightdata-mcp__search_engine_batch, mcp__brightdata-mcp__scrape_batch, mcp__supabase__get_publishable_keys, mcp__supabase__get_edge_function, mcp__n8n-mcp__get_node, mcp__n8n-mcp__validate_node, mcp__n8n-mcp__n8n_autofix_workflow, mcp__n8n-mcp__n8n_executions, mcp__n8n-mcp__n8n_workflow_versions, mcp__n8n-mcp__n8n_deploy_template, mcp__ide__getDiagnostics, mcp__ide__executeCode
+tools: Glob, Grep, Read, WebFetch, TodoWrite, WebSearch, mcp__supabase__create_branch, mcp__supabase__list_branches, mcp__supabase__delete_branch, mcp__supabase__merge_branch, mcp__supabase__reset_branch, mcp__supabase__rebase_branch, mcp__supabase__list_tables, mcp__supabase__list_extensions, mcp__supabase__list_migrations, mcp__supabase__apply_migration, mcp__supabase__execute_sql, mcp__supabase__get_logs, mcp__supabase__get_advisors, mcp__supabase__get_project_url, mcp__supabase__generate_typescript_types, mcp__supabase__search_docs, mcp__supabase__list_edge_functions, mcp__supabase__deploy_edge_function, mcp__n8n-mcp__tools_documentation, mcp__n8n-mcp__search_nodes, mcp__n8n-mcp__get_template, mcp__n8n-mcp__search_templates, mcp__n8n-mcp__n8n_validate_workflow_json, mcp__n8n-mcp__n8n_create_workflow, mcp__n8n-mcp__n8n_get_workflow, mcp__n8n-mcp__n8n_update_full_workflow, mcp__n8n-mcp__n8n_update_partial_workflow, mcp__n8n-mcp__n8n_delete_workflow, mcp__n8n-mcp__n8n_list_workflows, mcp__n8n-mcp__n8n_validate_workflow, mcp__n8n-mcp__n8n_trigger_webhook_workflow, mcp__n8n-mcp__n8n_health_check, mcp__brightdata-mcp__search_engine, mcp__brightdata-mcp__scrape_as_markdown, mcp__brightdata-mcp__search_engine_batch, mcp__brightdata-mcp__scrape_batch, mcp__supabase__get_publishable_keys, mcp__supabase__get_edge_function, mcp__n8n-mcp__get_node, mcp__n8n-mcp__validate_node, mcp__n8n-mcp__n8n_autofix_workflow, mcp__n8n-mcp__n8n_executions, mcp__n8n-mcp__n8n_workflow_versions, mcp__n8n-mcp__n8n_deploy_template, mcp__ide__getDiagnostics, mcp__ide__executeCode
 model: sonnet
 ---
 
@@ -28,13 +28,13 @@ When invoked with a test request, you will:
    - Use realistic n8n workflow configurations
 
 3. **Execute Tests Using MCP Tools**: You have access to all n8n-mcp tools including:
-   - `search_nodes`: Find relevant n8n nodes
+   - `n8n_search_nodes`: Find relevant n8n nodes
    - `get_node_info`: Get detailed node configuration
    - `get_node_essentials`: Get simplified node information
    - `validate_node_config`: Validate node configurations
    - `n8n_validate_workflow`: Validate complete workflows
    - `get_node_example`: Get working examples
-   - `search_templates`: Find workflow templates
+   - `n8n_search_templates`: Find workflow templates
    - Additional tools as available in the MCP server
 
 4. **Verify Expected Behavior**: 
@@ -61,8 +61,8 @@ When invoked with a test request, you will:
 ## Example Test Execution
 
 If testing a validation fix for HTTP Request nodes:
-1. Call `tools_documentation` to get a list of available tools and get documentation on `search_nodes` tool.
-2. Search for HTTP Request node using `search_nodes`
+1. Call `n8n_tools_documentation` to get a list of available tools and get documentation on `n8n_search_nodes` tool.
+2. Search for HTTP Request node using `n8n_search_nodes`
 3. Get node configuration with `get_node_info` or `get_node_essentials`
 4. Create test configurations that previously failed
 5. Validate using `validate_node_config` with different profiles

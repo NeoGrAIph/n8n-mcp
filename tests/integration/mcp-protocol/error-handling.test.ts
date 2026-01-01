@@ -59,7 +59,7 @@ describe('MCP Error Handling', () => {
     it('should handle invalid params', async () => {
       try {
         // Missing required parameter
-        await client.callTool({ name: 'get_node', arguments: {} });
+        await client.callTool({ name: 'n8n_get_node', arguments: {} });
         expect.fail('Should have thrown an error');
       } catch (error: any) {
         expect(error).toBeDefined();
@@ -71,7 +71,7 @@ describe('MCP Error Handling', () => {
     it('should handle internal errors gracefully', async () => {
       try {
         // Invalid node type format should cause internal processing error
-        await client.callTool({ name: 'get_node', arguments: {
+        await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'completely-invalid-format-$$$$'
         } });
         expect.fail('Should have thrown an error');
@@ -85,7 +85,7 @@ describe('MCP Error Handling', () => {
   describe('Tool-Specific Errors', () => {
     describe('Node Discovery Errors', () => {
       it('should handle search with no matching results', async () => {
-        const response = await client.callTool({ name: 'search_nodes', arguments: {
+        const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
           query: 'xyznonexistentnode123'
         } });
 
@@ -98,7 +98,7 @@ describe('MCP Error Handling', () => {
 
       it('should handle invalid search mode', async () => {
         try {
-          await client.callTool({ name: 'search_nodes', arguments: {
+          await client.callTool({ name: 'n8n_search_nodes', arguments: {
             query: 'test',
             mode: 'INVALID_MODE' as any
           } });
@@ -110,20 +110,20 @@ describe('MCP Error Handling', () => {
 
       it('should handle empty search query', async () => {
         try {
-          await client.callTool({ name: 'search_nodes', arguments: {
+          await client.callTool({ name: 'n8n_search_nodes', arguments: {
             query: ''
           } });
           expect.fail('Should have thrown an error');
         } catch (error: any) {
           expect(error).toBeDefined();
-          expect(error.message).toContain("search_nodes: Validation failed:");
+          expect(error.message).toContain("n8n_search_nodes: Validation failed:");
           expect(error.message).toContain("query: query cannot be empty");
         }
       });
 
       it('should handle non-existent node types', async () => {
         try {
-          await client.callTool({ name: 'get_node', arguments: {
+          await client.callTool({ name: 'n8n_get_node', arguments: {
             nodeType: 'nodes-base.thisDoesNotExist'
           } });
           expect.fail('Should have thrown an error');
@@ -135,10 +135,10 @@ describe('MCP Error Handling', () => {
     });
 
     describe('Validation Errors', () => {
-      // v2.26.0: validate_node_operation consolidated into validate_node
+      // v2.26.0: n8n_validate_node_operation consolidated into n8n_validate_node
       it('should handle invalid validation profile', async () => {
         try {
-          await client.callTool({ name: 'validate_node', arguments: {
+          await client.callTool({ name: 'n8n_validate_node', arguments: {
             nodeType: 'nodes-base.httpRequest',
             config: { method: 'GET', url: 'https://api.example.com' },
             mode: 'full',
@@ -152,7 +152,7 @@ describe('MCP Error Handling', () => {
 
       it('should handle malformed workflow structure', async () => {
         try {
-          await client.callTool({ name: 'validate_workflow', arguments: {
+          await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
             workflow: {
               // Missing required 'nodes' array
               connections: {}
@@ -161,7 +161,7 @@ describe('MCP Error Handling', () => {
           expect.fail('Should have thrown an error');
         } catch (error: any) {
           expect(error).toBeDefined();
-          expect(error.message).toContain("validate_workflow: Validation failed:");
+          expect(error.message).toContain("n8n_validate_workflow_json: Validation failed:");
           expect(error.message).toContain("workflow.nodes: workflow.nodes is required");
         }
       });
@@ -196,7 +196,7 @@ describe('MCP Error Handling', () => {
           }
         };
 
-        const response = await client.callTool({ name: 'validate_workflow', arguments: {
+        const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
           workflow
         } });
 
@@ -207,7 +207,7 @@ describe('MCP Error Handling', () => {
 
     describe('Documentation Errors', () => {
       it('should handle non-existent documentation topics', async () => {
-        const response = await client.callTool({ name: 'tools_documentation', arguments: {
+        const response = await client.callTool({ name: 'n8n_tools_documentation', arguments: {
           topic: 'completely_fake_tool'
         } });
 
@@ -216,7 +216,7 @@ describe('MCP Error Handling', () => {
 
       it('should handle invalid depth parameter', async () => {
         try {
-          await client.callTool({ name: 'tools_documentation', arguments: {
+          await client.callTool({ name: 'n8n_tools_documentation', arguments: {
             depth: 'invalid_depth' as any
           } });
           expect.fail('Should have thrown an error');
@@ -230,7 +230,7 @@ describe('MCP Error Handling', () => {
   describe('Large Payload Handling', () => {
     it('should handle large node info requests', async () => {
       // HTTP Request node has extensive properties
-      const response = await client.callTool({ name: 'get_node', arguments: {
+      const response = await client.callTool({ name: 'n8n_get_node', arguments: {
         nodeType: 'nodes-base.httpRequest',
         detail: 'full'
       } });
@@ -267,7 +267,7 @@ describe('MCP Error Handling', () => {
         }
       }
 
-      const response = await client.callTool({ name: 'validate_workflow', arguments: {
+      const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
         workflow: { nodes, connections }
       } });
 
@@ -281,7 +281,7 @@ describe('MCP Error Handling', () => {
 
       for (let i = 0; i < requestCount; i++) {
         promises.push(
-          client.callTool({ name: 'search_nodes', arguments: {
+          client.callTool({ name: 'n8n_search_nodes', arguments: {
             query: i % 2 === 0 ? 'webhook' : 'http',
             limit: 1
           } })
@@ -294,11 +294,11 @@ describe('MCP Error Handling', () => {
   });
 
   describe('Invalid JSON Handling', () => {
-    // v2.26.0: validate_node_operation consolidated into validate_node
+    // v2.26.0: n8n_validate_node_operation consolidated into n8n_validate_node
     it('should handle invalid JSON in tool parameters', async () => {
       try {
         // Config should be an object, not a string
-        await client.callTool({ name: 'validate_node', arguments: {
+        await client.callTool({ name: 'n8n_validate_node', arguments: {
           nodeType: 'nodes-base.httpRequest',
           config: 'invalid json string' as any,
           mode: 'full'
@@ -311,7 +311,7 @@ describe('MCP Error Handling', () => {
 
     it('should handle malformed workflow JSON', async () => {
       try {
-        await client.callTool({ name: 'validate_workflow', arguments: {
+        await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
           workflow: 'not a valid workflow object' as any
         } });
         expect.fail('Should have thrown an error');
@@ -326,7 +326,7 @@ describe('MCP Error Handling', () => {
       const start = Date.now();
 
       for (let i = 0; i < 20; i++) {
-        await client.callTool({ name: 'tools_documentation', arguments: {} });
+        await client.callTool({ name: 'n8n_tools_documentation', arguments: {} });
       }
 
       const duration = Date.now() - start;
@@ -337,7 +337,7 @@ describe('MCP Error Handling', () => {
 
     it('should handle long-running operations', async () => {
       // Search with complex query that requires more processing
-      const response = await client.callTool({ name: 'search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'a b c d e f g h i j k l m n o p q r s t u v w x y z',
         mode: 'AND'
       } });
@@ -361,7 +361,7 @@ describe('MCP Error Handling', () => {
 
       for (const nodeType of largeNodes) {
         promises.push(
-          client.callTool({ name: 'get_node', arguments: { nodeType } })
+          client.callTool({ name: 'n8n_get_node', arguments: { nodeType } })
             .catch(() => null) // Some might not exist
         );
       }
@@ -390,7 +390,7 @@ describe('MCP Error Handling', () => {
         });
       }
 
-      const response = await client.callTool({ name: 'validate_workflow', arguments: {
+      const response = await client.callTool({ name: 'n8n_validate_workflow_json', arguments: {
         workflow: {
           nodes,
           connections: {}
@@ -406,7 +406,7 @@ describe('MCP Error Handling', () => {
     it('should continue working after errors', async () => {
       // Cause an error
       try {
-        await client.callTool({ name: 'get_node', arguments: {
+        await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'invalid'
         } });
       } catch (error) {
@@ -414,17 +414,17 @@ describe('MCP Error Handling', () => {
       }
 
       // Should still work
-      const response = await client.callTool({ name: 'search_nodes', arguments: { query: 'webhook', limit: 1 } });
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'webhook', limit: 1 } });
       expect(response).toBeDefined();
     });
 
     it('should handle mixed success and failure', async () => {
       const promises = [
-        client.callTool({ name: 'search_nodes', arguments: { query: 'webhook', limit: 5 } }),
-        client.callTool({ name: 'get_node', arguments: { nodeType: 'invalid' } }).catch(e => ({ error: e })),
-        client.callTool({ name: 'tools_documentation', arguments: {} }),
-        client.callTool({ name: 'search_nodes', arguments: { query: '' } }).catch(e => ({ error: e })),
-        client.callTool({ name: 'get_node', arguments: { nodeType: 'nodes-base.httpRequest' } })
+        client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'webhook', limit: 5 } }),
+        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'invalid' } }).catch(e => ({ error: e })),
+        client.callTool({ name: 'n8n_tools_documentation', arguments: {} }),
+        client.callTool({ name: 'n8n_search_nodes', arguments: { query: '' } }).catch(e => ({ error: e })),
+        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'nodes-base.httpRequest' } })
       ];
 
       const results = await Promise.all(promises);
@@ -440,7 +440,7 @@ describe('MCP Error Handling', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty responses gracefully', async () => {
-      const response = await client.callTool({ name: 'search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'xyznonexistentnode12345'
       } });
 
@@ -451,7 +451,7 @@ describe('MCP Error Handling', () => {
     });
 
     it('should handle special characters in parameters', async () => {
-      const response = await client.callTool({ name: 'search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'test!@#$%^&*()_+-=[]{}|;\':",./<>?'
       } });
 
@@ -462,7 +462,7 @@ describe('MCP Error Handling', () => {
     });
 
     it('should handle unicode in parameters', async () => {
-      const response = await client.callTool({ name: 'search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'test 测试 тест परीक्षण'
       } });
 
@@ -473,7 +473,7 @@ describe('MCP Error Handling', () => {
 
     it('should handle null and undefined gracefully', async () => {
       // Most tools should handle missing optional params
-      const response = await client.callTool({ name: 'search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
         query: 'webhook',
         limit: undefined as any,
         mode: null as any
@@ -489,7 +489,7 @@ describe('MCP Error Handling', () => {
     it('should provide helpful error messages', async () => {
       try {
         // Use a truly invalid node type
-        await client.callTool({ name: 'get_node', arguments: {
+        await client.callTool({ name: 'n8n_get_node', arguments: {
           nodeType: 'invalid-node-type-that-does-not-exist'
         } });
         expect.fail('Should have thrown an error');
@@ -503,19 +503,19 @@ describe('MCP Error Handling', () => {
 
     it('should indicate missing required parameters', async () => {
       try {
-        await client.callTool({ name: 'search_nodes', arguments: {} });
+        await client.callTool({ name: 'n8n_search_nodes', arguments: {} });
         expect.fail('Should have thrown an error');
       } catch (error: any) {
         expect(error).toBeDefined();
         // The error now properly validates required parameters
-        expect(error.message).toContain("search_nodes: Validation failed:");
+        expect(error.message).toContain("n8n_search_nodes: Validation failed:");
         expect(error.message).toContain("query: query is required");
       }
     });
 
-    // v2.26.0: validate_node_operation consolidated into validate_node
+    // v2.26.0: n8n_validate_node_operation consolidated into n8n_validate_node
     it('should provide context for validation errors', async () => {
-      const response = await client.callTool({ name: 'validate_node', arguments: {
+      const response = await client.callTool({ name: 'n8n_validate_node', arguments: {
         nodeType: 'nodes-base.httpRequest',
         config: {
           // Missing required fields
