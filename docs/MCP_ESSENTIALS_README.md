@@ -2,23 +2,18 @@
 
 ## Overview
 
-> ⚠️ **Tool name changes (v2.29+)**  
-> The legacy tools `get_node_essentials`, `get_node_info`, and `get_node_documentation` were consolidated into `get_node`.  
-> Use these mappings in current versions:
-> - `get_node_essentials` → `get_node({detail: "standard"|"minimal", includeExamples: true})`
-> - `get_node_info` → `get_node({detail: "full"})`
-> - `get_node_documentation` → `get_node({mode: "docs"})`
-> This guide keeps legacy examples for reference—update calls to `get_node` when using current versions.
+n8n MCP now exposes a single `get_node` tool for node information. Use its **detail levels** to get only what you need:
+- `detail: "standard"` for essential properties + examples (recommended default)
+- `detail: "minimal"` for the smallest possible response
+- `detail: "full"` only when you truly need exhaustive data
 
-The n8n MCP has been enhanced with new tools that dramatically improve the AI agent experience when building n8n workflows. The key improvement is the `get_node_essentials` tool which reduces response sizes by 95% while providing all the information needed for basic configuration.
+This guide focuses on **essential configuration** using `get_node` with `detail: "standard"`, which replaces the legacy `get_node_essentials`.
 
-## New Tools
-
-### 1. `get_node_essentials`
+## Core Tool: `get_node` (detail: standard/minimal)
 
 **Purpose**: Get only the 10-20 most important properties for a node instead of 200+
 
-**When to use**: 
+**When to use**:
 - Starting to configure a new node
 - Need quick access to common properties
 - Want working examples
@@ -27,14 +22,16 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
 **Example usage**:
 ```json
 {
-  "name": "get_node_essentials",
+  "name": "get_node",
   "arguments": {
-    "nodeType": "nodes-base.httpRequest"
+    "nodeType": "nodes-base.httpRequest",
+    "detail": "standard",
+    "includeExamples": true
   }
 }
 ```
 
-**Response structure**:
+**Response structure (standard)**:
 ```json
 {
   "nodeType": "nodes-base.httpRequest",
@@ -59,7 +56,6 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
       ],
       "default": "GET"
     }
-    // ... 4-5 more common properties
   ],
   "examples": {
     "minimal": {
@@ -88,7 +84,7 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
 - No duplicate or confusing properties
 - Clear indication of what's required
 
-### 2. `search_node_properties`
+## Search Properties with `get_node` (mode: search_properties)
 
 **Purpose**: Find specific properties within a node without downloading everything
 
@@ -101,10 +97,11 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
 **Example usage**:
 ```json
 {
-  "name": "search_node_properties",
+  "name": "get_node",
   "arguments": {
     "nodeType": "nodes-base.httpRequest",
-    "query": "auth"
+    "mode": "search_properties",
+    "propertyQuery": "auth"
   }
 }
 ```
@@ -125,11 +122,6 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
         { "value": "none", "label": "None" },
         { "value": "basicAuth", "label": "Basic Auth" }
       ]
-    },
-    {
-      "name": "genericAuthType",
-      "path": "genericAuthType",
-      "showWhen": { "authentication": "genericCredentialType" }
     }
   ],
   "totalMatches": 5,
@@ -139,13 +131,13 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
 
 ## Recommended Workflow
 
-### For Basic Configuration:
+### For Basic Configuration
 
 1. **Start with essentials**:
    ```
-   get_node_essentials("nodes-base.httpRequest")
+   get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
-   
+
 2. **Use the provided examples**:
    - Start with `minimal` example
    - Upgrade to `common` for typical use cases
@@ -153,37 +145,37 @@ The n8n MCP has been enhanced with new tools that dramatically improve the AI ag
 
 3. **Search for specific features** (if needed):
    ```
-   search_node_properties("nodes-base.httpRequest", "header")
+   get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "header"})
    ```
 
-### For Complex Configuration:
+### For Complex Configuration
 
 1. **Get documentation first**:
    ```
-   get_node_documentation("nodes-base.httpRequest")
+   get_node({nodeType: "nodes-base.httpRequest", mode: "docs"})
    ```
 
 2. **Get essentials for the basics**:
    ```
-   get_node_essentials("nodes-base.httpRequest")
+   get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
 
 3. **Search for advanced properties**:
    ```
-   search_node_properties("nodes-base.httpRequest", "proxy")
+   get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "proxy"})
    ```
 
-4. **Only use get_node_info if absolutely necessary**:
+4. **Only use full detail if absolutely necessary**:
    ```
-   get_node_info("nodes-base.httpRequest")  // Last resort - 100KB+ response
+   get_node({nodeType: "nodes-base.httpRequest", detail: "full"})
    ```
 
 ## Common Patterns
 
-### Making API Calls:
+### Making API Calls
 ```javascript
 // Start with essentials
-const essentials = get_node_essentials("nodes-base.httpRequest");
+const essentials = get_node({ nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true });
 
 // Use the POST example
 const config = essentials.examples.common;
@@ -193,20 +185,20 @@ config.url = "https://api.myservice.com/endpoint";
 config.jsonBody = JSON.stringify({ my: "data" });
 ```
 
-### Setting up Webhooks:
+### Setting up Webhooks
 ```javascript
 // Get webhook essentials
-const essentials = get_node_essentials("nodes-base.webhook");
+const essentials = get_node({ nodeType: "nodes-base.webhook", detail: "standard", includeExamples: true });
 
 // Start with minimal
 const config = essentials.examples.minimal;
 config.path = "my-webhook-endpoint";
 ```
 
-### Database Operations:
+### Database Operations
 ```javascript
 // Get database essentials
-const essentials = get_node_essentials("nodes-base.postgres");
+const essentials = get_node({ nodeType: "nodes-base.postgres", detail: "standard", includeExamples: true });
 
 // Check available operations
 const operations = essentials.operations;
@@ -217,19 +209,15 @@ const config = essentials.examples.common;
 
 ## Tips for AI Agents
 
-1. **Always start with get_node_essentials** - It has everything needed for 90% of use cases
-
+1. **Always start with get_node (detail: standard)** - It has everything needed for 90% of use cases
 2. **Use examples as templates** - They're tested, working configurations
-
-3. **Search before diving deep** - Use search_node_properties to find specific options
-
+3. **Search before diving deep** - Use search_properties to find specific options
 4. **Check metadata** - Know if you need credentials, if it's a trigger, etc.
-
 5. **Progressive disclosure** - Start simple, add complexity only when needed
 
 ## Supported Nodes
 
-The essentials tool has optimized configurations for 20+ commonly used nodes:
+The essentials flow has optimized configurations for 20+ commonly used nodes:
 
 - **Core**: httpRequest, webhook, code, set, if, merge, splitInBatches
 - **Databases**: postgres, mysql, mongodb, redis
@@ -237,60 +225,3 @@ The essentials tool has optimized configurations for 20+ commonly used nodes:
 - **Files**: ftp, ssh, googleSheets
 - **AI**: openAi, agent
 - **Utilities**: executeCommand, function
-
-For other nodes, the tool automatically extracts the most important properties.
-
-## Performance Metrics
-
-Based on testing with top 10 nodes:
-
-- **Average size reduction**: 94.3%
-- **Response time improvement**: 78%
-- **Properties shown**: 10-20 (vs 200+)
-- **Usability improvement**: Dramatic
-
-## Migration Guide
-
-If you're currently using `get_node_info`, here's how to migrate:
-
-### Before:
-```javascript
-const node = get_node_info("nodes-base.httpRequest");
-// Parse through 200+ properties
-// Figure out what's required
-// Deal with duplicates and conditionals
-```
-
-### After:
-```javascript
-const essentials = get_node_essentials("nodes-base.httpRequest");
-// Use essentials.requiredProperties
-// Use essentials.commonProperties  
-// Start with essentials.examples.common
-```
-
-## Troubleshooting
-
-**Q: The tool says node not found**
-A: Use the full node type with prefix: `nodes-base.httpRequest` not just `httpRequest`
-
-**Q: I need a property that's not in essentials**
-A: Use `search_node_properties` to find it, or `get_node_info` as last resort
-
-**Q: The examples don't cover my use case**
-A: Start with the closest example and modify. Use search to find additional properties.
-
-**Q: How do I know what properties are available?**
-A: Check `metadata.totalProperties` to see how many are available, then search for what you need
-
-## Future Improvements
-
-Planned enhancements:
-- Task-based configurations (e.g., "post_json_with_auth")
-- Configuration validation
-- Property dependency resolution
-- More node coverage
-
-## Summary
-
-The new essentials tools make n8n workflow building with AI agents actually practical. Instead of overwhelming agents with hundreds of properties, we provide just what's needed, when it's needed. This results in faster, more accurate workflow creation with fewer errors.
