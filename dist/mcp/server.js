@@ -79,12 +79,12 @@ const VALIDATION_TOOL_NAMES = new Set([
     'n8n_workflow_validate',
     'n8n_workflow_json_validate'
 ]);
-const WriteResourceRequestSchema = types_js_1.RequestSchema.extend({
+const WriteResourceRequestSchema = zod_1.z.object({
     method: zod_1.z.literal('resources/write'),
     params: zod_1.z
         .object({
         uri: zod_1.z.string(),
-        contents: zod_1.z.array(types_js_1.TextResourceContentsSchema).optional(),
+        contents: zod_1.z.array(zod_1.z.any()).optional(),
         text: zod_1.z.string().optional(),
         expectedEtag: zod_1.z.string().optional()
     })

@@ -7,8 +7,6 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
   ListResourceTemplatesRequestSchema,
-  RequestSchema,
-  TextResourceContentsSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { existsSync, promises as fs } from 'fs';
@@ -57,12 +55,12 @@ const VALIDATION_TOOL_NAMES = new Set([
   'n8n_workflow_json_validate'
 ]);
 
-const WriteResourceRequestSchema = RequestSchema.extend({
+const WriteResourceRequestSchema = z.object({
   method: z.literal('resources/write'),
   params: z
     .object({
       uri: z.string(),
-      contents: z.array(TextResourceContentsSchema).optional(),
+      contents: z.array(z.any()).optional(),
       text: z.string().optional(),
       expectedEtag: z.string().optional()
     })
