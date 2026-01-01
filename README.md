@@ -941,6 +941,13 @@ Once connected, Claude can use these powerful tools:
 > **Tool metadata (MCP 2024-11-05)**: Tools expose `name`, `description`, and `inputSchema` (no `outputSchema`).  
 > Each tool also includes `annotations` (e.g., `readOnlyHint`, `destructiveHint`, `idempotentHint`) to guide client UX and approvals.
 
+### Tool Name Changes (v2.29+)
+- `get_node_essentials`, `get_node_info`, `get_node_documentation` → **`get_node`** (use `detail` and `mode`)
+- `list_nodes` → **`search_nodes`**
+- `search_node_properties` → **`get_node`** with `mode: "search_properties"`
+- `n8n_executions` → **`n8n_executions_get` / `n8n_executions_list` / `n8n_executions_delete`** (legacy kept)
+- `n8n_workflow_versions` → **`n8n_workflow_versions_*`** (legacy kept)
+
 ### Core Tools (7 tools)
 - **`tools_documentation`** - Get documentation for any MCP tool (START HERE!)
 - **`search_nodes`** - Full-text search across all nodes. Use `includeExamples: true` for real-world configurations
