@@ -1,9 +1,6 @@
 # MCP Implementation Quick Start Guide
 
-> ⚠️ **Tool name changes (v2.29+)**  
-> Legacy tools `get_node_essentials` and `get_node_info` are consolidated into `get_node`.  
-> Use `get_node({detail: "standard"|"minimal"})` instead of `get_node_essentials`, and `get_node({detail: "full"})` instead of `get_node_info`.
-> This guide keeps legacy examples for reference—update calls to `get_node` when using current versions.
+This guide shows how to implement the **consolidated `get_node` tool** with detail levels and property search. It replaces the legacy `get_node_essentials` / `get_node_info` / `search_node_properties` split.
 
 ## Immediate Actions (Day 1)
 
@@ -47,65 +44,64 @@ Create `src/data/essential-properties.json`:
 }
 ```
 
-### 2. Implement get_node_essentials Tool
+### 2. Implement `get_node` (detail: standard/minimal)
 
 Add to `src/mcp/server.ts`:
 
 ```typescript
 // Add to tool implementations
-case "get_node_essentials": {
-  const { nodeType } = request.params.arguments as { nodeType: string };
-  
-  // Load essential properties config
-  const essentialsConfig = require('../data/essential-properties.json');
-  const nodeConfig = essentialsConfig[nodeType];
-  
-  if (!nodeConfig) {
-    // Fallback: extract from existing data
-    const node = await service.getNodeByType(nodeType);
-    if (!node) {
-      return { error: `Node type ${nodeType} not found` };
-    }
-    
-    // Parse properties to find required ones
-    const properties = JSON.parse(node.properties_schema || '[]');
-    const required = properties.filter((p: any) => p.required);
-    const common = properties.slice(0, 5); // Top 5 as fallback
-    
-    return {
-      nodeType,
-      displayName: node.display_name,
-      description: node.description,
-      requiredProperties: required.map(simplifyProperty),
-      commonProperties: common.map(simplifyProperty),
-      examples: {
-        minimal: {},
-        common: {}
-      }
-    };
+case "get_node": {
+  const {
+    nodeType,
+    detail = "standard",
+    mode = "info",
+    includeExamples = true
+  } = request.params.arguments as {
+    nodeType: string;
+    detail?: "minimal" | "standard" | "full";
+    mode?: "info" | "docs" | "search_properties";
+    includeExamples?: boolean;
+  };
+
+  if (mode === "search_properties") {
+    // handled in Day 2-3 section
   }
-  
-  // Use configured essentials
+
+  if (detail === "full") {
+    // Return full node info (existing full builder)
+    return await service.getNodeFullInfo(nodeType);
+  }
+
+  // Standard/minimal detail: use essentials config
+  const essentialsConfig = require("../data/essential-properties.json");
+  const nodeConfig = essentialsConfig[nodeType];
+
   const node = await service.getNodeByType(nodeType);
-  const properties = JSON.parse(node.properties_schema || '[]');
-  
-  const requiredProps = nodeConfig.required.map((name: string) => {
+  if (!node) {
+    return { error: `Node type ${nodeType} not found` };
+  }
+
+  const properties = JSON.parse(node.properties_schema || "[]");
+  const required = nodeConfig?.required ?? [];
+  const common = nodeConfig?.common ?? properties.slice(0, 5).map((p: any) => p.name);
+
+  const requiredProps = required.map((name: string) => {
     const prop = findPropertyByName(properties, name);
     return prop ? simplifyProperty(prop) : null;
   }).filter(Boolean);
-  
-  const commonProps = nodeConfig.common.map((name: string) => {
+
+  const commonProps = common.map((name: string) => {
     const prop = findPropertyByName(properties, name);
     return prop ? simplifyProperty(prop) : null;
   }).filter(Boolean);
-  
+
   return {
     nodeType,
     displayName: node.display_name,
     description: node.description,
     requiredProperties: requiredProps,
     commonProperties: commonProps,
-    examples: nodeConfig.examples || {}
+    examples: includeExamples ? (nodeConfig?.examples || {}) : {}
   };
 }
 
@@ -114,10 +110,10 @@ function simplifyProperty(prop: any) {
   return {
     name: prop.name,
     type: prop.type,
-    description: prop.description || prop.displayName || '',
+    description: prop.description || prop.displayName || "",
     default: prop.default,
-    options: prop.options?.map((opt: any) => 
-      typeof opt === 'string' ? opt : opt.value
+    options: prop.options?.map((opt: any) =>
+      typeof opt === "string" ? opt : opt.value
     ),
     placeholder: prop.placeholder
   };
@@ -126,8 +122,7 @@ function simplifyProperty(prop: any) {
 function findPropertyByName(properties: any[], name: string): any {
   for (const prop of properties) {
     if (prop.name === name) return prop;
-    // Check in nested collections
-    if (prop.type === 'collection' && prop.options) {
+    if (prop.type === "collection" && prop.options) {
       const found = findPropertyByName(prop.options, name);
       if (found) return found;
     }
@@ -142,14 +137,29 @@ Add to tool definitions:
 
 ```typescript
 {
-  name: "get_node_essentials",
-  description: "Get only essential and commonly-used properties for a node - perfect for quick configuration",
+  name: "get_node",
+  description: "Get node info with detail levels and modes (info/docs/search_properties). Use detail='standard' for essentials.",
   inputSchema: {
     type: "object",
     properties: {
       nodeType: {
         type: "string",
         description: "The node type (e.g., 'nodes-base.httpRequest')"
+      },
+      detail: {
+        type: "string",
+        enum: ["minimal", "standard", "full"]
+      },
+      mode: {
+        type: "string",
+        enum: ["info", "docs", "search_properties"]
+      },
+      includeExamples: {
+        type: "boolean"
+      },
+      propertyQuery: {
+        type: "string",
+        description: "For mode=search_properties"
       }
     },
     required: ["nodeType"]
@@ -166,28 +176,28 @@ export class PropertyParser {
   /**
    * Parse nested properties and flatten to searchable format
    */
-  static parseProperties(properties: any[], path = ''): ParsedProperty[] {
+  static parseProperties(properties: any[], path = ""): ParsedProperty[] {
     const results: ParsedProperty[] = [];
-    
+
     for (const prop of properties) {
       const currentPath = path ? `${path}.${prop.name}` : prop.name;
-      
+
       // Add current property
       results.push({
         name: prop.name,
         path: currentPath,
         type: prop.type,
-        description: prop.description || prop.displayName || '',
+        description: prop.description || prop.displayName || "",
         required: prop.required || false,
         displayConditions: prop.displayOptions,
         default: prop.default,
-        options: prop.options?.filter((opt: any) => typeof opt === 'string' || opt.value)
+        options: prop.options?.filter((opt: any) => typeof opt === "string" || opt.value)
       });
-      
+
       // Recursively parse nested properties
-      if (prop.type === 'collection' && prop.options) {
+      if (prop.type === "collection" && prop.options) {
         results.push(...this.parseProperties(prop.options, currentPath));
-      } else if (prop.type === 'fixedCollection' && prop.options) {
+      } else if (prop.type === "fixedCollection" && prop.options) {
         for (const option of prop.options) {
           if (option.values) {
             results.push(...this.parseProperties(option.values, `${currentPath}.${option.name}`));
@@ -195,70 +205,21 @@ export class PropertyParser {
         }
       }
     }
-    
+
     return results;
   }
-  
+
   /**
    * Find properties matching a search query
    */
   static searchProperties(properties: ParsedProperty[], query: string): ParsedProperty[] {
     const lowerQuery = query.toLowerCase();
-    return properties.filter(prop => 
+    return properties.filter(prop =>
       prop.name.toLowerCase().includes(lowerQuery) ||
       prop.description.toLowerCase().includes(lowerQuery) ||
       prop.path.toLowerCase().includes(lowerQuery)
     );
   }
-  
-  /**
-   * Categorize properties
-   */
-  static categorizeProperties(properties: ParsedProperty[]): CategorizedProperties {
-    const categories: CategorizedProperties = {
-      authentication: [],
-      request: [],
-      response: [],
-      advanced: [],
-      other: []
-    };
-    
-    for (const prop of properties) {
-      if (prop.name.includes('auth') || prop.name.includes('credential')) {
-        categories.authentication.push(prop);
-      } else if (prop.name.includes('body') || prop.name.includes('header') || 
-                 prop.name.includes('query') || prop.name.includes('url')) {
-        categories.request.push(prop);
-      } else if (prop.name.includes('response') || prop.name.includes('output')) {
-        categories.response.push(prop);
-      } else if (prop.path.includes('options.')) {
-        categories.advanced.push(prop);
-      } else {
-        categories.other.push(prop);
-      }
-    }
-    
-    return categories;
-  }
-}
-
-interface ParsedProperty {
-  name: string;
-  path: string;
-  type: string;
-  description: string;
-  required: boolean;
-  displayConditions?: any;
-  default?: any;
-  options?: any[];
-}
-
-interface CategorizedProperties {
-  authentication: ParsedProperty[];
-  request: ParsedProperty[];
-  response: ParsedProperty[];
-  advanced: ParsedProperty[];
-  other: ParsedProperty[];
 }
 ```
 
@@ -267,60 +228,63 @@ interface CategorizedProperties {
 Create `scripts/test-essentials.ts`:
 
 ```typescript
-import { MCPClient } from '../src/mcp/client';
+import { MCPClient } from "../src/mcp/client";
 
 async function testEssentials() {
   const client = new MCPClient();
-  
-  console.log('Testing get_node_essentials...\n');
-  
+
+  console.log("Testing get_node (standard)...\n");
+
   // Test HTTP Request node
-  const httpEssentials = await client.call('get_node_essentials', {
-    nodeType: 'nodes-base.httpRequest'
+  const httpEssentials = await client.call("get_node", {
+    nodeType: "nodes-base.httpRequest",
+    detail: "standard",
+    includeExamples: true
   });
-  
-  console.log('HTTP Request Essentials:');
-  console.log(`- Required: ${httpEssentials.requiredProperties.map(p => p.name).join(', ')}`);
-  console.log(`- Common: ${httpEssentials.commonProperties.map(p => p.name).join(', ')}`);
+
+  console.log("HTTP Request Essentials:");
+  console.log(`- Required: ${httpEssentials.requiredProperties.map((p: any) => p.name).join(", ")}`);
+  console.log(`- Common: ${httpEssentials.commonProperties.map((p: any) => p.name).join(", ")}`);
   console.log(`- Total properties: ${httpEssentials.requiredProperties.length + httpEssentials.commonProperties.length}`);
-  
+
   // Compare with full response
-  const fullInfo = await client.call('get_node_info', {
-    nodeType: 'nodes-base.httpRequest'
+  const fullInfo = await client.call("get_node", {
+    nodeType: "nodes-base.httpRequest",
+    detail: "full"
   });
-  
+
   const fullSize = JSON.stringify(fullInfo).length;
   const essentialSize = JSON.stringify(httpEssentials).length;
-  
-  console.log(`\nSize comparison:`);
+
+  console.log("\nSize comparison:");
   console.log(`- Full response: ${(fullSize / 1024).toFixed(1)}KB`);
-  console.log(`- Essential response: ${(essentialSize / 1024).toFixed(1)}KB`);
+  console.log(`- Standard response: ${(essentialSize / 1024).toFixed(1)}KB`);
   console.log(`- Reduction: ${((1 - essentialSize / fullSize) * 100).toFixed(1)}%`);
 }
 
 testEssentials().catch(console.error);
 ```
 
-## Day 2-3: Implement search_node_properties
+## Day 2-3: Implement search_properties mode
+
+Add a branch inside the `get_node` handler:
 
 ```typescript
-case "search_node_properties": {
-  const { nodeType, query } = request.params.arguments as { 
-    nodeType: string; 
-    query: string;
-  };
-  
+if (mode === "search_properties") {
+  const { propertyQuery = "" } = request.params.arguments as { propertyQuery?: string };
+
   const node = await service.getNodeByType(nodeType);
   if (!node) {
     return { error: `Node type ${nodeType} not found` };
   }
-  
-  const properties = JSON.parse(node.properties_schema || '[]');
+
+  const properties = JSON.parse(node.properties_schema || "[]");
   const parsed = PropertyParser.parseProperties(properties);
-  const matches = PropertyParser.searchProperties(parsed, query);
-  
+  const matches = PropertyParser.searchProperties(parsed, propertyQuery);
+
   return {
-    query,
+    nodeType,
+    query: propertyQuery,
     matches: matches.map(prop => ({
       name: prop.name,
       type: prop.type,
@@ -333,9 +297,9 @@ case "search_node_properties": {
 }
 ```
 
-## Day 4-5: Implement get_node_for_task
+## Day 4-5: Implement task templates (via search_templates)
 
-Create `src/data/task-templates.json`:
+Create `src/data/task-templates.json` and expose task search via `search_templates` (`searchMode: "by_task"`). Example entry:
 
 ```json
 {
@@ -364,11 +328,11 @@ Create `src/data/task-templates.json`:
 
 ## Testing Checklist
 
-- [ ] Test get_node_essentials with HTTP Request node
+- [ ] Test `get_node` (detail: standard) with HTTP Request node
 - [ ] Verify size reduction is >90%
 - [ ] Test with Webhook, Agent, and Code nodes
 - [ ] Validate examples work correctly
-- [ ] Test property search functionality
+- [ ] Test `mode: "search_properties"` functionality
 - [ ] Verify task templates are valid
 - [ ] Check backward compatibility
 - [ ] Measure response times (<100ms)
@@ -376,7 +340,7 @@ Create `src/data/task-templates.json`:
 ## Success Indicators
 
 1. **Immediate (Day 1)**:
-   - get_node_essentials returns <5KB for HTTP Request
+   - `get_node` (detail: standard) returns <5KB for HTTP Request
    - Response includes working examples
    - No errors with top 10 nodes
 
