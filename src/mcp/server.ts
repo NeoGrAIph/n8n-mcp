@@ -10,6 +10,7 @@ import path from 'path';
 import { n8nDocumentationToolsFinal } from './tools';
 import { n8nManagementTools } from './tools-n8n-manager';
 import { makeToolsN8nFriendly } from './tools-n8n-friendly';
+import { withToolAnnotations } from './tool-annotations';
 import { getWorkflowExampleString } from './workflow-examples';
 import { logger } from '../utils/logger';
 import { NodeRepository } from '../database/node-repository';
@@ -595,6 +596,8 @@ export class N8NDocumentationMCPServer {
         logger.info('Detected n8n client, using n8n-friendly tool descriptions');
         tools = makeToolsN8nFriendly(tools);
       }
+
+      tools = withToolAnnotations(tools);
       
       // Log validation tools' input schemas for debugging
       const validationTools = tools.filter(t => t.name.startsWith('validate_'));
