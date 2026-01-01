@@ -28,10 +28,10 @@ export const n8nManagementTools: ToolDefinition[] = [
               id: { type: 'string' },
               name: { type: 'string' },
               type: { type: 'string' },
-              typeVersion: { type: 'number' },
+              typeVersion: { type: 'integer' },
               position: { 
                 type: 'array',
-                items: { type: 'number' },
+                items: { type: 'integer' },
                 minItems: 2,
                 maxItems: 2
               },
@@ -41,8 +41,8 @@ export const n8nManagementTools: ToolDefinition[] = [
               notes: { type: 'string' },
               continueOnFail: { type: 'boolean' },
               retryOnFail: { type: 'boolean' },
-              maxTries: { type: 'number' },
-              waitBetweenTries: { type: 'number' }
+              maxTries: { type: 'integer' },
+              waitBetweenTries: { type: 'integer' }
             }
           }
         },
@@ -60,7 +60,7 @@ export const n8nManagementTools: ToolDefinition[] = [
             saveDataSuccessExecution: { type: 'string', enum: ['all', 'none'] },
             saveManualExecutions: { type: 'boolean' },
             saveExecutionProgress: { type: 'boolean' },
-            executionTimeout: { type: 'number' },
+            executionTimeout: { type: 'integer' },
             errorWorkflow: { type: 'string' }
           }
         }
@@ -174,7 +174,7 @@ export const n8nManagementTools: ToolDefinition[] = [
       type: 'object',
       properties: {
         limit: { 
-          type: 'number', 
+          type: 'integer', 
           description: 'Number of workflows to return (1-100, default: 100)' 
         },
         cursor: { 
@@ -266,7 +266,7 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Minimum confidence level for fixes (default: medium)'
         },
         maxFixes: {
-          type: 'number',
+          type: 'integer',
           description: 'Maximum number of fixes to apply (default: 50)'
         }
       },
@@ -319,7 +319,7 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Custom HTTP headers'
         },
         timeout: {
-          type: 'number',
+          type: 'integer',
           description: 'Timeout in ms (default: 120000)'
         },
         waitForResponse: {
@@ -358,7 +358,7 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'For action=get with mode=filtered: filter to specific nodes by name'
         },
         itemsLimit: {
-          type: 'number',
+          type: 'integer',
           description: 'For action=get with mode=filtered: items per node (0=structure, 2=default, -1=unlimited)'
         },
         includeInputData: {
@@ -367,7 +367,7 @@ export const n8nManagementTools: ToolDefinition[] = [
         },
         // Error mode specific parameters
         errorItemsLimit: {
-          type: 'number',
+          type: 'integer',
           description: 'For action=get with mode=error: sample items from upstream node (default: 2, max: 100)'
         },
         includeStackTrace: {
@@ -384,7 +384,7 @@ export const n8nManagementTools: ToolDefinition[] = [
         },
         // For action='list'
         limit: {
-          type: 'number',
+          type: 'integer',
           description: 'For action=list: number of executions to return (1-100, default: 100)'
         },
         cursor: {
@@ -455,11 +455,11 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Workflow ID (required for list, rollback, delete, prune)'
         },
         versionId: {
-          type: 'number',
+          type: 'integer',
           description: 'Version ID (required for get mode and single version delete, optional for rollback)'
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           default: 10,
           description: 'Max versions to return in list mode'
         },
@@ -474,7 +474,7 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Delete all versions for workflow (delete mode only)'
         },
         maxVersions: {
-          type: 'number',
+          type: 'integer',
           default: 10,
           description: 'Keep N most recent versions (prune mode only)'
         },
@@ -496,7 +496,7 @@ export const n8nManagementTools: ToolDefinition[] = [
       type: 'object',
       properties: {
         templateId: {
-          type: 'number',
+          type: 'integer',
           description: 'Template ID from n8n.io (required)'
         },
         name: {
