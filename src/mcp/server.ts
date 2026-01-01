@@ -4,11 +4,15 @@ import {
   CallToolRequestSchema, 
   ListToolsRequestSchema,
   InitializeRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListResourceTemplatesRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { existsSync, promises as fs } from 'fs';
 import path from 'path';
 import { n8nDocumentationToolsFinal } from './tools';
 import { n8nManagementTools } from './tools-n8n-manager';
+import { n8nWorkflowFileTools } from './tools-workflow-files';
 import { makeToolsN8nFriendly } from './tools-n8n-friendly';
 import { withToolAnnotations } from './tool-annotations';
 import { getWorkflowExampleString } from './workflow-examples';
@@ -32,6 +36,7 @@ import { PROJECT_VERSION } from '../utils/version';
 import { getNodeTypeAlternatives, getWorkflowNodeType } from '../utils/node-utils';
 import { NodeTypeNormalizer } from '../utils/node-type-normalizer';
 import { ToolValidation, Validator, ValidationError } from '../utils/validation-schemas';
+import { isWorkflowFilesConfigured } from '../services/workflow-files-service';
 import {
   negotiateProtocolVersion,
   logProtocolNegotiation,
@@ -41,6 +46,7 @@ import { InstanceContext } from '../types/instance-context';
 import { telemetry } from '../telemetry';
 import { EarlyErrorLogger } from '../telemetry/early-error-logger';
 import { STARTUP_CHECKPOINTS } from '../telemetry/startup-checkpoints';
+import * as workflowFileHandlers from './handlers-workflow-files';
 
 const VALIDATION_TOOL_NAMES = new Set([
   'n8n_node_validate',
@@ -196,11 +202,13 @@ export class N8NDocumentationMCPServer {
 
       // Log n8n API configuration status at startup
       const apiConfigured = isN8nApiConfigured();
-      const totalTools = apiConfigured ?
-        n8nDocumentationToolsFinal.length + n8nManagementTools.length :
-        n8nDocumentationToolsFinal.length;
+      const workflowFilesConfigured = isWorkflowFilesConfigured();
+      const totalTools =
+        n8nDocumentationToolsFinal.length +
+        (apiConfigured ? n8nManagementTools.length : 0) +
+        (workflowFilesConfigured ? n8nWorkflowFileTools.length : 0);
 
-      logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'})`);
+      logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'}, workflow files: ${workflowFilesConfigured ? 'configured' : 'not configured'})`);
 
       if (this.earlyLogger) {
         this.earlyLogger.logCheckpoint(STARTUP_CHECKPOINTS.N8N_API_READY);
@@ -209,6 +217,8 @@ export class N8NDocumentationMCPServer {
 
     logger.info('Initializing n8n Documentation MCP server');
     
+    const workflowFilesConfigured = isWorkflowFilesConfigured();
+
     this.server = new Server(
       {
         name: 'n8n-documentation-mcp',
@@ -235,6 +245,7 @@ export class N8NDocumentationMCPServer {
       {
         capabilities: {
           tools: {},
+          ...(workflowFilesConfigured ? { resources: {} } : {})
         },
       }
     );
@@ -493,6 +504,7 @@ export class N8NDocumentationMCPServer {
   }
 
   private setupHandlers(): void {
+    workflowFileHandlers.logWorkflowFilesConfig();
     // Handle initialization
     this.server.setRequestHandler(InitializeRequestSchema, async (request) => {
       const clientVersion = request.params.protocolVersion;
@@ -528,11 +540,15 @@ export class N8NDocumentationMCPServer {
         });
       }
       
+      const workflowFilesConfigured = isWorkflowFilesConfigured();
+      const capabilities: Record<string, unknown> = { tools: {} };
+      if (workflowFilesConfigured) {
+        capabilities.resources = {};
+      }
+
       const response = {
         protocolVersion: negotiationResult.version,
-        capabilities: {
-          tools: {},
-        },
+        capabilities,
         serverInfo: {
           name: 'n8n-documentation-mcp',
           version: PROJECT_VERSION,
@@ -547,6 +563,7 @@ export class N8NDocumentationMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async (request) => {
       // Get disabled tools from environment variable
       const disabledTools = this.getDisabledTools();
+      const workflowFilesConfigured = isWorkflowFilesConfigured();
 
       // Filter documentation tools based on disabled list
       const enabledDocTools = n8nDocumentationToolsFinal.filter(
@@ -587,9 +604,20 @@ export class N8NDocumentationMCPServer {
         });
       }
 
+      if (workflowFilesConfigured) {
+        const enabledFileTools = n8nWorkflowFileTools.filter(
+          tool => !disabledTools.has(tool.name)
+        );
+        tools.push(...enabledFileTools);
+        logger.debug(`Workflow file tools enabled (${enabledFileTools.length} tools)`);
+      }
+
       // Log filtered tools count if any tools are disabled
       if (disabledTools.size > 0) {
-        const totalAvailableTools = n8nDocumentationToolsFinal.length + (shouldIncludeManagementTools ? n8nManagementTools.length : 0);
+        const totalAvailableTools =
+          n8nDocumentationToolsFinal.length +
+          (shouldIncludeManagementTools ? n8nManagementTools.length : 0) +
+          (workflowFilesConfigured ? n8nWorkflowFileTools.length : 0);
         logger.debug(`Filtered ${disabledTools.size} disabled tools, ${tools.length}/${totalAvailableTools} tools available`);
       }
       
@@ -616,6 +644,38 @@ export class N8NDocumentationMCPServer {
       });
       
       return { tools };
+    });
+
+    // Handle resource templates listing
+    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
+      const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
+      return { resourceTemplates: templates };
+    });
+
+    // Handle resource listing
+    this.server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
+      const cursor = request.params?.cursor as string | undefined;
+      const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
+      return {
+        resources,
+        ...(nextCursor ? { nextCursor } : {})
+      };
+    });
+
+    // Handle resource reading
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const uri = request.params.uri;
+      const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
+      return {
+        contents: [
+          {
+            uri: resource.uri,
+            mimeType: resource.mimeType,
+            text: resource.text,
+            _meta: resource._meta
+          }
+        ]
+      };
     });
 
     // Handle tool execution
@@ -1003,7 +1063,7 @@ export class N8NDocumentationMCPServer {
     }
 
     // Get all available tools
-    const allTools = [...n8nDocumentationToolsFinal, ...n8nManagementTools];
+    const allTools = [...n8nDocumentationToolsFinal, ...n8nManagementTools, ...n8nWorkflowFileTools];
     const tool = allTools.find(t => t.name === toolName);
     if (!tool || !tool.inputSchema) {
       return true; // If no schema, assume valid
@@ -1301,6 +1361,25 @@ export class N8NDocumentationMCPServer {
         if (!this.templateService) throw new Error('Template service not initialized');
         if (!this.repository) throw new Error('Repository not initialized');
         return n8nHandlers.handleDeployTemplate(args, this.templateService, this.repository, this.instanceContext);
+
+      case 'n8n_code_files_list':
+        this.validateToolParams(name, args, ['workflowId']);
+        return workflowFileHandlers.handleListCodeFiles(args);
+      case 'n8n_code_file_read':
+        this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+        return workflowFileHandlers.handleReadCodeFile(args);
+      case 'n8n_code_file_write':
+        this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+        return workflowFileHandlers.handleWriteCodeFile(args);
+      case 'n8n_set_files_list':
+        this.validateToolParams(name, args, ['workflowId']);
+        return workflowFileHandlers.handleListSetFiles(args);
+      case 'n8n_set_file_read':
+        this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+        return workflowFileHandlers.handleReadSetFile(args);
+      case 'n8n_set_file_write':
+        this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+        return workflowFileHandlers.handleWriteSetFile(args);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

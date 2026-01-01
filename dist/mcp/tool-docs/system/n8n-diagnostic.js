@@ -93,7 +93,7 @@ The diagnostic is essential when:
             'API connectivity test requires network access to n8n instance',
             'Does not test specific workflow operations, only basic connectivity'
         ],
-        relatedTools: ['n8n_health_check', 'n8n_list_available_tools', 'tools_documentation']
+        relatedTools: ['n8n_health_check', 'n8n_list_available_tools', 'n8n_tools_documentation']
     }
 };
 //# sourceMappingURL=n8n-diagnostic.js.map

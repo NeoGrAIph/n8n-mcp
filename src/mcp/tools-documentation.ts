@@ -102,7 +102,7 @@ When working with Code nodes, always start by calling the relevant guide:
    - n8n_node_validate({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
    - n8n_workflow_json_validate({workflow: {...}}) - Validate entire workflow
 
-## Tool Categories (19 Tools Total)
+## Tool Categories (33 Tools Total)
 
 **Discovery Tools** (1 tool)
 - n8n_nodes_search - Full-text search across all nodes (supports OR, AND, FUZZY modes)
@@ -148,11 +148,20 @@ When working with Code nodes, always start by calling the relevant guide:
 - n8n_workflow_versions_truncate - Truncate ALL versions (dangerous)
 - n8n_template_deploy - Deploy templates directly to n8n instance
 
+**Workflow File Tools** (6 tools, requires N8N_WORKFLOWS_ROOT)
+- n8n_code_files_list - List Code node files for a workflow
+- n8n_code_file_read - Read a Code node file
+- n8n_code_file_write - Write a Code node file with optional ETag protection
+- n8n_set_files_list - List Set(raw) node files for a workflow
+- n8n_set_file_read - Read a Set(raw) node JSON file
+- n8n_set_file_write - Write a Set(raw) node JSON file with optional ETag protection
+
 ## Performance Characteristics
 - Instant (<10ms): n8n_nodes_search, n8n_node_get (minimal/standard)
 - Fast (<100ms): n8n_node_validate, n8n_template_get
 - Moderate (100-500ms): n8n_workflow_json_validate, n8n_node_get (full detail)
-- Network-dependent: All n8n_* tools
+- Network-dependent: n8n API tools (require reachable n8n instance)
+- Filesystem-dependent: workflow file tools (require workflows directory mounted)
 
 For comprehensive documentation on any tool:
 n8n_tools_documentation({topic: "tool_name", depth: "full"})`;
@@ -187,6 +196,7 @@ ${tools.map(toolName => {
 - Use n8n_node_get() with detail='standard' first for most tasks (~95% smaller than detail='full')
 - Validation profiles: minimal (editing), runtime (default), strict (deployment)
 - n8n API tools only available when N8N_API_URL and N8N_API_KEY are configured
+- Workflow file tools only available when N8N_WORKFLOWS_ROOT points to a readable workflows directory
 
 For detailed documentation on any tool:
 n8n_tools_documentation({topic: "tool_name", depth: "full"})`;

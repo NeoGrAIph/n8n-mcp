@@ -91,8 +91,8 @@ async function testAutofixDocumentation() {
         logger.info('✨ Documentation integration successful!');
         logger.info('The n8n_workflow_autofix tool documentation is properly integrated.');
         logger.info('\nTo use in MCP:');
-        logger.info('  - Essentials: tools_documentation({topic: "n8n_workflow_autofix"})');
-        logger.info('  - Full: tools_documentation({topic: "n8n_workflow_autofix", depth: "full"})');
+        logger.info('  - Essentials: n8n_tools_documentation({topic: "n8n_workflow_autofix"})');
+        logger.info('  - Full: n8n_tools_documentation({topic: "n8n_workflow_autofix", depth: "full"})');
     }
     else {
         logger.error('⚠️ Documentation integration incomplete');

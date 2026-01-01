@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nFriendlyDescriptions = void 0;
 exports.makeToolsN8nFriendly = makeToolsN8nFriendly;
 exports.n8nFriendlyDescriptions = {
-    validate_node: {
-        description: 'Validate n8n node config. Pass nodeType (string) and config (object). Use mode="full" for comprehensive validation, mode="minimal" for quick check. Example: {"nodeType": "nodes-base.slack", "config": {"resource": "channel", "operation": "create"}}',
+    n8n_node_validate: {
+        description: 'Validate a node configuration against its schema. Use this when you want to check required fields or perform full validation before building a workflow. Provide nodeType and config, and choose mode (minimal/full) with optional profile. Returns a structured validation result with errors, warnings, and suggestions.',
         params: {
             nodeType: 'String value like "nodes-base.slack"',
             config: 'Object value like {"resource": "channel", "operation": "create"} or empty object {}',
@@ -12,15 +12,15 @@ exports.n8nFriendlyDescriptions = {
             profile: 'Optional string: "minimal" or "runtime" or "ai-friendly" or "strict"'
         }
     },
-    search_nodes: {
-        description: 'Search nodes. Pass query (string). Example: {"query": "webhook"}',
+    n8n_nodes_search: {
+        description: 'Search the local n8n node catalog by keyword. Use this when you need to discover node types that fit an integration or capability. Provide query and optional limit/mode/includeExamples to adjust matching and sample configs. Returns a ranked list of node types with basic metadata.',
         params: {
             query: 'String keyword like "webhook" or "database"',
             limit: 'Optional number, default 20'
         }
     },
-    get_node: {
-        description: 'Get node info with multiple modes. Pass nodeType (string). Use mode="info" for config, mode="docs" for documentation, mode="search_properties" with propertyQuery for finding fields. Example: {"nodeType": "nodes-base.httpRequest", "detail": "standard"}',
+    n8n_node_get: {
+        description: 'Retrieve metadata for a specific node type. Use this when you already know the nodeType and need its schema, docs, or property search. Provide nodeType plus optional detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.',
         params: {
             nodeType: 'String with prefix like "nodes-base.httpRequest"',
             mode: 'Optional string: "info" (default), "docs", "search_properties", "versions", "compare", "breaking", "migrations"',
@@ -28,15 +28,15 @@ exports.n8nFriendlyDescriptions = {
             propertyQuery: 'For mode="search_properties": search term like "auth"'
         }
     },
-    validate_workflow: {
-        description: 'Validate workflow structure, connections, and expressions. Pass workflow object. MUST have: {"workflow": {"nodes": [array of node objects], "connections": {object with node connections}}}. Each node needs: name, type, typeVersion, position.',
+    n8n_workflow_json_validate: {
+        description: 'Validate a workflow JSON object locally without calling n8n. Use this when you want to check a workflow structure before API calls or deployment. Provide a workflow object (nodes and connections) and optional options for validation depth. Returns validity, summary, errors, warnings, and suggestions.',
         params: {
             workflow: 'Object with two required fields: nodes (array) and connections (object). Example: {"nodes": [{"name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [250, 300], "parameters": {}}], "connections": {}}',
             options: 'Optional object. Example: {"validateNodes": true, "validateConnections": true, "validateExpressions": true, "profile": "runtime"}'
         }
     },
-    search_templates: {
-        description: 'Search workflow templates with multiple modes. Use searchMode="keyword" for text search, searchMode="by_nodes" to find by node types, searchMode="by_task" for task-based templates, searchMode="by_metadata" for filtering. Example: {"query": "chatbot"} or {"searchMode": "by_task", "task": "webhook_processing"}',
+    n8n_templates_search: {
+        description: 'Search the local workflow templates catalog. Use this when you want to discover templates by keyword, node types, task, or metadata filters. Provide searchMode and matching parameters plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.',
         params: {
             query: 'For searchMode="keyword": string keyword like "chatbot"',
             searchMode: 'Optional: "keyword" (default), "by_nodes", "by_task", "by_metadata"',
@@ -45,18 +45,18 @@ exports.n8nFriendlyDescriptions = {
             limit: 'Optional number, default 20'
         }
     },
-    get_template: {
-        description: 'Get template by ID. Pass templateId (number). Example: {"templateId": 1234}',
+    n8n_template_get: {
+        description: 'Fetch a workflow template by templateId from the local template database. Use this when you already know the template ID and need its structure. Provide templateId and optional mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.',
         params: {
             templateId: 'Number ID like 1234',
             mode: 'Optional: "full" (default), "nodes_only", "structure"'
         }
     },
-    tools_documentation: {
-        description: 'Get tool docs. Pass optional depth (string). Example: {"depth": "essentials"} or {}',
+    n8n_tools_documentation: {
+        description: 'Fetch the built-in documentation for n8n MCP tools and guides. Use this when you need usage guidance, examples, or the tool index. Provide topic for a specific tool or "overview", and set depth to control verbosity. Returns Markdown content.',
         params: {
             depth: 'Optional string: "essentials" (default) or "full"',
-            topic: 'Optional string tool name like "search_nodes"'
+            topic: 'Optional string tool name like "n8n_nodes_search"'
         }
     }
 };

@@ -51,7 +51,7 @@ exports.n8nListWorkflowsDoc = {
             'Server may return fewer than requested limit',
             'returned field is count of current page only, not system total'
         ],
-        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'n8n_executions']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'n8n_executions_list']
     }
 };
 //# sourceMappingURL=n8n-list-workflows.js.map

@@ -44,7 +44,7 @@ exports.n8nUpdateFullWorkflowDoc = {
         bestPractices: [
             'Always include intent parameter - it helps provide better responses',
             'Get workflow first, modify, then update',
-            'Validate with validate_workflow before updating',
+            'Validate with n8n_workflow_json_validate before updating',
             'Use update_partial for small changes',
             'Test updates in non-production first'
         ],
@@ -55,7 +55,7 @@ exports.n8nUpdateFullWorkflowDoc = {
             'Can break active workflows',
             'No partial updates - use update_partial instead'
         ],
-        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'validate_workflow', 'n8n_workflow_create']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'n8n_workflow_json_validate', 'n8n_workflow_create']
     }
 };
 //# sourceMappingURL=n8n-update-full-workflow.js.map

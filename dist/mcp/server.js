@@ -44,7 +44,9 @@ const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
 const tools_1 = require("./tools");
 const tools_n8n_manager_1 = require("./tools-n8n-manager");
+const tools_workflow_files_1 = require("./tools-workflow-files");
 const tools_n8n_friendly_1 = require("./tools-n8n-friendly");
+const tool_annotations_1 = require("./tool-annotations");
 const workflow_examples_1 = require("./workflow-examples");
 const logger_1 = require("../utils/logger");
 const node_repository_1 = require("../database/node-repository");
@@ -66,9 +68,16 @@ const version_1 = require("../utils/version");
 const node_utils_1 = require("../utils/node-utils");
 const node_type_normalizer_1 = require("../utils/node-type-normalizer");
 const validation_schemas_1 = require("../utils/validation-schemas");
+const workflow_files_service_1 = require("../services/workflow-files-service");
 const protocol_version_1 = require("../utils/protocol-version");
 const telemetry_1 = require("../telemetry");
 const startup_checkpoints_1 = require("../telemetry/startup-checkpoints");
+const workflowFileHandlers = __importStar(require("./handlers-workflow-files"));
+const VALIDATION_TOOL_NAMES = new Set([
+    'n8n_node_validate',
+    'n8n_workflow_validate',
+    'n8n_workflow_json_validate'
+]);
 class N8NDocumentationMCPServer {
     constructor(instanceContext, earlyLogger) {
         this.db = null;
@@ -111,15 +120,17 @@ class N8NDocumentationMCPServer {
                 this.earlyLogger.logCheckpoint(startup_checkpoints_1.STARTUP_CHECKPOINTS.N8N_API_CHECKING);
             }
             const apiConfigured = (0, n8n_api_1.isN8nApiConfigured)();
-            const totalTools = apiConfigured ?
-                tools_1.n8nDocumentationToolsFinal.length + tools_n8n_manager_1.n8nManagementTools.length :
-                tools_1.n8nDocumentationToolsFinal.length;
-            logger_1.logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'})`);
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const totalTools = tools_1.n8nDocumentationToolsFinal.length +
+                (apiConfigured ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
+                (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
+            logger_1.logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'}, workflow files: ${workflowFilesConfigured ? 'configured' : 'not configured'})`);
             if (this.earlyLogger) {
                 this.earlyLogger.logCheckpoint(startup_checkpoints_1.STARTUP_CHECKPOINTS.N8N_API_READY);
             }
         });
         logger_1.logger.info('Initializing n8n Documentation MCP server');
+        const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
         this.server = new index_js_1.Server({
             name: 'n8n-documentation-mcp',
             version: version_1.PROJECT_VERSION,
@@ -144,6 +155,7 @@ class N8NDocumentationMCPServer {
         }, {
             capabilities: {
                 tools: {},
+                ...(workflowFilesConfigured ? { resources: {} } : {})
             },
         });
         this.setupHandlers();
@@ -319,6 +331,7 @@ class N8NDocumentationMCPServer {
         return this.disabledToolsCache;
     }
     setupHandlers() {
+        workflowFileHandlers.logWorkflowFilesConfig();
         this.server.setRequestHandler(types_js_1.InitializeRequestSchema, async (request) => {
             const clientVersion = request.params.protocolVersion;
             const clientCapabilities = request.params.capabilities;
@@ -337,11 +350,14 @@ class N8NDocumentationMCPServer {
                     reasoning: negotiationResult.reasoning
                 });
             }
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const capabilities = { tools: {} };
+            if (workflowFilesConfigured) {
+                capabilities.resources = {};
+            }
             const response = {
                 protocolVersion: negotiationResult.version,
-                capabilities: {
-                    tools: {},
-                },
+                capabilities,
                 serverInfo: {
                     name: 'n8n-documentation-mcp',
                     version: version_1.PROJECT_VERSION,
@@ -352,6 +368,7 @@ class N8NDocumentationMCPServer {
         });
         this.server.setRequestHandler(types_js_1.ListToolsRequestSchema, async (request) => {
             const disabledTools = this.getDisabledTools();
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
             const enabledDocTools = tools_1.n8nDocumentationToolsFinal.filter(tool => !disabledTools.has(tool.name));
             let tools = [...enabledDocTools];
             const hasEnvConfig = (0, n8n_api_1.isN8nApiConfigured)();
@@ -376,8 +393,15 @@ class N8NDocumentationMCPServer {
                     disabledToolsCount: disabledTools.size
                 });
             }
+            if (workflowFilesConfigured) {
+                const enabledFileTools = tools_workflow_files_1.n8nWorkflowFileTools.filter(tool => !disabledTools.has(tool.name));
+                tools.push(...enabledFileTools);
+                logger_1.logger.debug(`Workflow file tools enabled (${enabledFileTools.length} tools)`);
+            }
             if (disabledTools.size > 0) {
-                const totalAvailableTools = tools_1.n8nDocumentationToolsFinal.length + (shouldIncludeManagementTools ? tools_n8n_manager_1.n8nManagementTools.length : 0);
+                const totalAvailableTools = tools_1.n8nDocumentationToolsFinal.length +
+                    (shouldIncludeManagementTools ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
+                    (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
                 logger_1.logger.debug(`Filtered ${disabledTools.size} disabled tools, ${tools.length}/${totalAvailableTools} tools available`);
             }
             const clientInfo = this.clientInfo;
@@ -387,16 +411,42 @@ class N8NDocumentationMCPServer {
                 logger_1.logger.info('Detected n8n client, using n8n-friendly tool descriptions');
                 tools = (0, tools_n8n_friendly_1.makeToolsN8nFriendly)(tools);
             }
-            const validationTools = tools.filter(t => t.name.startsWith('validate_'));
+            tools = (0, tool_annotations_1.withToolAnnotations)(tools);
+            const validationTools = tools.filter(t => VALIDATION_TOOL_NAMES.has(t.name));
             validationTools.forEach(tool => {
                 logger_1.logger.info('Validation tool schema', {
                     toolName: tool.name,
                     inputSchema: JSON.stringify(tool.inputSchema, null, 2),
-                    hasOutputSchema: !!tool.outputSchema,
                     description: tool.description
                 });
             });
             return { tools };
+        });
+        this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
+            const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
+            return { resourceTemplates: templates };
+        });
+        this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
+            const cursor = request.params?.cursor;
+            const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
+            return {
+                resources,
+                ...(nextCursor ? { nextCursor } : {})
+            };
+        });
+        this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
+            const uri = request.params.uri;
+            const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
+            return {
+                contents: [
+                    {
+                        uri: resource.uri,
+                        mimeType: resource.mimeType,
+                        text: resource.text,
+                        _meta: resource._meta
+                    }
+                ]
+            };
         });
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
@@ -469,7 +519,7 @@ class N8NDocumentationMCPServer {
                 let responseText;
                 let structuredContent = null;
                 try {
-                    if (name.startsWith('validate_') && typeof result === 'object' && result !== null) {
+                    if (VALIDATION_TOOL_NAMES.has(name) && typeof result === 'object' && result !== null) {
                         const cleanResult = this.sanitizeValidationResult(result, name);
                         structuredContent = cleanResult;
                         responseText = JSON.stringify(cleanResult, null, 2);
@@ -495,7 +545,7 @@ class N8NDocumentationMCPServer {
                         },
                     ],
                 };
-                if (name.startsWith('validate_') && structuredContent !== null) {
+                if (VALIDATION_TOOL_NAMES.has(name) && structuredContent !== null) {
                     mcpResponse.structuredContent = structuredContent;
                 }
                 return mcpResponse;
@@ -521,7 +571,7 @@ class N8NDocumentationMCPServer {
                 else if (errorMessage.includes('Unknown category') || errorMessage.includes('not found')) {
                     helpfulMessage += '\n\nNote: The requested resource or category was not found. Please check the available options.';
                 }
-                if (name.startsWith('validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
+                if (VALIDATION_TOOL_NAMES.has(name) && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
                     helpfulMessage += '\n\nFor validation tools:\n- nodeType should be a string (e.g., "nodes-base.webhook")\n- config should be an object (e.g., {})';
                 }
                 return {
@@ -541,18 +591,16 @@ class N8NDocumentationMCPServer {
             return result;
         }
         const sanitized = { ...result };
-        if (toolName === 'validate_node_minimal') {
-            const filtered = {
-                nodeType: String(sanitized.nodeType || ''),
-                displayName: String(sanitized.displayName || ''),
-                valid: Boolean(sanitized.valid),
-                missingRequiredFields: Array.isArray(sanitized.missingRequiredFields)
-                    ? sanitized.missingRequiredFields.map(String)
-                    : []
-            };
-            return filtered;
-        }
-        else if (toolName === 'validate_node_operation') {
+        if (toolName === 'n8n_node_validate') {
+            if (Array.isArray(sanitized.missingRequiredFields)) {
+                const filtered = {
+                    nodeType: String(sanitized.nodeType || ''),
+                    displayName: String(sanitized.displayName || ''),
+                    valid: Boolean(sanitized.valid),
+                    missingRequiredFields: sanitized.missingRequiredFields.map(String)
+                };
+                return filtered;
+            }
             let summary = sanitized.summary;
             if (!summary || typeof summary !== 'object') {
                 summary = {
@@ -574,11 +622,11 @@ class N8NDocumentationMCPServer {
             };
             return filtered;
         }
-        else if (toolName.startsWith('validate_workflow')) {
+        else if (toolName.startsWith('n8n_workflow_json_validate')) {
             sanitized.valid = Boolean(sanitized.valid);
             sanitized.errors = Array.isArray(sanitized.errors) ? sanitized.errors : [];
             sanitized.warnings = Array.isArray(sanitized.warnings) ? sanitized.warnings : [];
-            if (toolName === 'validate_workflow') {
+            if (toolName === 'n8n_workflow_json_validate') {
                 if (!sanitized.summary || typeof sanitized.summary !== 'object') {
                     sanitized.summary = {
                         totalNodes: 0,
@@ -610,13 +658,13 @@ class N8NDocumentationMCPServer {
         try {
             let validationResult;
             switch (toolName) {
-                case 'validate_node':
+                case 'n8n_node_validate':
                     validationResult = validation_schemas_1.ToolValidation.validateNodeOperation(args);
                     break;
-                case 'validate_workflow':
+                case 'n8n_workflow_json_validate':
                     validationResult = validation_schemas_1.ToolValidation.validateWorkflow(args);
                     break;
-                case 'search_nodes':
+                case 'n8n_nodes_search':
                     validationResult = validation_schemas_1.ToolValidation.validateSearchNodes(args);
                     break;
                 case 'n8n_workflow_create':
@@ -629,10 +677,32 @@ class N8NDocumentationMCPServer {
                 case 'n8n_workflow_autofix':
                     validationResult = validation_schemas_1.ToolValidation.validateWorkflowId(args);
                     break;
-                case 'n8n_executions':
-                    validationResult = args.action
+                case 'n8n_executions_get':
+                case 'n8n_executions_delete':
+                    validationResult = args.id
                         ? { valid: true, errors: [] }
-                        : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
+                        : { valid: false, errors: [{ field: 'id', message: 'id is required' }] };
+                    break;
+                case 'n8n_executions_list':
+                    validationResult = { valid: true, errors: [] };
+                    break;
+                case 'n8n_workflow_versions_list':
+                case 'n8n_workflow_versions_rollback':
+                case 'n8n_workflow_versions_delete':
+                case 'n8n_workflow_versions_prune':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
+                case 'n8n_workflow_versions_get':
+                    validationResult = args.versionId !== undefined
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'versionId', message: 'versionId is required' }] };
+                    break;
+                case 'n8n_workflow_versions_truncate':
+                    validationResult = args.confirmTruncate === true
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'confirmTruncate', message: 'confirmTruncate must be true' }] };
                     break;
                 case 'n8n_template_deploy':
                     validationResult = args.templateId !== undefined
@@ -681,7 +751,7 @@ class N8NDocumentationMCPServer {
         if (!args || typeof args !== 'object') {
             return false;
         }
-        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools];
+        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools, ...tools_workflow_files_1.n8nWorkflowFileTools];
         const tool = allTools.find(t => t.name === toolName);
         if (!tool || !tool.inputSchema) {
             return true;
@@ -745,13 +815,13 @@ class N8NDocumentationMCPServer {
             throw new Error(`Invalid arguments for tool ${name}: expected object, got ${typeof args}`);
         }
         switch (name) {
-            case 'tools_documentation':
+            case 'n8n_tools_documentation':
                 return this.getToolsDocumentation(args.topic, args.depth);
-            case 'search_nodes':
+            case 'n8n_nodes_search':
                 this.validateToolParams(name, args, ['query']);
                 const limit = args.limit !== undefined ? Number(args.limit) || 20 : 20;
                 return this.searchNodes(args.query, limit, { mode: args.mode, includeExamples: args.includeExamples });
-            case 'get_node':
+            case 'n8n_node_get':
                 this.validateToolParams(name, args, ['nodeType']);
                 if (args.mode === 'docs') {
                     return this.getNodeDocumentation(args.nodeType);
@@ -764,10 +834,10 @@ class N8NDocumentationMCPServer {
                     return this.searchNodeProperties(args.nodeType, args.propertyQuery, maxResults);
                 }
                 return this.getNode(args.nodeType, args.detail, args.mode, args.includeTypeInfo, args.includeExamples, args.fromVersion, args.toVersion);
-            case 'validate_node':
+            case 'n8n_node_validate':
                 this.validateToolParams(name, args, ['nodeType', 'config']);
                 if (typeof args.config !== 'object' || args.config === null) {
-                    logger_1.logger.warn(`validate_node called with invalid config type: ${typeof args.config}`);
+                    logger_1.logger.warn(`n8n_node_validate called with invalid config type: ${typeof args.config}`);
                     const validationMode = args.mode || 'full';
                     if (validationMode === 'minimal') {
                         return {
@@ -795,7 +865,7 @@ class N8NDocumentationMCPServer {
                         suggestions: [
                             '🔧 RECOVERY: Invalid config detected. Fix with:',
                             '   • Ensure config is an object: { "resource": "...", "operation": "..." }',
-                            '   • Use get_node to see required fields for this node type',
+                            '   • Use n8n_node_get to see required fields for this node type',
                             '   • Check if the node type is correct before configuring it'
                         ],
                         summary: {
@@ -811,12 +881,12 @@ class N8NDocumentationMCPServer {
                     return this.validateNodeMinimal(args.nodeType, args.config);
                 }
                 return this.validateNodeConfig(args.nodeType, args.config, 'operation', args.profile);
-            case 'get_template':
+            case 'n8n_template_get':
                 this.validateToolParams(name, args, ['templateId']);
                 const templateId = Number(args.templateId);
                 const templateMode = args.mode || 'full';
                 return this.getTemplate(templateId, templateMode);
-            case 'search_templates': {
+            case 'n8n_templates_search': {
                 const searchMode = args.searchMode || 'keyword';
                 const searchLimit = Math.min(Math.max(Number(args.limit) || 20, 1), 100);
                 const searchOffset = Math.max(Number(args.offset) || 0, 0);
@@ -849,7 +919,7 @@ class N8NDocumentationMCPServer {
                         return this.searchTemplates(args.query, searchLimit, searchOffset, searchFields);
                 }
             }
-            case 'validate_workflow':
+            case 'n8n_workflow_json_validate':
                 this.validateToolParams(name, args, ['workflow']);
                 return this.validateWorkflow(args.workflow, args.options);
             case 'n8n_workflow_create':
@@ -896,34 +966,40 @@ class N8NDocumentationMCPServer {
             case 'n8n_workflow_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
-            case 'n8n_executions': {
-                this.validateToolParams(name, args, ['action']);
-                const execAction = args.action;
-                switch (execAction) {
-                    case 'get':
-                        if (!args.id) {
-                            throw new Error('id is required for action=get');
-                        }
-                        return n8nHandlers.handleGetExecution(args, this.instanceContext);
-                    case 'list':
-                        return n8nHandlers.handleListExecutions(args, this.instanceContext);
-                    case 'delete':
-                        if (!args.id) {
-                            throw new Error('id is required for action=delete');
-                        }
-                        return n8nHandlers.handleDeleteExecution(args, this.instanceContext);
-                    default:
-                        throw new Error(`Unknown action: ${execAction}. Valid actions: get, list, delete`);
-                }
-            }
+            case 'n8n_executions_get':
+                this.validateToolParams(name, args, ['id']);
+                return n8nHandlers.handleGetExecution(args, this.instanceContext);
+            case 'n8n_executions_list':
+                return n8nHandlers.handleListExecutions(args, this.instanceContext);
+            case 'n8n_executions_delete':
+                this.validateToolParams(name, args, ['id']);
+                return n8nHandlers.handleDeleteExecution(args, this.instanceContext);
             case 'n8n_health_check':
                 if (args.mode === 'diagnostic') {
                     return n8nHandlers.handleDiagnostic({ params: { arguments: args } }, this.instanceContext);
                 }
                 return n8nHandlers.handleHealthCheck(this.instanceContext);
-            case 'n8n_workflow_versions':
-                this.validateToolParams(name, args, ['mode']);
-                return n8nHandlers.handleWorkflowVersions(args, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_list':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'list' }, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_get':
+                this.validateToolParams(name, args, ['versionId']);
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'get' }, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_rollback':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'rollback' }, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_delete':
+                this.validateToolParams(name, args, ['workflowId']);
+                if (!args.versionId && !args.deleteAll) {
+                    throw new Error('versionId is required unless deleteAll=true');
+                }
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'delete' }, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_prune':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'prune' }, this.repository, this.instanceContext);
+            case 'n8n_workflow_versions_truncate':
+                this.validateToolParams(name, args, ['confirmTruncate']);
+                return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'truncate' }, this.repository, this.instanceContext);
             case 'n8n_template_deploy':
                 this.validateToolParams(name, args, ['templateId']);
                 await this.ensureInitialized();
@@ -932,6 +1008,24 @@ class N8NDocumentationMCPServer {
                 if (!this.repository)
                     throw new Error('Repository not initialized');
                 return n8nHandlers.handleDeployTemplate(args, this.templateService, this.repository, this.instanceContext);
+            case 'n8n_code_files_list':
+                this.validateToolParams(name, args, ['workflowId']);
+                return workflowFileHandlers.handleListCodeFiles(args);
+            case 'n8n_code_file_read':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+                return workflowFileHandlers.handleReadCodeFile(args);
+            case 'n8n_code_file_write':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+                return workflowFileHandlers.handleWriteCodeFile(args);
+            case 'n8n_set_files_list':
+                this.validateToolParams(name, args, ['workflowId']);
+                return workflowFileHandlers.handleListSetFiles(args);
+            case 'n8n_set_file_read':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+                return workflowFileHandlers.handleReadSetFile(args);
+            case 'n8n_set_file_write':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+                return workflowFileHandlers.handleWriteSetFile(args);
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }
@@ -1766,10 +1860,10 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         const validDetailLevels = ['minimal', 'standard', 'full'];
         const validModes = ['info', 'versions', 'compare', 'breaking', 'migrations'];
         if (!validDetailLevels.includes(detail)) {
-            throw new Error(`get_node: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
+            throw new Error(`n8n_node_get: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
         }
         if (!validModes.includes(mode)) {
-            throw new Error(`get_node: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
+            throw new Error(`n8n_node_get: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
         }
         const normalizedType = node_type_normalizer_1.NodeTypeNormalizer.normalizeToFullForm(nodeType);
         if (mode !== 'info') {
@@ -1844,21 +1938,21 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
                 return this.getVersionHistory(nodeType);
             case 'compare':
                 if (!fromVersion) {
-                    throw new Error(`get_node: fromVersion is required for compare mode (nodeType: ${nodeType})`);
+                    throw new Error(`n8n_node_get: fromVersion is required for compare mode (nodeType: ${nodeType})`);
                 }
                 return this.compareVersions(nodeType, fromVersion, toVersion);
             case 'breaking':
                 if (!fromVersion) {
-                    throw new Error(`get_node: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
+                    throw new Error(`n8n_node_get: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
                 }
                 return this.getBreakingChanges(nodeType, fromVersion, toVersion);
             case 'migrations':
                 if (!fromVersion || !toVersion) {
-                    throw new Error(`get_node: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
+                    throw new Error(`n8n_node_get: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
                 }
                 return this.getMigrations(nodeType, fromVersion, toVersion);
             default:
-                throw new Error(`get_node: Unknown mode: ${mode} (nodeType: ${nodeType})`);
+                throw new Error(`n8n_node_get: Unknown mode: ${mode} (nodeType: ${nodeType})`);
         }
     }
     getVersionSummary(nodeType) {
@@ -2450,7 +2544,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         return {
             ...result,
             tip: result.items.length > 0 ?
-                `Use get_template(templateId) to get full workflow details. Total: ${result.total} templates available.` :
+                `Use n8n_template_get(templateId) to get full workflow details. Total: ${result.total} templates available.` :
                 "No templates found. Run 'npm run fetch:templates' to update template database"
         };
     }
@@ -2479,7 +2573,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         if (!template) {
             return {
                 error: `Template ${templateId} not found`,
-                tip: "Use list_templates, list_node_templates or search_templates to find available templates"
+                tip: "Use list_templates, list_node_templates or n8n_templates_search to find available templates"
             };
         }
         const usage = mode === 'nodes_only' ? "Node list for quick overview" :
@@ -2520,7 +2614,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
                 ...result,
                 message: `No templates found for task: ${task}`,
                 availableTasks,
-                tip: "Try a different task or use search_templates for custom searches"
+                tip: "Try a different task or use n8n_templates_search for custom searches"
             };
         }
         return {

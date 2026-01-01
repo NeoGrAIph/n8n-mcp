@@ -138,7 +138,7 @@ Auto-sanitization CANNOT fix:
 ### Recovery Guidance
 If validation still fails after auto-sanitization:
 1. Check error details for specific issues
-2. Use \`validate_workflow\` to see all validation errors
+2. Use \`n8n_workflow_json_validate\` to see all validation errors
 3. For connection issues, use \`cleanStaleConnections\` operation
 4. For branch mismatches, add missing output connections
 5. For paradoxical corrupted workflows, create new workflow and migrate nodes
@@ -414,7 +414,7 @@ n8n_workflow_update_partial({
             'Nested property removal with dot notation only removes the specific nested field, not the entire parent object',
             'Array index notation (e.g., "parameters.headers[0]") is not supported - remove the entire array property instead'
         ],
-        relatedTools: ['n8n_workflow_update_full', 'n8n_workflow_get', 'validate_workflow', 'tools_documentation']
+        relatedTools: ['n8n_workflow_update_full', 'n8n_workflow_get', 'n8n_workflow_json_validate', 'n8n_tools_documentation']
     }
 };
 //# sourceMappingURL=n8n-update-partial-workflow.js.map

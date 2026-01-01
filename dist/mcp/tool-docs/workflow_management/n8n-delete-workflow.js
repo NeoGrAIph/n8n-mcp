@@ -46,7 +46,7 @@ exports.n8nDeleteWorkflowDoc = {
             'Active workflows can be deleted',
             'No built-in confirmation'
         ],
-        relatedTools: ['n8n_workflow_get', 'n8n_workflows_list', 'n8n_workflow_update_partial', 'n8n_executions']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflows_list', 'n8n_workflow_update_partial', 'n8n_executions_list']
     }
 };
 //# sourceMappingURL=n8n-delete-workflow.js.map

@@ -108,10 +108,10 @@ The tool auto-detects the appropriate trigger type by analyzing the workflow's t
 When execution fails, the response includes guidance for debugging:
 
 **With Execution ID** (workflow started but failed):
-- Use n8n_executions({action: 'get', id: executionId, mode: 'preview'}) to investigate
+- Use n8n_executions_get({id: executionId, mode: 'preview'}) to investigate
 
 **Without Execution ID** (workflow didn't start):
-- Use n8n_executions({action: 'list', workflowId: 'wf_id'}) to find recent executions
+- Use n8n_executions_list({workflowId: 'wf_id'}) to find recent executions
 
 **Common Errors:**
 - "Workflow not found" - Check workflow ID exists
@@ -123,7 +123,7 @@ When execution fails, the response includes guidance for debugging:
             'Let auto-detection choose the trigger type when possible',
             'Ensure workflow has a webhook, form, or chat trigger before testing',
             'For chat workflows, provide sessionId for multi-turn conversations',
-            'Use mode="preview" with n8n_executions for efficient debugging',
+            'Use mode="preview" with n8n_executions_get for efficient debugging',
             'Test with small data payloads first',
             'Activate workflows before testing (use n8n_workflow_update_partial with activateWorkflow)'
         ],
@@ -134,7 +134,7 @@ When execution fails, the response includes guidance for debugging:
             'Form data must match expected form fields',
             'Webhook method must match node configuration'
         ],
-        relatedTools: ['n8n_executions', 'n8n_workflow_get', 'n8n_workflow_create', 'n8n_workflow_validate']
+        relatedTools: ['n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_get', 'n8n_workflow_create', 'n8n_workflow_validate']
     }
 };
 //# sourceMappingURL=n8n-test-workflow.js.map

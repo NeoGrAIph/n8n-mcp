@@ -12,7 +12,7 @@ exports.n8nCreateWorkflowDoc = {
         tips: [
             'Workflow created inactive',
             'Returns ID for future updates',
-            'Validate first with validate_workflow',
+            'Validate first with n8n_workflow_json_validate',
             'Auto-sanitization fixes operator structures and missing metadata during creation'
         ]
     },
@@ -21,7 +21,7 @@ exports.n8nCreateWorkflowDoc = {
         parameters: {
             name: { type: 'string', required: true, description: 'Workflow name' },
             nodes: { type: 'array', required: true, description: 'Array of nodes with id, name, type, typeVersion, position, parameters' },
-            connections: { type: 'object', required: true, description: 'Node connections. Keys are source node IDs' },
+            connections: { type: 'object', required: true, description: 'Node connections. Keys are source node names (not IDs)' },
             settings: { type: 'object', description: 'Optional workflow settings (timezone, error handling, etc.)' }
         },
         returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_workflow_get with mode "structure" to verify current state if needed.',
@@ -56,8 +56,8 @@ n8n_workflow_create({
     }
   ],
   connections: {
-    "webhook_1": {
-      "main": [[{node: "slack_1", type: "main", index: 0}]]
+    "Webhook": {
+      "main": [[{node: "Slack", type: "main", index: 0}]]
     }
   }
 })`,
@@ -82,7 +82,7 @@ n8n_workflow_create({
         ],
         performance: 'Network-dependent - Typically 100-500ms depending on workflow size',
         bestPractices: [
-            'Validate with validate_workflow first',
+            'Validate with n8n_workflow_json_validate first',
             'Use unique node IDs',
             'Position nodes for readability',
             'Test with n8n_workflow_test'
@@ -96,7 +96,7 @@ n8n_workflow_create({
             '**Auto-sanitization runs on creation**: All nodes sanitized before workflow created (operator structures fixed, missing metadata added)',
             '**Auto-sanitization cannot prevent all failures**: Broken connections or invalid node configurations may still cause creation to fail'
         ],
-        relatedTools: ['validate_workflow', 'n8n_workflow_update_partial', 'n8n_workflow_test']
+        relatedTools: ['n8n_workflow_json_validate', 'n8n_workflow_update_partial', 'n8n_workflow_test']
     }
 };
 //# sourceMappingURL=n8n-create-workflow.js.map

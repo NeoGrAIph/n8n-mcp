@@ -2,15 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTemplateDoc = void 0;
 exports.getTemplateDoc = {
-    name: 'get_template',
+    name: 'n8n_template_get',
     category: 'templates',
     essentials: {
-        description: 'Get workflow template by ID with configurable detail level. Ready to import. IDs from search_templates.',
+        description: 'Get workflow template by ID with configurable detail level. Ready to import. IDs from n8n_templates_search.',
         keyParameters: ['templateId', 'mode'],
-        example: 'get_template({templateId: 1234, mode: "full"})',
+        example: 'n8n_template_get({templateId: 1234, mode: "full"})',
         performance: 'Fast (<100ms) - single database lookup',
         tips: [
-            'Get template IDs from search_templates first',
+            'Get template IDs from n8n_templates_search first',
             'Use mode="nodes_only" for quick overview, "structure" for topology, "full" for import',
             'Returns complete workflow JSON ready for import into n8n'
         ]
@@ -21,7 +21,7 @@ exports.getTemplateDoc = {
             templateId: {
                 type: 'number',
                 required: true,
-                description: 'The numeric ID of the template to retrieve. Get IDs from search_templates'
+                description: 'The numeric ID of the template to retrieve. Get IDs from n8n_templates_search'
             },
             mode: {
                 type: 'string',
@@ -43,14 +43,14 @@ exports.getTemplateDoc = {
   - url: Link to template on n8n.io
   - workflow: Complete workflow JSON with structure:
     - nodes: Array of node objects (id, name, type, typeVersion, position, parameters)
-    - connections: Object mapping source nodes to targets
+    - connections: Object mapping source node names to targets
     - settings: Workflow configuration (timezone, error handling, etc.)
 - usage: Instructions for using the workflow`,
         examples: [
-            'get_template({templateId: 1234}) - Get complete workflow (default mode="full")',
-            'get_template({templateId: 1234, mode: "nodes_only"}) - Get just the node list',
-            'get_template({templateId: 1234, mode: "structure"}) - Get nodes and connections',
-            'get_template({templateId: 5678, mode: "full"}) - Get complete workflow JSON for import'
+            'n8n_template_get({templateId: 1234}) - Get complete workflow (default mode="full")',
+            'n8n_template_get({templateId: 1234, mode: "nodes_only"}) - Get just the node list',
+            'n8n_template_get({templateId: 1234, mode: "structure"}) - Get nodes and connections',
+            'n8n_template_get({templateId: 5678, mode: "full"}) - Get complete workflow JSON for import'
         ],
         useCases: [
             'Download workflows for direct import into n8n',
@@ -78,7 +78,7 @@ exports.getTemplateDoc = {
             'Not all templates work with all n8n versions',
             'Template may reference external services you don\'t have access to'
         ],
-        relatedTools: ['search_templates', 'n8n_workflow_create']
+        relatedTools: ['n8n_templates_search', 'n8n_workflow_create']
     }
 };
 //# sourceMappingURL=get-template.js.map

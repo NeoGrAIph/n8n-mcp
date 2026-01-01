@@ -9,6 +9,7 @@ exports.startFixedHTTPServer = startFixedHTTPServer;
 const express_1 = __importDefault(require("express"));
 const tools_1 = require("./mcp/tools");
 const tools_n8n_manager_1 = require("./mcp/tools-n8n-manager");
+const tool_annotations_1 = require("./mcp/tool-annotations");
 const server_1 = require("./mcp/server");
 const logger_1 = require("./utils/logger");
 const auth_1 = require("./utils/auth");
@@ -102,7 +103,7 @@ async function startFixedHTTPServer() {
     app.use((req, res, next) => {
         const allowedOrigin = process.env.CORS_ORIGIN || '*';
         res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-        res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
         res.setHeader('Access-Control-Max-Age', '86400');
         if (req.method === 'OPTIONS') {
@@ -298,10 +299,11 @@ async function startFixedHTTPServer() {
                             if ((0, n8n_api_1.isN8nApiConfigured)()) {
                                 tools.push(...tools_n8n_manager_1.n8nManagementTools);
                             }
+                            const toolsWithAnnotations = (0, tool_annotations_1.withToolAnnotations)(tools);
                             response = {
                                 jsonrpc: '2.0',
                                 result: {
-                                    tools
+                                    tools: toolsWithAnnotations
                                 },
                                 id: jsonRpcRequest.id
                             };
@@ -320,7 +322,7 @@ async function startFixedHTTPServer() {
                                         }
                                     ]
                                 };
-                                if (toolName.startsWith('validate_')) {
+                                if (toolName === 'n8n_node_validate' || toolName === 'n8n_workflow_validate' || toolName === 'n8n_workflow_json_validate') {
                                     const resultSize = responseText.length;
                                     if (resultSize > 1000000) {
                                         logger_1.logger.warn(`Validation tool ${toolName} response is very large (${resultSize} chars). ` +

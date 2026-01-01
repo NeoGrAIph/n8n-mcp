@@ -213,7 +213,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                 });
                 const recoverySteps = [];
                 if (errorTypes.has('operator_issues')) {
-                    recoverySteps.push('Operator structure issue detected. Use validate_node_operation to check specific nodes.');
+                    recoverySteps.push('Operator structure issue detected. Use n8n_node_validate to check specific nodes.');
                     recoverySteps.push('Binary operators (equals, contains, greaterThan, etc.) must NOT have singleValue:true');
                     recoverySteps.push('Unary operators (isEmpty, isNotEmpty, true, false) REQUIRE singleValue:true');
                 }
@@ -231,7 +231,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                 if (recoverySteps.length === 0) {
                     recoverySteps.push('Review the validation errors listed above');
                     recoverySteps.push('Fix issues using updateNode or cleanStaleConnections operations');
-                    recoverySteps.push('Run validate_workflow again to verify fixes');
+                    recoverySteps.push('Run n8n_workflow_json_validate again to verify fixes');
                 }
                 const errorMessage = structureErrors.length === 1
                     ? `Workflow validation failed: ${structureErrors[0]}`

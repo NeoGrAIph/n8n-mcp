@@ -1210,8 +1210,8 @@ async function handleHealthCheck(context) {
         responseData.nextSteps = [
             '• Create workflow: n8n_workflow_create',
             '• List workflows: n8n_workflows_list',
-            '• Search nodes: search_nodes',
-            '• Browse templates: search_templates'
+            '• Search nodes: n8n_nodes_search',
+            '• Browse templates: n8n_templates_search'
         ];
         if (versionCheck.isOutdated && versionCheck.latestVersion) {
             responseData.updateWarning = `⚠️  n8n-mcp v${versionCheck.latestVersion} is available (you have v${versionCheck.currentVersion}). Update recommended.`;
@@ -1518,12 +1518,12 @@ async function handleDiagnostic(request, context) {
                     timing: 'Typically 6-14 minutes to build'
                 },
                 {
-                    action: 'search_nodes',
+                    action: 'n8n_nodes_search',
                     description: 'Discover available nodes',
                     timing: 'Fast - explore 500+ nodes'
                 },
                 {
-                    action: 'search_templates',
+                    action: 'n8n_templates_search',
                     description: 'Browse pre-built workflows',
                     timing: 'Find examples quickly'
                 }
@@ -1562,9 +1562,9 @@ async function handleDiagnostic(request, context) {
             whatYouCanDoNow: {
                 documentation: [
                     {
-                        tool: 'search_nodes',
+                        tool: 'n8n_nodes_search',
                         description: 'Search 500+ n8n nodes',
-                        example: 'search_nodes({query: "slack"})'
+                        example: 'n8n_nodes_search({query: "slack"})'
                     },
                     {
                         tool: 'get_node_essentials',
@@ -1572,14 +1572,14 @@ async function handleDiagnostic(request, context) {
                         example: 'get_node_essentials({nodeType: "nodes-base.httpRequest"})'
                     },
                     {
-                        tool: 'search_templates',
+                        tool: 'n8n_templates_search',
                         description: 'Browse workflow templates',
-                        example: 'search_templates({query: "chatbot"})'
+                        example: 'n8n_templates_search({query: "chatbot"})'
                     },
                     {
-                        tool: 'validate_workflow',
+                        tool: 'n8n_workflow_json_validate',
                         description: 'Validate workflow JSON',
-                        example: 'validate_workflow({workflow: {...}})'
+                        example: 'n8n_workflow_json_validate({workflow: {...}})'
                     }
                 ],
                 note: '14 documentation tools available without API configuration'
@@ -1817,7 +1817,7 @@ async function handleDeployTemplate(args, templateService, repository, context) 
                 success: false,
                 error: `Template ${input.templateId} not found`,
                 details: {
-                    hint: 'Use search_templates to find available templates',
+                    hint: 'Use n8n_templates_search to find available templates',
                     templateUrl: `https://n8n.io/workflows/${input.templateId}`
                 }
             };

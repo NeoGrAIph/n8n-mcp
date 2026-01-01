@@ -4,7 +4,7 @@ exports.n8nManagementTools = void 0;
 exports.n8nManagementTools = [
     {
         name: 'n8n_workflow_create',
-        description: `Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID.`,
+        description: `Create a new workflow in n8n. Use this when you need to persist a workflow definition from JSON into the n8n instance. Provide name, nodes, and connections (node types must use full n8n-nodes-base.* form) plus optional settings; the workflow is created inactive. Returns the new workflow id/name and basic stats.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -22,10 +22,10 @@ exports.n8nManagementTools = [
                             id: { type: 'string' },
                             name: { type: 'string' },
                             type: { type: 'string' },
-                            typeVersion: { type: 'number' },
+                            typeVersion: { type: 'integer' },
                             position: {
                                 type: 'array',
-                                items: { type: 'number' },
+                                items: { type: 'integer' },
                                 minItems: 2,
                                 maxItems: 2
                             },
@@ -35,14 +35,14 @@ exports.n8nManagementTools = [
                             notes: { type: 'string' },
                             continueOnFail: { type: 'boolean' },
                             retryOnFail: { type: 'boolean' },
-                            maxTries: { type: 'number' },
-                            waitBetweenTries: { type: 'number' }
+                            maxTries: { type: 'integer' },
+                            waitBetweenTries: { type: 'integer' }
                         }
                     }
                 },
                 connections: {
                     type: 'object',
-                    description: 'Workflow connections object. Keys are source node IDs, values define output connections'
+                    description: 'Workflow connections object. Keys are source node names (the name field, not id), values define output connections'
                 },
                 settings: {
                     type: 'object',
@@ -54,7 +54,7 @@ exports.n8nManagementTools = [
                         saveDataSuccessExecution: { type: 'string', enum: ['all', 'none'] },
                         saveManualExecutions: { type: 'boolean' },
                         saveExecutionProgress: { type: 'boolean' },
-                        executionTimeout: { type: 'number' },
+                        executionTimeout: { type: 'integer' },
                         errorWorkflow: { type: 'string' }
                     }
                 }
@@ -64,7 +64,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_get',
-        description: `Get workflow by ID with different detail levels. Use mode='full' for complete workflow, 'details' for metadata+stats, 'structure' for nodes/connections only, 'minimal' for id/name/active/tags.`,
+        description: `Fetch a workflow by id from n8n. Use this when you need the current workflow definition or metadata. Provide id and optionally mode to control detail (full, details, structure, minimal). Returns workflow data; details adds execution stats and webhook info.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -84,7 +84,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_update_full',
-        description: `Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_workflow_update_partial.`,
+        description: `Replace a workflow's nodes, connections, and settings in n8n. Use this when you want a full overwrite rather than incremental diffs. Provide id and the updated fields; nodes/connections should be complete if you modify structure. Returns basic info about the updated workflow and writes changes to n8n.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -118,7 +118,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_update_partial',
-        description: `Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, updateSettings, updateName, add/removeTag. See tools_documentation("n8n_workflow_update_partial", "full") for details.`,
+        description: `Apply diff-based updates to an existing workflow. Use this when you need targeted changes like add/remove/update nodes or connections. Provide id and an operations[] list plus optional validateOnly and continueOnError. Returns applied/failed operations and writes changes when validateOnly is false.`,
         inputSchema: {
             type: 'object',
             additionalProperties: true,
@@ -149,7 +149,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_delete',
-        description: `Permanently delete a workflow. This action cannot be undone.`,
+        description: `Delete a workflow by id in n8n. Use this when you need to permanently remove a workflow. Provide id. Returns confirmation of deletion.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -163,12 +163,12 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflows_list',
-        description: `List workflows (minimal metadata only). Returns id/name/active/dates/tags. Check hasMore/nextCursor for pagination.`,
+        description: `List workflows in n8n with optional filters. Use this when you need workflow IDs or to browse by tags/active status. Provide limit, cursor, active, tags, or projectId as needed. Returns minimal metadata and pagination cursors.`,
         inputSchema: {
             type: 'object',
             properties: {
                 limit: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Number of workflows to return (1-100, default: 100)'
                 },
                 cursor: {
@@ -197,7 +197,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_validate',
-        description: `Validate workflow by ID. Checks nodes, connections, expressions. Returns errors/warnings/suggestions.`,
+        description: `Validate an existing workflow in n8n by id. Use this when you need server-side validation of nodes, connections, and expressions. Provide id and optional options to control checks and profile. Returns validity, summary, errors, warnings, and suggestions for that workflow.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -234,7 +234,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_autofix',
-        description: `Automatically fix common workflow validation errors. Preview fixes or apply them. Fixes expression format, typeVersion, error output config, webhook paths.`,
+        description: `Generate or apply automatic fixes for a workflow. Use this when validation finds common issues that can be corrected. Provide id and optional applyFixes, fixTypes, confidenceThreshold, and maxFixes; applyFixes=false previews only. Returns fix summaries and counts, and writes changes when applyFixes is true.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -260,7 +260,7 @@ exports.n8nManagementTools = [
                     description: 'Minimum confidence level for fixes (default: medium)'
                 },
                 maxFixes: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Maximum number of fixes to apply (default: 50)'
                 }
             },
@@ -269,7 +269,7 @@ exports.n8nManagementTools = [
     },
     {
         name: 'n8n_workflow_test',
-        description: `Test/trigger workflow execution. Auto-detects trigger type (webhook/form/chat). Supports: webhook (HTTP), form (fields), chat (message). Note: Only workflows with these trigger types can be executed externally.`,
+        description: `Trigger a workflow execution via webhook, form, or chat. Use this when you need to run a workflow and observe outputs or side effects. Provide workflowId and optional trigger parameters such as triggerType, message, or httpMethod. Returns execution details or response data when available.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -308,7 +308,7 @@ exports.n8nManagementTools = [
                     description: 'Custom HTTP headers'
                 },
                 timeout: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Timeout in ms (default: 120000)'
                 },
                 waitForResponse: {
@@ -320,86 +320,104 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_executions',
-        description: `Manage workflow executions: get details, list, or delete. Use action='get' with id for execution details, action='list' for listing executions, action='delete' to remove execution record.`,
+        name: 'n8n_executions_get',
+        description: `Get details for a specific execution by id. Use this when you need to inspect a run for debugging or audit. Provide id plus optional mode/nodeNames/itemsLimit to control response size and error detail. Returns the execution data, possibly filtered or summarized.`,
         inputSchema: {
             type: 'object',
             properties: {
-                action: {
-                    type: 'string',
-                    enum: ['get', 'list', 'delete'],
-                    description: 'Operation: get=get execution details, list=list executions, delete=delete execution'
-                },
                 id: {
                     type: 'string',
-                    description: 'Execution ID (required for action=get or action=delete)'
+                    description: 'Execution ID (required)'
                 },
                 mode: {
                     type: 'string',
                     enum: ['preview', 'summary', 'filtered', 'full', 'error'],
-                    description: 'For action=get: preview=structure only, summary=2 items (default), filtered=custom, full=all data, error=optimized error debugging'
+                    description: 'Detail level: preview, summary (default), filtered, full, or error'
                 },
                 nodeNames: {
                     type: 'array',
                     items: { type: 'string' },
-                    description: 'For action=get with mode=filtered: filter to specific nodes by name'
+                    description: 'For mode=filtered: filter to specific nodes by name'
                 },
                 itemsLimit: {
-                    type: 'number',
-                    description: 'For action=get with mode=filtered: items per node (0=structure, 2=default, -1=unlimited)'
+                    type: 'integer',
+                    description: 'For mode=filtered: items per node (0=structure, 2=default, -1=unlimited)'
                 },
                 includeInputData: {
                     type: 'boolean',
-                    description: 'For action=get: include input data in addition to output (default: false)'
+                    description: 'Include input data in addition to output (default: false)'
                 },
                 errorItemsLimit: {
-                    type: 'number',
-                    description: 'For action=get with mode=error: sample items from upstream node (default: 2, max: 100)'
+                    type: 'integer',
+                    description: 'For mode=error: sample items from upstream node (default: 2, max: 100)'
                 },
                 includeStackTrace: {
                     type: 'boolean',
-                    description: 'For action=get with mode=error: include full stack trace (default: false, shows truncated)'
+                    description: 'For mode=error: include full stack trace (default: false, shows truncated)'
                 },
                 includeExecutionPath: {
                     type: 'boolean',
-                    description: 'For action=get with mode=error: include execution path leading to error (default: true)'
+                    description: 'For mode=error: include execution path leading to error (default: true)'
                 },
                 fetchWorkflow: {
                     type: 'boolean',
-                    description: 'For action=get with mode=error: fetch workflow for accurate upstream detection (default: true)'
-                },
+                    description: 'For mode=error: fetch workflow for accurate upstream detection (default: true)'
+                }
+            },
+            required: ['id']
+        }
+    },
+    {
+        name: 'n8n_executions_list',
+        description: `List executions with filters such as status, workflowId, and limit. Use this to monitor recent runs or search for failures. Provide limit/cursor and optional workflowId, projectId, status, includeData. Returns a paginated list of execution records and cursors.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
                 limit: {
-                    type: 'number',
-                    description: 'For action=list: number of executions to return (1-100, default: 100)'
+                    type: 'integer',
+                    description: 'Number of executions to return (1-100, default: 100)'
                 },
                 cursor: {
                     type: 'string',
-                    description: 'For action=list: pagination cursor from previous response'
+                    description: 'Pagination cursor from previous response'
                 },
                 workflowId: {
                     type: 'string',
-                    description: 'For action=list: filter by workflow ID'
+                    description: 'Filter by workflow ID'
                 },
                 projectId: {
                     type: 'string',
-                    description: 'For action=list: filter by project ID (enterprise feature)'
+                    description: 'Filter by project ID (enterprise feature)'
                 },
                 status: {
                     type: 'string',
                     enum: ['success', 'error', 'waiting'],
-                    description: 'For action=list: filter by execution status'
+                    description: 'Filter by execution status'
                 },
                 includeData: {
                     type: 'boolean',
-                    description: 'For action=list: include execution data (default: false)'
+                    description: 'Include execution data (default: false)'
+                }
+            }
+        }
+    },
+    {
+        name: 'n8n_executions_delete',
+        description: `Delete an execution record by id. Use this when you need to remove stored execution data. Provide id. Returns confirmation of deletion.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                id: {
+                    type: 'string',
+                    description: 'Execution ID (required)'
                 }
             },
-            required: ['action']
+            required: ['id']
         }
     },
     {
         name: 'n8n_health_check',
-        description: `Check n8n instance health and API connectivity. Use mode='diagnostic' for detailed troubleshooting with env vars and tool status.`,
+        description: `Check n8n API connectivity and MCP server status. Use this when you need to verify credentials, versions, or network reachability. Provide mode=status or mode=diagnostic and optional verbose. Returns health status, version info, and troubleshooting hints.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -417,67 +435,126 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_workflow_versions',
-        description: `Manage workflow version history, rollback, and cleanup. Six modes:
-- list: Show version history for a workflow
-- get: Get details of specific version
-- rollback: Restore workflow to previous version (creates backup first)
-- delete: Delete specific version or all versions for a workflow
-- prune: Manually trigger pruning to keep N most recent versions
-- truncate: Delete ALL versions for ALL workflows (requires confirmation)`,
+        name: 'n8n_workflow_versions_list',
+        description: `List stored version history for a workflow. Use this when you need to inspect version counts or pick a rollback target. Provide workflowId and optional limit. Returns version metadata and totals.`,
         inputSchema: {
             type: 'object',
             properties: {
-                mode: {
-                    type: 'string',
-                    enum: ['list', 'get', 'rollback', 'delete', 'prune', 'truncate'],
-                    description: 'Operation mode'
-                },
                 workflowId: {
                     type: 'string',
-                    description: 'Workflow ID (required for list, rollback, delete, prune)'
-                },
-                versionId: {
-                    type: 'number',
-                    description: 'Version ID (required for get mode and single version delete, optional for rollback)'
+                    description: 'Workflow ID (required)'
                 },
                 limit: {
-                    type: 'number',
+                    type: 'integer',
                     default: 10,
-                    description: 'Max versions to return in list mode'
+                    description: 'Max versions to return'
+                }
+            },
+            required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_workflow_versions_get',
+        description: `Get a specific workflow version by versionId. Use this when you need the exact snapshot for analysis or rollback planning. Provide versionId. Returns the full version record.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                versionId: {
+                    type: 'integer',
+                    description: 'Version ID (required)'
+                }
+            },
+            required: ['versionId']
+        }
+    },
+    {
+        name: 'n8n_workflow_versions_rollback',
+        description: `Rollback a workflow to a previous version. Use this when you want to revert to a known good snapshot. Provide workflowId and optional versionId/validateBefore. Returns rollback results and writes changes to n8n.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID (required)'
+                },
+                versionId: {
+                    type: 'integer',
+                    description: 'Specific version ID to rollback to (optional)'
                 },
                 validateBefore: {
                     type: 'boolean',
                     default: true,
                     description: 'Validate workflow structure before rollback'
+                }
+            },
+            required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_workflow_versions_delete',
+        description: `Delete workflow versions for a workflow. Use this when you need to remove version history. Provide workflowId and optionally versionId or deleteAll to choose scope. Returns confirmation and permanently removes versions.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID (required)'
+                },
+                versionId: {
+                    type: 'integer',
+                    description: 'Specific version ID to delete (optional)'
                 },
                 deleteAll: {
                     type: 'boolean',
                     default: false,
-                    description: 'Delete all versions for workflow (delete mode only)'
+                    description: 'Delete all versions for this workflow (delete mode only)'
+                }
+            },
+            required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_workflow_versions_prune',
+        description: `Prune old workflow versions and keep the most recent N. Use this to limit version history size. Provide workflowId and maxVersions. Returns how many versions were removed.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID (required)'
                 },
                 maxVersions: {
-                    type: 'number',
+                    type: 'integer',
                     default: 10,
-                    description: 'Keep N most recent versions (prune mode only)'
-                },
+                    description: 'Keep N most recent versions'
+                }
+            },
+            required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_workflow_versions_truncate',
+        description: `Truncate all workflow versions globally. Use this only when you need a full reset of version history. Provide confirmTruncate=true to proceed. Returns the count of deleted versions.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
                 confirmTruncate: {
                     type: 'boolean',
                     default: false,
-                    description: 'REQUIRED: Must be true to truncate all versions (truncate mode only)'
+                    description: 'REQUIRED: Must be true to truncate all versions'
                 }
             },
-            required: ['mode']
+            required: ['confirmTruncate']
         }
     },
     {
         name: 'n8n_template_deploy',
-        description: `Deploy a workflow template from n8n.io directly to your n8n instance. Deploys first, then auto-fixes common issues (expression format, typeVersions). Returns workflow ID, required credentials, and fixes applied.`,
+        description: `Deploy a workflow template from the local template database into n8n. Use this when you want to create a workflow from a known template ID. Provide templateId and optional name, autoUpgradeVersions, autoFix, and stripCredentials. Returns the new workflow id plus status and required credentials.`,
         inputSchema: {
             type: 'object',
             properties: {
                 templateId: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Template ID from n8n.io (required)'
                 },
                 name: {

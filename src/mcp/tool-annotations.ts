@@ -31,6 +31,13 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_workflow_versions_prune: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_workflow_versions_truncate: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_template_deploy: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+  // Workflow file tools (filesystem access)
+  n8n_code_files_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  n8n_code_file_read: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  n8n_code_file_write: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+  n8n_set_files_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  n8n_set_file_read: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  n8n_set_file_write: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
 };
 
 export function withToolAnnotations(tools: ToolDefinition[]): ToolDefinition[] {

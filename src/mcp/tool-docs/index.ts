@@ -31,6 +31,14 @@ import {
   n8nWorkflowVersionsTruncateDoc,
   n8nDeployTemplateDoc
 } from './workflow_management';
+import {
+  n8nCodeFilesListDoc,
+  n8nCodeFileReadDoc,
+  n8nCodeFileWriteDoc,
+  n8nSetFilesListDoc,
+  n8nSetFileReadDoc,
+  n8nSetFileWriteDoc
+} from './workflow_files';
 
 // Combine all tool documentations into a single object
 export const toolsDocumentation: Record<string, ToolDocumentation> = {
@@ -74,7 +82,15 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_workflow_versions_delete: n8nWorkflowVersionsDeleteDoc,
   n8n_workflow_versions_prune: n8nWorkflowVersionsPruneDoc,
   n8n_workflow_versions_truncate: n8nWorkflowVersionsTruncateDoc,
-  n8n_template_deploy: n8nDeployTemplateDoc
+  n8n_template_deploy: n8nDeployTemplateDoc,
+
+  // Workflow file tools
+  n8n_code_files_list: n8nCodeFilesListDoc,
+  n8n_code_file_read: n8nCodeFileReadDoc,
+  n8n_code_file_write: n8nCodeFileWriteDoc,
+  n8n_set_files_list: n8nSetFilesListDoc,
+  n8n_set_file_read: n8nSetFileReadDoc,
+  n8n_set_file_write: n8nSetFileWriteDoc
 };
 
 // Re-export types

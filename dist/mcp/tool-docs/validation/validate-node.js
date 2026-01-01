@@ -2,15 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateNodeDoc = void 0;
 exports.validateNodeDoc = {
-    name: 'validate_node',
+    name: 'n8n_node_validate',
     category: 'validation',
     essentials: {
         description: 'Validate n8n node configuration. Use mode="full" for comprehensive validation with errors/warnings/suggestions, mode="minimal" for quick required fields check.',
         keyParameters: ['nodeType', 'config', 'mode', 'profile'],
-        example: 'validate_node({nodeType: "nodes-base.slack", config: {resource: "channel", operation: "create"}})',
+        example: 'n8n_node_validate({nodeType: "nodes-base.slack", config: {resource: "channel", operation: "create"}})',
         performance: 'Fast (<100ms)',
         tips: [
-            'Always call get_node({detail:"standard"}) first to see required fields',
+            'Always call n8n_node_get({detail:"standard"}) first to see required fields',
             'Use mode="minimal" for quick checks during development',
             'Use mode="full" with profile="strict" before production deployment',
             'Includes automatic structure validation for filter, resourceMapper, etc.'
@@ -50,10 +50,10 @@ Validates complex n8n types automatically:
 - missingRequiredFields: (mode=minimal only) Array of missing required field names
 - summary: Object with hasErrors, errorCount, warningCount, suggestionCount`,
         examples: [
-            '// Full validation with default profile\nvalidate_node({nodeType: "nodes-base.slack", config: {resource: "channel", operation: "create"}})',
-            '// Quick required fields check\nvalidate_node({nodeType: "nodes-base.webhook", config: {}, mode: "minimal"})',
-            '// Strict validation for production\nvalidate_node({nodeType: "nodes-base.httpRequest", config: {...}, mode: "full", profile: "strict"})',
-            '// Validate IF node with filter\nvalidate_node({nodeType: "nodes-base.if", config: {conditions: {combinator: "and", conditions: [...]}}})'
+            '// Full validation with default profile\nn8n_node_validate({nodeType: "nodes-base.slack", config: {resource: "channel", operation: "create"}})',
+            '// Quick required fields check\nn8n_node_validate({nodeType: "nodes-base.webhook", config: {}, mode: "minimal"})',
+            '// Strict validation for production\nn8n_node_validate({nodeType: "nodes-base.httpRequest", config: {...}, mode: "full", profile: "strict"})',
+            '// Validate IF node with filter\nn8n_node_validate({nodeType: "nodes-base.if", config: {conditions: {combinator: "and", conditions: [...]}}})'
         ],
         useCases: [
             'Validate node configuration before adding to workflow',
@@ -64,7 +64,7 @@ Validates complex n8n types automatically:
         ],
         performance: 'Fast validation: <50ms for minimal mode, <100ms for full mode. Structure validation adds minimal overhead.',
         bestPractices: [
-            'Always call get_node() first to understand required fields',
+            'Always call n8n_node_get() first to understand required fields',
             'Use mode="minimal" for rapid iteration during development',
             'Use profile="strict" before deploying to production',
             'Pay attention to warnings - they often prevent runtime issues',
@@ -76,7 +76,7 @@ Validates complex n8n types automatically:
             'Some warnings may be acceptable for specific use cases',
             'Credential validation requires runtime context'
         ],
-        relatedTools: ['get_node', 'validate_workflow', 'n8n_workflow_autofix']
+        relatedTools: ['n8n_node_get', 'n8n_workflow_json_validate', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=validate-node.js.map
