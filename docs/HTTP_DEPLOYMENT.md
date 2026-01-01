@@ -204,10 +204,6 @@ When configured, you get additional n8n management tools:
 **System Tools:**
 - `n8n_health_check` - Check n8n connectivity
 
-**Legacy (kept for backwards compatibility):**
-- `n8n_executions` - Unified execution management via action (deprecated)
-- `n8n_workflow_versions` - Unified version management via mode (deprecated)
-
 #### Getting Your n8n API Key
 
 1. Log into your n8n instance

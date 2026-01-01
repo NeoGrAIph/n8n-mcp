@@ -462,10 +462,6 @@ Once connected, you can use these MCP tools in n8n:
 - `n8n_workflow_versions_prune` - Prune versions to keep N most recent
 - `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
 
-**Legacy (kept for backwards compatibility):**
-- `n8n_executions` - Unified execution management via action (deprecated)
-- `n8n_workflow_versions` - Unified version management via mode (deprecated)
-
 ### Using with AI Agents
 
 Connect n8n-MCP to AI Agent nodes for intelligent automation:

@@ -148,10 +148,6 @@ After restarting Claude Desktop:
 - **`n8n_workflow_versions_prune`** - Prune old versions
 - **`n8n_workflow_versions_truncate`** - Truncate ALL versions
 
-### Legacy (kept for backwards compatibility)
-- **`n8n_executions`** - Unified execution management via action (deprecated)
-- **`n8n_workflow_versions`** - Unified version management via mode (deprecated)
-
 ### Example Questions to Ask Claude:
 - "Show me all n8n nodes for working with databases"
 - "How do I use the HTTP Request node?"

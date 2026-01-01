@@ -50,6 +50,6 @@ export const n8nListWorkflowsDoc: ToolDocumentation = {
       'Server may return fewer than requested limit',
       'returned field is count of current page only, not system total'
     ],
-    relatedTools: ['n8n_get_workflow', 'n8n_update_partial_workflow', 'n8n_executions']
+    relatedTools: ['n8n_get_workflow', 'n8n_update_partial_workflow', 'n8n_executions_list']
   }
 };

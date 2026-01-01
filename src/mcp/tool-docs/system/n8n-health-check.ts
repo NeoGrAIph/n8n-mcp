@@ -95,6 +95,6 @@ Health checks are crucial for:
       'Does not check individual workflow health',
       'Health endpoint might be cached - not real-time for all metrics'
     ],
-    relatedTools: ['n8n_list_workflows', 'n8n_validate_workflow', 'n8n_workflow_versions']
+    relatedTools: ['n8n_list_workflows', 'n8n_validate_workflow', 'n8n_workflow_versions_list']
   }
 };

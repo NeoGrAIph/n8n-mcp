@@ -945,8 +945,8 @@ Once connected, Claude can use these powerful tools:
 - `get_node_essentials`, `get_node_info`, `get_node_documentation` → **`get_node`** (use `detail` and `mode`)
 - `list_nodes` → **`search_nodes`**
 - `search_node_properties` → **`get_node`** with `mode: "search_properties"`
-- `n8n_executions` → **`n8n_executions_get` / `n8n_executions_list` / `n8n_executions_delete`** (legacy kept)
-- `n8n_workflow_versions` → **`n8n_workflow_versions_*`** (legacy kept)
+- `n8n_executions` → **`n8n_executions_get` / `n8n_executions_list` / `n8n_executions_delete`** (legacy removed)
+- `n8n_workflow_versions` → **`n8n_workflow_versions_*`** (legacy removed)
 
 ### Core Tools (7 tools)
 - **`tools_documentation`** - Get documentation for any MCP tool (START HERE!)
@@ -1002,10 +1002,6 @@ These tools require `N8N_API_URL` and `N8N_API_KEY` in your configuration.
 
 #### System Tools
 - **`n8n_health_check`** - Check n8n API connectivity and features
-
-#### Legacy (kept for backwards compatibility)
-- **`n8n_executions`** - Unified execution management via `action` (deprecated; use split tools above)
-- **`n8n_workflow_versions`** - Unified version management via `mode` (deprecated; use split tools above)
 
 ### Example Usage
 

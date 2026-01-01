@@ -45,6 +45,6 @@ export const n8nDeleteWorkflowDoc: ToolDocumentation = {
       'Active workflows can be deleted',
       'No built-in confirmation'
     ],
-    relatedTools: ['n8n_get_workflow', 'n8n_list_workflows', 'n8n_update_partial_workflow', 'n8n_executions']
+    relatedTools: ['n8n_get_workflow', 'n8n_list_workflows', 'n8n_update_partial_workflow', 'n8n_executions_list']
   }
 };
