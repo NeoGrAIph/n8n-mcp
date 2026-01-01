@@ -543,12 +543,16 @@ export class SingleSessionHTTPServer {
           });
           
           // Set up cleanup handlers
+          const keepSessions = process.env.STREAMABLE_HTTP_KEEP_SESSIONS !== 'false';
           transport.onclose = () => {
             const sid = transport.sessionId;
-            if (sid) {
-              logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
-              this.removeSession(sid, 'transport_closed');
+            if (!sid) return;
+            if (keepSessions) {
+              logger.info('handleRequest: Transport closed, keeping session', { sessionId: sid });
+              return;
             }
+            logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
+            this.removeSession(sid, 'transport_closed');
           };
           
           // Handle transport errors to prevent connection drops
