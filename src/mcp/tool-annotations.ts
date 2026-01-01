@@ -19,7 +19,7 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_list_workflows: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_validate_workflow: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_autofix_workflow: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
-  n8n_test_workflow: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+  n8n_test_workflow: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_executions_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_executions_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_executions_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
