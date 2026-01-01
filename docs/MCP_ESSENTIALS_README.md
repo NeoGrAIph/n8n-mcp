@@ -7,7 +7,7 @@ n8n MCP now exposes a single `get_node` tool for node information. Use its **det
 - `detail: "minimal"` for the smallest possible response
 - `detail: "full"` only when you truly need exhaustive data
 
-This guide focuses on **essential configuration** using `get_node` with `detail: "standard"`, which replaces the legacy `get_node_essentials`.
+This guide focuses on **essential configuration** using `get_node` with `detail: "standard"`.
 
 ## Core Tool: `get_node` (detail: standard/minimal)
 
