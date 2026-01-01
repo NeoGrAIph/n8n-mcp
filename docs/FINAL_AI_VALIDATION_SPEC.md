@@ -1,5 +1,10 @@
 # Final AI Node Validation Specification
 
+> ⚠️ **Tool name changes (v2.29+)**  
+> Legacy tools `get_node_essentials`, `get_node_info`, and `get_node_documentation` were consolidated into `get_node`.  
+> Use `get_node({detail: "standard"|"minimal"})`, `get_node({detail: "full"})`, and `get_node({mode: "docs"})` respectively.
+> Any legacy references below should be mapped to `get_node` in current versions.
+
 ## AI Agent Deep Architecture Analysis
 
 ### 1. Prompt Construction and Message Flow

@@ -2,6 +2,14 @@
 
 ## Overview
 
+> ⚠️ **Tool name changes (v2.29+)**  
+> The legacy tools `get_node_essentials`, `get_node_info`, and `get_node_documentation` were consolidated into `get_node`.  
+> Use these mappings in current versions:
+> - `get_node_essentials` → `get_node({detail: "standard"|"minimal", includeExamples: true})`
+> - `get_node_info` → `get_node({detail: "full"})`
+> - `get_node_documentation` → `get_node({mode: "docs"})`
+> This guide keeps legacy examples for reference—update calls to `get_node` when using current versions.
+
 The n8n MCP has been enhanced with new tools that dramatically improve the AI agent experience when building n8n workflows. The key improvement is the `get_node_essentials` tool which reduces response sizes by 95% while providing all the information needed for basic configuration.
 
 ## New Tools

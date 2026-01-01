@@ -530,7 +530,7 @@ CRITICAL: Execute tools without commentary. Only respond AFTER all tools complet
 ### 2. Parallel Execution
 When operations are independent, execute them in parallel for maximum performance.
 
-✅ GOOD: Call search_nodes, list_nodes, and search_templates simultaneously
+✅ GOOD: Call search_nodes and search_templates simultaneously
 ❌ BAD: Sequential tool calls (await each one before the next)
 
 ### 3. Templates First
@@ -631,7 +631,7 @@ Default values cause runtime failures. Example:
 ### Level 4 - Post-Deployment
 1. `n8n_validate_workflow({id})` - Validate deployed workflow
 2. `n8n_autofix_workflow({id})` - Auto-fix common errors
-3. `n8n_executions({action: 'list'})` - Monitor execution status
+3. `n8n_executions_list({workflowId})` - Monitor execution status
 
 ## Response Format
 
@@ -938,6 +938,9 @@ When Claude, Anthropic's AI assistant, tested n8n-MCP, the results were transfor
 
 Once connected, Claude can use these powerful tools:
 
+> **Tool metadata (MCP 2024-11-05)**: Tools expose `name`, `description`, and `inputSchema` (no `outputSchema`).  
+> Each tool also includes `annotations` (e.g., `readOnlyHint`, `destructiveHint`, `idempotentHint`) to guide client UX and approvals.
+
 ### Core Tools (7 tools)
 - **`tools_documentation`** - Get documentation for any MCP tool (START HERE!)
 - **`search_nodes`** - Full-text search across all nodes. Use `includeExamples: true` for real-world configurations
@@ -957,7 +960,7 @@ Once connected, Claude can use these powerful tools:
   - `searchMode: 'by_metadata'` - Filter by `complexity`, `requiredService`, `targetAudience`
 - **`get_template`** - Get complete workflow JSON (modes: nodes_only, structure, full)
 
-### n8n Management Tools (13 tools - Requires API Configuration)
+### n8n Management Tools (Requires API Configuration)
 These tools require `N8N_API_URL` and `N8N_API_KEY` in your configuration.
 
 #### Workflow Management
@@ -973,21 +976,29 @@ These tools require `N8N_API_URL` and `N8N_API_KEY` in your configuration.
 - **`n8n_list_workflows`** - List workflows with filtering and pagination
 - **`n8n_validate_workflow`** - Validate workflows in n8n by ID
 - **`n8n_autofix_workflow`** - Automatically fix common workflow errors
-- **`n8n_workflow_versions`** - Manage version history and rollback
 - **`n8n_deploy_template`** - Deploy templates from n8n.io directly to your instance with auto-fix
+- **`n8n_workflow_versions_list`** - List workflow version history
+- **`n8n_workflow_versions_get`** - Get a specific workflow version
+- **`n8n_workflow_versions_rollback`** - Roll back to a previous version
+- **`n8n_workflow_versions_delete`** - Delete versions for a workflow
+- **`n8n_workflow_versions_prune`** - Prune versions to keep N most recent
+- **`n8n_workflow_versions_truncate`** - Truncate ALL versions (dangerous)
 
 #### Execution Management
 - **`n8n_test_workflow`** - Test/trigger workflow execution:
   - Auto-detects trigger type (webhook, form, chat) from workflow
   - Supports custom data, headers, and HTTP methods for webhooks
   - Chat triggers support message and sessionId for conversations
-- **`n8n_executions`** - Unified execution management (v2.26.0):
-  - `action: 'list'` - List executions with status filtering
-  - `action: 'get'` - Get execution details by ID
-  - `action: 'delete'` - Delete execution records
+- **`n8n_executions_get`** - Get execution details by ID
+- **`n8n_executions_list`** - List executions with status filtering
+- **`n8n_executions_delete`** - Delete execution records
 
 #### System Tools
 - **`n8n_health_check`** - Check n8n API connectivity and features
+
+#### Legacy (kept for backwards compatibility)
+- **`n8n_executions`** - Unified execution management via `action` (deprecated; use split tools above)
+- **`n8n_workflow_versions`** - Unified version management via `mode` (deprecated; use split tools above)
 
 ### Example Usage
 

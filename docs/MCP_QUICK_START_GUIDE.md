@@ -1,5 +1,10 @@
 # MCP Implementation Quick Start Guide
 
+> ⚠️ **Tool name changes (v2.29+)**  
+> Legacy tools `get_node_essentials` and `get_node_info` are consolidated into `get_node`.  
+> Use `get_node({detail: "standard"|"minimal"})` instead of `get_node_essentials`, and `get_node({detail: "full"})` instead of `get_node_info`.
+> This guide keeps legacy examples for reference—update calls to `get_node` when using current versions.
+
 ## Immediate Actions (Day 1)
 
 ### 1. Create Essential Properties Configuration
