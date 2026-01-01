@@ -2,13 +2,8 @@
 
 This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
 
-> ⚠️ **Tool name changes (v2.29+)**  
-> Legacy tools `list_nodes`, `get_node_info`, `get_node_essentials`, and `get_node_documentation` were consolidated into `get_node`, and `search_nodes` replaces `list_nodes` for discovery.  
-> Use these mappings in current versions:
-> - `list_nodes` → `search_nodes`
-> - `get_node_essentials` → `get_node({detail: "standard"|"minimal", includeExamples: true})`
-> - `get_node_info` → `get_node({detail: "full"})`
-> - `get_node_documentation` → `get_node({mode: "docs"})`
+> ✅ **Using current tool names**  
+> This guide uses the consolidated tool set: `get_node` (detail/mode) + `search_nodes`.
 
 ## 🎯 Prerequisites
 
