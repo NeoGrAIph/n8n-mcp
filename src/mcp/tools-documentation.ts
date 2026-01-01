@@ -126,7 +126,7 @@ When working with Code nodes, always start by calling the relevant guide:
   - searchMode='by_task': Curated task-based templates
   - searchMode='by_metadata': Filter by complexity/services
 
-**n8n API Tools** (13 tools, requires N8N_API_URL configuration)
+**n8n API Tools** (22 tools, requires N8N_API_URL configuration)
 - n8n_create_workflow - Create new workflows
 - n8n_get_workflow - Get workflow with mode='full'/'details'/'structure'/'minimal'
 - n8n_update_full_workflow - Full workflow replacement
@@ -136,9 +136,18 @@ When working with Code nodes, always start by calling the relevant guide:
 - n8n_validate_workflow - Validate workflow by ID
 - n8n_autofix_workflow - Auto-fix common issues
 - n8n_test_workflow - Test/trigger workflows (webhook, form, chat, execute)
-- n8n_executions - Unified execution management (action='get'/'list'/'delete')
+- n8n_executions_get - Get execution details by ID
+- n8n_executions_list - List executions with filters
+- n8n_executions_delete - Delete execution record
+- n8n_executions - Unified execution management (action='get'/'list'/'delete', legacy)
 - n8n_health_check - Check n8n API connectivity
-- n8n_workflow_versions - Version history and rollback
+- n8n_workflow_versions_list - List workflow version history
+- n8n_workflow_versions_get - Get a specific workflow version
+- n8n_workflow_versions_rollback - Roll back to a previous version
+- n8n_workflow_versions_delete - Delete versions for a workflow
+- n8n_workflow_versions_prune - Prune versions to keep N most recent
+- n8n_workflow_versions_truncate - Truncate ALL versions (dangerous)
+- n8n_workflow_versions - Version history and rollback (legacy)
 - n8n_deploy_template - Deploy templates directly to n8n instance
 
 ## Performance Characteristics
