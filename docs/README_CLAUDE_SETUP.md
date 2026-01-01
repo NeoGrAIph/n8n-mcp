@@ -2,6 +2,14 @@
 
 This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
 
+> ⚠️ **Tool name changes (v2.29+)**  
+> Legacy tools `list_nodes`, `get_node_info`, `get_node_essentials`, and `get_node_documentation` were consolidated into `get_node`, and `search_nodes` replaces `list_nodes` for discovery.  
+> Use these mappings in current versions:
+> - `list_nodes` → `search_nodes`
+> - `get_node_essentials` → `get_node({detail: "standard"|"minimal", includeExamples: true})`
+> - `get_node_info` → `get_node({detail: "full"})`
+> - `get_node_documentation` → `get_node({mode: "docs"})`
+
 ## 🎯 Prerequisites
 
 - Claude Desktop installed
@@ -110,36 +118,44 @@ After restarting Claude Desktop:
 
 1. Look for "n8n-docker" or "n8n-documentation" in the MCP servers list
 2. Try asking Claude: "What n8n nodes are available for working with Slack?"
-3. Or use a tool directly: "Use the list_nodes tool to show me trigger nodes"
+3. Or use a tool directly: "Use the search_nodes tool to show me trigger nodes"
 
-## 🔧 Available Tools (v2.5.1)
-
-### Essential Tool - Start Here!
-- **`tools_documentation`** - Get documentation for any MCP tool (ALWAYS use this first!)
+## 🔧 Available Tools
 
 ### Core Tools
-- **`list_nodes`** - List all n8n nodes with filtering options
-- **`get_node_info`** - Get comprehensive information (now includes aiToolCapabilities)
-- **`get_node_essentials`** - Get only 10-20 essential properties (95% smaller!)
-- **`search_nodes`** - Full-text search across all node documentation
-- **`search_node_properties`** - Find specific properties within nodes
-- **`get_node_documentation`** - Get parsed documentation from n8n-docs
-- **`get_database_statistics`** - View database metrics and coverage
+- **`tools_documentation`** - Get documentation for any MCP tool (start here)
+- **`search_nodes`** - Full-text search across all nodes
+- **`get_node`** - Unified node info (info/docs/search_properties/versions)
+- **`validate_node`** - Validate node configuration (minimal/full)
+- **`validate_workflow`** - Full workflow validation
+- **`search_templates`** - Search workflow templates
+- **`get_template`** - Get template details by ID
 
-### AI Tools (Enhanced in v2.5.1)
-- **`list_ai_tools`** - List AI-capable nodes (ANY node can be used as AI tool!)
-- **`get_node_as_tool_info`** - Get guidance on using any node as an AI tool
+### n8n Management Tools (Requires API Configuration)
+- **`n8n_create_workflow`** - Create new workflows
+- **`n8n_get_workflow`** - Get workflow by ID (full/details/structure/minimal)
+- **`n8n_update_full_workflow`** - Replace entire workflow
+- **`n8n_update_partial_workflow`** - Diff-based updates
+- **`n8n_delete_workflow`** - Delete workflows
+- **`n8n_list_workflows`** - List workflows
+- **`n8n_validate_workflow`** - Validate workflows in n8n by ID
+- **`n8n_autofix_workflow`** - Auto-fix common workflow errors
+- **`n8n_deploy_template`** - Deploy templates from n8n.io
+- **`n8n_test_workflow`** - Trigger workflow execution
+- **`n8n_executions_get`** - Get execution details
+- **`n8n_executions_list`** - List executions
+- **`n8n_executions_delete`** - Delete execution records
+- **`n8n_health_check`** - Check n8n connectivity
+- **`n8n_workflow_versions_list`** - List workflow versions
+- **`n8n_workflow_versions_get`** - Get workflow version
+- **`n8n_workflow_versions_rollback`** - Roll back to a version
+- **`n8n_workflow_versions_delete`** - Delete workflow versions
+- **`n8n_workflow_versions_prune`** - Prune old versions
+- **`n8n_workflow_versions_truncate`** - Truncate ALL versions
 
-### Task & Template Tools
-- **`get_node_for_task`** - Pre-configured node settings for common tasks
-- **`list_tasks`** - Discover available task templates
-- **`list_node_templates`** - Find workflow templates using specific nodes
-- **`get_template`** - Get complete workflow JSON for import
-- **`search_templates`** - Search templates by keywords
-- **`get_templates_for_task`** - Get curated templates for common tasks
-
-### Validation Tools (Professional Grade)
-- **`validate_node_operation`** - Smart validation with operation awareness
+### Legacy (kept for backwards compatibility)
+- **`n8n_executions`** - Unified execution management via action (deprecated)
+- **`n8n_workflow_versions`** - Unified version management via mode (deprecated)
 - **`validate_node_minimal`** - Quick validation for just required fields
 - **`validate_workflow`** - Complete workflow validation (validates AI tool connections)
 - **`validate_workflow_connections`** - Check workflow structure
@@ -149,7 +165,7 @@ After restarting Claude Desktop:
 ### Example Questions to Ask Claude:
 - "Show me all n8n nodes for working with databases"
 - "How do I use the HTTP Request node?"
-- "Get the essentials for Slack node" (uses get_node_essentials)
+- "Get the Slack node essentials" (uses get_node with detail: standard)
 - "How can I use Google Sheets as an AI tool?"
 - "Validate my workflow before deployment"
 - "Find templates for webhook automation"

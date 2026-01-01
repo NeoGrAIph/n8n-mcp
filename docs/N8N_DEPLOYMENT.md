@@ -425,26 +425,46 @@ docker compose up -d
    
    ⚠️ **Critical**: The Server URL must include the `/mcp` endpoint path. Without this, the connection will fail.
 
-3. **Test the connection** by selecting a simple tool like `list_nodes`
+3. **Test the connection** by selecting a simple tool like `search_nodes`
 
 ### Available Tools
 
 Once connected, you can use these MCP tools in n8n:
 
 **Documentation Tools** (No API key required):
-- `list_nodes` - List all n8n nodes with filtering
+- `tools_documentation` - Tool docs and usage guidance
 - `search_nodes` - Search nodes by keyword
-- `get_node_info` - Get detailed node information
-- `get_node_essentials` - Get only essential properties
+- `get_node` - Node info (minimal/standard/full), docs, property search, versions
+- `validate_node` - Validate node configuration
 - `validate_workflow` - Validate workflow configurations
-- `get_node_documentation` - Get human-readable docs
+- `search_templates` - Search workflow templates
+- `get_template` - Get template details by ID
 
 **Management Tools** (Requires n8n API key):
 - `n8n_create_workflow` - Create new workflows
-- `n8n_update_workflow` - Update existing workflows
 - `n8n_get_workflow` - Retrieve workflow details
-- `n8n_list_workflows` - List all workflows
-- `n8n_trigger_webhook_workflow` - Trigger webhook workflows
+- `n8n_update_full_workflow` - Update existing workflows (full replace)
+- `n8n_update_partial_workflow` - Update via diff operations
+- `n8n_delete_workflow` - Delete workflows
+- `n8n_list_workflows` - List workflows
+- `n8n_validate_workflow` - Validate workflows in n8n by ID
+- `n8n_autofix_workflow` - Auto-fix common errors
+- `n8n_test_workflow` - Trigger workflow execution
+- `n8n_executions_get` - Get execution details
+- `n8n_executions_list` - List executions
+- `n8n_executions_delete` - Delete execution records
+- `n8n_health_check` - Check n8n connectivity
+- `n8n_deploy_template` - Deploy templates from n8n.io
+- `n8n_workflow_versions_list` - List workflow version history
+- `n8n_workflow_versions_get` - Get a specific workflow version
+- `n8n_workflow_versions_rollback` - Roll back to a previous version
+- `n8n_workflow_versions_delete` - Delete versions for a workflow
+- `n8n_workflow_versions_prune` - Prune versions to keep N most recent
+- `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
+
+**Legacy (kept for backwards compatibility):**
+- `n8n_executions` - Unified execution management via action (deprecated)
+- `n8n_workflow_versions` - Unified version management via mode (deprecated)
 
 ### Using with AI Agents
 
@@ -457,7 +477,7 @@ Connect n8n-MCP to AI Agent nodes for intelligent automation:
 ```
 You are an n8n workflow expert. Use the MCP tools to:
 1. Search for appropriate nodes using search_nodes
-2. Get configuration details with get_node_essentials
+2. Get configuration details with get_node
 3. Validate configurations with validate_workflow
 4. Create the workflow if all validations pass
 ```

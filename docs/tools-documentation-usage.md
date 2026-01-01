@@ -2,6 +2,10 @@
 
 The `tools_documentation` tool provides comprehensive documentation for all MCP tools, making it easy for LLMs to understand how to use the tools effectively.
 
+> ⚠️ **Tool name changes (v2.29+)**  
+> Legacy tools `get_node_essentials` and `get_node_info` are now `get_node` (use `detail`/`mode`).  
+> Example update: `get_node_essentials` → `get_node({detail: "standard"})`.
+
 ## Basic Usage
 
 ### 1. Get Documentation for Specific Tools
@@ -10,7 +14,7 @@ The `tools_documentation` tool provides comprehensive documentation for all MCP 
 {
   "name": "tools_documentation",
   "arguments": {
-    "tools": ["search_nodes", "get_node_essentials"]
+    "tools": ["search_nodes", "get_node"]
   }
 }
 ```
@@ -118,8 +122,8 @@ Response includes:
 
 The documentation helps build workflows efficiently:
 
-1. **Discovery Phase**: Use `search_nodes` and `list_nodes` documentation
-2. **Configuration Phase**: Learn from `get_node_essentials` examples
+1. **Discovery Phase**: Use `search_nodes` documentation
+2. **Configuration Phase**: Learn from `get_node` examples (detail: standard)
 3. **Validation Phase**: Understand validation tool options and profiles
 4. **Creation Phase**: Follow `n8n_create_workflow` best practices
 5. **Update Phase**: Master `n8n_update_partial_workflow` operations
@@ -127,8 +131,8 @@ The documentation helps build workflows efficiently:
 ## Performance Optimization
 
 The documentation emphasizes performance:
-- Which tools are fast (essentials) vs slow (full info)
-- Optimal parameters (e.g., limit: 200+ for list_nodes)
+- Which tools are fast (standard/minimal) vs slow (full info)
+- Optimal parameters (e.g., limit: 200+ for search_nodes)
 - Caching behavior
 - Token savings with partial updates
 

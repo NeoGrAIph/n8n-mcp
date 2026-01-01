@@ -163,7 +163,7 @@ Skip HTTP entirely and use stdio mode directly:
 
 ### n8n Management Tools (Optional)
 
-Enable 16 additional tools for managing n8n workflows by configuring API access:
+Enable additional tools for managing n8n workflows by configuring API access:
 
 ⚠️ **Requires v2.7.1+** - Earlier versions had an issue with tool registration in Docker environments.
 
@@ -176,27 +176,37 @@ Enable 16 additional tools for managing n8n workflows by configuring API access:
 
 #### What This Enables
 
-When configured, you get **16 additional tools** (total: 39 tools):
+When configured, you get additional n8n management tools:
 
-**Workflow Management (11 tools):**
+**Workflow Management:**
 - `n8n_create_workflow` - Create new workflows
-- `n8n_get_workflow` - Get workflow by ID
+- `n8n_get_workflow` - Get workflow by ID (full/details/structure/minimal modes)
 - `n8n_update_full_workflow` - Update entire workflow
-- `n8n_update_partial_workflow` - Update using diff operations (v2.7.0+)
+- `n8n_update_partial_workflow` - Update using diff operations
 - `n8n_delete_workflow` - Delete workflows
-- `n8n_list_workflows` - List all workflows
-- And more workflow detail/structure tools
+- `n8n_list_workflows` - List workflows with filters
+- `n8n_validate_workflow` - Validate workflows in n8n by ID
+- `n8n_autofix_workflow` - Auto-fix common workflow errors
+- `n8n_deploy_template` - Deploy templates from n8n.io
+- `n8n_workflow_versions_list` - List workflow version history
+- `n8n_workflow_versions_get` - Get a specific workflow version
+- `n8n_workflow_versions_rollback` - Roll back to a previous version
+- `n8n_workflow_versions_delete` - Delete versions for a workflow
+- `n8n_workflow_versions_prune` - Prune versions to keep N most recent
+- `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
 
-**Execution Management (4 tools):**
-- `n8n_trigger_webhook_workflow` - Execute via webhooks
-- `n8n_get_execution` - Get execution details
-- `n8n_list_executions` - List workflow runs
-- `n8n_delete_execution` - Delete execution records
+**Execution Management:**
+- `n8n_test_workflow` - Trigger workflow execution
+- `n8n_executions_get` - Get execution details
+- `n8n_executions_list` - List executions
+- `n8n_executions_delete` - Delete execution records
 
 **System Tools:**
 - `n8n_health_check` - Check n8n connectivity
-- `n8n_diagnostic` - System diagnostics
-- `n8n_validate_workflow` - Validate from n8n instance
+
+**Legacy (kept for backwards compatibility):**
+- `n8n_executions` - Unified execution management via action (deprecated)
+- `n8n_workflow_versions` - Unified version management via mode (deprecated)
 
 #### Getting Your n8n API Key
 
