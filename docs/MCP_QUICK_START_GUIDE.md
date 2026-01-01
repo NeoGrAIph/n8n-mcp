@@ -1,6 +1,6 @@
 # MCP Implementation Quick Start Guide
 
-This guide shows how to implement the **consolidated `get_node` tool** with detail levels and property search. It replaces the legacy `get_node_essentials` / `get_node_info` / `search_node_properties` split.
+This guide shows how to implement the **consolidated `get_node` tool** with detail levels and property search.
 
 ## Immediate Actions (Day 1)
 

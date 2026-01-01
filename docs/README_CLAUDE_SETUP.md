@@ -151,11 +151,6 @@ After restarting Claude Desktop:
 ### Legacy (kept for backwards compatibility)
 - **`n8n_executions`** - Unified execution management via action (deprecated)
 - **`n8n_workflow_versions`** - Unified version management via mode (deprecated)
-- **`validate_node_minimal`** - Quick validation for just required fields
-- **`validate_workflow`** - Complete workflow validation (validates AI tool connections)
-- **`validate_workflow_connections`** - Check workflow structure
-- **`validate_workflow_expressions`** - Validate n8n expressions including $fromAI()
-- **`get_property_dependencies`** - Analyze property visibility conditions
 
 ### Example Questions to Ask Claude:
 - "Show me all n8n nodes for working with databases"
