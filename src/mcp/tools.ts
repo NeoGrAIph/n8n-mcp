@@ -111,7 +111,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'validate_node',
-    description: `Validate n8n node configuration. Use mode='full' for comprehensive validation with errors/warnings/suggestions, mode='minimal' for quick required fields check. Example: nodeType="nodes-base.slack", config={resource:"channel",operation:"create"}`,
+    description: `Validate n8n node configuration. Use mode='full' for comprehensive validation with errors/warnings/suggestions, mode='minimal' for quick required fields check. Example: nodeType="nodes-base.slack", config={resource:"channel",operation:"create"}. Output JSON: { nodeType, workflowNodeType, displayName, valid, errors[], warnings[], suggestions[], summary{hasErrors,errorCount,warningCount,suggestionCount}; missingRequiredFields[] only in mode=minimal }.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -138,55 +138,6 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
       },
       required: ['nodeType', 'config'],
       additionalProperties: false,
-    },
-    outputSchema: {
-      type: 'object',
-      properties: {
-        nodeType: { type: 'string' },
-        workflowNodeType: { type: 'string' },
-        displayName: { type: 'string' },
-        valid: { type: 'boolean' },
-        errors: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              type: { type: 'string' },
-              property: { type: 'string' },
-              message: { type: 'string' },
-              fix: { type: 'string' }
-            }
-          }
-        },
-        warnings: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              type: { type: 'string' },
-              property: { type: 'string' },
-              message: { type: 'string' },
-              suggestion: { type: 'string' }
-            }
-          }
-        },
-        suggestions: { type: 'array', items: { type: 'string' } },
-        missingRequiredFields: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Only present in mode=minimal'
-        },
-        summary: {
-          type: 'object',
-          properties: {
-            hasErrors: { type: 'boolean' },
-            errorCount: { type: 'number' },
-            warningCount: { type: 'number' },
-            suggestionCount: { type: 'number' }
-          }
-        }
-      },
-      required: ['nodeType', 'displayName', 'valid']
     },
   },
   {
@@ -306,7 +257,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'validate_workflow',
-    description: `Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy.`,
+    description: `Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy. Output JSON: { valid, summary{totalNodes,enabledNodes,triggerNodes,validConnections,invalidConnections,expressionsValidated,errorCount,warningCount}, errors[], warnings[], suggestions[] }.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -344,49 +295,6 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
       },
       required: ['workflow'],
       additionalProperties: false,
-    },
-    outputSchema: {
-      type: 'object',
-      properties: {
-        valid: { type: 'boolean' },
-        summary: {
-          type: 'object',
-          properties: {
-            totalNodes: { type: 'number' },
-            enabledNodes: { type: 'number' },
-            triggerNodes: { type: 'number' },
-            validConnections: { type: 'number' },
-            invalidConnections: { type: 'number' },
-            expressionsValidated: { type: 'number' },
-            errorCount: { type: 'number' },
-            warningCount: { type: 'number' }
-          }
-        },
-        errors: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              node: { type: 'string' },
-              message: { type: 'string' },
-              details: { type: 'string' }
-            }
-          }
-        },
-        warnings: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              node: { type: 'string' },
-              message: { type: 'string' },
-              details: { type: 'string' }
-            }
-          }
-        },
-        suggestions: { type: 'array', items: { type: 'string' } }
-      },
-      required: ['valid', 'summary']
     },
   },
 ];

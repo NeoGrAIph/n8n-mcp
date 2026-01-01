@@ -602,7 +602,6 @@ export class N8NDocumentationMCPServer {
         logger.info('Validation tool schema', {
           toolName: tool.name,
           inputSchema: JSON.stringify(tool.inputSchema, null, 2),
-          hasOutputSchema: !!tool.outputSchema,
           description: tool.description
         });
       });
@@ -703,7 +702,7 @@ export class N8NDocumentationMCPServer {
         try {
           // For validation tools, check if we should use structured content
           if (name.startsWith('validate_') && typeof result === 'object' && result !== null) {
-            // Clean up the result to ensure it matches the outputSchema
+            // Clean up the result to ensure it matches the expected structured output
             const cleanResult = this.sanitizeValidationResult(result, name);
             structuredContent = cleanResult;
             responseText = JSON.stringify(cleanResult, null, 2);
@@ -732,7 +731,7 @@ export class N8NDocumentationMCPServer {
           ],
         };
         
-        // For tools with outputSchema, structuredContent is REQUIRED by MCP spec
+        // For validation tools, also include structuredContent for typed output
         if (name.startsWith('validate_') && structuredContent !== null) {
           mcpResponse.structuredContent = structuredContent;
         }
@@ -791,7 +790,7 @@ export class N8NDocumentationMCPServer {
   }
 
   /**
-   * Sanitize validation result to match outputSchema
+   * Sanitize validation result to match expected structured output
    */
   private sanitizeValidationResult(result: any, toolName: string): any {
     if (!result || typeof result !== 'object') {

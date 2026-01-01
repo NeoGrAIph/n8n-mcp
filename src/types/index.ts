@@ -19,12 +19,6 @@ export interface ToolDefinition {
     required?: string[];
     additionalProperties?: boolean | Record<string, any>;
   };
-  outputSchema?: {
-    type: string;
-    properties: Record<string, any>;
-    required?: string[];
-    additionalProperties?: boolean | Record<string, any>;
-  };
 }
 
 export interface ResourceDefinition {
