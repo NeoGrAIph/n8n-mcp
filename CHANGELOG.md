@@ -81,7 +81,7 @@ The `validateWorkflowStructure()` function only checked `main` connections when 
 
 **New `error` Mode for Execution Debugging**
 
-Added a new `mode='error'` option to `n8n_executions` action=get that's optimized for AI agents debugging workflow failures. This mode provides intelligent error extraction with 80-99% token savings compared to `mode='full'`.
+Added a new `mode='error'` option to `n8n_executions_get` that's optimized for AI agents debugging workflow failures. This mode provides intelligent error extraction with 80-99% token savings compared to `mode='full'`.
 
 **Key Features:**
 
@@ -121,13 +121,13 @@ Added a new `mode='error'` option to `n8n_executions` action=get that's optimize
 
 ```javascript
 // Basic error debugging
-n8n_executions({action: "get", id: "exec_123", mode: "error"})
+n8n_executions_get({id: "exec_123", mode: "error"})
 
 // With more sample data
-n8n_executions({action: "get", id: "exec_123", mode: "error", errorItemsLimit: 5})
+n8n_executions_get({id: "exec_123", mode: "error", errorItemsLimit: 5})
 
 // With full stack trace
-n8n_executions({action: "get", id: "exec_123", mode: "error", includeStackTrace: true})
+n8n_executions_get({id: "exec_123", mode: "error", includeStackTrace: true})
 ```
 
 ## [2.30.2] - 2025-12-21
@@ -576,7 +576,7 @@ Added `versionNotice` field to make typeVersion more prominent in n8n_node_get o
 
 **n8n_workflow_test: Unified Workflow Trigger Tool**
 
-Replaced `n8n_trigger_webhook_workflow` with a new unified `n8n_workflow_test` tool that supports multiple trigger types with auto-detection.
+Replaced `n8n_workflow_test` with a new unified `n8n_workflow_test` tool that supports multiple trigger types with auto-detection.
 
 #### Key Features
 
@@ -631,7 +631,7 @@ n8n_workflow_test({
 
 #### Breaking Changes
 
-- **Removed**: `n8n_trigger_webhook_workflow` tool
+- **Removed**: `n8n_workflow_test` tool
 - **Replaced by**: `n8n_workflow_test` with enhanced capabilities
 - **Migration**: Change tool name and add `workflowId` parameter (previously `webhookUrl`)
 
@@ -795,7 +795,7 @@ n8n_template_deploy({
   - Cleaned up consolidation comments in index.ts
   - Documentation now starts directly with functional content for better AI agent efficiency
   - Estimated savings: ~128 tokens per full documentation request
-  - Affected tools: `n8n_node_get`, `n8n_node_validate`, `n8n_templates_search`, `n8n_executions`, `n8n_workflow_get`, `n8n_workflow_update_partial`
+  - Affected tools: `n8n_node_get`, `n8n_node_validate`, `n8n_templates_search`, `n8n_executions_get`, `n8n_executions_list`, `n8n_executions_delete`, `n8n_workflow_get`, `n8n_workflow_update_partial`
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
 
@@ -838,7 +838,7 @@ n8n_template_deploy({
   - Deleted 23 obsolete documentation files for removed tools (get_node_info, get_node_essentials, validate_node_operation, etc.)
   - Created consolidated documentation for `n8n_node_get` (covers all modes: info, docs, search_properties, versions, compare, breaking, migrations)
   - Created consolidated documentation for `n8n_node_validate` (covers modes: full, minimal; profiles: minimal, runtime, ai-friendly, strict)
-  - Created consolidated documentation for `n8n_executions` (covers actions: get, list, delete)
+  - Created consolidated documentation for `n8n_executions_get` / `n8n_executions_list` / `n8n_executions_delete`
   - Updated `n8n_templates_search` documentation with all searchModes (keyword, by_nodes, by_task, by_metadata)
   - Updated `n8n_workflow_get` documentation with all modes (full, details, structure, minimal)
   - Fixed stale `relatedTools` references pointing to removed tools
@@ -942,28 +942,17 @@ n8n_workflow_get_minimal({id: "123"})
 n8n_workflow_get({id: "123", mode: "minimal"})
 ```
 
-**5. Execution Tools - `n8n_executions` Unified**
+**5. Execution Tools - `n8n_executions_*` Split**
 
-Consolidated `n8n_list_executions`, `n8n_get_execution`, `n8n_delete_execution`:
-- `action='list'`: List executions with filters
-- `action='get'`: Get single execution details
-- `action='delete'`: Delete an execution
+Split execution management into three focused tools:
+- `n8n_executions_list`: List executions with filters
+- `n8n_executions_get`: Get single execution details
+- `n8n_executions_delete`: Delete an execution record
 
 ```javascript
-// Old: n8n_list_executions
-n8n_list_executions({workflowId: "123", status: "success"})
-// New: action='list'
-n8n_executions({action: "list", workflowId: "123", status: "success"})
-
-// Old: n8n_get_execution
-n8n_get_execution({id: "456"})
-// New: action='get'
-n8n_executions({action: "get", id: "456"})
-
-// Old: n8n_delete_execution
-n8n_delete_execution({id: "456"})
-// New: action='delete'
-n8n_executions({action: "delete", id: "456"})
+n8n_executions_list({workflowId: "123", status: "success"})
+n8n_executions_get({id: "456"})
+n8n_executions_delete({id: "456"})
 ```
 
 ### 🗑️ Removed Tools
@@ -980,9 +969,9 @@ The following tools have been removed (use consolidated equivalents):
 - `n8n_workflow_get_details` → `n8n_workflow_get` with `mode='details'`
 - `n8n_workflow_get_structure` → `n8n_workflow_get` with `mode='structure'`
 - `n8n_workflow_get_minimal` → `n8n_workflow_get` with `mode='minimal'`
-- `n8n_list_executions` → `n8n_executions` with `action='list'`
-- `n8n_get_execution` → `n8n_executions` with `action='get'`
-- `n8n_delete_execution` → `n8n_executions` with `action='delete'`
+- `n8n_executions_list` → `n8n_executions_list`
+- `n8n_executions_get` → `n8n_executions_get`
+- `n8n_executions_delete` → `n8n_executions_delete`
 
 ### 📊 Impact
 
@@ -6542,9 +6531,9 @@ get_node_essentials({
 ### Enhanced
 - **Webhook Error Messages**: Replaced generic "Please try again later or contact support" messages with actionable guidance
   - Error messages now extract execution ID and workflow ID from failed webhook triggers
-  - Guide users to use `n8n_get_execution({id: executionId, mode: 'preview'})` for efficient debugging
-  - Format: "Workflow {workflowId} execution {executionId} failed. Use n8n_get_execution({id: '{executionId}', mode: 'preview'}) to investigate the error."
-  - When no execution ID available: "Workflow failed to execute. Use n8n_list_executions to find recent executions, then n8n_get_execution with mode='preview' to investigate."
+  - Guide users to use `n8n_executions_get({id: executionId, mode: 'preview'})` for efficient debugging
+  - Format: "Workflow {workflowId} execution {executionId} failed. Use n8n_executions_get({id: '{executionId}', mode: 'preview'}) to investigate the error."
+  - When no execution ID available: "Workflow failed to execute. Use n8n_executions_list to find recent executions, then n8n_executions_get with mode='preview' to investigate."
 
 ### Added
 - New error formatting functions in `n8n-errors.ts`:
@@ -6577,7 +6566,7 @@ get_node_essentials({
 ## [2.14.5] - 2025-09-30
 
 ### Added
-- **Intelligent Execution Data Filtering**: Major enhancement to `n8n_get_execution` tool to handle large datasets without exceeding token limits
+- **Intelligent Execution Data Filtering**: Major enhancement to `n8n_executions_get` tool to handle large datasets without exceeding token limits
   - **Preview Mode**: Shows data structure, counts, and size estimates without actual data (~500 tokens)
   - **Summary Mode**: Returns 2 sample items per node (safe default, ~2-5K tokens)
   - **Filtered Mode**: Granular control with node filtering and custom item limits
@@ -6589,7 +6578,7 @@ get_node_essentials({
   - Automatic size estimation and token consumption guidance
 
 ### Enhanced
-- `n8n_get_execution` tool with new parameters:
+- `n8n_executions_get` tool with new parameters:
   - `mode`: 'preview' | 'summary' | 'filtered' | 'full'
   - `nodeNames`: Filter to specific nodes
   - `itemsLimit`: Control items per node (0=structure, -1=unlimited, default=2)
@@ -6627,7 +6616,7 @@ get_node_essentials({
   - Recommendations are now accurate and prevent token overflow issues
 
 ### Migration Guide
-- **No breaking changes**: Existing `n8n_get_execution` calls work unchanged
+- **No breaking changes**: Existing `n8n_executions_get` calls work unchanged
 - New recommended workflow:
   1. Call with `mode: 'preview'` to assess data size
   2. Follow `recommendation.suggestedMode` from preview

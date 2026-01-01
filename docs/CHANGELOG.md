@@ -911,7 +911,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed misleading `total` field to `returned` to clarify it's the count of items in current page
   - Added `hasMore` boolean flag for clear pagination indication
   - Added `_note` field with guidance when more data is available ("More workflows available. Use cursor to get next page.")
-  - Applied same improvements to `n8n_list_executions` for consistency
+  - Applied same improvements to `n8n_executions_list` for consistency
   - AI agents now correctly understand they need to use pagination instead of assuming limited total workflows
 
 ### Added
@@ -1363,7 +1363,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Script to sync package.runtime.json version
 
 ### Changed
-- Renamed `n8n_update_workflow` to `n8n_workflow_update_full` to clarify it replaces entire workflow
+- Standardized the workflow update tool name to `n8n_workflow_update_full` to clarify it replaces the entire workflow
 - Renamed core MCP files for clarity:
   - `tools-update.ts` → `tools.ts`
   - `server-update.ts` → `server.ts`
@@ -1420,9 +1420,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 14 n8n management tools for complete workflow lifecycle management:
   - `n8n_workflow_create` - Create workflows programmatically
-  - `n8n_update_workflow` - Update existing workflows
-  - `n8n_trigger_webhook_workflow` - Execute workflows via webhooks
-  - `n8n_list_executions` - Monitor workflow executions
+  - `n8n_workflow_update_full` - Update existing workflows
+  - `n8n_workflow_test` - Execute workflows via webhooks
+  - `n8n_executions_list` - Monitor workflow executions
   - `n8n_health_check` - Check n8n instance connectivity
   - And 9 more workflow and execution management tools
 - Integration with n8n-manager-for-ai-agents functionality
