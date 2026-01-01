@@ -8,6 +8,7 @@ import {
   readSetFile,
   writeCodeFile,
   writeSetFile,
+  writeWorkflowResource,
   listWorkflowResources,
   readWorkflowResource,
   listWorkflowResourceTemplates,
@@ -204,6 +205,15 @@ export async function handleReadWorkflowResource(uri: string): Promise<{ uri: st
 
 export function handleListWorkflowResourceTemplates(): Array<{ name: string; title: string; uriTemplate: string; description: string; mimeType?: string }>{
   return listWorkflowResourceTemplates();
+}
+
+export async function handleWriteWorkflowResource(
+  uri: string,
+  text: string,
+  expectedEtag?: string
+): Promise<{ uri: string; etag: string; size: number; lastModified: string }>{
+  ensureWorkflowFilesConfigured();
+  return writeWorkflowResource(uri, text, expectedEtag);
 }
 
 export function logWorkflowFilesConfig(): void {

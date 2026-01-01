@@ -7,7 +7,10 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
   ListResourceTemplatesRequestSchema,
+  RequestSchema,
+  TextResourceContentsSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 import { existsSync, promises as fs } from 'fs';
 import path from 'path';
 import { n8nDocumentationToolsFinal } from './tools';
@@ -53,6 +56,18 @@ const VALIDATION_TOOL_NAMES = new Set([
   'n8n_workflow_validate',
   'n8n_workflow_json_validate'
 ]);
+
+const WriteResourceRequestSchema = RequestSchema.extend({
+  method: z.literal('resources/write'),
+  params: z
+    .object({
+      uri: z.string(),
+      contents: z.array(TextResourceContentsSchema).optional(),
+      text: z.string().optional(),
+      expectedEtag: z.string().optional()
+    })
+    .passthrough()
+});
 
 interface NodeRow {
   node_type: string;
@@ -675,6 +690,28 @@ export class N8NDocumentationMCPServer {
             _meta: resource._meta
           }
         ]
+      };
+    });
+
+    this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
+      const uri = request.params.uri;
+      const expectedEtag = request.params.expectedEtag as string | undefined;
+      const contents = request.params.contents as Array<{ type: 'text'; text: string }> | undefined;
+      const directText = request.params.text as string | undefined;
+      const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
+
+      if (typeof text !== 'string') {
+        throw new Error('resources/write requires text content');
+      }
+
+      const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
+      return {
+        uri: result.uri,
+        _meta: {
+          etag: result.etag,
+          size: result.size,
+          lastModified: result.lastModified
+        }
       };
     });
 

@@ -366,6 +366,13 @@ export interface WorkflowResourceDescriptor {
   _meta: Record<string, unknown>;
 }
 
+export interface WorkflowResourceWriteResult {
+  uri: string;
+  etag: string;
+  size: number;
+  lastModified: string;
+}
+
 export async function listWorkflowResources(): Promise<WorkflowResourceDescriptor[]> {
   const root = path.resolve(WORKFLOWS_ROOT);
   const resources: WorkflowResourceDescriptor[] = [];
@@ -444,6 +451,78 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
 }
 
 export async function readWorkflowResource(uri: string): Promise<{ uri: string; mimeType: string; text: string; _meta: Record<string, unknown> }>{
+  const parsed = parseWorkflowResourceUri(uri);
+
+  if (parsed.kind === 'code') {
+    const workflowDir = await getWorkflowDir(parsed.workflowId);
+    const filePath = path.join(workflowDir, `${parsed.nodeId}.${parsed.ext}`);
+    if (!existsSync(filePath)) {
+      throw new Error(`File not found for URI: ${uri}`);
+    }
+    const content = await fs.readFile(filePath, 'utf-8');
+    const { etag, size, lastModified } = await statFile(filePath);
+    return {
+      uri,
+      mimeType: resolveCodeMime(parsed.ext),
+      text: content,
+      _meta: {
+        workflowId: parsed.workflowId,
+        nodeId: parsed.nodeId,
+        kind: 'code',
+        language: resolveCodeLanguage(parsed.ext),
+        etag,
+        size,
+        lastModified
+      }
+    };
+  }
+
+  const workflowDir = await getWorkflowDir(parsed.workflowId);
+  const filePath = path.join(workflowDir, `${parsed.nodeId}.set.json`);
+  if (!existsSync(filePath)) {
+    throw new Error(`File not found for URI: ${uri}`);
+  }
+  const content = await fs.readFile(filePath, 'utf-8');
+  const { etag, size, lastModified } = await statFile(filePath);
+  return {
+    uri,
+    mimeType: 'application/json',
+    text: content,
+    _meta: { workflowId: parsed.workflowId, nodeId: parsed.nodeId, kind: 'set', etag, size, lastModified }
+  };
+}
+
+export async function writeWorkflowResource(
+  uri: string,
+  content: string,
+  expectedEtag?: string
+): Promise<WorkflowResourceWriteResult> {
+  const parsed = parseWorkflowResourceUri(uri);
+  const workflowDir = await getWorkflowDir(parsed.workflowId);
+  const fileName = parsed.kind === 'code'
+    ? `${parsed.nodeId}.${parsed.ext}`
+    : `${parsed.nodeId}.set.json`;
+  const filePath = path.join(workflowDir, fileName);
+
+  if (existsSync(filePath)) {
+    await verifyExpectedEtag(filePath, expectedEtag);
+  } else if (expectedEtag) {
+    const error = new Error('ETag mismatch: file does not exist');
+    (error as any).code = 'CONFLICT';
+    throw error;
+  }
+
+  await fs.writeFile(filePath, content, 'utf-8');
+  await fs.chmod(filePath, 0o666).catch(() => undefined);
+  const { etag, size, lastModified } = await statFile(filePath);
+  return { uri, etag, size, lastModified };
+}
+
+function parseWorkflowResourceUri(
+  uri: string
+):
+  | { kind: 'code'; workflowId: string; nodeId: string; ext: 'py' | 'json' }
+  | { kind: 'set'; workflowId: string; nodeId: string } {
   const parsed = new URL(uri);
   if (parsed.protocol !== 'n8n-workflows:') {
     throw new Error(`Unsupported resource URI: ${uri}`);
@@ -465,38 +544,16 @@ export async function readWorkflowResource(uri: string): Promise<{ uri: string; 
     if (!match) throw new Error(`Invalid code file name in URI: ${uri}`);
     const nodeId = match[1];
     const ext = match[2] as 'py' | 'json';
-    const workflowDir = await getWorkflowDir(workflowId);
-    const filePath = path.join(workflowDir, `${nodeId}.${ext}`);
-    if (!existsSync(filePath)) {
-      throw new Error(`File not found for URI: ${uri}`);
-    }
-    const content = await fs.readFile(filePath, 'utf-8');
-    const { etag, size, lastModified } = await statFile(filePath);
-    return {
-      uri,
-      mimeType: resolveCodeMime(ext),
-      text: content,
-      _meta: { workflowId, nodeId, kind: 'code', language: resolveCodeLanguage(ext), etag, size, lastModified }
-    };
+    assertNodeId(nodeId);
+    return { kind: 'code', workflowId, nodeId, ext };
   }
 
   if (kind === 'set') {
     const match = fileName.match(/^([0-9a-fA-F-]{36})\.set\.json$/);
     if (!match) throw new Error(`Invalid set file name in URI: ${uri}`);
     const nodeId = match[1];
-    const workflowDir = await getWorkflowDir(workflowId);
-    const filePath = path.join(workflowDir, `${nodeId}.set.json`);
-    if (!existsSync(filePath)) {
-      throw new Error(`File not found for URI: ${uri}`);
-    }
-    const content = await fs.readFile(filePath, 'utf-8');
-    const { etag, size, lastModified } = await statFile(filePath);
-    return {
-      uri,
-      mimeType: 'application/json',
-      text: content,
-      _meta: { workflowId, nodeId, kind: 'set', etag, size, lastModified }
-    };
+    assertNodeId(nodeId);
+    return { kind: 'set', workflowId, nodeId };
   }
 
   throw new Error(`Unsupported resource URI: ${uri}`);

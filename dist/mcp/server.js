@@ -40,6 +40,7 @@ exports.N8NDocumentationMCPServer = void 0;
 const index_js_1 = require("@modelcontextprotocol/sdk/server/index.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
 const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
+const zod_1 = require("zod");
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
 const tools_1 = require("./tools");
@@ -78,6 +79,17 @@ const VALIDATION_TOOL_NAMES = new Set([
     'n8n_workflow_validate',
     'n8n_workflow_json_validate'
 ]);
+const WriteResourceRequestSchema = types_js_1.RequestSchema.extend({
+    method: zod_1.z.literal('resources/write'),
+    params: zod_1.z
+        .object({
+        uri: zod_1.z.string(),
+        contents: zod_1.z.array(types_js_1.TextResourceContentsSchema).optional(),
+        text: zod_1.z.string().optional(),
+        expectedEtag: zod_1.z.string().optional()
+    })
+        .passthrough()
+});
 class N8NDocumentationMCPServer {
     constructor(instanceContext, earlyLogger) {
         this.db = null;
@@ -446,6 +458,25 @@ class N8NDocumentationMCPServer {
                         _meta: resource._meta
                     }
                 ]
+            };
+        });
+        this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
+            const uri = request.params.uri;
+            const expectedEtag = request.params.expectedEtag;
+            const contents = request.params.contents;
+            const directText = request.params.text;
+            const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
+            if (typeof text !== 'string') {
+                throw new Error('resources/write requires text content');
+            }
+            const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
+            return {
+                uri: result.uri,
+                _meta: {
+                    etag: result.etag,
+                    size: result.size,
+                    lastModified: result.lastModified
+                }
             };
         });
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
