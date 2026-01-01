@@ -438,7 +438,7 @@ interface AIAgentRequirements {
 
 Based on this analysis, MCP tools should return:
 
-#### For `get_node_info` / `get_node_essentials`:
+#### For `get_node` (detail: standard/minimal):
 ```typescript
 {
   "essentials": {
@@ -508,7 +508,7 @@ Based on this analysis, MCP tools should return:
 }
 ```
 
-#### For `get_node_documentation`:
+#### For `get_node` (mode: "docs"):
 ```markdown
 # AI Agent
 
