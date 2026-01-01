@@ -9,7 +9,7 @@ import { ToolDefinition } from '../types';
 export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   {
     name: 'tools_documentation',
-    description: `Use this when you need guidance on the n8n-mcp toolset or a specific tool. Do not use it to fetch node or workflow data.`,
+    description: `Get documentation for n8n MCP tools. Call without parameters for quick start guide. Use topic parameter to get documentation for specific tools. Use depth='full' for comprehensive documentation.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -28,7 +28,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'search_nodes',
-    description: `Use this when the user needs to discover which n8n node fits a capability or integration. Do not use it when you already know the exact node type.`,
+    description: `Search n8n nodes by keyword with optional real-world examples. Pass query as string. Example: query="webhook" or query="database". Returns max 20 results. Use includeExamples=true to get top 2 template configs per node.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -58,7 +58,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'get_node',
-    description: `Use this when you need detailed info or docs for a specific node type. Do not use it for discovery—use search_nodes instead.`,
+    description: `Get node info with progressive detail levels and multiple modes. Detail: minimal (~200 tokens), standard (~1-2K, default), full (~3-8K). Modes: info (default), docs (markdown documentation), search_properties (find properties), versions/compare/breaking/migrations (version info). Use format='docs' for readable documentation, mode='search_properties' with propertyQuery for finding specific fields.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -111,7 +111,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'validate_node',
-    description: `Use this when validating a single node configuration against its node type. Do not use it for full workflow validation.`,
+    description: `Validate n8n node configuration. Use mode='full' for comprehensive validation with errors/warnings/suggestions, mode='minimal' for quick required fields check. Example: nodeType="nodes-base.slack", config={resource:"channel",operation:"create"}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -142,7 +142,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'get_template',
-    description: `Use this when you need the details of a specific template by ID. Do not use it for searching.`,
+    description: `Get template by ID. Use mode to control response size: nodes_only (minimal), structure (nodes+connections), full (complete workflow).`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -162,7 +162,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'search_templates',
-    description: `Use this when you need to find workflow templates by keyword, node types, or task. Do not use it to fetch a template by ID.`,
+    description: `Search templates with multiple modes. Use searchMode='keyword' for text search, 'by_nodes' to find templates using specific nodes, 'by_task' for curated task-based templates, 'by_metadata' for filtering by complexity/setup time/services.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -257,7 +257,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'validate_workflow',
-    description: `Use this when you have full workflow JSON and need validation before deployment. Do not use it when you only have a workflow ID.`,
+    description: `Validate complete workflow JSON before deployment. Returns errors, warnings, and suggestions. Use this for offline validation (no n8n API required).`,
     inputSchema: {
       type: 'object',
       properties: {
