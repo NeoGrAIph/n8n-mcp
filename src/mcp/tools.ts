@@ -37,7 +37,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
           description: 'Search terms. Use quotes for exact phrase.',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           description: 'Max results (default 20)',
           default: 20,
         },
@@ -101,7 +101,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
           description: 'For mode=search_properties: search term to find properties (e.g., "auth", "header", "body")',
         },
         maxPropertyResults: {
-          type: 'number',
+          type: 'integer',
           description: 'For mode=search_properties: max results (default 20)',
           default: 20,
         },
@@ -147,7 +147,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
       type: 'object',
       properties: {
         templateId: {
-          type: 'number',
+          type: 'integer',
           description: 'The template ID to retrieve',
         },
         mode: {
@@ -219,13 +219,13 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
           description: 'For searchMode=by_metadata: filter by complexity level',
         },
         maxSetupMinutes: {
-          type: 'number',
+          type: 'integer',
           description: 'For searchMode=by_metadata: maximum setup time in minutes',
           minimum: 5,
           maximum: 480,
         },
         minSetupMinutes: {
-          type: 'number',
+          type: 'integer',
           description: 'For searchMode=by_metadata: minimum setup time in minutes',
           minimum: 5,
           maximum: 480,
@@ -240,14 +240,14 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
         },
         // Common pagination
         limit: {
-          type: 'number',
+          type: 'integer',
           description: 'Maximum number of results. Default 20.',
           default: 20,
           minimum: 1,
           maximum: 100,
         },
         offset: {
-          type: 'number',
+          type: 'integer',
           description: 'Pagination offset. Default 0.',
           default: 0,
           minimum: 0,

@@ -26,6 +26,7 @@ export interface ToolAnnotations {
   readOnlyHint?: boolean;
   destructiveHint?: boolean;
   openWorldHint?: boolean;
+  idempotentHint?: boolean;
 }
 
 export interface ResourceDefinition {
