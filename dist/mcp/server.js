@@ -461,10 +461,11 @@ class N8NDocumentationMCPServer {
             };
         });
         this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
-            const uri = request.params.uri;
-            const expectedEtag = request.params.expectedEtag;
-            const contents = request.params.contents;
-            const directText = request.params.text;
+            const params = request.params ?? {};
+            const uri = params.uri;
+            const expectedEtag = params.expectedEtag;
+            const contents = params.contents;
+            const directText = params.text;
             const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
             if (typeof text !== 'string') {
                 throw new Error('resources/write requires text content');

@@ -691,11 +691,12 @@ export class N8NDocumentationMCPServer {
       };
     });
 
-    this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
-      const uri = request.params.uri;
-      const expectedEtag = request.params.expectedEtag as string | undefined;
-      const contents = request.params.contents as Array<{ type: 'text'; text: string }> | undefined;
-      const directText = request.params.text as string | undefined;
+    this.server.setRequestHandler(WriteResourceRequestSchema as any, async (request: any) => {
+      const params = request.params ?? {};
+      const uri = params.uri as string;
+      const expectedEtag = params.expectedEtag as string | undefined;
+      const contents = params.contents as Array<{ type: 'text'; text: string }> | undefined;
+      const directText = params.text as string | undefined;
       const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
 
       if (typeof text !== 'string') {
