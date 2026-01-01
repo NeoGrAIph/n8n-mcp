@@ -18,17 +18,17 @@ exports.toolsDocumentation = {
     validate_workflow: validation_1.validateWorkflowDoc,
     get_template: templates_1.getTemplateDoc,
     search_templates: templates_1.searchTemplatesDoc,
-    n8n_create_workflow: workflow_management_1.n8nCreateWorkflowDoc,
-    n8n_get_workflow: workflow_management_1.n8nGetWorkflowDoc,
-    n8n_update_full_workflow: workflow_management_1.n8nUpdateFullWorkflowDoc,
-    n8n_update_partial_workflow: workflow_management_1.n8nUpdatePartialWorkflowDoc,
-    n8n_delete_workflow: workflow_management_1.n8nDeleteWorkflowDoc,
-    n8n_list_workflows: workflow_management_1.n8nListWorkflowsDoc,
-    n8n_validate_workflow: workflow_management_1.n8nValidateWorkflowDoc,
-    n8n_autofix_workflow: workflow_management_1.n8nAutofixWorkflowDoc,
-    n8n_test_workflow: workflow_management_1.n8nTestWorkflowDoc,
+    n8n_workflow_create: workflow_management_1.n8nCreateWorkflowDoc,
+    n8n_workflow_get: workflow_management_1.n8nGetWorkflowDoc,
+    n8n_workflow_update_full: workflow_management_1.n8nUpdateFullWorkflowDoc,
+    n8n_workflow_update_partial: workflow_management_1.n8nUpdatePartialWorkflowDoc,
+    n8n_workflow_delete: workflow_management_1.n8nDeleteWorkflowDoc,
+    n8n_workflows_list: workflow_management_1.n8nListWorkflowsDoc,
+    n8n_workflow_validate: workflow_management_1.n8nValidateWorkflowDoc,
+    n8n_workflow_autofix: workflow_management_1.n8nAutofixWorkflowDoc,
+    n8n_workflow_test: workflow_management_1.n8nTestWorkflowDoc,
     n8n_executions: workflow_management_1.n8nExecutionsDoc,
     n8n_workflow_versions: workflow_management_1.n8nWorkflowVersionsDoc,
-    n8n_deploy_template: workflow_management_1.n8nDeployTemplateDoc
+    n8n_template_deploy: workflow_management_1.n8nDeployTemplateDoc
 };
 //# sourceMappingURL=index.js.map

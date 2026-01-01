@@ -78,8 +78,8 @@ describe('n8nDocumentationToolsFinal', () => {
       });
     });
 
-    describe('n8n_get_node', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_get_node');
+    describe('n8n_node_get', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_node_get');
 
       it('should exist', () => {
         expect(tool).toBeDefined();
@@ -94,8 +94,8 @@ describe('n8nDocumentationToolsFinal', () => {
       });
     });
 
-    describe('n8n_search_nodes', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_search_nodes');
+    describe('n8n_nodes_search', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_nodes_search');
 
       it('should exist', () => {
         expect(tool).toBeDefined();
@@ -115,8 +115,8 @@ describe('n8nDocumentationToolsFinal', () => {
       });
     });
 
-    describe('n8n_validate_workflow_json', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_validate_workflow_json');
+    describe('n8n_workflow_json_validate', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_workflow_json_validate');
 
       it('should exist', () => {
         expect(tool).toBeDefined();
@@ -141,8 +141,8 @@ describe('n8nDocumentationToolsFinal', () => {
       });
     });
 
-    describe('n8n_search_templates (consolidated)', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_search_templates');
+    describe('n8n_templates_search (consolidated)', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_templates_search');
 
       it('should exist', () => {
         expect(tool).toBeDefined();
@@ -193,8 +193,8 @@ describe('n8nDocumentationToolsFinal', () => {
 
     it('should include examples or key information in descriptions', () => {
       const toolsWithExamples = [
-        'n8n_get_node',
-        'n8n_search_nodes'
+        'n8n_node_get',
+        'n8n_nodes_search'
       ];
 
       toolsWithExamples.forEach(toolName => {
@@ -237,10 +237,10 @@ describe('n8nDocumentationToolsFinal', () => {
     it('should have tools for all major categories', () => {
       // Updated for v2.26.0 consolidated tools
       const categories = {
-        discovery: ['n8n_search_nodes'],
-        configuration: ['n8n_get_node'],  // n8n_get_node now includes docs mode
-        validation: ['n8n_validate_node', 'n8n_validate_workflow_json'],  // consolidated n8n_validate_node
-        templates: ['n8n_search_templates', 'n8n_get_template'],  // n8n_search_templates now handles all search modes
+        discovery: ['n8n_nodes_search'],
+        configuration: ['n8n_node_get'],  // n8n_node_get now includes docs mode
+        validation: ['n8n_node_validate', 'n8n_workflow_json_validate'],  // consolidated n8n_node_validate
+        templates: ['n8n_templates_search', 'n8n_template_get'],  // n8n_templates_search now handles all search modes
         documentation: ['n8n_tools_documentation']
       };
 
@@ -294,8 +294,8 @@ describe('n8nDocumentationToolsFinal', () => {
     });
 
     it('should have array parameters defined correctly', () => {
-      // n8n_search_templates now handles nodeTypes for by_nodes mode
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_search_templates');
+      // n8n_templates_search now handles nodeTypes for by_nodes mode
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_templates_search');
       const arrayParam = tool?.inputSchema.properties?.nodeTypes;
       expect(arrayParam?.type).toBe('array');
       expect(arrayParam?.items).toBeDefined();
@@ -304,8 +304,8 @@ describe('n8nDocumentationToolsFinal', () => {
   });
 
   describe('Consolidated Template Tools (v2.26.0)', () => {
-    describe('n8n_get_template', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_get_template');
+    describe('n8n_template_get', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_template_get');
 
       it('should exist and support mode parameter', () => {
         expect(tool).toBeDefined();
@@ -325,8 +325,8 @@ describe('n8nDocumentationToolsFinal', () => {
       });
     });
 
-    describe('n8n_search_templates (consolidated with searchMode)', () => {
-      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_search_templates');
+    describe('n8n_templates_search (consolidated with searchMode)', () => {
+      const tool = n8nDocumentationToolsFinal.find(t => t.name === 'n8n_templates_search');
 
       it('should exist with searchMode parameter', () => {
         expect(tool).toBeDefined();

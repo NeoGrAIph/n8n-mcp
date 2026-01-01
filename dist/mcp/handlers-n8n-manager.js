@@ -291,7 +291,7 @@ async function handleCreateWorkflow(args, context) {
                 active: workflow.active,
                 nodeCount: workflow.nodes?.length || 0
             },
-            message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_get_workflow with mode 'structure' to verify current state.`
+            message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_workflow_get with mode 'structure' to verify current state.`
         };
     }
     catch (error) {
@@ -529,7 +529,7 @@ async function handleUpdateWorkflow(args, repository, context) {
         if (workflowBefore) {
             trackWorkflowMutationForFullUpdate({
                 sessionId,
-                toolName: 'n8n_update_full_workflow',
+                toolName: 'n8n_workflow_update_full',
                 userIntent,
                 operations: [],
                 workflowBefore,
@@ -548,14 +548,14 @@ async function handleUpdateWorkflow(args, repository, context) {
                 active: workflow.active,
                 nodeCount: workflow.nodes?.length || 0
             },
-            message: `Workflow "${workflow.name}" updated successfully. Use n8n_get_workflow with mode 'structure' to verify current state.`
+            message: `Workflow "${workflow.name}" updated successfully. Use n8n_workflow_get with mode 'structure' to verify current state.`
         };
     }
     catch (error) {
         if (workflowBefore) {
             trackWorkflowMutationForFullUpdate({
                 sessionId,
-                toolName: 'n8n_update_full_workflow',
+                toolName: 'n8n_workflow_update_full',
                 userIntent,
                 operations: [],
                 workflowBefore,
@@ -955,7 +955,7 @@ async function handleTestWorkflow(args, context) {
                 details: {
                     workflowId: input.workflowId,
                     triggerType,
-                    hint: 'Activate the workflow in n8n using n8n_update_partial_workflow with [{type: "activateWorkflow"}]',
+                    hint: 'Activate the workflow in n8n using n8n_workflow_update_partial with [{type: "activateWorkflow"}]',
                 },
             };
         }
@@ -1208,8 +1208,8 @@ async function handleHealthCheck(context) {
             }
         };
         responseData.nextSteps = [
-            '• Create workflow: n8n_create_workflow',
-            '• List workflows: n8n_list_workflows',
+            '• Create workflow: n8n_workflow_create',
+            '• List workflows: n8n_workflows_list',
             '• Search nodes: search_nodes',
             '• Browse templates: search_templates'
         ];
@@ -1508,12 +1508,12 @@ async function handleDiagnostic(request, context) {
             message: '✓ API connected! Here\'s what you can do:',
             recommended: [
                 {
-                    action: 'n8n_list_workflows',
+                    action: 'n8n_workflows_list',
                     description: 'See your existing workflows',
                     timing: 'Fast (6 seconds median)'
                 },
                 {
-                    action: 'n8n_create_workflow',
+                    action: 'n8n_workflow_create',
                     description: 'Create a new workflow',
                     timing: 'Typically 6-14 minutes to build'
                 },
@@ -1530,8 +1530,8 @@ async function handleDiagnostic(request, context) {
             ],
             tips: [
                 '82% of users start creating workflows after diagnostics - you\'re ready to go!',
-                'Most common first action: n8n_update_partial_workflow (managing existing workflows)',
-                'Use n8n_validate_workflow before deploying to catch issues early'
+                'Most common first action: n8n_workflow_update_partial (managing existing workflows)',
+                'Use n8n_workflow_validate before deploying to catch issues early'
             ]
         };
     }

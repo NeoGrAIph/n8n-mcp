@@ -1,6 +1,6 @@
 # Final AI Node Validation Specification
 
-> ✅ This spec uses the current tool set (`n8n_get_node`, `n8n_search_nodes`, `n8n_validate_node`, etc.).
+> ✅ This spec uses the current tool set (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate`, etc.).
 
 ## AI Agent Deep Architecture Analysis
 
@@ -435,7 +435,7 @@ interface AIAgentRequirements {
 
 Based on this analysis, MCP tools should return:
 
-#### For `n8n_get_node` (detail: standard/minimal):
+#### For `n8n_node_get` (detail: standard/minimal):
 ```typescript
 {
   "essentials": {
@@ -476,7 +476,7 @@ Based on this analysis, MCP tools should return:
 }
 ```
 
-#### For `n8n_search_nodes` with query "AI Agent":
+#### For `n8n_nodes_search` with query "AI Agent":
 ```typescript
 {
   "results": [
@@ -505,7 +505,7 @@ Based on this analysis, MCP tools should return:
 }
 ```
 
-#### For `n8n_get_node` (mode: "docs"):
+#### For `n8n_node_get` (mode: "docs"):
 ```markdown
 # AI Agent
 

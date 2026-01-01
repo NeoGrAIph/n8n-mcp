@@ -71,7 +71,7 @@ Shows all available MCP tools:
 - `n8n_tools_documentation`
 - `list_nodes`
 - `get_node_info`
-- `n8n_search_nodes`
+- `n8n_nodes_search`
 - `get_node_essentials`
 - `validate_node_config`
 - And many more...
@@ -84,7 +84,7 @@ Execute specific tools with arguments:
 - Arguments: `{ "nodeType": "n8n-nodes-base.httpRequest" }`
 
 **Example: Search Nodes**
-- Tool Name: `n8n_search_nodes`
+- Tool Name: `n8n_nodes_search`
 - Arguments: `{ "query": "webhook", "limit": 5 }`
 
 ## Import Example Workflow

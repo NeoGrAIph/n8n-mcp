@@ -82,7 +82,7 @@ The validation system was tested against real-world n8n.io workflow templates:
 
 ### Automatic Integration
 
-Structure validation is automatically applied during node configuration validation. When you call `n8n_validate_node` (mode: `full` or `minimal`), the system:
+Structure validation is automatically applied during node configuration validation. When you call `n8n_node_validate` (mode: `full` or `minimal`), the system:
 
 1. **Identifies Special Types**: Detects properties that use filter, resourceMapper, assignmentCollection, or resourceLocator types
 2. **Validates Structure**: Checks that the configuration matches the expected structure for that type
@@ -94,7 +94,7 @@ Structure validation is automatically applied during node configuration validati
 ```
 User/AI provides node config
         ↓
-n8n_validate_node (MCP tool)
+n8n_node_validate (MCP tool)
         ↓
 EnhancedConfigValidator.validateWithMode()
         ↓

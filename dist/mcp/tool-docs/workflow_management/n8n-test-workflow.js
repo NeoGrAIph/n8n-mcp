@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nTestWorkflowDoc = void 0;
 exports.n8nTestWorkflowDoc = {
-    name: 'n8n_test_workflow',
+    name: 'n8n_workflow_test',
     category: 'workflow_management',
     essentials: {
         description: 'Test/trigger workflow execution. Auto-detects trigger type (webhook/form/chat). Only workflows with these triggers can be executed externally.',
         keyParameters: ['workflowId', 'triggerType', 'data', 'message'],
-        example: 'n8n_test_workflow({workflowId: "123"}) - auto-detect trigger',
+        example: 'n8n_workflow_test({workflowId: "123"}) - auto-detect trigger',
         performance: 'Immediate trigger, response time depends on workflow complexity',
         tips: [
             'Auto-detects trigger type from workflow if not specified',
@@ -88,10 +88,10 @@ The tool auto-detects the appropriate trigger type by analyzing the workflow's t
 - triggerType: detected or specified trigger type
 - metadata: timing and request details`,
         examples: [
-            'n8n_test_workflow({workflowId: "123"}) - Auto-detect and trigger',
-            'n8n_test_workflow({workflowId: "123", triggerType: "webhook", data: {name: "John"}}) - Webhook with data',
-            'n8n_test_workflow({workflowId: "123", triggerType: "chat", message: "Hello AI"}) - Chat trigger',
-            'n8n_test_workflow({workflowId: "123", triggerType: "form", data: {email: "test@example.com"}}) - Form submission'
+            'n8n_workflow_test({workflowId: "123"}) - Auto-detect and trigger',
+            'n8n_workflow_test({workflowId: "123", triggerType: "webhook", data: {name: "John"}}) - Webhook with data',
+            'n8n_workflow_test({workflowId: "123", triggerType: "chat", message: "Hello AI"}) - Chat trigger',
+            'n8n_workflow_test({workflowId: "123", triggerType: "form", data: {email: "test@example.com"}}) - Form submission'
         ],
         useCases: [
             'Test workflows during development',
@@ -125,7 +125,7 @@ When execution fails, the response includes guidance for debugging:
             'For chat workflows, provide sessionId for multi-turn conversations',
             'Use mode="preview" with n8n_executions for efficient debugging',
             'Test with small data payloads first',
-            'Activate workflows before testing (use n8n_update_partial_workflow with activateWorkflow)'
+            'Activate workflows before testing (use n8n_workflow_update_partial with activateWorkflow)'
         ],
         pitfalls: [
             'All trigger types require the workflow to be ACTIVE',
@@ -134,7 +134,7 @@ When execution fails, the response includes guidance for debugging:
             'Form data must match expected form fields',
             'Webhook method must match node configuration'
         ],
-        relatedTools: ['n8n_executions', 'n8n_get_workflow', 'n8n_create_workflow', 'n8n_validate_workflow']
+        relatedTools: ['n8n_executions', 'n8n_workflow_get', 'n8n_workflow_create', 'n8n_workflow_validate']
     }
 };
 //# sourceMappingURL=n8n-test-workflow.js.map

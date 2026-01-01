@@ -58,12 +58,12 @@ vi.mock('../../../src/database/template-repository', () => ({
 // Mock MCP tools
 vi.mock('../../../src/mcp/tools', () => ({
   n8nDocumentationToolsFinal: [
-    { name: 'n8n_search_nodes', description: 'Search n8n nodes', inputSchema: {} },
+    { name: 'n8n_nodes_search', description: 'Search n8n nodes', inputSchema: {} },
     { name: 'get_node_info', description: 'Get node info', inputSchema: {} }
   ],
   n8nManagementTools: [
-    { name: 'n8n_create_workflow', description: 'Create workflow', inputSchema: {} },
-    { name: 'n8n_get_workflow', description: 'Get workflow', inputSchema: {} }
+    { name: 'n8n_workflow_create', description: 'Create workflow', inputSchema: {} },
+    { name: 'n8n_workflow_get', description: 'Get workflow', inputSchema: {} }
   ]
 }));
 
@@ -114,8 +114,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         const toolNames = result.tools.map((tool: any) => tool.name);
 
         // Should include both documentation and management tools
-        expect(toolNames).toContain('n8n_search_nodes');  // Documentation tool
-        expect(toolNames).toContain('n8n_create_workflow');  // Management tool
+        expect(toolNames).toContain('n8n_nodes_search');  // Documentation tool
+        expect(toolNames).toContain('n8n_workflow_create');  // Management tool
         expect(toolNames.length).toBeGreaterThan(20);  // Should have both sets
       });
 
@@ -133,7 +133,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when only N8N_API_KEY is set', async () => {
@@ -150,7 +150,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should only include documentation tools when no environment variables are set', async () => {
@@ -167,8 +167,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         const toolNames = result.tools.map((tool: any) => tool.name);
 
         // Should only include documentation tools
-        expect(toolNames).toContain('n8n_search_nodes');
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_nodes_search');
+        expect(toolNames).not.toContain('n8n_workflow_create');
         expect(toolNames.length).toBeLessThan(20);  // Only documentation tools
       });
     });
@@ -192,7 +192,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when instance context has only URL', async () => {
@@ -212,7 +212,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when instance context has only key', async () => {
@@ -232,7 +232,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should only include documentation tools when instance context is empty', async () => {
@@ -250,8 +250,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_search_nodes');
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_nodes_search');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
 
       it('should only include documentation tools when instance context is undefined', async () => {
@@ -266,8 +266,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_search_nodes');
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_nodes_search');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
     });
 
@@ -285,7 +285,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should not include management tools when ENABLE_MULTI_TENANT is false', async () => {
@@ -301,8 +301,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_search_nodes');
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_nodes_search');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
 
       it('should not include management tools when ENABLE_MULTI_TENANT is undefined', async () => {
@@ -317,8 +317,8 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_search_nodes');
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_nodes_search');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
 
       it('should not include management tools when ENABLE_MULTI_TENANT is empty string', async () => {
@@ -334,7 +334,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
 
       it('should not include management tools when ENABLE_MULTI_TENANT is any other value', async () => {
@@ -350,7 +350,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).not.toContain('n8n_create_workflow');
+        expect(toolNames).not.toContain('n8n_workflow_create');
       });
     });
 
@@ -376,7 +376,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when env vars and multi-tenant flag are both set', async () => {
@@ -394,7 +394,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when instance context and multi-tenant flag are both set', async () => {
@@ -417,7 +417,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
 
       it('should include management tools when all three configuration methods are set', async () => {
@@ -442,7 +442,7 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
         // Assert
         expect(result.tools).toBeDefined();
         const toolNames = result.tools.map((tool: any) => tool.name);
-        expect(toolNames).toContain('n8n_create_workflow');
+        expect(toolNames).toContain('n8n_workflow_create');
       });
     });
 
@@ -537,9 +537,9 @@ describe.skip('MCP Server Multi-Tenant Tool Listing', () => {
           const toolNames = result.tools.map((tool: any) => tool.name);
 
           if (expected) {
-            expect(toolNames).toContain('n8n_create_workflow');
+            expect(toolNames).toContain('n8n_workflow_create');
           } else {
-            expect(toolNames).not.toContain('n8n_create_workflow');
+            expect(toolNames).not.toContain('n8n_workflow_create');
           }
         });
       });

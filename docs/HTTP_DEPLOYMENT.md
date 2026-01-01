@@ -179,15 +179,15 @@ Enable additional tools for managing n8n workflows by configuring API access:
 When configured, you get additional n8n management tools:
 
 **Workflow Management:**
-- `n8n_create_workflow` - Create new workflows
-- `n8n_get_workflow` - Get workflow by ID (full/details/structure/minimal modes)
-- `n8n_update_full_workflow` - Update entire workflow
-- `n8n_update_partial_workflow` - Update using diff operations
-- `n8n_delete_workflow` - Delete workflows
-- `n8n_list_workflows` - List workflows with filters
-- `n8n_validate_workflow` - Validate workflows in n8n by ID
-- `n8n_autofix_workflow` - Auto-fix common workflow errors
-- `n8n_deploy_template` - Deploy templates from n8n.io
+- `n8n_workflow_create` - Create new workflows
+- `n8n_workflow_get` - Get workflow by ID (full/details/structure/minimal modes)
+- `n8n_workflow_update_full` - Update entire workflow
+- `n8n_workflow_update_partial` - Update using diff operations
+- `n8n_workflow_delete` - Delete workflows
+- `n8n_workflows_list` - List workflows with filters
+- `n8n_workflow_validate` - Validate workflows in n8n by ID
+- `n8n_workflow_autofix` - Auto-fix common workflow errors
+- `n8n_template_deploy` - Deploy templates from n8n.io
 - `n8n_workflow_versions_list` - List workflow version history
 - `n8n_workflow_versions_get` - Get a specific workflow version
 - `n8n_workflow_versions_rollback` - Roll back to a previous version
@@ -196,7 +196,7 @@ When configured, you get additional n8n management tools:
 - `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
 
 **Execution Management:**
-- `n8n_test_workflow` - Trigger workflow execution
+- `n8n_workflow_test` - Trigger workflow execution
 - `n8n_executions_get` - Get execution details
 - `n8n_executions_list` - List executions
 - `n8n_executions_delete` - Delete execution records

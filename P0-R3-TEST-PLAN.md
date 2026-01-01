@@ -6,7 +6,7 @@ This document outlines comprehensive test coverage for the P0-R3 feature (Templa
 
 **Feature Overview:**
 - New database table: `template_node_configs` (197 pre-extracted configurations)
-- Enhanced tools: `n8n_search_nodes({includeExamples: true})` and `get_node_essentials({includeExamples: true})`
+- Enhanced tools: `n8n_nodes_search({includeExamples: true})` and `get_node_essentials({includeExamples: true})`
 - Breaking changes: Removed `get_node_for_task` tool
 
 ## Test Files Created
@@ -44,7 +44,7 @@ This document outlines comprehensive test coverage for the P0-R3 feature (Templa
 ---
 
 #### 2. `/tests/unit/mcp/search-nodes-examples.test.ts` ✅
-**Purpose:** Test `n8n_search_nodes` tool with includeExamples parameter
+**Purpose:** Test `n8n_nodes_search` tool with includeExamples parameter
 
 **Coverage:**
 - includeExamples parameter behavior
@@ -125,7 +125,7 @@ This document outlines comprehensive test coverage for the P0-R3 feature (Templa
 
 **Coverage:**
 - Direct SQL queries
-  - Top 2 examples for n8n_search_nodes
+  - Top 2 examples for n8n_nodes_search
   - Top 3 examples with metadata for get_node_essentials
 - Data structure validation
   - Valid JSON in all fields
@@ -199,17 +199,17 @@ This document outlines comprehensive test coverage for the P0-R3 feature (Templa
 
 ```typescript
 // BEFORE:
-templates: ['list_tasks', 'get_node_for_task', 'n8n_search_templates', ...]
+templates: ['list_tasks', 'get_node_for_task', 'n8n_templates_search', ...]
 
 // AFTER:
-templates: ['list_tasks', 'n8n_search_templates', ...]
+templates: ['list_tasks', 'n8n_templates_search', ...]
 ```
 
 **Add:** Tests for new includeExamples parameter in tool definitions
 
 ```typescript
-it('should have includeExamples parameter in n8n_search_nodes', () => {
-  const searchNodesTool = tools.find(t => t.name === 'n8n_search_nodes');
+it('should have includeExamples parameter in n8n_nodes_search', () => {
+  const searchNodesTool = tools.find(t => t.name === 'n8n_nodes_search');
   expect(searchNodesTool.inputSchema.properties.includeExamples).toBeDefined();
   expect(searchNodesTool.inputSchema.properties.includeExamples.type).toBe('boolean');
   expect(searchNodesTool.inputSchema.properties.includeExamples.default).toBe(false);
@@ -243,10 +243,10 @@ client.callTool({ name: 'get_node_for_task', arguments: { task: 'invalid_task' }
 **Add:** Tests for new includeExamples functionality
 
 ```typescript
-describe('n8n_search_nodes with includeExamples', () => {
+describe('n8n_nodes_search with includeExamples', () => {
   it('should return examples when includeExamples is true', async () => {
     const response = await client.callTool({
-      name: 'n8n_search_nodes',
+      name: 'n8n_nodes_search',
       arguments: { query: 'webhook', includeExamples: true }
     });
 
@@ -256,7 +256,7 @@ describe('n8n_search_nodes with includeExamples', () => {
 
   it('should not return examples when includeExamples is false', async () => {
     const response = await client.callTool({
-      name: 'n8n_search_nodes',
+      name: 'n8n_nodes_search',
       arguments: { query: 'webhook', includeExamples: false }
     });
 
@@ -425,7 +425,7 @@ Current thresholds maintained. Expected improvements:
 - [ ] Run `npm run rebuild` - Verify migration applies cleanly
 - [ ] Run `npm run fetch:templates --extract-only` - Verify extraction works
 - [ ] Check database: `SELECT COUNT(*) FROM template_node_configs` - Should be ~197
-- [ ] Test MCP tool: `n8n_search_nodes({query: "webhook", includeExamples: true})`
+- [ ] Test MCP tool: `n8n_nodes_search({query: "webhook", includeExamples: true})`
 - [ ] Test MCP tool: `get_node_essentials({nodeType: "nodes-base.webhook", includeExamples: true})`
 - [ ] Verify backward compatibility: Tools work without includeExamples parameter
 - [ ] Performance test: Query 100 nodes with examples < 200ms

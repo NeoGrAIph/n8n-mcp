@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nListWorkflowsDoc = void 0;
 exports.n8nListWorkflowsDoc = {
-    name: 'n8n_list_workflows',
+    name: 'n8n_workflows_list',
     category: 'workflow_management',
     essentials: {
         description: 'List workflows (minimal metadata only - no nodes/connections). Supports pagination via cursor.',
         keyParameters: ['limit', 'active', 'tags'],
-        example: 'n8n_list_workflows({limit: 20, active: true})',
+        example: 'n8n_workflows_list({limit: 20, active: true})',
         performance: 'Fast (100-300ms)',
         tips: [
             'Use cursor for pagination',
@@ -16,7 +16,7 @@ exports.n8nListWorkflowsDoc = {
         ]
     },
     full: {
-        description: 'Lists workflows from n8n with powerful filtering options. Returns ONLY minimal metadata (id, name, active, dates, tags, nodeCount) - no workflow structure, nodes, or connections. Use n8n_get_workflow to fetch full workflow details.',
+        description: 'Lists workflows from n8n with powerful filtering options. Returns ONLY minimal metadata (id, name, active, dates, tags, nodeCount) - no workflow structure, nodes, or connections. Use n8n_workflow_get to fetch full workflow details.',
         parameters: {
             limit: { type: 'number', description: 'Number of workflows to return (1-100, default: 100)' },
             cursor: { type: 'string', description: 'Pagination cursor from previous response for next page' },
@@ -27,9 +27,9 @@ exports.n8nListWorkflowsDoc = {
         },
         returns: 'Object with: workflows array (minimal fields: id, name, active, createdAt, updatedAt, tags, nodeCount), returned (count in this response), hasMore (boolean), nextCursor (for pagination), and _note (guidance when more data exists)',
         examples: [
-            'n8n_list_workflows({limit: 20}) - First 20 workflows',
-            'n8n_list_workflows({active: true, tags: ["production"]}) - Active production workflows',
-            'n8n_list_workflows({cursor: "abc123", limit: 50}) - Next page of results'
+            'n8n_workflows_list({limit: 20}) - First 20 workflows',
+            'n8n_workflows_list({active: true, tags: ["production"]}) - Active production workflows',
+            'n8n_workflows_list({cursor: "abc123", limit: 50}) - Next page of results'
         ],
         useCases: [
             'Build workflow dashboards',
@@ -51,7 +51,7 @@ exports.n8nListWorkflowsDoc = {
             'Server may return fewer than requested limit',
             'returned field is count of current page only, not system total'
         ],
-        relatedTools: ['n8n_get_workflow', 'n8n_update_partial_workflow', 'n8n_executions']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'n8n_executions']
     }
 };
 //# sourceMappingURL=n8n-list-workflows.js.map

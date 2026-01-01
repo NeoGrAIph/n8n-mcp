@@ -290,8 +290,8 @@ sqlite3 data/nodes.db "SELECT COUNT(*),
 
 Templates are available through MCP tools:
 - `list_templates`: List all templates
-- `n8n_get_template`: Get specific template with workflow
-- `n8n_search_templates`: Search by keyword
+- `n8n_template_get`: Get specific template with workflow
+- `n8n_templates_search`: Search by keyword
 - `list_node_templates`: Templates using specific nodes
 - `get_templates_for_task`: Templates for common tasks
 - `search_templates_by_metadata`: Advanced filtering

@@ -7,7 +7,7 @@ async function testSimple() {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   // Just test one query
-  const result = await server.executeTool('n8n_search_nodes', {
+  const result = await server.executeTool('n8n_nodes_search', {
     query: 'slak',
     mode: 'FUZZY',
     limit: 5

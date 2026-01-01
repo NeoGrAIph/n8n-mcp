@@ -1,17 +1,17 @@
 import { ToolDocumentation } from '../types';
 
 export const n8nCreateWorkflowDoc: ToolDocumentation = {
-  name: 'n8n_create_workflow',
+  name: 'n8n_workflow_create',
   category: 'workflow_management',
   essentials: {
     description: 'Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID.',
     keyParameters: ['name', 'nodes', 'connections'],
-    example: 'n8n_create_workflow({name: "My Flow", nodes: [...], connections: {...}})',
+    example: 'n8n_workflow_create({name: "My Flow", nodes: [...], connections: {...}})',
     performance: 'Network-dependent',
     tips: [
       'Workflow created inactive',
       'Returns ID for future updates',
-      'Validate first with n8n_validate_workflow_json',
+      'Validate first with n8n_workflow_json_validate',
       'Auto-sanitization fixes operator structures and missing metadata during creation'
     ]
   },
@@ -23,10 +23,10 @@ export const n8nCreateWorkflowDoc: ToolDocumentation = {
       connections: { type: 'object', required: true, description: 'Node connections. Keys are source node names (not IDs)' },
       settings: { type: 'object', description: 'Optional workflow settings (timezone, error handling, etc.)' }
     },
-    returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_get_workflow with mode "structure" to verify current state if needed.',
+    returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_workflow_get with mode "structure" to verify current state if needed.',
     examples: [
       `// Basic webhook to Slack workflow
-n8n_create_workflow({
+n8n_workflow_create({
   name: "Webhook to Slack",
   nodes: [
     {
@@ -61,7 +61,7 @@ n8n_create_workflow({
   }
 })`,
       `// Workflow with settings and error handling
-n8n_create_workflow({
+n8n_workflow_create({
   name: "Data Processing",
   nodes: [...],
   connections: {...},
@@ -81,10 +81,10 @@ n8n_create_workflow({
     ],
     performance: 'Network-dependent - Typically 100-500ms depending on workflow size',
     bestPractices: [
-      'Validate with n8n_validate_workflow_json first',
+      'Validate with n8n_workflow_json_validate first',
       'Use unique node IDs',
       'Position nodes for readability',
-      'Test with n8n_test_workflow'
+      'Test with n8n_workflow_test'
     ],
     pitfalls: [
       '**REQUIRES N8N_API_URL and N8N_API_KEY environment variables** - tool unavailable without n8n API access',
@@ -95,6 +95,6 @@ n8n_create_workflow({
       '**Auto-sanitization runs on creation**: All nodes sanitized before workflow created (operator structures fixed, missing metadata added)',
       '**Auto-sanitization cannot prevent all failures**: Broken connections or invalid node configurations may still cause creation to fail'
     ],
-    relatedTools: ['n8n_validate_workflow_json', 'n8n_update_partial_workflow', 'n8n_test_workflow']
+    relatedTools: ['n8n_workflow_json_validate', 'n8n_workflow_update_partial', 'n8n_workflow_test']
   }
 };

@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nCreateWorkflowDoc = void 0;
 exports.n8nCreateWorkflowDoc = {
-    name: 'n8n_create_workflow',
+    name: 'n8n_workflow_create',
     category: 'workflow_management',
     essentials: {
         description: 'Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID.',
         keyParameters: ['name', 'nodes', 'connections'],
-        example: 'n8n_create_workflow({name: "My Flow", nodes: [...], connections: {...}})',
+        example: 'n8n_workflow_create({name: "My Flow", nodes: [...], connections: {...}})',
         performance: 'Network-dependent',
         tips: [
             'Workflow created inactive',
@@ -24,10 +24,10 @@ exports.n8nCreateWorkflowDoc = {
             connections: { type: 'object', required: true, description: 'Node connections. Keys are source node IDs' },
             settings: { type: 'object', description: 'Optional workflow settings (timezone, error handling, etc.)' }
         },
-        returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_get_workflow with mode "structure" to verify current state if needed.',
+        returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_workflow_get with mode "structure" to verify current state if needed.',
         examples: [
             `// Basic webhook to Slack workflow
-n8n_create_workflow({
+n8n_workflow_create({
   name: "Webhook to Slack",
   nodes: [
     {
@@ -62,7 +62,7 @@ n8n_create_workflow({
   }
 })`,
             `// Workflow with settings and error handling
-n8n_create_workflow({
+n8n_workflow_create({
   name: "Data Processing",
   nodes: [...],
   connections: {...},
@@ -85,7 +85,7 @@ n8n_create_workflow({
             'Validate with validate_workflow first',
             'Use unique node IDs',
             'Position nodes for readability',
-            'Test with n8n_test_workflow'
+            'Test with n8n_workflow_test'
         ],
         pitfalls: [
             '**REQUIRES N8N_API_URL and N8N_API_KEY environment variables** - tool unavailable without n8n API access',
@@ -96,7 +96,7 @@ n8n_create_workflow({
             '**Auto-sanitization runs on creation**: All nodes sanitized before workflow created (operator structures fixed, missing metadata added)',
             '**Auto-sanitization cannot prevent all failures**: Broken connections or invalid node configurations may still cause creation to fail'
         ],
-        relatedTools: ['validate_workflow', 'n8n_update_partial_workflow', 'n8n_test_workflow']
+        relatedTools: ['validate_workflow', 'n8n_workflow_update_partial', 'n8n_workflow_test']
     }
 };
 //# sourceMappingURL=n8n-create-workflow.js.map

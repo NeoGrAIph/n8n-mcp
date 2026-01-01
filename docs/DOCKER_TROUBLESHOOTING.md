@@ -199,7 +199,7 @@ docker ps -a | grep n8n-mcp | grep Exited | awk '{print $1}' | xargs -r docker r
 ### Webhooks to Local n8n Fail (v2.16.3+)
 
 **Symptoms:**
-- `n8n_test_workflow` fails with "SSRF protection" error
+- `n8n_workflow_test` fails with "SSRF protection" error
 - Error message: "SSRF protection: Localhost access is blocked"
 - Webhooks work from n8n UI but not from n8n-MCP
 

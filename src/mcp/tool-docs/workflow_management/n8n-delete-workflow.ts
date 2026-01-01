@@ -1,17 +1,17 @@
 import { ToolDocumentation } from '../types';
 
 export const n8nDeleteWorkflowDoc: ToolDocumentation = {
-  name: 'n8n_delete_workflow',
+  name: 'n8n_workflow_delete',
   category: 'workflow_management',
   essentials: {
     description: 'Permanently delete a workflow. This action cannot be undone.',
     keyParameters: ['id'],
-    example: 'n8n_delete_workflow({id: "workflow_123"})',
+    example: 'n8n_workflow_delete({id: "workflow_123"})',
     performance: 'Fast (50-150ms)',
     tips: [
       'Action is irreversible',
       'Deletes all execution history',
-      'Check workflow first with n8n_get_workflow({mode: "minimal"})'
+      'Check workflow first with n8n_workflow_get({mode: "minimal"})'
     ]
   },
   full: {
@@ -21,8 +21,8 @@ export const n8nDeleteWorkflowDoc: ToolDocumentation = {
     },
     returns: 'Minimal confirmation (id, name, deleted: true) for token efficiency.',
     examples: [
-      'n8n_delete_workflow({id: "abc123"}) - Delete specific workflow',
-      'if (confirm) { n8n_delete_workflow({id: wf.id}); } // With confirmation'
+      'n8n_workflow_delete({id: "abc123"}) - Delete specific workflow',
+      'if (confirm) { n8n_workflow_delete({id: wf.id}); } // With confirmation'
     ],
     useCases: [
       'Remove obsolete workflows',
@@ -34,7 +34,7 @@ export const n8nDeleteWorkflowDoc: ToolDocumentation = {
     performance: 'Fast operation - typically 50-150ms. May take longer if workflow has extensive execution history.',
     bestPractices: [
       'Always confirm before deletion',
-      'Check workflow with n8n_get_workflow({mode: "minimal"}) first',
+      'Check workflow with n8n_workflow_get({mode: "minimal"}) first',
       'Consider deactivating instead of deleting',
       'Export workflow before deletion for backup'
     ],
@@ -45,6 +45,6 @@ export const n8nDeleteWorkflowDoc: ToolDocumentation = {
       'Active workflows can be deleted',
       'No built-in confirmation'
     ],
-    relatedTools: ['n8n_get_workflow', 'n8n_list_workflows', 'n8n_update_partial_workflow', 'n8n_executions_list']
+    relatedTools: ['n8n_workflow_get', 'n8n_workflows_list', 'n8n_workflow_update_partial', 'n8n_executions_list']
   }
 };

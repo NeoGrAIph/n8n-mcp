@@ -1,15 +1,15 @@
 import { ToolDocumentation } from '../types';
 
 export const getTemplateDoc: ToolDocumentation = {
-  name: 'n8n_get_template',
+  name: 'n8n_template_get',
   category: 'templates',
   essentials: {
-    description: 'Get workflow template by ID with configurable detail level. Ready to import. IDs from n8n_search_templates.',
+    description: 'Get workflow template by ID with configurable detail level. Ready to import. IDs from n8n_templates_search.',
     keyParameters: ['templateId', 'mode'],
-    example: 'n8n_get_template({templateId: 1234, mode: "full"})',
+    example: 'n8n_template_get({templateId: 1234, mode: "full"})',
     performance: 'Fast (<100ms) - single database lookup',
     tips: [
-      'Get template IDs from n8n_search_templates first',
+      'Get template IDs from n8n_templates_search first',
       'Use mode="nodes_only" for quick overview, "structure" for topology, "full" for import',
       'Returns complete workflow JSON ready for import into n8n'
     ]
@@ -20,7 +20,7 @@ export const getTemplateDoc: ToolDocumentation = {
       templateId: {
         type: 'number',
         required: true,
-        description: 'The numeric ID of the template to retrieve. Get IDs from n8n_search_templates'
+        description: 'The numeric ID of the template to retrieve. Get IDs from n8n_templates_search'
       },
       mode: {
         type: 'string',
@@ -46,10 +46,10 @@ export const getTemplateDoc: ToolDocumentation = {
     - settings: Workflow configuration (timezone, error handling, etc.)
 - usage: Instructions for using the workflow`,
     examples: [
-      'n8n_get_template({templateId: 1234}) - Get complete workflow (default mode="full")',
-      'n8n_get_template({templateId: 1234, mode: "nodes_only"}) - Get just the node list',
-      'n8n_get_template({templateId: 1234, mode: "structure"}) - Get nodes and connections',
-      'n8n_get_template({templateId: 5678, mode: "full"}) - Get complete workflow JSON for import'
+      'n8n_template_get({templateId: 1234}) - Get complete workflow (default mode="full")',
+      'n8n_template_get({templateId: 1234, mode: "nodes_only"}) - Get just the node list',
+      'n8n_template_get({templateId: 1234, mode: "structure"}) - Get nodes and connections',
+      'n8n_template_get({templateId: 5678, mode: "full"}) - Get complete workflow JSON for import'
     ],
     useCases: [
       'Download workflows for direct import into n8n',
@@ -77,6 +77,6 @@ export const getTemplateDoc: ToolDocumentation = {
       'Not all templates work with all n8n versions',
       'Template may reference external services you don\'t have access to'
     ],
-    relatedTools: ['n8n_search_templates', 'n8n_create_workflow']
+    relatedTools: ['n8n_templates_search', 'n8n_workflow_create']
   }
 };

@@ -12,7 +12,7 @@ export const aiAgentsGuide: ToolDocumentation = {
       'Start with Chat Trigger → AI Agent → Language Model pattern',
       'Always connect language model BEFORE enabling AI Agent',
       'Use proper toolDescription for all AI tools (15+ characters)',
-      'Validate workflows with n8n_validate_workflow before deployment',
+      'Validate workflows with n8n_workflow_validate before deployment',
       'Use includeExamples=true when searching for AI nodes',
       'Check FINAL_AI_VALIDATION_SPEC.md for detailed requirements'
     ]
@@ -131,7 +131,7 @@ This is why you use \`sourceOutput: "ai_languageModel"\` when connecting compone
 
 \`\`\`typescript
 // Basic AI Agent setup
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [
     // Connect language model (REQUIRED)
@@ -173,7 +173,7 @@ n8n_update_partial_workflow({
 
 #### Step 1: Create Chat Trigger
 
-Use \`n8n_create_workflow\` or manually create a workflow with:
+Use \`n8n_workflow_create\` or manually create a workflow with:
 
 \`\`\`typescript
 {
@@ -198,7 +198,7 @@ Use \`n8n_create_workflow\` or manually create a workflow with:
 #### Step 2: Add Language Model
 
 \`\`\`typescript
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [
     {
@@ -220,7 +220,7 @@ n8n_update_partial_workflow({
 #### Step 3: Add AI Agent
 
 \`\`\`typescript
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [
     {
@@ -242,7 +242,7 @@ n8n_update_partial_workflow({
 #### Step 4: Connect Components
 
 \`\`\`typescript
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [
     // Chat Trigger → AI Agent (main connection)
@@ -265,7 +265,7 @@ n8n_update_partial_workflow({
 #### Step 5: Validate
 
 \`\`\`typescript
-n8n_validate_workflow({id: "workflow_id"})
+n8n_workflow_validate({id: "workflow_id"})
 \`\`\`
 
 ---
@@ -347,7 +347,7 @@ n8n_validate_workflow({id: "workflow_id"})
 **Example**:
 \`\`\`typescript
 // Step 1: Create Vector Store with embeddings and documents
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   operations: [
     {type: "addConnection", source: "Embeddings OpenAI", target: "Pinecone", sourceOutput: "ai_embedding"},
     {type: "addConnection", source: "Document Loader", target: "Pinecone", sourceOutput: "ai_document"}
@@ -355,14 +355,14 @@ n8n_update_partial_workflow({
 })
 
 // Step 2: Connect Vector Store to Vector Store Tool
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   operations: [
     {type: "addConnection", source: "Pinecone", target: "Vector Store Tool", sourceOutput: "ai_vectorStore"}
   ]
 })
 
 // Step 3: Connect tool to AI Agent
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   operations: [
     {type: "addConnection", source: "Vector Store Tool", target: "AI Agent", sourceOutput: "ai_tool"}
   ]
@@ -444,7 +444,7 @@ For real-time user experience:
 For production reliability with fallback language models:
 
 \`\`\`typescript
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   operations: [
     // Primary model
     {
@@ -522,7 +522,7 @@ Specialized sub-agents for complex tasks:
 ### Always Validate Before Deployment
 
 \`\`\`typescript
-const result = n8n_validate_workflow({id: "workflow_id"})
+const result = n8n_workflow_validate({id: "workflow_id"})
 
 if (!result.valid) {
   console.log("Errors:", result.errors)
@@ -563,7 +563,7 @@ if (!result.valid) {
 - [ ] Credentials are set up if needed
 
 ✅ **For Production**:
-- [ ] Workflow validated with n8n_validate_workflow
+- [ ] Workflow validated with n8n_workflow_validate
 - [ ] Tested with real user queries
 - [ ] Fallback model configured for reliability
 - [ ] Error handling in place
@@ -579,7 +579,7 @@ if (!result.valid) {
 
 **Solution**:
 \`\`\`typescript
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   operations: [
     {
       type: "addConnection",
@@ -680,7 +680,7 @@ sourceOutput: "ai_vectorStore"
 ### Validation Command
 
 \`\`\`typescript
-n8n_validate_workflow({id: "workflow_id"})
+n8n_workflow_validate({id: "workflow_id"})
 \`\`\`
 
 ---
@@ -688,9 +688,9 @@ n8n_validate_workflow({id: "workflow_id"})
 ## Related Resources
 
 - **FINAL_AI_VALIDATION_SPEC.md**: Complete validation rules
-- **n8n_update_partial_workflow**: Workflow modification tool
-- **n8n_search_nodes({query: "AI", includeExamples: true})**: Find AI nodes with examples
-- **n8n_get_node({nodeType: "...", detail: "standard", includeExamples: true})**: Node details with examples
+- **n8n_workflow_update_partial**: Workflow modification tool
+- **n8n_nodes_search({query: "AI", includeExamples: true})**: Find AI nodes with examples
+- **n8n_node_get({nodeType: "...", detail: "standard", includeExamples: true})**: Node details with examples
 
 ---
 
@@ -715,7 +715,7 @@ n8n_validate_workflow({id: "workflow_id"})
     bestPractices: [
       'Reference this guide when users ask about AI Agents',
       'Point to specific sections based on user needs',
-      'Combine with n8n_search_nodes(includeExamples=true) for working examples',
+      'Combine with n8n_nodes_search(includeExamples=true) for working examples',
       'Validate workflows after following guide instructions',
       'Use FINAL_AI_VALIDATION_SPEC.md for detailed requirements'
     ],
@@ -727,11 +727,11 @@ n8n_validate_workflow({id: "workflow_id"})
       'Fallback models require AI Agent node with fallback support'
     ],
     relatedTools: [
-      'n8n_create_workflow',
-      'n8n_update_partial_workflow',
-      'n8n_validate_workflow',
-      'n8n_search_nodes',
-      'n8n_get_node'
+      'n8n_workflow_create',
+      'n8n_workflow_update_partial',
+      'n8n_workflow_validate',
+      'n8n_nodes_search',
+      'n8n_node_get'
     ]
   }
 };

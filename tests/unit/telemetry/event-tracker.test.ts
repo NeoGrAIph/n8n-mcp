@@ -573,14 +573,14 @@ describe('TelemetryEventTracker', () => {
   describe('trackPerformanceMetric()', () => {
     it('should track performance metrics', () => {
       const metadata = { operation: 'database_query', table: 'nodes' };
-      eventTracker.trackPerformanceMetric('n8n_search_nodes', 1500, metadata);
+      eventTracker.trackPerformanceMetric('n8n_nodes_search', 1500, metadata);
 
       const events = eventTracker.getEventQueue();
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
         event: 'performance_metric',
         properties: {
-          operation: 'n8n_search_nodes',
+          operation: 'n8n_nodes_search',
           duration: 1500,
           isSlow: true,
           isVerySlow: false,

@@ -5,11 +5,11 @@ import path from 'path';
 import fs from 'fs';
 
 /**
- * Unit tests for n8n_search_nodes with includeExamples parameter
+ * Unit tests for n8n_nodes_search with includeExamples parameter
  * Testing P0-R3 feature: Template-based configuration examples
  */
 
-describe('n8n_search_nodes with includeExamples', () => {
+describe('n8n_nodes_search with includeExamples', () => {
   let server: N8NDocumentationMCPServer;
   let dbPath: string;
 

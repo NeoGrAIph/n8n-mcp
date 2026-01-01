@@ -5,7 +5,7 @@
  * The get_node_for_task tool has been removed in favor of template-based configuration examples.
  *
  * Migration:
- * - Use `n8n_search_nodes({query: "webhook", includeExamples: true})` to find nodes with real template configs
+ * - Use `n8n_nodes_search({query: "webhook", includeExamples: true})` to find nodes with real template configs
  * - Use `get_node_essentials({nodeType: "nodes-base.webhook", includeExamples: true})` for top 3 examples
  * - New approach provides 2,646 real templates vs 31 hardcoded tasks
  *

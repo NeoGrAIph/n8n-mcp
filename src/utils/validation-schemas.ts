@@ -216,7 +216,7 @@ export class Validator {
  */
 export class ToolValidation {
   /**
-   * Validate parameters for n8n_validate_node tool (mode=full)
+   * Validate parameters for n8n_node_validate tool (mode=full)
    */
   static validateNodeOperation(args: any): ValidationResult {
     const nodeTypeResult = Validator.validateString(args.nodeType, 'nodeType');
@@ -232,7 +232,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for n8n_validate_node tool (mode=minimal)
+   * Validate parameters for n8n_node_validate tool (mode=minimal)
    */
   static validateNodeMinimal(args: any): ValidationResult {
     const nodeTypeResult = Validator.validateString(args.nodeType, 'nodeType');
@@ -242,7 +242,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for n8n_validate_workflow_json tool
+   * Validate parameters for n8n_workflow_json_validate tool
    */
   static validateWorkflow(args: any): ValidationResult {
     const workflowResult = Validator.validateObject(args.workflow, 'workflow');
@@ -264,7 +264,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for n8n_search_nodes tool
+   * Validate parameters for n8n_nodes_search tool
    */
   static validateSearchNodes(args: any): ValidationResult {
     const queryResult = Validator.validateString(args.query, 'query');
@@ -297,7 +297,7 @@ export class ToolValidation {
   }
 
   /**
-   * Validate parameters for n8n_create_workflow tool
+   * Validate parameters for n8n_workflow_create tool
    */
   static validateCreateWorkflow(args: any): ValidationResult {
     const nameResult = Validator.validateString(args.name, 'name');

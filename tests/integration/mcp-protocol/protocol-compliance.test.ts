@@ -125,14 +125,14 @@ describe('MCP Protocol Compliance', () => {
 
     it('should handle missing params gracefully', async () => {
       // Most tools should work without params
-      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'webhook' } });
+      const response = await client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'webhook' } });
       expect(response).toBeDefined();
     });
 
     it('should validate params schema', async () => {
       try {
         // Invalid nodeType format (missing prefix)
-        const response = await client.callTool({ name: 'n8n_get_node', arguments: {
+        const response = await client.callTool({ name: 'n8n_node_get', arguments: {
           nodeType: 'httpRequest' // Should be 'nodes-base.httpRequest'
         } });
         // Check if the response indicates an error
@@ -157,7 +157,7 @@ describe('MCP Protocol Compliance', () => {
 
     it('should handle large text responses', async () => {
       // Get a large node info response
-      const response = await client.callTool({ name: 'n8n_get_node', arguments: {
+      const response = await client.callTool({ name: 'n8n_node_get', arguments: {
         nodeType: 'nodes-base.httpRequest'
       } });
 
@@ -167,7 +167,7 @@ describe('MCP Protocol Compliance', () => {
     });
 
     it('should handle JSON content properly', async () => {
-      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: {
+      const response = await client.callTool({ name: 'n8n_nodes_search', arguments: {
         query: 'webhook',
         limit: 5
       } });
@@ -182,9 +182,9 @@ describe('MCP Protocol Compliance', () => {
   describe('Request/Response Correlation', () => {
     it('should correlate concurrent requests correctly', async () => {
       const requests = [
-        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'nodes-base.httpRequest' } }),
-        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'nodes-base.webhook' } }),
-        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'nodes-base.slack' } })
+        client.callTool({ name: 'n8n_node_get', arguments: { nodeType: 'nodes-base.httpRequest' } }),
+        client.callTool({ name: 'n8n_node_get', arguments: { nodeType: 'nodes-base.webhook' } }),
+        client.callTool({ name: 'n8n_node_get', arguments: { nodeType: 'nodes-base.slack' } })
       ];
 
       const responses = await Promise.all(requests);
@@ -201,10 +201,10 @@ describe('MCP Protocol Compliance', () => {
       const p1 = client.callTool({ name: 'n8n_tools_documentation', arguments: {} })
         .then(() => { results.push('docs'); return 'docs'; });
 
-      const p2 = client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'webhook', limit: 1 } })
+      const p2 = client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'webhook', limit: 1 } })
         .then(() => { results.push('nodes'); return 'nodes'; });
 
-      const p3 = client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http' } })
+      const p3 = client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http' } })
         .then(() => { results.push('search'); return 'search'; });
 
       const resolved = await Promise.all([p1, p2, p3]);
@@ -217,8 +217,8 @@ describe('MCP Protocol Compliance', () => {
 
   describe('Protocol Extensions', () => {
     it('should handle tool-specific extensions', async () => {
-      // Test tool with complex params (using consolidated n8n_validate_node from v2.26.0)
-      const response = await client.callTool({ name: 'n8n_validate_node', arguments: {
+      // Test tool with complex params (using consolidated n8n_node_validate from v2.26.0)
+      const response = await client.callTool({ name: 'n8n_node_validate', arguments: {
         nodeType: 'nodes-base.httpRequest',
         config: {
           method: 'GET',
@@ -234,10 +234,10 @@ describe('MCP Protocol Compliance', () => {
 
     it('should support optional parameters', async () => {
       // Call with minimal params
-      const response1 = await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'webhook' } });
+      const response1 = await client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'webhook' } });
 
       // Call with all params
-      const response2 = await client.callTool({ name: 'n8n_search_nodes', arguments: {
+      const response2 = await client.callTool({ name: 'n8n_nodes_search', arguments: {
         query: 'webhook',
         limit: 10,
         mode: 'OR'

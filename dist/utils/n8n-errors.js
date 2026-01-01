@@ -93,10 +93,10 @@ function handleN8nApiError(error) {
 }
 function formatExecutionError(executionId, workflowId) {
     const workflowPrefix = workflowId ? `Workflow ${workflowId} execution ` : 'Execution ';
-    return `${workflowPrefix}${executionId} failed. Use n8n_get_execution({id: '${executionId}', mode: 'preview'}) to investigate the error.`;
+    return `${workflowPrefix}${executionId} failed. Use n8n_executions_get({id: '${executionId}', mode: 'preview'}) to investigate the error.`;
 }
 function formatNoExecutionError() {
-    return "Workflow failed to execute. Use n8n_list_executions to find recent executions, then n8n_get_execution with mode='preview' to investigate.";
+    return "Workflow failed to execute. Use n8n_executions_list to find recent executions, then n8n_executions_get with mode='preview' to investigate.";
 }
 function getUserFriendlyErrorMessage(error) {
     switch (error.code) {

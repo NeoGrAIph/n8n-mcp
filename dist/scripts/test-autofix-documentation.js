@@ -6,9 +6,9 @@ const tools_documentation_1 = require("../mcp/tools-documentation");
 const logger_1 = require("../utils/logger");
 const logger = new logger_1.Logger({ prefix: '[AutofixDoc Test]' });
 async function testAutofixDocumentation() {
-    logger.info('Testing n8n_autofix_workflow documentation...\n');
+    logger.info('Testing n8n_workflow_autofix documentation...\n');
     logger.info('Test 1: Checking documentation registry');
-    const hasDoc = 'n8n_autofix_workflow' in tool_docs_1.toolsDocumentation;
+    const hasDoc = 'n8n_workflow_autofix' in tool_docs_1.toolsDocumentation;
     if (hasDoc) {
         logger.info('✅ Documentation found in registry');
     }
@@ -18,7 +18,7 @@ async function testAutofixDocumentation() {
     }
     if (hasDoc) {
         logger.info('\nTest 2: Checking documentation structure');
-        const doc = tool_docs_1.toolsDocumentation['n8n_autofix_workflow'];
+        const doc = tool_docs_1.toolsDocumentation['n8n_workflow_autofix'];
         const hasEssentials = doc.essentials &&
             doc.essentials.description &&
             doc.essentials.keyParameters &&
@@ -46,8 +46,8 @@ async function testAutofixDocumentation() {
     }
     logger.info('\nTest 3: Testing getToolDocumentation function');
     try {
-        const essentialsDoc = (0, tools_documentation_1.getToolDocumentation)('n8n_autofix_workflow', 'essentials');
-        if (essentialsDoc.includes("Tool 'n8n_autofix_workflow' not found")) {
+        const essentialsDoc = (0, tools_documentation_1.getToolDocumentation)('n8n_workflow_autofix', 'essentials');
+        if (essentialsDoc.includes("Tool 'n8n_workflow_autofix' not found")) {
             logger.error('❌ Essentials documentation retrieval failed');
         }
         else {
@@ -60,8 +60,8 @@ async function testAutofixDocumentation() {
         logger.error('❌ Error retrieving essentials documentation:', error);
     }
     try {
-        const fullDoc = (0, tools_documentation_1.getToolDocumentation)('n8n_autofix_workflow', 'full');
-        if (fullDoc.includes("Tool 'n8n_autofix_workflow' not found")) {
+        const fullDoc = (0, tools_documentation_1.getToolDocumentation)('n8n_workflow_autofix', 'full');
+        if (fullDoc.includes("Tool 'n8n_workflow_autofix' not found")) {
             logger.error('❌ Full documentation retrieval failed');
         }
         else {
@@ -75,24 +75,24 @@ async function testAutofixDocumentation() {
     }
     logger.info('\nTest 4: Checking workflow management tools listing');
     const workflowTools = Object.keys(tool_docs_1.toolsDocumentation).filter(k => k.startsWith('n8n_'));
-    const hasAutofix = workflowTools.includes('n8n_autofix_workflow');
+    const hasAutofix = workflowTools.includes('n8n_workflow_autofix');
     if (hasAutofix) {
-        logger.info('✅ n8n_autofix_workflow is listed in workflow management tools');
+        logger.info('✅ n8n_workflow_autofix is listed in workflow management tools');
         logger.info(`  Total workflow tools: ${workflowTools.length}`);
         const relatedTools = workflowTools.filter(t => t.includes('validate') || t.includes('update') || t.includes('fix'));
         logger.info(`  Related tools: ${relatedTools.join(', ')}`);
     }
     else {
-        logger.error('❌ n8n_autofix_workflow NOT listed in workflow management tools');
+        logger.error('❌ n8n_workflow_autofix NOT listed in workflow management tools');
     }
     logger.info('\n' + '='.repeat(60));
     logger.info('Summary:');
     if (hasDoc && hasAutofix) {
         logger.info('✨ Documentation integration successful!');
-        logger.info('The n8n_autofix_workflow tool documentation is properly integrated.');
+        logger.info('The n8n_workflow_autofix tool documentation is properly integrated.');
         logger.info('\nTo use in MCP:');
-        logger.info('  - Essentials: tools_documentation({topic: "n8n_autofix_workflow"})');
-        logger.info('  - Full: tools_documentation({topic: "n8n_autofix_workflow", depth: "full"})');
+        logger.info('  - Essentials: tools_documentation({topic: "n8n_workflow_autofix"})');
+        logger.info('  - Full: tools_documentation({topic: "n8n_workflow_autofix", depth: "full"})');
     }
     else {
         logger.error('⚠️ Documentation integration incomplete');

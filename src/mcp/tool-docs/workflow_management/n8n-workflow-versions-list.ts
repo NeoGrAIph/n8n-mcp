@@ -10,7 +10,7 @@ export const n8nWorkflowVersionsListDoc: ToolDocumentation = {
     performance: 'Fast (50-200ms)',
     tips: [
       'Use small limits for quick history checks',
-      'Use workflowId from n8n_list_workflows',
+      'Use workflowId from n8n_workflows_list',
       'Combine with get for specific versions'
     ]
   },

@@ -9,7 +9,7 @@ import { ToolDefinition } from '../types';
 export const n8nManagementTools: ToolDefinition[] = [
   // Workflow Management Tools
   {
-    name: 'n8n_create_workflow',
+    name: 'n8n_workflow_create',
     description: `Create a new workflow in n8n. Provide name, nodes, and connections (node types must use full n8n-nodes-base.* form) plus optional settings. Returns the new workflow id/name and basic stats; the workflow is created inactive.`,
     inputSchema: {
       type: 'object',
@@ -69,7 +69,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_get_workflow',
+    name: 'n8n_workflow_get',
     description: `Fetch a workflow by id from n8n. Use mode to control detail (full, details, structure, minimal) depending on how much data you need. Returns workflow data, and the details mode adds execution stats and webhook info.`,
     inputSchema: {
       type: 'object',
@@ -89,7 +89,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_update_full_workflow',
+    name: 'n8n_workflow_update_full',
     description: `Replace a workflow’s nodes, connections, and settings in n8n. Provide id plus the updated fields and use this for full updates rather than small diffs. Returns basic info about the updated workflow and writes changes to n8n.`,
     inputSchema: {
       type: 'object',
@@ -123,7 +123,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_update_partial_workflow',
+    name: 'n8n_workflow_update_partial',
     description: `Apply diff-based updates to an existing workflow. Provide id and an operations[] list (add/remove/update nodes or connections, settings, tags), with optional validateOnly and continueOnError. Returns applied/failed operations and writes changes when validateOnly is false.`,
     inputSchema: {
       type: 'object',
@@ -154,7 +154,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_delete_workflow',
+    name: 'n8n_workflow_delete',
     description: `Delete a workflow by id in n8n. Provide id. Returns confirmation of deletion and removes the workflow permanently.`,
     inputSchema: {
       type: 'object',
@@ -168,7 +168,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_list_workflows',
+    name: 'n8n_workflows_list',
     description: `List workflows in n8n with optional filters. Provide limit, cursor, active, tags, or projectId as needed. Returns minimal metadata and pagination cursors.`,
     inputSchema: {
       type: 'object',
@@ -202,7 +202,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_validate_workflow',
+    name: 'n8n_workflow_validate',
     description: `Validate an existing workflow in n8n by id. Optionally pass options to control checks and profile. Returns validity, summary, errors, warnings, and suggestions for that workflow.`,
     inputSchema: {
       type: 'object',
@@ -239,7 +239,7 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_autofix_workflow',
+    name: 'n8n_workflow_autofix',
     description: `Generate or apply automatic fixes for a workflow. Provide id and optional applyFixes, fixTypes, confidenceThreshold, and maxFixes. Returns fix summaries and counts, and writes changes when applyFixes is true.`,
     inputSchema: {
       type: 'object',
@@ -276,7 +276,7 @@ export const n8nManagementTools: ToolDefinition[] = [
 
   // Execution Management Tools
   {
-    name: 'n8n_test_workflow',
+    name: 'n8n_workflow_test',
     description: `Trigger a workflow execution via webhook, form, or chat. Provide workflowId and optional trigger parameters such as triggerType, message, or httpMethod. Returns execution details and metadata when supported, and may cause side effects in connected systems.`,
     inputSchema: {
       type: 'object',
@@ -563,7 +563,7 @@ export const n8nManagementTools: ToolDefinition[] = [
 
   // Template Deployment Tool
   {
-    name: 'n8n_deploy_template',
+    name: 'n8n_template_deploy',
     description: `Deploy a workflow template from the local template database into n8n. Provide templateId and optional name, autoUpgradeVersions, autoFix, and stripCredentials. Returns the new workflow id plus required credentials and status, and creates the workflow inactive.`,
     inputSchema: {
       type: 'object',

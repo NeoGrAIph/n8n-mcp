@@ -250,8 +250,8 @@ describe('handleDeployTemplate Helper Functions', () => {
 describe('Tool Definition Validation', () => {
   it('should have correct tool name', () => {
     // This tests that the tool is properly exported
-    const toolName = 'n8n_deploy_template';
-    expect(toolName).toBe('n8n_deploy_template');
+    const toolName = 'n8n_template_deploy';
+    expect(toolName).toBe('n8n_template_deploy');
   });
 
   it('should have required parameter templateId in schema', () => {

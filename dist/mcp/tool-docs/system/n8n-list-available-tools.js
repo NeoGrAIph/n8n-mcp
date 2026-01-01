@@ -32,7 +32,7 @@ The tool list is dynamic:
         parameters: {},
         returns: `Object containing:
 - tools: Array of available tool objects, each with:
-  - name: Tool identifier (e.g., 'n8n_create_workflow')
+  - name: Tool identifier (e.g., 'n8n_workflow_create')
   - description: Brief description of tool functionality
   - category: Tool category ('workflow', 'execution', 'system')
   - requiresApi: Whether tool needs API configuration

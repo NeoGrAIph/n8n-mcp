@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.14.4] - 2025-09-30
 
 ### Added
-- **Workflow Cleanup Operations**: Two new operations for `n8n_update_partial_workflow` to handle broken workflow recovery
+- **Workflow Cleanup Operations**: Two new operations for `n8n_workflow_update_partial` to handle broken workflow recovery
   - `cleanStaleConnections`: Automatically removes all connections referencing non-existent nodes
     - Essential after node renames or deletions that leave dangling connection references
     - Supports `dryRun: true` mode to preview what would be removed
@@ -81,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintains atomic mode as default for safety
 
 ### Enhanced
-- **Tool Documentation**: Updated `n8n_update_partial_workflow` documentation
+- **Tool Documentation**: Updated `n8n_workflow_update_partial` documentation
   - Added examples for cleanup scenarios
   - Documented new operation types and modes
   - Added best practices for workflow recovery
@@ -150,7 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.13.1] - 2025-01-24
 
 ### Changed
-- **Removed 5-operation limit from n8n_update_partial_workflow**: The workflow diff engine now supports unlimited operations per request
+- **Removed 5-operation limit from n8n_workflow_update_partial**: The workflow diff engine now supports unlimited operations per request
   - Previously limited to 5 operations for "transactional integrity"
   - Analysis revealed the limit was unnecessary - the clone-validate-apply pattern already ensures atomicity
   - All operations are validated before any are applied, maintaining data integrity
@@ -174,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Only auto-fixes suggestions with ≥90% confidence
   - 5-minute cache for performance optimization
 
-- **n8n_autofix_workflow Tool**: New MCP tool for automatic workflow error correction
+- **n8n_workflow_autofix Tool**: New MCP tool for automatic workflow error correction
   - Comprehensive documentation with examples and best practices
   - Supports 5 fix types: expression-format, typeversion-correction, error-output-config, node-type-correction, webhook-missing-path
   - Confidence-based system (high/medium/low) for safe fixes
@@ -288,7 +288,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.11.3] - 2025-09-17
 
 ### Fixed
-- **n8n_update_partial_workflow Tool**: Fixed critical bug where updateNode and updateConnection operations were using incorrect property name
+- **n8n_workflow_update_partial Tool**: Fixed critical bug where updateNode and updateConnection operations were using incorrect property name
   - Changed from `changes` property to `updates` property to match documentation and expected behavior
   - Resolves issue where AI agents would break workflow connections when updating nodes
   - Fixes GitHub issues #159 (update_partial_workflow is invalid) and #168 (partial workflow update returns error)
@@ -310,12 +310,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.11.1] - 2025-09-15
 
 ### Added
-- **Optional Fields Parameter for n8n_search_templates**: Enhanced n8n_search_templates tool with field filtering capability
+- **Optional Fields Parameter for n8n_templates_search**: Enhanced n8n_templates_search tool with field filtering capability
   - New optional `fields` parameter accepts an array of field names to include in response
   - Supported fields: 'id', 'name', 'description', 'author', 'nodes', 'views', 'created', 'url', 'metadata'
   - Reduces response size by 70-98% when requesting only specific fields (e.g., just id and name)
   - Maintains full backward compatibility - existing calls without fields parameter work unchanged
-  - Example: `n8n_search_templates({query: "slack", fields: ["id", "name"]})` returns minimal data
+  - Example: `n8n_templates_search({query: "slack", fields: ["id", "name"]})` returns minimal data
   - Significantly improves AI agent performance by reducing token usage
 
 ### Added
@@ -357,7 +357,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Returns minimal data (id, name, views, nodeCount) for quick overview
   - Supports sorting by views, created_at, or name
   - Optimized for discovering templates without downloading full workflow data
-- **Flexible Template Retrieval Modes**: Enhanced `n8n_get_template` with three response modes
+- **Flexible Template Retrieval Modes**: Enhanced `n8n_template_get` with three response modes
   - `nodes_only`: Returns just node types and names (minimal tokens)
   - `structure`: Returns nodes with positions and connections (moderate detail)
   - `full`: Returns complete workflow JSON (default, maximum detail)
@@ -385,7 +385,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Without compression would be ~120MB+
 - **Token Efficiency**: 80-90% reduction in response size for minimal queries
   - `list_templates`: ~10 tokens per template vs 100+ for full data
-  - `n8n_get_template` with `nodes_only`: Returns just essential node information
+  - `n8n_template_get` with `nodes_only`: Returns just essential node information
   - Pagination prevents overwhelming responses for large result sets
 
 ### Fixed
@@ -465,10 +465,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Validation System Robustness**: Fixed multiple critical validation issues affecting AI agents and workflow validation (fixes #58, #68, #70, #73)
-  - **Issue #73**: Fixed `n8n_validate_node_minimal` crash when config is undefined
+  - **Issue #73**: Fixed `n8n_node_validate_minimal` crash when config is undefined
     - Added safe property access with optional chaining (`config?.resource`)
     - Tool now handles undefined, null, and malformed configs gracefully
-  - **Issue #58**: Fixed `n8n_validate_node_operation` crash on invalid nodeType
+  - **Issue #58**: Fixed `n8n_node_validate_operation` crash on invalid nodeType
     - Added type checking before calling string methods
     - Prevents "Cannot read properties of undefined (reading 'replace')" error
   - **Issue #70**: Fixed validation profile settings being ignored
@@ -899,15 +899,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added automatic normalization: `@n8n/n8n-nodes-langchain.agent` → `nodes-langchain.agent`
   - Fixed 9 MCP tools that were failing with full package names:
     - `get_node_info`, `get_node_essentials`, `get_node_as_tool_info`
-    - `search_node_properties`, `n8n_validate_node_minimal`, `n8n_validate_node_config`
-    - `get_property_dependencies`, `n8n_search_nodes`, `get_node_documentation`
+    - `search_node_properties`, `n8n_node_validate_minimal`, `n8n_node_validate_config`
+    - `get_property_dependencies`, `n8n_nodes_search`, `get_node_documentation`
   - Maintains backward compatibility - existing short prefixes continue to work
   - Created centralized `normalizeNodeType` utility for consistent handling across all tools
 - **Health check endpoint** - Fixed incorrect `/health` endpoint usage
   - Now correctly uses `/healthz` endpoint which is available on all n8n instances
   - Improved error handling with proper fallback to workflow list endpoint
   - Fixed axios import for healthz endpoint access
-- **n8n_list_workflows pagination clarity** (Issue #54)
+- **n8n_workflows_list pagination clarity** (Issue #54)
   - Changed misleading `total` field to `returned` to clarify it's the count of items in current page
   - Added `hasMore` boolean flag for clear pagination indication
   - Added `_note` field with guidance when more data is available ("More workflows available. Use cursor to get next page.")
@@ -923,7 +923,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - AI agents now receive both `nodeType` (internal format) and `workflowNodeType` (n8n format)
   - Example: `nodeType: "nodes-base.webhook"`, `workflowNodeType: "n8n-nodes-base.webhook"`
   - Prevents confusion where AI agents would search nodes and use wrong format in workflows
-  - Added to: `n8n_search_nodes`, `get_node_info`, `get_node_essentials`, `get_node_as_tool_info`, `n8n_validate_node_operation`
+  - Added to: `n8n_nodes_search`, `get_node_info`, `get_node_essentials`, `get_node_as_tool_info`, `n8n_node_validate_operation`
 - **Version information in health check**
   - `n8n_health_check` now returns MCP version and supported n8n version
   - Added `mcpVersion`, `supportedN8nVersion`, and `versionNote` fields
@@ -931,19 +931,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Note: n8n API currently doesn't expose instance version, so manual verification is required
 
 ### Performance
-- **n8n_list_workflows response size optimization**
+- **n8n_workflows_list response size optimization**
   - Tool now returns only minimal metadata (id, name, active, dates, tags, nodeCount) instead of full workflow structure
   - Reduced response size by ~95% - from potentially thousands of tokens per workflow to ~10 tokens
   - Eliminated token limit errors when listing workflows with many nodes
   - Updated tool description to clarify it returns "minimal metadata only"
-  - Users should use `n8n_get_workflow` to fetch full workflow details when needed
+  - Users should use `n8n_workflow_get` to fetch full workflow details when needed
 
 ## [2.7.17] - 2025-07-17
 
 ### Fixed
 - **Removed faulty auto-generated examples from MCP tools** (Issue #60)
   - Removed examples from `get_node_essentials` responses that were misleading AI agents
-  - Removed examples from `n8n_validate_node_operation` when validation errors occur
+  - Removed examples from `n8n_node_validate_operation` when validation errors occur
   - Examples were showing incorrect configurations (e.g., Slack showing "channel" property instead of required "select" property)
   - Tools now focus on validation errors and fix suggestions instead of potentially incorrect examples
   - Preserved helpful format hints in `get_node_for_task` (these show input formats like "#general" or URL examples, not node configurations)
@@ -951,7 +951,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated tool documentation to reflect removal of auto-generated examples
-- `get_node_essentials` now points users to `n8n_validate_node_operation` for working configurations
+- `get_node_essentials` now points users to `n8n_node_validate_operation` for working configurations
 - Enhanced validation error messages to be more helpful without relying on examples
 
 ## [2.7.16] - 2025-07-17
@@ -1056,11 +1056,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Management tools: Average 93 chars (down from ~200-400)
   - Overall token reduction: ~65-70%
   - Moved detailed documentation to `n8n_tools_documentation()` system
-  - Only 2 tools exceed 200 chars (list_nodes: 204, n8n_update_partial_workflow: 284)
+  - Only 2 tools exceed 200 chars (list_nodes: 204, n8n_workflow_update_partial: 284)
   - Preserved all essential information while removing redundancy
 
 ### Fixed
-- **n8n_search_nodes Tool**: Major improvements to search functionality for AI agents
+- **n8n_nodes_search Tool**: Major improvements to search functionality for AI agents
   - Primary nodes (webhook, httpRequest) now appear first in search results instead of being buried
   - Fixed issue where searching "webhook" returned specialized triggers instead of the main Webhook node
   - Fixed issue where searching "http call" didn't prioritize HTTP Request node
@@ -1068,7 +1068,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed unnecessary searchInfo messages that appeared on every search
   - Fixed HTTP node type comparison case sensitivity issue
   - Implemented relevance-based ranking with special boosting for primary nodes
-- **n8n_search_templates FTS5 Error**: Fixed "no such module: fts5" error in environments without FTS5 support (fixes Claude Desktop issue)
+- **n8n_templates_search FTS5 Error**: Fixed "no such module: fts5" error in environments without FTS5 support (fixes Claude Desktop issue)
   - Made FTS5 completely optional - detects support at runtime
   - Removed FTS5 from required schema to prevent initialization failures
   - Automatically falls back to LIKE search when FTS5 is unavailable
@@ -1116,7 +1116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Root cause: AI agents were confused by examples showing `parameters.path` updates and assumed all properties followed the same pattern
   - Error handling properties (`onError`, `retryOnFail`, `maxTries`, `waitBetweenTries`, `alwaysOutputData`) must be placed at the NODE level
   - Other node-level properties (`executeOnce`, `disabled`, `notes`, `notesInFlow`, `credentials`) were previously undocumented for AI agents
-  - Updated `n8n_create_workflow` and `n8n_update_partial_workflow` documentation with explicit examples and warnings
+  - Updated `n8n_workflow_create` and `n8n_workflow_update_partial` documentation with explicit examples and warnings
   - Verified fix with workflows tGyHrsBNWtaK0inQ, usVP2XRXhI35m3Ts, and swuogdCCmNY7jj71
 
 ### Added
@@ -1189,8 +1189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Enhanced
 - **MCP Tool Documentation** significantly improved:
-  - `n8n_create_workflow` now includes complete node example with all properties
-  - `n8n_update_partial_workflow` shows difference between node-level vs parameter updates
+  - `n8n_workflow_create` now includes complete node example with all properties
+  - `n8n_workflow_update_partial` shows difference between node-level vs parameter updates
   - Added "CRITICAL" warnings about property placement
   - Updated best practices and common pitfalls sections
 - **Workflow Validator** improvements:
@@ -1227,7 +1227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.7.10] - 2025-07-09
 
 ### Documentation Update
-- Added comprehensive documentation on how to update error handling properties using `n8n_update_partial_workflow`
+- Added comprehensive documentation on how to update error handling properties using `n8n_workflow_update_partial`
 - Error handling properties can be updated at the node level using the workflow diff engine:
   - `continueOnFail`: boolean - Whether to continue workflow on node failure
   - `onError`: 'continueRegularOutput' | 'continueErrorOutput' | 'stopWorkflow' - Error handling strategy
@@ -1348,7 +1348,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.7.0] - 2025-06-29
 
 ### Added
-- New `n8n_update_partial_workflow` tool for efficient diff-based workflow editing with transactional updates
+- New `n8n_workflow_update_partial` tool for efficient diff-based workflow editing with transactional updates
 - WorkflowDiffEngine for applying targeted edits without sending full workflow JSON (80-90% token savings)
 - 13 diff operations: addNode, removeNode, updateNode, moveNode, enableNode, disableNode, addConnection, removeConnection, updateConnection, updateSettings, updateName, addTag, removeTag
 - Smart node references supporting both node ID and name
@@ -1363,7 +1363,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Script to sync package.runtime.json version
 
 ### Changed
-- Renamed `n8n_update_workflow` to `n8n_update_full_workflow` to clarify it replaces entire workflow
+- Renamed `n8n_update_workflow` to `n8n_workflow_update_full` to clarify it replaces entire workflow
 - Renamed core MCP files for clarity:
   - `tools-update.ts` → `tools.ts`
   - `server-update.ts` → `server.ts`
@@ -1385,7 +1385,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.6.3] - 2025-06-26
 
 ### Added
-- `n8n_validate_workflow` tool to validate workflows directly from n8n instance by ID
+- `n8n_workflow_validate` tool to validate workflows directly from n8n instance by ID
 - Fetches workflow from n8n API and runs comprehensive validation
 - Supports all validation profiles and options
 - Part of complete lifecycle: discover → build → validate → deploy → execute
@@ -1419,7 +1419,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - 14 n8n management tools for complete workflow lifecycle management:
-  - `n8n_create_workflow` - Create workflows programmatically
+  - `n8n_workflow_create` - Create workflows programmatically
   - `n8n_update_workflow` - Update existing workflows
   - `n8n_trigger_webhook_workflow` - Execute workflows via webhooks
   - `n8n_list_executions` - Monitor workflow executions
@@ -1444,7 +1444,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Comprehensive workflow validation system:
-  - `n8n_validate_workflow_json` - Validate entire workflows before deployment
+  - `n8n_workflow_json_validate` - Validate entire workflows before deployment
   - `validate_workflow_connections` - Check workflow structure and connections
   - `validate_workflow_expressions` - Validate all n8n expressions
 - Expression validator for n8n syntax validation
@@ -1455,8 +1455,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Enhanced operation-aware validation system
-- `n8n_validate_node_operation` - Verify node configuration with operation awareness
-- `n8n_validate_node_minimal` - Quick validation for required fields only
+- `n8n_node_validate_operation` - Verify node configuration with operation awareness
+- `n8n_node_validate_minimal` - Quick validation for required fields only
 - Node-specific validation logic
 - Validation profiles support
 
@@ -1468,8 +1468,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - n8n workflow templates integration:
   - `list_node_templates` - Find workflow templates using specific nodes
-  - `n8n_get_template` - Get complete workflow JSON for import
-  - `n8n_search_templates` - Search templates by keywords
+  - `n8n_template_get` - Get complete workflow JSON for import
+  - `n8n_templates_search` - Search templates by keywords
   - `get_templates_for_task` - Get curated templates for common tasks
 - Template fetching from n8n.io API
 - Robust template fetching with retries

@@ -6,7 +6,7 @@ export const toolsDocumentationDoc: ToolDocumentation = {
   essentials: {
     description: 'The meta-documentation tool. Returns documentation for any MCP tool, including itself. Call without parameters for a comprehensive overview of all available tools. This is your starting point for discovering n8n MCP capabilities.',
     keyParameters: ['topic', 'depth'],
-    example: 'n8n_tools_documentation({topic: "n8n_search_nodes"})',
+    example: 'n8n_tools_documentation({topic: "n8n_nodes_search"})',
     performance: 'Instant (static content)',
     tips: [
       'Call without parameters first to see all tools',
@@ -17,7 +17,7 @@ export const toolsDocumentationDoc: ToolDocumentation = {
   full: {
     description: 'The self-referential documentation system for all MCP tools. This tool can document any other tool, including itself. It\'s the primary discovery mechanism for understanding what tools are available and how to use them. Returns utilitarian documentation optimized for AI agent consumption.',
     parameters: {
-      topic: { type: 'string', description: 'Tool name (e.g., "n8n_search_nodes"), special topic ("javascript_code_node_guide", "python_code_node_guide"), or "overview". Leave empty for quick reference.', required: false },
+      topic: { type: 'string', description: 'Tool name (e.g., "n8n_nodes_search"), special topic ("javascript_code_node_guide", "python_code_node_guide"), or "overview". Leave empty for quick reference.', required: false },
       depth: { type: 'string', description: 'Level of detail: "essentials" (default, concise) or "full" (comprehensive with examples)', required: false }
     },
     returns: 'Markdown-formatted documentation tailored for the requested tool and depth. For essentials: key info, parameters, example, tips. For full: complete details, all examples, use cases, best practices.',
@@ -26,10 +26,10 @@ export const toolsDocumentationDoc: ToolDocumentation = {
       'n8n_tools_documentation()',
       '',
       '// Learn about a specific tool',
-      'n8n_tools_documentation({topic: "n8n_search_nodes"})',
+      'n8n_tools_documentation({topic: "n8n_nodes_search"})',
       '',
       '// Get comprehensive details',
-      'n8n_tools_documentation({topic: "n8n_validate_workflow_json", depth: "full"})',
+      'n8n_tools_documentation({topic: "n8n_workflow_json_validate", depth: "full"})',
       '',
       '// Self-referential example - document this tool',
       'n8n_tools_documentation({topic: "n8n_tools_documentation", depth: "full"})',
@@ -58,6 +58,6 @@ export const toolsDocumentationDoc: ToolDocumentation = {
       'Not all internal functions are documented',
       'Special topics (code guides) require exact names'
     ],
-    relatedTools: ['n8n_health_check for verifying API connection', 'n8n_search_templates for workflow examples', 'n8n_search_nodes for finding nodes']
+    relatedTools: ['n8n_health_check for verifying API connection', 'n8n_templates_search for workflow examples', 'n8n_nodes_search for finding nodes']
   }
 };

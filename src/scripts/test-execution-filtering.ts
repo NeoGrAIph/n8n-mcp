@@ -2,7 +2,7 @@
 /**
  * Manual testing script for execution filtering feature
  *
- * This script demonstrates all modes of the n8n_get_execution tool
+ * This script demonstrates all modes of the n8n_executions_get tool
  * with various filtering options.
  *
  * Usage: npx tsx src/scripts/test-execution-filtering.ts

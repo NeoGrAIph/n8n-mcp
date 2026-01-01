@@ -43,6 +43,6 @@ export const n8nExecutionsListDoc: ToolDocumentation = {
     pitfalls: [
       'includeData can increase payload size significantly'
     ],
-    relatedTools: ['n8n_executions_get', 'n8n_list_workflows']
+    relatedTools: ['n8n_executions_get', 'n8n_workflows_list']
   }
 };

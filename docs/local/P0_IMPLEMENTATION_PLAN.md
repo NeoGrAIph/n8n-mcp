@@ -627,7 +627,7 @@ const node = repository.getNode(nodeType);
 if (!node) {
   return {
     success: false,
-    error: `Node type "${nodeType}" not found. Use n8n_search_nodes to find available nodes.`
+    error: `Node type "${nodeType}" not found. Use n8n_nodes_search to find available nodes.`
   };
 }
 ```
@@ -699,9 +699,9 @@ describe('NodeRepository - Null Safety', () => {
 
 **Current State:**
 - Only 31 predefined tasks in `task-templates.ts` (5.9% node coverage)
-- 22.5:1 usage ratio favoring `n8n_search_nodes` (8,839 calls vs 392)
+- 22.5:1 usage ratio favoring `n8n_nodes_search` (8,839 calls vs 392)
 - Hardcoded configurations require manual maintenance
-- Tool provides no unique value over `n8n_search_nodes`
+- Tool provides no unique value over `n8n_nodes_search`
 
 **Discovery:** We have 2,646 real production workflow templates from n8n.io with:
 - 3,820 httpRequest configurations
@@ -733,7 +733,7 @@ describe('NodeRepository - Null Safety', () => {
 **Strategy:**
 1. Pre-extract top 10 node configurations per node type into new table
 2. Enhance `get_node_essentials` with optional examples
-3. Enhance `n8n_search_nodes` with optional examples
+3. Enhance `n8n_nodes_search` with optional examples
 4. **Remove** `get_node_for_task` entirely (no redirect)
 
 See `/docs/local/TEMPLATE_MINING_ANALYSIS.md` for complete analysis
@@ -960,7 +960,7 @@ async function getNodeEssentials(
   if (!node) {
     return {
       success: false,
-      error: `Node type "${nodeType}" not found. Use n8n_search_nodes to find available nodes.`
+      error: `Node type "${nodeType}" not found. Use n8n_nodes_search to find available nodes.`
     };
   }
 
@@ -1027,11 +1027,11 @@ async function getNodeEssentials(
 }
 ```
 
-#### 4. Enhance n8n_search_nodes with Examples
+#### 4. Enhance n8n_nodes_search with Examples
 
 **File:** `src/mcp/handlers-*.ts` or `src/mcp/server.ts`
 
-Update `n8n_search_nodes` handler:
+Update `n8n_nodes_search` handler:
 
 ```typescript
 async function searchNodes(
@@ -1079,7 +1079,7 @@ async function searchNodes(
 
 ```typescript
 {
-  name: 'n8n_search_nodes',
+  name: 'n8n_nodes_search',
   description: 'Search for n8n nodes by keyword...',
   inputSchema: {
     type: 'object',
@@ -1127,8 +1127,8 @@ grep -r "getNodeForTask" src/
 ### BREAKING CHANGES in v2.15.0
 
 - **Removed:** `get_node_for_task` tool
-  - **Replacement:** Use `n8n_search_nodes` with `includeExamples: true`
-  - **Migration:** `get_node_for_task({task: "webhook"})` → `n8n_search_nodes({query: "webhook", includeExamples: true})`
+  - **Replacement:** Use `n8n_nodes_search` with `includeExamples: true`
+  - **Migration:** `get_node_for_task({task: "webhook"})` → `n8n_nodes_search({query: "webhook", includeExamples: true})`
   - **Benefit:** Access to 2,646 real templates vs 31 hardcoded tasks
 ```
 
@@ -1180,7 +1180,7 @@ describe('Enhanced Tools with Examples', () => {
     expect(result.examples[0].config).toHaveProperty('url');
   });
 
-  it('n8n_search_nodes should return examples when requested', async () => {
+  it('n8n_nodes_search should return examples when requested', async () => {
     const result = await searchNodes('webhook', { includeExamples: true });
 
     expect(result.length).toBeGreaterThan(0);
@@ -1198,7 +1198,7 @@ describe('Enhanced Tools with Examples', () => {
 - [ ] Extract 2,000+ node configurations from templates
 - [ ] Query performance: <1ms for pre-extracted configs
 - [ ] `get_node_essentials` with examples: <5ms total
-- [ ] `n8n_search_nodes` with examples: <10ms total
+- [ ] `n8n_nodes_search` with examples: <10ms total
 - [ ] Database size increase: <1 MB
 - [ ] `get_node_for_task` completely removed from codebase
 - [ ] All documentation updated
@@ -1217,7 +1217,7 @@ describe('Enhanced Tools with Examples', () => {
   - Write ranking logic
   - Test with 2,646 templates
 
-- **Day 3:** Enhance get_node_essentials + n8n_search_nodes (8 hours)
+- **Day 3:** Enhance get_node_essentials + n8n_nodes_search (8 hours)
   - Add includeExamples parameter
   - Update tool definitions
   - Integration testing
@@ -1274,7 +1274,7 @@ describe('Enhanced Tools with Examples', () => {
 
 **Monday (Day 7): Tool Enhancements**
 - AM: Enhance get_node_essentials with includeExamples
-- PM: Enhance n8n_search_nodes with includeExamples
+- PM: Enhance n8n_nodes_search with includeExamples
 - **Deliverable:** Both tools return real examples
 
 **Tuesday (Day 8): Tool Removal + Documentation**
@@ -1384,7 +1384,7 @@ describe('Enhanced Tools with Examples', () => {
 | Node configs extracted | 0 | 2,000+ | Database count |
 | Config query performance | N/A | <1ms | Performance tests |
 | get_node_for_task usage | 392 calls | 0 (removed) | Tool usage stats |
-| n8n_search_nodes w/ examples | 0 | Monitored | New feature adoption |
+| n8n_nodes_search w/ examples | 0 | Monitored | New feature adoption |
 
 ### Telemetry Monitoring
 
@@ -1418,7 +1418,7 @@ No new NPM packages required - all functionality uses existing dependencies.
 2. **README.md** - Remove get_node_for_task, add includeExamples parameter
 3. **src/mcp/tools-documentation.ts** - Remove get_node_for_task documentation
 4. **API.md** - Document enhanced tool parameters
-5. **MIGRATION.md** - Add migration guide from get_node_for_task to n8n_search_nodes (NEW)
+5. **MIGRATION.md** - Add migration guide from get_node_for_task to n8n_nodes_search (NEW)
 
 ### Example CHANGELOG Entry
 
@@ -1427,8 +1427,8 @@ No new NPM packages required - all functionality uses existing dependencies.
 
 ### BREAKING CHANGES
 - **Removed:** `get_node_for_task` tool
-  - **Replacement:** Use `n8n_search_nodes` with `includeExamples: true`
-  - **Migration:** `get_node_for_task({task: "webhook"})` → `n8n_search_nodes({query: "webhook", includeExamples: true})`
+  - **Replacement:** Use `n8n_nodes_search` with `includeExamples: true`
+  - **Migration:** `get_node_for_task({task: "webhook"})` → `n8n_nodes_search({query: "webhook", includeExamples: true})`
   - **Benefit:** Access to 2,646 real templates vs 31 hardcoded tasks
 
 ### Fixed
@@ -1440,7 +1440,7 @@ No new NPM packages required - all functionality uses existing dependencies.
 - `SafePropertyAccess` utility for defensive property access
 - `template_node_configs` table with 2,000+ pre-extracted configurations
 - `includeExamples` parameter for `get_node_essentials` (returns 2-3 real configs)
-- `includeExamples` parameter for `n8n_search_nodes` (returns 2 real configs per node)
+- `includeExamples` parameter for `n8n_nodes_search` (returns 2 real configs per node)
 - Real-world configuration examples from popular n8n templates
 
 ### Performance

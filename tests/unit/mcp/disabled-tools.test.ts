@@ -73,14 +73,14 @@ describe('Disabled Tools Feature (Issue #410)', () => {
     });
 
     it('should parse multiple disabled tools correctly', () => {
-      process.env.DISABLED_TOOLS = 'n8n_diagnostic,n8n_health_check,n8n_search_nodes';
+      process.env.DISABLED_TOOLS = 'n8n_diagnostic,n8n_health_check,n8n_nodes_search';
       server = new TestableN8NMCPServer();
       const disabledTools = server.testGetDisabledTools();
 
       expect(disabledTools.size).toBe(3);
       expect(disabledTools.has('n8n_diagnostic')).toBe(true);
       expect(disabledTools.has('n8n_health_check')).toBe(true);
-      expect(disabledTools.has('n8n_search_nodes')).toBe(true);
+      expect(disabledTools.has('n8n_nodes_search')).toBe(true);
     });
 
     it('should trim whitespace from tool names', () => {
@@ -94,14 +94,14 @@ describe('Disabled Tools Feature (Issue #410)', () => {
     });
 
     it('should filter out empty entries from comma-separated list', () => {
-      process.env.DISABLED_TOOLS = 'n8n_diagnostic,,n8n_health_check,,,n8n_search_nodes';
+      process.env.DISABLED_TOOLS = 'n8n_diagnostic,,n8n_health_check,,,n8n_nodes_search';
       server = new TestableN8NMCPServer();
       const disabledTools = server.testGetDisabledTools();
 
       expect(disabledTools.size).toBe(3);
       expect(disabledTools.has('n8n_diagnostic')).toBe(true);
       expect(disabledTools.has('n8n_health_check')).toBe(true);
-      expect(disabledTools.has('n8n_search_nodes')).toBe(true);
+      expect(disabledTools.has('n8n_nodes_search')).toBe(true);
     });
 
     it('should handle single comma correctly', () => {
@@ -283,8 +283,8 @@ describe('Disabled Tools Feature (Issue #410)', () => {
     it('should support security hardening use case - disable management tools', () => {
       // Disable potentially dangerous management tools
       const dangerousTools = [
-        'n8n_delete_workflow',
-        'n8n_update_full_workflow'
+        'n8n_workflow_delete',
+        'n8n_workflow_update_full'
       ];
 
       process.env.DISABLED_TOOLS = dangerousTools.join(',');

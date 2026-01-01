@@ -112,7 +112,7 @@ export async function handleBatchUpdateWorkflow(
 **Usage Example**:
 ```typescript
 // AI agent can now batch multiple updates
-const result = await n8n_update_partial_workflow({
+const result = await n8n_workflow_update_partial({
   id: 'workflow-123',
   operations: [
     { type: 'updateNode', nodeId: 'node1', updates: { position: [100, 200] } },
@@ -125,7 +125,7 @@ const result = await n8n_update_partial_workflow({
 
 // Then apply if preview looks good
 if (result.preview.valid) {
-  await n8n_update_partial_workflow({
+  await n8n_workflow_update_partial({
     ...params,
     mode: 'atomic',
     includeUndo: true
@@ -151,7 +151,7 @@ if (result.preview.valid) {
 
 #### **P1-R5: Proactive node suggestions during workflow creation**
 
-**Observation**: `create_workflow → n8n_search_nodes` happens 166 times
+**Observation**: `create_workflow → n8n_nodes_search` happens 166 times
 
 **Opportunity**: Suggest relevant nodes during creation based on:
 - Existing nodes in workflow
@@ -295,7 +295,7 @@ Would you like me to add any of these?
 - **Reduced search iterations**: AI agents discover nodes faster
 - **Better workflows**: Suggestions based on real usage patterns
 - **Educational**: Users learn common patterns
-- **Token savings**: Fewer n8n_search_nodes calls
+- **Token savings**: Fewer n8n_nodes_search calls
 
 **Effort**: 3 days (24 hours)
 **Risk**: Low (adds value without changing core functionality)
@@ -362,7 +362,7 @@ function validateNodeTypes(workflow: any): ValidationError[] {
       message: `Found ${invalidNodes.length} nodes with incorrect type prefixes`,
       autoFix: {
         available: true,
-        tool: 'n8n_autofix_workflow',
+        tool: 'n8n_workflow_autofix',
         operation: 'fix-node-type-prefixes',
         params: {
           id: workflow.id,
@@ -388,7 +388,7 @@ function validateConnections(workflow: any): ValidationError[] {
       message: 'Multi-node workflow has no connections. Nodes must be connected to create a workflow.',
       autoFix: {
         available: false,
-        tool: 'n8n_update_partial_workflow',
+        tool: 'n8n_workflow_update_partial',
         operation: 'addConnection',
         params: {},
         description: 'Manually add connections between nodes',
@@ -414,7 +414,7 @@ function validateConnections(workflow: any): ValidationError[] {
         "message": "Found 5 nodes with incorrect type prefixes",
         "autoFix": {
           "available": true,
-          "tool": "n8n_autofix_workflow",
+          "tool": "n8n_workflow_autofix",
           "operation": "fix-node-type-prefixes",
           "params": {
             "id": "workflow-123",
@@ -426,7 +426,7 @@ function validateConnections(workflow: any): ValidationError[] {
         "documentation": "https://docs.n8n.io/workflows/node-types/"
       }
     ],
-    "quickFix": "n8n_autofix_workflow({ id: 'workflow-123', fixTypes: ['typeversion-correction'], applyFixes: true })"
+    "quickFix": "n8n_workflow_autofix({ id: 'workflow-123', fixTypes: ['typeversion-correction'], applyFixes: true })"
   }
 }
 ```
@@ -438,7 +438,7 @@ Assistant: The workflow validation found errors, but I can fix them automaticall
 Error: 5 nodes have incorrect type prefixes (nodes-base.* should be n8n-nodes-base.*)
 
 Auto-fix available (high confidence):
-  Tool: n8n_autofix_workflow
+  Tool: n8n_workflow_autofix
   Action: Convert node types to correct format
 
 Would you like me to apply this fix?
@@ -767,14 +767,14 @@ export class NodeNotFoundError extends N8nMcpError {
       code: 'NODE_NOT_FOUND',
       category: 'data',
       developerMessage: `Node type "${nodeType}" not found in database`,
-      userMessage: `Node type "${nodeType}" not found. Use n8n_search_nodes to find available nodes.`,
+      userMessage: `Node type "${nodeType}" not found. Use n8n_nodes_search to find available nodes.`,
       context: { nodeType },
       autoFixable: false
     });
   }
 
   getAutoFixDescription(): string {
-    return 'No auto-fix available. Use n8n_search_nodes to find the correct node type.';
+    return 'No auto-fix available. Use n8n_nodes_search to find the correct node type.';
   }
 }
 
@@ -787,7 +787,7 @@ export class InvalidNodeTypePrefixError extends N8nMcpError {
       userMessage: `Node type "${invalidType}" has incorrect prefix. Should be "${correctType}".`,
       context: { invalidType, correctType, nodeId },
       autoFixable: true,
-      autoFixTool: 'n8n_autofix_workflow'
+      autoFixTool: 'n8n_workflow_autofix'
     });
   }
 
@@ -809,7 +809,7 @@ export class WorkflowConnectionError extends N8nMcpError {
   }
 
   getAutoFixDescription(): string {
-    return 'Manually add connections between nodes using n8n_update_partial_workflow';
+    return 'Manually add connections between nodes using n8n_workflow_update_partial';
   }
 }
 ```
@@ -1089,7 +1089,7 @@ Based on recent changes (v2.14.0 - v2.14.6):
 - Enabled this entire deep-dive analysis
 
 ✅ **Diff-based workflow updates (v2.7.0)**
-- Heavily used: 10,177 calls to `n8n_update_partial_workflow`
+- Heavily used: 10,177 calls to `n8n_workflow_update_partial`
 - 80-90% token savings vs full workflow updates
 - `update → update → update` pattern validates the approach
 

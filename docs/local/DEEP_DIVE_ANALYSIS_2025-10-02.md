@@ -23,7 +23,7 @@ n8n-mcp has achieved **strong adoption** with 2,119 users generating 212K+ event
 - **Overall Success Rate:** 96-98% across all user segments
 - **Daily Event Growth:** 16K → 40K events (2.5x growth in 3 days)
 - **Power User Concentration:** Top 3% of users generate 27% of events
-- **Most Used Tools:** update_partial_workflow (10,177), n8n_search_nodes (8,839), create_workflow (6,046)
+- **Most Used Tools:** update_partial_workflow (10,177), n8n_nodes_search (8,839), create_workflow (6,046)
 - **Critical Failure Rates:** get_node_for_task (28%), get_node_info (18%), get_node_essentials (10%)
 
 ---
@@ -51,20 +51,20 @@ n8n-mcp has achieved **strong adoption** with 2,119 users generating 212K+ event
 ### **1.1 Success Rate Tiers**
 
 **EXCELLENT (95-100% success):**
-- ✅ `n8n_update_partial_workflow` - 10,177 calls, 98.7% success, 846 users
-- ✅ `n8n_search_nodes` - 8,839 calls, 99.8% success, 1,283 users
-- ✅ `n8n_create_workflow` - 6,046 calls, 96.1% success, 1,305 users
-- ✅ `n8n_validate_workflow` - 3,222 calls, 99.8% success, 597 users
-- ✅ `n8n_get_workflow` - 3,368 calls, 99.8% success, 790 users
-- ✅ `n8n_update_full_workflow` - 2,640 calls, 99.4% success, 486 users
+- ✅ `n8n_workflow_update_partial` - 10,177 calls, 98.7% success, 846 users
+- ✅ `n8n_nodes_search` - 8,839 calls, 99.8% success, 1,283 users
+- ✅ `n8n_workflow_create` - 6,046 calls, 96.1% success, 1,305 users
+- ✅ `n8n_workflow_validate` - 3,222 calls, 99.8% success, 597 users
+- ✅ `n8n_workflow_get` - 3,368 calls, 99.8% success, 790 users
+- ✅ `n8n_workflow_update_full` - 2,640 calls, 99.4% success, 486 users
 - ✅ `n8n_tools_documentation` - 1,886 calls, 100% success, 879 users
-- ✅ `n8n_validate_workflow_json` - 1,667 calls, 95.4% success, 472 users
+- ✅ `n8n_workflow_json_validate` - 1,667 calls, 95.4% success, 472 users
 - ✅ All n8n workflow management tools (list/delete/health) - 100% success
 
 **GOOD (80-95% success):**
 - ⚠️ `get_node_essentials` - 4,909 calls, **90.2% success**, 921 users (**9.8% failure**)
 - ⚠️ `get_node_documentation` - 1,919 calls, 92.9% success, 657 users (**7.1% failure**)
-- ⚠️ `n8n_validate_node_operation` - 998 calls, 88.6% success, 240 users (**11.4% failure**)
+- ⚠️ `n8n_node_validate_operation` - 998 calls, 88.6% success, 240 users (**11.4% failure**)
 - ⚠️ `list_ai_tools` - 234 calls, 84.2% success, 184 users (**15.8% failure**)
 - ⚠️ `get_node_info` - 1,988 calls, **82.3% success**, 677 users (**17.7% failure**)
 
@@ -78,21 +78,21 @@ n8n-mcp has achieved **strong adoption** with 2,119 users generating 212K+ event
 - `get_node_info`: 4.78ms avg (median: 1ms)
 - `get_node_documentation`: 2.16ms avg (median: 1ms)
 - `n8n_tools_documentation`: 3.42ms avg (median: 1ms)
-- `n8n_validate_node_minimal`: 1.79ms avg (median: 1ms)
+- `n8n_node_validate_minimal`: 1.79ms avg (median: 1ms)
 
 **Fast (10-100ms avg):**
-- `n8n_search_nodes`: 20.47ms avg (median: 5ms, p95: 84ms)
-- `n8n_validate_workflow_json`: 31.59ms avg (median: 12ms, p95: 103ms)
+- `n8n_nodes_search`: 20.47ms avg (median: 5ms, p95: 84ms)
+- `n8n_workflow_json_validate`: 31.59ms avg (median: 12ms, p95: 103ms)
 - `list_nodes`: 41.86ms avg (median: 11ms, p95: 196ms)
 
 **Acceptable (100-500ms avg):**
-- `n8n_get_workflow`: 248.79ms avg (median: 111ms, p95: 830ms)
-- `n8n_validate_workflow`: 229.37ms avg (median: 106ms, p95: 722ms)
-- `n8n_update_full_workflow`: 302.70ms avg (median: 119ms, p95: 1,069ms)
-- `n8n_delete_workflow`: 308.85ms avg (median: 166ms, p95: 950ms)
-- `n8n_create_workflow`: 333.37ms avg (median: 85ms, p95: 1,251ms)
-- `n8n_list_workflows`: 476.05ms avg (median: 231ms, p95: 1,465ms)
-- `n8n_autofix_workflow`: 486.49ms avg (median: 174ms, p95: 1,152ms)
+- `n8n_workflow_get`: 248.79ms avg (median: 111ms, p95: 830ms)
+- `n8n_workflow_validate`: 229.37ms avg (median: 106ms, p95: 722ms)
+- `n8n_workflow_update_full`: 302.70ms avg (median: 119ms, p95: 1,069ms)
+- `n8n_workflow_delete`: 308.85ms avg (median: 166ms, p95: 950ms)
+- `n8n_workflow_create`: 333.37ms avg (median: 85ms, p95: 1,251ms)
+- `n8n_workflows_list`: 476.05ms avg (median: 231ms, p95: 1,465ms)
+- `n8n_workflow_autofix`: 486.49ms avg (median: 174ms, p95: 1,152ms)
 
 **Slow (>500ms avg):**
 - `n8n_get_execution`: 670.35ms avg (median: 121ms, p95: 1,166ms)
@@ -122,10 +122,10 @@ n8n-mcp has achieved **strong adoption** with 2,119 users generating 212K+ event
 - **Conclusion**: Performance is NOT a bottleneck; reliability is
 
 **FINDING #4: Workflow management tools have perfect reliability**
-- `n8n_list_workflows`: 100% success (1,489 calls)
+- `n8n_workflows_list`: 100% success (1,489 calls)
 - `n8n_health_check`: 100% success (1,304 calls)
 - `n8n_list_executions`: 100% success (1,297 calls)
-- `n8n_delete_workflow`: 100% success (1,230 calls)
+- `n8n_workflow_delete`: 100% success (1,230 calls)
 - **Takeaway**: The n8n API integration layer is rock-solid
 
 ---
@@ -288,14 +288,14 @@ From CHANGELOG 2.14.2:
 | 3 | `update_partial_workflow` → `get_workflow` | 265 | 91 | Update then verify |
 | 4 | `create_workflow` → `create_workflow` | 237 | 97 | Multiple attempts |
 | 5 | `create_workflow` → `get_workflow` | 185 | 81 | Create then inspect |
-| 6 | `create_workflow` → `n8n_search_nodes` | 166 | 72 | Create then discover |
-| 7 | `n8n_validate_workflow_json` → `update_partial_workflow` | 161 | 63 | Validate then fix |
-| 8 | `n8n_validate_workflow_json` → `n8n_validate_workflow_json` | 152 | 44 | Re-validation |
-| 9 | `n8n_validate_workflow_json` → `get_workflow` | 134 | 53 | Validate then inspect |
+| 6 | `create_workflow` → `n8n_nodes_search` | 166 | 72 | Create then discover |
+| 7 | `n8n_workflow_json_validate` → `update_partial_workflow` | 161 | 63 | Validate then fix |
+| 8 | `n8n_workflow_json_validate` → `n8n_workflow_json_validate` | 152 | 44 | Re-validation |
+| 9 | `n8n_workflow_json_validate` → `get_workflow` | 134 | 53 | Validate then inspect |
 | 10 | `update_partial_workflow` → `create_workflow` | 130 | 59 | Update then recreate |
 | 11 | `get_workflow` → `update_partial_workflow` | 117 | 50 | Inspect then update |
 | 12 | `update_full_workflow` → `update_partial_workflow` | 98 | 41 | Full to partial update |
-| 13 | `update_partial_workflow` → `n8n_search_nodes` | 94 | 42 | Update then discover |
+| 13 | `update_partial_workflow` → `n8n_nodes_search` | 94 | 42 | Update then discover |
 | 14 | `get_workflow` → `create_workflow` | 87 | 42 | Inspect then recreate |
 | 15 | `create_workflow` → `n8n_tools_documentation` | 85 | 36 | Create then learn |
 
@@ -325,7 +325,7 @@ From CHANGELOG 2.14.2:
 **Recommendation**: Add fine-grained timing (see T1 in Telemetry Enhancements)
 
 **INSIGHT #3: Node discovery happens AFTER workflow creation**
-- `create_workflow → n8n_search_nodes` (166 occurrences)
+- `create_workflow → n8n_nodes_search` (166 occurrences)
 - **Flow**:
   1. AI creates workflow with known nodes
   2. Realizes it needs additional nodes
@@ -335,8 +335,8 @@ From CHANGELOG 2.14.2:
 **Opportunity**: Proactive node suggestions during creation (see P1-R5)
 
 **INSIGHT #4: Validation drives updates**
-- `n8n_validate_workflow_json → update_partial_workflow` (161 occurrences)
-- `n8n_validate_workflow_json → n8n_validate_workflow_json` (152 occurrences)
+- `n8n_workflow_json_validate → update_partial_workflow` (161 occurrences)
+- `n8n_workflow_json_validate → n8n_workflow_json_validate` (152 occurrences)
 - **Pattern**: Validation → Fix → Re-validate loop
 
 **Quality**: This is GOOD behavior (AI agents using validation to improve)
@@ -346,21 +346,21 @@ From CHANGELOG 2.14.2:
 
 **Pattern A: Create-Update-Validate Loop**
 ```
-create_workflow → update_partial_workflow → n8n_validate_workflow_json → update_partial_workflow
+create_workflow → update_partial_workflow → n8n_workflow_json_validate → update_partial_workflow
 ```
 - Most common for new workflows
 - 3-5 iterations average before success
 
 **Pattern B: Inspect-Modify-Deploy**
 ```
-get_workflow → update_partial_workflow → n8n_validate_workflow_json → get_workflow
+get_workflow → update_partial_workflow → n8n_workflow_json_validate → get_workflow
 ```
 - Common for modifying existing workflows
 - "Get" used to verify final state
 
 **Pattern C: Search-Create-Refine**
 ```
-n8n_search_nodes → create_workflow → update_partial_workflow → n8n_validate_workflow_json
+n8n_nodes_search → create_workflow → update_partial_workflow → n8n_workflow_json_validate
 ```
 - Discovery-driven workflow creation
 - Users explore capabilities before creating
@@ -372,16 +372,16 @@ n8n_search_nodes → create_workflow → update_partial_workflow → n8n_validat
 | Tool | Occurrences | Users | Conversion Rate |
 |------|-------------|-------|-----------------|
 | `update_partial_workflow` | 6,271 | 547 | High |
-| `n8n_search_nodes` | 6,099 | 901 | High |
+| `n8n_nodes_search` | 6,099 | 901 | High |
 | `get_node_essentials` | 3,361 | 649 | Medium |
 | `create_workflow` | 2,810 | 742 | Medium (re-creation) |
 | `get_workflow` | 2,057 | 512 | Medium |
-| `n8n_validate_workflow_json` | 2,014 | 417 | Medium |
+| `n8n_workflow_json_validate` | 2,014 | 417 | Medium |
 | `get_node_documentation` | 1,301 | 456 | Low |
 | `n8n_tools_documentation` | 1,290 | 596 | Low |
 
 **Interpretation:**
-- **Discovery tools** (n8n_search_nodes, get_node_essentials) → high workflow creation
+- **Discovery tools** (n8n_nodes_search, get_node_essentials) → high workflow creation
 - **Documentation tools** → lower conversion (learning/exploring phase)
 - **Workflow management** (update/validate) → iterative creation process
 
@@ -664,7 +664,7 @@ const description = node?.properties?.description?.text ?? 'No description';
 ### **7.2 ValidationError in Workflow Creation**
 
 **Pattern:**
-- `n8n_create_workflow`: 237 failures (3.9% failure rate)
+- `n8n_workflow_create`: 237 failures (3.9% failure rate)
 - Error type: `ValidationError`
 - Context: `tool_execution`
 
@@ -939,7 +939,7 @@ export async function handleGetNodeEssentials(params: { nodeType: string }): Pro
     if (!essentials) {
       return {
         success: false,
-        error: `Node type "${nodeType}" not found. Use n8n_search_nodes to find available nodes.`
+        error: `Node type "${nodeType}" not found. Use n8n_nodes_search to find available nodes.`
       };
     }
 
@@ -1088,7 +1088,7 @@ export class DiscoveryService {
   }
 
   private searchNodesByKeywords(query: string): TaskMatch[] {
-    // Use existing n8n_search_nodes functionality
+    // Use existing n8n_nodes_search functionality
     const results = nodeRepository.searchNodes(query, { limit: 3 });
     return results.map(node => ({
       node: node.type,
@@ -1112,9 +1112,9 @@ export async function handleGetNodeForTask(params: { task: string }): Promise<Mc
     if (matches.length === 0) {
       return {
         success: false,
-        error: `No node found for task "${task}". Try n8n_search_nodes with keywords instead.`,
+        error: `No node found for task "${task}". Try n8n_nodes_search with keywords instead.`,
         suggestions: [
-          'Use n8n_search_nodes to explore available nodes',
+          'Use n8n_nodes_search to explore available nodes',
           'Check list_tasks to see predefined task names'
         ]
       };

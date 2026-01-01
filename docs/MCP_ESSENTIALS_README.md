@@ -2,14 +2,14 @@
 
 ## Overview
 
-n8n MCP now exposes a single `n8n_get_node` tool for node information. Use its **detail levels** to get only what you need:
+n8n MCP now exposes a single `n8n_node_get` tool for node information. Use its **detail levels** to get only what you need:
 - `detail: "standard"` for essential properties + examples (recommended default)
 - `detail: "minimal"` for the smallest possible response
 - `detail: "full"` only when you truly need exhaustive data
 
-This guide focuses on **essential configuration** using `n8n_get_node` with `detail: "standard"`.
+This guide focuses on **essential configuration** using `n8n_node_get` with `detail: "standard"`.
 
-## Core Tool: `n8n_get_node` (detail: standard/minimal)
+## Core Tool: `n8n_node_get` (detail: standard/minimal)
 
 **Purpose**: Get only the 10-20 most important properties for a node instead of 200+
 
@@ -22,7 +22,7 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 **Example usage**:
 ```json
 {
-  "name": "n8n_get_node",
+  "name": "n8n_node_get",
   "arguments": {
     "nodeType": "nodes-base.httpRequest",
     "detail": "standard",
@@ -84,7 +84,7 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 - No duplicate or confusing properties
 - Clear indication of what's required
 
-## Search Properties with `n8n_get_node` (mode: search_properties)
+## Search Properties with `n8n_node_get` (mode: search_properties)
 
 **Purpose**: Find specific properties within a node without downloading everything
 
@@ -97,7 +97,7 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 **Example usage**:
 ```json
 {
-  "name": "n8n_get_node",
+  "name": "n8n_node_get",
   "arguments": {
     "nodeType": "nodes-base.httpRequest",
     "mode": "search_properties",
@@ -135,7 +135,7 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 
 1. **Start with essentials**:
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
 
 2. **Use the provided examples**:
@@ -145,29 +145,29 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 
 3. **Search for specific features** (if needed):
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "header"})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "header"})
    ```
 
 ### For Complex Configuration
 
 1. **Get documentation first**:
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "docs"})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "docs"})
    ```
 
 2. **Get essentials for the basics**:
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
 
 3. **Search for advanced properties**:
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "proxy"})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "proxy"})
    ```
 
 4. **Only use full detail if absolutely necessary**:
    ```
-   n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "full"})
+   n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "full"})
    ```
 
 ## Common Patterns
@@ -175,7 +175,7 @@ This guide focuses on **essential configuration** using `n8n_get_node` with `det
 ### Making API Calls
 ```javascript
 // Start with essentials
-const essentials = n8n_get_node({ nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true });
+const essentials = n8n_node_get({ nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true });
 
 // Use the POST example
 const config = essentials.examples.common;
@@ -188,7 +188,7 @@ config.jsonBody = JSON.stringify({ my: "data" });
 ### Setting up Webhooks
 ```javascript
 // Get webhook essentials
-const essentials = n8n_get_node({ nodeType: "nodes-base.webhook", detail: "standard", includeExamples: true });
+const essentials = n8n_node_get({ nodeType: "nodes-base.webhook", detail: "standard", includeExamples: true });
 
 // Start with minimal
 const config = essentials.examples.minimal;
@@ -198,7 +198,7 @@ config.path = "my-webhook-endpoint";
 ### Database Operations
 ```javascript
 // Get database essentials
-const essentials = n8n_get_node({ nodeType: "nodes-base.postgres", detail: "standard", includeExamples: true });
+const essentials = n8n_node_get({ nodeType: "nodes-base.postgres", detail: "standard", includeExamples: true });
 
 // Check available operations
 const operations = essentials.operations;
@@ -209,7 +209,7 @@ const config = essentials.examples.common;
 
 ## Tips for AI Agents
 
-1. **Always start with n8n_get_node (detail: standard)** - It has everything needed for 90% of use cases
+1. **Always start with n8n_node_get (detail: standard)** - It has everything needed for 90% of use cases
 2. **Use examples as templates** - They're tested, working configurations
 3. **Search before diving deep** - Use search_properties to find specific options
 4. **Check metadata** - Know if you need credentials, if it's a trigger, etc.

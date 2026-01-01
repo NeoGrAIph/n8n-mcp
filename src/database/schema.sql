@@ -224,9 +224,9 @@ CREATE TABLE IF NOT EXISTS workflow_versions (
   workflow_name TEXT NOT NULL,            -- Workflow name at time of backup
   workflow_snapshot TEXT NOT NULL,        -- Full workflow JSON before modification
   trigger TEXT NOT NULL CHECK(trigger IN (
-    'partial_update',                     -- Created by n8n_update_partial_workflow
-    'full_update',                        -- Created by n8n_update_full_workflow
-    'autofix'                             -- Created by n8n_autofix_workflow
+    'partial_update',                     -- Created by n8n_workflow_update_partial
+    'full_update',                        -- Created by n8n_workflow_update_full
+    'autofix'                             -- Created by n8n_workflow_autofix
   )),
   operations TEXT,                        -- JSON array of diff operations (if partial update)
   fix_types TEXT,                         -- JSON array of fix types (if autofix)

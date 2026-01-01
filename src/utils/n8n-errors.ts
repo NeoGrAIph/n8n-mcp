@@ -96,14 +96,14 @@ export function handleN8nApiError(error: unknown): N8nApiError {
 }
 
 /**
- * Format execution error message with guidance to use n8n_get_execution
+ * Format execution error message with guidance to use n8n_executions_get
  * @param executionId - The execution ID from the failed execution
  * @param workflowId - Optional workflow ID
- * @returns Formatted error message with n8n_get_execution guidance
+ * @returns Formatted error message with n8n_executions_get guidance
  */
 export function formatExecutionError(executionId: string, workflowId?: string): string {
   const workflowPrefix = workflowId ? `Workflow ${workflowId} execution ` : 'Execution ';
-  return `${workflowPrefix}${executionId} failed. Use n8n_get_execution({id: '${executionId}', mode: 'preview'}) to investigate the error.`;
+  return `${workflowPrefix}${executionId} failed. Use n8n_executions_get({id: '${executionId}', mode: 'preview'}) to investigate the error.`;
 }
 
 /**
@@ -111,7 +111,7 @@ export function formatExecutionError(executionId: string, workflowId?: string): 
  * @returns Generic guidance to check executions
  */
 export function formatNoExecutionError(): string {
-  return "Workflow failed to execute. Use n8n_list_executions to find recent executions, then n8n_get_execution with mode='preview' to investigate.";
+  return "Workflow failed to execute. Use n8n_executions_list to find recent executions, then n8n_executions_get with mode='preview' to investigate.";
 }
 
 // Utility to extract user-friendly error messages

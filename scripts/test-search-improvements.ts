@@ -57,7 +57,7 @@ async function testSearchImprovements() {
       console.log(`\nTest: ${testCase.description}`);
       console.log(`Query: "${testCase.query}"`);
       
-      const results = await server.executeTool('n8n_search_nodes', { 
+      const results = await server.executeTool('n8n_nodes_search', { 
         query: testCase.query, 
         limit: 10 
       });
@@ -106,7 +106,7 @@ async function testSearchImprovements() {
   
   // Test webhook query that was problematic
   console.log('1. Testing "webhook" query (was returning service-specific webhooks first):');
-  const webhookResult = await server.executeTool('n8n_search_nodes', { query: 'webhook', limit: 10 });
+  const webhookResult = await server.executeTool('n8n_nodes_search', { query: 'webhook', limit: 10 });
   const webhookFirst = webhookResult.results[0];
   if (webhookFirst.nodeType === 'nodes-base.webhook') {
     console.log('   ✅ SUCCESS: Primary Webhook node now appears first!');
@@ -117,7 +117,7 @@ async function testSearchImprovements() {
   
   // Test http call query
   console.log('\n2. Testing "http call" query (was not finding HTTP Request easily):');
-  const httpCallResult = await server.executeTool('n8n_search_nodes', { query: 'http call', limit: 10 });
+  const httpCallResult = await server.executeTool('n8n_nodes_search', { query: 'http call', limit: 10 });
   const httpCallFirst = httpCallResult.results[0];
   if (httpCallFirst.nodeType === 'nodes-base.httpRequest') {
     console.log('   ✅ SUCCESS: HTTP Request node now appears first!');

@@ -72,7 +72,7 @@ async function testFTS5Search() {
     console.log('-'.repeat(40));
     
     try {
-      const results = await server.executeTool('n8n_search_nodes', {
+      const results = await server.executeTool('n8n_nodes_search', {
         query: test.query,
         mode: test.mode,
         limit: 5
@@ -127,7 +127,7 @@ async function testFTS5Search() {
   
   // Test FTS5-specific features
   console.log('\n1. Testing relevance ranking...');
-  const webhookResult = await server.executeTool('n8n_search_nodes', {
+  const webhookResult = await server.executeTool('n8n_nodes_search', {
     query: 'webhook',
     limit: 10
   });
@@ -136,7 +136,7 @@ async function testFTS5Search() {
   console.log('\n2. Testing fuzzy matching with various typos...');
   const typoTests = ['webook', 'htpp', 'slck', 'googl sheet'];
   for (const typo of typoTests) {
-    const result = await server.executeTool('n8n_search_nodes', {
+    const result = await server.executeTool('n8n_nodes_search', {
       query: typo,
       mode: 'FUZZY',
       limit: 1

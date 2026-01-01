@@ -161,9 +161,9 @@ exports.n8nWorkflowVersionsDoc = {
             'Large workflows may have significant version storage overhead'
         ],
         relatedTools: [
-            'n8n_get_workflow - View current workflow state',
-            'n8n_update_partial_workflow - Make incremental changes',
-            'n8n_validate_workflow - Validate before deployment'
+            'n8n_workflow_get - View current workflow state',
+            'n8n_workflow_update_partial - Make incremental changes',
+            'n8n_workflow_validate - Validate before deployment'
         ]
     }
 };

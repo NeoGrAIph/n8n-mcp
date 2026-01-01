@@ -15,7 +15,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
       properties: {
         topic: {
           type: 'string',
-          description: 'Tool name (e.g., "n8n_search_nodes") or "overview" for general guide. Leave empty for quick reference.',
+          description: 'Tool name (e.g., "n8n_nodes_search") or "overview" for general guide. Leave empty for quick reference.',
         },
         depth: {
           type: 'string',
@@ -27,7 +27,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_search_nodes',
+    name: 'n8n_nodes_search',
     description: `Search the local n8n node catalog by keyword to discover node types. Provide query plus optional mode/limit and includeExamples to control matching and sample configs. Returns a ranked list of node types with basic metadata.`,
     inputSchema: {
       type: 'object',
@@ -57,7 +57,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_get_node',
+    name: 'n8n_node_get',
     description: `Retrieve detailed metadata for a specific node type. Provide nodeType and optionally detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.`,
     inputSchema: {
       type: 'object',
@@ -110,7 +110,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_validate_node',
+    name: 'n8n_node_validate',
     description: `Validate a node configuration against its schema. Provide nodeType and config, and set mode to minimal or full with an optional profile for strictness. Returns a structured validation result with errors, warnings, and suggestions.`,
     inputSchema: {
       type: 'object',
@@ -141,7 +141,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_get_template',
+    name: 'n8n_template_get',
     description: `Fetch a workflow template from the local template database by templateId. Use mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.`,
     inputSchema: {
       type: 'object',
@@ -161,7 +161,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_search_templates',
+    name: 'n8n_templates_search',
     description: `Search the local workflow templates catalog. Choose searchMode and provide matching parameters (query, nodeTypes, task, or metadata filters) plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.`,
     inputSchema: {
       type: 'object',
@@ -256,7 +256,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
     },
   },
   {
-    name: 'n8n_validate_workflow_json',
+    name: 'n8n_workflow_json_validate',
     description: `Validate a workflow JSON object locally without calling n8n. Provide workflow with nodes and connections, plus optional options to control validation depth. Returns validity, summary, errors, warnings, and suggestions.`,
     inputSchema: {
       type: 'object',
@@ -303,13 +303,13 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
  * QUICK REFERENCE for AI Agents:
  *
  * 1. RECOMMENDED WORKFLOW:
- *    - Start: n8n_search_nodes → n8n_get_node → n8n_validate_node
- *    - Discovery: n8n_search_nodes({query:"trigger"}) for finding nodes
- *    - Quick Config: n8n_get_node("nodes-base.httpRequest", {detail:"standard"}) - only essential properties
- *    - Documentation: n8n_get_node("nodes-base.httpRequest", {mode:"docs"}) - readable markdown docs
- *    - Find Properties: n8n_get_node("nodes-base.httpRequest", {mode:"search_properties", propertyQuery:"auth"})
- *    - Full Details: n8n_get_node with detail="full" only when standard isn't enough
- *    - Validation: Use n8n_validate_node for complex nodes (Slack, Google Sheets, etc.)
+ *    - Start: n8n_nodes_search → n8n_node_get → n8n_node_validate
+ *    - Discovery: n8n_nodes_search({query:"trigger"}) for finding nodes
+ *    - Quick Config: n8n_node_get("nodes-base.httpRequest", {detail:"standard"}) - only essential properties
+ *    - Documentation: n8n_node_get("nodes-base.httpRequest", {mode:"docs"}) - readable markdown docs
+ *    - Find Properties: n8n_node_get("nodes-base.httpRequest", {mode:"search_properties", propertyQuery:"auth"})
+ *    - Full Details: n8n_node_get with detail="full" only when standard isn't enough
+ *    - Validation: Use n8n_node_validate for complex nodes (Slack, Google Sheets, etc.)
  *
  * 2. COMMON NODE TYPES:
  *    Triggers: webhook, schedule, emailReadImap, slackTrigger
@@ -318,14 +318,14 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
  *    AI: agent, openAi, chainLlm, documentLoader
  *
  * 3. SEARCH TIPS:
- *    - n8n_search_nodes returns ANY word match (OR logic)
+ *    - n8n_nodes_search returns ANY word match (OR logic)
  *    - Single words more precise, multiple words broader
  *    - If no results: try different keywords or partial names
  *
  * 4. TEMPLATE SEARCHING:
- *    - n8n_search_templates("slack") searches template names/descriptions, NOT node types!
- *    - To find templates using Slack node: n8n_search_templates({searchMode:"by_nodes", nodeTypes:["n8n-nodes-base.slack"]})
- *    - For task-based templates: n8n_search_templates({searchMode:"by_task", task:"slack_integration"})
+ *    - n8n_templates_search("slack") searches template names/descriptions, NOT node types!
+ *    - To find templates using Slack node: n8n_templates_search({searchMode:"by_nodes", nodeTypes:["n8n-nodes-base.slack"]})
+ *    - For task-based templates: n8n_templates_search({searchMode:"by_task", task:"slack_integration"})
  *
  * 5. KNOWN ISSUES:
  *    - Some nodes have duplicate properties with different conditions
@@ -333,7 +333,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
  *    - Check showWhen/hideWhen to identify the right property variant
  *
  * 6. PERFORMANCE:
- *    - n8n_get_node (detail=standard): Fast (<5KB)
- *    - n8n_get_node (detail=full): Slow (100KB+) - use sparingly
- *    - n8n_search_nodes: Fast, cached
+ *    - n8n_node_get (detail=standard): Fast (<5KB)
+ *    - n8n_node_get (detail=full): Slow (100KB+) - use sparingly
+ *    - n8n_nodes_search: Fast, cached
  */

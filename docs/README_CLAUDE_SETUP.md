@@ -3,7 +3,7 @@
 This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
 
 > ✅ **Using current tool names**  
-> This guide uses the consolidated tool set: `n8n_get_node` (detail/mode) + `n8n_search_nodes`.
+> This guide uses the consolidated tool set: `n8n_node_get` (detail/mode) + `n8n_nodes_search`.
 
 ## 🎯 Prerequisites
 
@@ -113,30 +113,30 @@ After restarting Claude Desktop:
 
 1. Look for "n8n-docker" or "n8n-documentation" in the MCP servers list
 2. Try asking Claude: "What n8n nodes are available for working with Slack?"
-3. Or use a tool directly: "Use the n8n_search_nodes tool to show me trigger nodes"
+3. Or use a tool directly: "Use the n8n_nodes_search tool to show me trigger nodes"
 
 ## 🔧 Available Tools
 
 ### Core Tools
 - **`n8n_tools_documentation`** - Get documentation for any MCP tool (start here)
-- **`n8n_search_nodes`** - Full-text search across all nodes
-- **`n8n_get_node`** - Unified node info (info/docs/search_properties/versions)
-- **`n8n_validate_node`** - Validate node configuration (minimal/full)
-- **`n8n_validate_workflow_json`** - Full workflow validation
-- **`n8n_search_templates`** - Search workflow templates
-- **`n8n_get_template`** - Get template details by ID
+- **`n8n_nodes_search`** - Full-text search across all nodes
+- **`n8n_node_get`** - Unified node info (info/docs/search_properties/versions)
+- **`n8n_node_validate`** - Validate node configuration (minimal/full)
+- **`n8n_workflow_json_validate`** - Full workflow validation
+- **`n8n_templates_search`** - Search workflow templates
+- **`n8n_template_get`** - Get template details by ID
 
 ### n8n Management Tools (Requires API Configuration)
-- **`n8n_create_workflow`** - Create new workflows
-- **`n8n_get_workflow`** - Get workflow by ID (full/details/structure/minimal)
-- **`n8n_update_full_workflow`** - Replace entire workflow
-- **`n8n_update_partial_workflow`** - Diff-based updates
-- **`n8n_delete_workflow`** - Delete workflows
-- **`n8n_list_workflows`** - List workflows
-- **`n8n_validate_workflow`** - Validate workflows in n8n by ID
-- **`n8n_autofix_workflow`** - Auto-fix common workflow errors
-- **`n8n_deploy_template`** - Deploy templates from n8n.io
-- **`n8n_test_workflow`** - Trigger workflow execution
+- **`n8n_workflow_create`** - Create new workflows
+- **`n8n_workflow_get`** - Get workflow by ID (full/details/structure/minimal)
+- **`n8n_workflow_update_full`** - Replace entire workflow
+- **`n8n_workflow_update_partial`** - Diff-based updates
+- **`n8n_workflow_delete`** - Delete workflows
+- **`n8n_workflows_list`** - List workflows
+- **`n8n_workflow_validate`** - Validate workflows in n8n by ID
+- **`n8n_workflow_autofix`** - Auto-fix common workflow errors
+- **`n8n_template_deploy`** - Deploy templates from n8n.io
+- **`n8n_workflow_test`** - Trigger workflow execution
 - **`n8n_executions_get`** - Get execution details
 - **`n8n_executions_list`** - List executions
 - **`n8n_executions_delete`** - Delete execution records
@@ -151,7 +151,7 @@ After restarting Claude Desktop:
 ### Example Questions to Ask Claude:
 - "Show me all n8n nodes for working with databases"
 - "How do I use the HTTP Request node?"
-- "Get the Slack node essentials" (uses n8n_get_node with detail: standard)
+- "Get the Slack node essentials" (uses n8n_node_get with detail: standard)
 - "How can I use Google Sheets as an AI tool?"
 - "Validate my workflow before deployment"
 - "Find templates for webhook automation"

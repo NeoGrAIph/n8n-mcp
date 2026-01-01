@@ -42,29 +42,29 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   ai_agents_guide: aiAgentsGuide,
 
   // Discovery tools
-  n8n_search_nodes: searchNodesDoc,
+  n8n_nodes_search: searchNodesDoc,
 
   // Configuration tools
-  n8n_get_node: getNodeDoc,
+  n8n_node_get: getNodeDoc,
 
   // Validation tools
-  n8n_validate_node: validateNodeDoc,
-  n8n_validate_workflow_json: validateWorkflowDoc,
+  n8n_node_validate: validateNodeDoc,
+  n8n_workflow_json_validate: validateWorkflowDoc,
 
   // Template tools
-  n8n_get_template: getTemplateDoc,
-  n8n_search_templates: searchTemplatesDoc,
+  n8n_template_get: getTemplateDoc,
+  n8n_templates_search: searchTemplatesDoc,
 
   // Workflow Management tools (n8n API)
-  n8n_create_workflow: n8nCreateWorkflowDoc,
-  n8n_get_workflow: n8nGetWorkflowDoc,
-  n8n_update_full_workflow: n8nUpdateFullWorkflowDoc,
-  n8n_update_partial_workflow: n8nUpdatePartialWorkflowDoc,
-  n8n_delete_workflow: n8nDeleteWorkflowDoc,
-  n8n_list_workflows: n8nListWorkflowsDoc,
-  n8n_validate_workflow: n8nValidateWorkflowDoc,
-  n8n_autofix_workflow: n8nAutofixWorkflowDoc,
-  n8n_test_workflow: n8nTestWorkflowDoc,
+  n8n_workflow_create: n8nCreateWorkflowDoc,
+  n8n_workflow_get: n8nGetWorkflowDoc,
+  n8n_workflow_update_full: n8nUpdateFullWorkflowDoc,
+  n8n_workflow_update_partial: n8nUpdatePartialWorkflowDoc,
+  n8n_workflow_delete: n8nDeleteWorkflowDoc,
+  n8n_workflows_list: n8nListWorkflowsDoc,
+  n8n_workflow_validate: n8nValidateWorkflowDoc,
+  n8n_workflow_autofix: n8nAutofixWorkflowDoc,
+  n8n_workflow_test: n8nTestWorkflowDoc,
   n8n_executions_get: n8nExecutionsGetDoc,
   n8n_executions_list: n8nExecutionsListDoc,
   n8n_executions_delete: n8nExecutionsDeleteDoc,
@@ -74,7 +74,7 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_workflow_versions_delete: n8nWorkflowVersionsDeleteDoc,
   n8n_workflow_versions_prune: n8nWorkflowVersionsPruneDoc,
   n8n_workflow_versions_truncate: n8nWorkflowVersionsTruncateDoc,
-  n8n_deploy_template: n8nDeployTemplateDoc
+  n8n_template_deploy: n8nDeployTemplateDoc
 };
 
 // Re-export types

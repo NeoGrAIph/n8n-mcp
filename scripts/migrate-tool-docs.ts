@@ -7,7 +7,7 @@ import * as path from 'path';
 
 const toolsByCategory = {
   discovery: [
-    'n8n_search_nodes',
+    'n8n_nodes_search',
     'list_nodes', 
     'list_ai_tools',
     'get_database_statistics'
@@ -21,9 +21,9 @@ const toolsByCategory = {
     'get_property_dependencies'
   ],
   validation: [
-    'n8n_validate_node_minimal',
-    'n8n_validate_node_operation',
-    'n8n_validate_workflow_json',
+    'n8n_node_validate_minimal',
+    'n8n_node_validate_operation',
+    'n8n_workflow_json_validate',
     'validate_workflow_connections',
     'validate_workflow_expressions'
   ],
@@ -31,25 +31,25 @@ const toolsByCategory = {
     'get_node_for_task',
     'list_tasks',
     'list_node_templates',
-    'n8n_get_template',
-    'n8n_search_templates',
+    'n8n_template_get',
+    'n8n_templates_search',
     'get_templates_for_task'
   ],
   workflow_management: [
-    'n8n_create_workflow',
-    'n8n_get_workflow',
-    'n8n_get_workflow_details',
-    'n8n_get_workflow_structure',
-    'n8n_get_workflow_minimal',
-    'n8n_update_full_workflow',
-    'n8n_update_partial_workflow',
-    'n8n_delete_workflow',
-    'n8n_list_workflows',
-    'n8n_validate_workflow',
-    'n8n_trigger_webhook_workflow',
-    'n8n_get_execution',
-    'n8n_list_executions',
-    'n8n_delete_execution'
+    'n8n_workflow_create',
+    'n8n_workflow_get',
+    'n8n_workflow_get_details',
+    'n8n_workflow_get_structure',
+    'n8n_workflow_get_minimal',
+    'n8n_workflow_update_full',
+    'n8n_workflow_update_partial',
+    'n8n_workflow_delete',
+    'n8n_workflows_list',
+    'n8n_workflow_validate',
+    'n8n_workflow_test',
+    'n8n_executions_get',
+    'n8n_executions_list',
+    'n8n_executions_delete'
   ],
   system: [
     'n8n_tools_documentation',

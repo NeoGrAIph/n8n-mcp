@@ -430,7 +430,7 @@ const autofixWorkflowSchema = z.object({
   maxFixes: z.number().optional().default(50)
 });
 
-// Schema for n8n_test_workflow tool
+// Schema for n8n_workflow_test tool
 const testWorkflowSchema = z.object({
   workflowId: z.string(),
   triggerType: z.enum(['webhook', 'form', 'chat']).optional(),
@@ -524,7 +524,7 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
         active: workflow.active,
         nodeCount: workflow.nodes?.length || 0
       },
-      message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_get_workflow with mode 'structure' to verify current state.`
+      message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_workflow_get with mode 'structure' to verify current state.`
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -804,7 +804,7 @@ export async function handleUpdateWorkflow(
     if (workflowBefore) {
       trackWorkflowMutationForFullUpdate({
         sessionId,
-        toolName: 'n8n_update_full_workflow',
+        toolName: 'n8n_workflow_update_full',
         userIntent,
         operations: [], // Full update doesn't use diff operations
         workflowBefore,
@@ -824,14 +824,14 @@ export async function handleUpdateWorkflow(
         active: workflow.active,
         nodeCount: workflow.nodes?.length || 0
       },
-      message: `Workflow "${workflow.name}" updated successfully. Use n8n_get_workflow with mode 'structure' to verify current state.`
+      message: `Workflow "${workflow.name}" updated successfully. Use n8n_workflow_get with mode 'structure' to verify current state.`
     };
   } catch (error) {
     // Track failed mutation
     if (workflowBefore) {
       trackWorkflowMutationForFullUpdate({
         sessionId,
-        toolName: 'n8n_update_full_workflow',
+        toolName: 'n8n_workflow_update_full',
         userIntent,
         operations: [],
         workflowBefore,
@@ -1012,7 +1012,7 @@ export async function handleValidateWorkflow(
     // Run validation
     const validationResult = await validator.validateWorkflow(workflow, input.options);
     
-    // Format the response (same format as the regular n8n_validate_workflow_json tool)
+    // Format the response (same format as the regular n8n_workflow_json_validate tool)
     const response: WorkflowValidationResponse = {
       valid: validationResult.valid,
       workflowId: workflow.id,
@@ -1257,7 +1257,7 @@ export async function handleAutofixWorkflow(
 // Execution Management Handlers
 
 /**
- * Handler for n8n_test_workflow tool
+ * Handler for n8n_workflow_test tool
  * Triggers workflow execution via auto-detected or specified trigger type
  */
 export async function handleTestWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
@@ -1341,7 +1341,7 @@ export async function handleTestWorkflow(args: unknown, context?: InstanceContex
         details: {
           workflowId: input.workflowId,
           triggerType,
-          hint: 'Activate the workflow in n8n using n8n_update_partial_workflow with [{type: "activateWorkflow"}]',
+          hint: 'Activate the workflow in n8n using n8n_workflow_update_partial with [{type: "activateWorkflow"}]',
         },
       };
     }
@@ -1677,10 +1677,10 @@ export async function handleHealthCheck(context?: InstanceContext): Promise<McpT
 
     // Add next steps guidance based on telemetry insights
     responseData.nextSteps = [
-      '• Create workflow: n8n_create_workflow',
-      '• List workflows: n8n_list_workflows',
-      '• Search nodes: n8n_search_nodes',
-      '• Browse templates: n8n_search_templates'
+      '• Create workflow: n8n_workflow_create',
+      '• List workflows: n8n_workflows_list',
+      '• Search nodes: n8n_nodes_search',
+      '• Browse templates: n8n_templates_search'
     ];
 
     // Add update warning if outdated
@@ -1957,7 +1957,7 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
 
   // Check which tools are available
   const documentationTools = 7; // Base documentation tools (after v2.26.0 consolidation)
-  const managementTools = apiConfigured ? 13 : 0; // Management tools requiring API (includes n8n_deploy_template)
+  const managementTools = apiConfigured ? 13 : 0; // Management tools requiring API (includes n8n_template_deploy)
   const totalTools = documentationTools + managementTools;
 
   // Check npm version
@@ -2019,30 +2019,30 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       message: '✓ API connected! Here\'s what you can do:',
       recommended: [
         {
-          action: 'n8n_list_workflows',
+          action: 'n8n_workflows_list',
           description: 'See your existing workflows',
           timing: 'Fast (6 seconds median)'
         },
         {
-          action: 'n8n_create_workflow',
+          action: 'n8n_workflow_create',
           description: 'Create a new workflow',
           timing: 'Typically 6-14 minutes to build'
         },
         {
-          action: 'n8n_search_nodes',
+          action: 'n8n_nodes_search',
           description: 'Discover available nodes',
           timing: 'Fast - explore 500+ nodes'
         },
         {
-          action: 'n8n_search_templates',
+          action: 'n8n_templates_search',
           description: 'Browse pre-built workflows',
           timing: 'Find examples quickly'
         }
       ],
       tips: [
         '82% of users start creating workflows after diagnostics - you\'re ready to go!',
-        'Most common first action: n8n_update_partial_workflow (managing existing workflows)',
-        'Use n8n_validate_workflow before deploying to catch issues early'
+        'Most common first action: n8n_workflow_update_partial (managing existing workflows)',
+        'Use n8n_workflow_validate before deploying to catch issues early'
       ]
     };
   } else if (apiConfigured && !apiStatus.connected) {
@@ -2073,9 +2073,9 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       whatYouCanDoNow: {
         documentation: [
           {
-            tool: 'n8n_search_nodes',
+            tool: 'n8n_nodes_search',
             description: 'Search 500+ n8n nodes',
-            example: 'n8n_search_nodes({query: "slack"})'
+            example: 'n8n_nodes_search({query: "slack"})'
           },
           {
             tool: 'get_node_essentials',
@@ -2083,14 +2083,14 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
             example: 'get_node_essentials({nodeType: "nodes-base.httpRequest"})'
           },
           {
-            tool: 'n8n_search_templates',
+            tool: 'n8n_templates_search',
             description: 'Browse workflow templates',
-            example: 'n8n_search_templates({query: "chatbot"})'
+            example: 'n8n_templates_search({query: "chatbot"})'
           },
           {
-            tool: 'n8n_validate_workflow_json',
+            tool: 'n8n_workflow_json_validate',
             description: 'Validate workflow JSON',
-            example: 'n8n_validate_workflow_json({workflow: {...}})'
+            example: 'n8n_workflow_json_validate({workflow: {...}})'
           }
         ],
         note: '14 documentation tools available without API configuration'
@@ -2405,7 +2405,7 @@ export async function handleDeployTemplate(
         success: false,
         error: `Template ${input.templateId} not found`,
         details: {
-          hint: 'Use n8n_search_templates to find available templates',
+          hint: 'Use n8n_templates_search to find available templates',
           templateUrl: `https://n8n.io/workflows/${input.templateId}`
         }
       };

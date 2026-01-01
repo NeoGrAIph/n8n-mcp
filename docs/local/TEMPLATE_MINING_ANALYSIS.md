@@ -146,7 +146,7 @@ Each template has structured metadata including:
 - 28% failure rate (users can't find what they need)
 - Requires manual maintenance
 - Static configurations without real-world context
-- Usage ratio 22.5:1 (n8n_search_nodes is preferred)
+- Usage ratio 22.5:1 (n8n_nodes_search is preferred)
 
 ### Template-Based Approach
 

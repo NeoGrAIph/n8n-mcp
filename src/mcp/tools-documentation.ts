@@ -84,58 +84,58 @@ When working with Code nodes, always start by calling the relevant guide:
 
 ## Standard Workflow Pattern
 
-⚠️ **CRITICAL**: Always call n8n_get_node() with detail='standard' FIRST before configuring any node!
+⚠️ **CRITICAL**: Always call n8n_node_get() with detail='standard' FIRST before configuring any node!
 
 1. **Find** the node you need:
-   - n8n_search_nodes({query: "slack"}) - Search by keyword
-   - n8n_search_nodes({query: "communication"}) - Search by category name
-   - n8n_search_nodes({query: "AI langchain"}) - Search for AI-capable nodes
+   - n8n_nodes_search({query: "slack"}) - Search by keyword
+   - n8n_nodes_search({query: "communication"}) - Search by category name
+   - n8n_nodes_search({query: "AI langchain"}) - Search for AI-capable nodes
 
 2. **Configure** the node (ALWAYS START WITH STANDARD DETAIL):
-   - ✅ n8n_get_node({nodeType: "nodes-base.slack", detail: "standard"}) - Get essential properties FIRST (~1-2KB, shows required fields)
-   - n8n_get_node({nodeType: "nodes-base.slack", detail: "full"}) - Get complete schema only if standard insufficient (~100KB+)
-   - n8n_get_node({nodeType: "nodes-base.slack", mode: "docs"}) - Get readable markdown documentation
-   - n8n_get_node({nodeType: "nodes-base.slack", mode: "search_properties", propertyQuery: "auth"}) - Find specific properties
+   - ✅ n8n_node_get({nodeType: "nodes-base.slack", detail: "standard"}) - Get essential properties FIRST (~1-2KB, shows required fields)
+   - n8n_node_get({nodeType: "nodes-base.slack", detail: "full"}) - Get complete schema only if standard insufficient (~100KB+)
+   - n8n_node_get({nodeType: "nodes-base.slack", mode: "docs"}) - Get readable markdown documentation
+   - n8n_node_get({nodeType: "nodes-base.slack", mode: "search_properties", propertyQuery: "auth"}) - Find specific properties
 
 3. **Validate** before deployment:
-   - n8n_validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "minimal"}) - Quick required fields check
-   - n8n_validate_node({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
-   - n8n_validate_workflow_json({workflow: {...}}) - Validate entire workflow
+   - n8n_node_validate({nodeType: "nodes-base.slack", config: {...}, mode: "minimal"}) - Quick required fields check
+   - n8n_node_validate({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
+   - n8n_workflow_json_validate({workflow: {...}}) - Validate entire workflow
 
 ## Tool Categories (19 Tools Total)
 
 **Discovery Tools** (1 tool)
-- n8n_search_nodes - Full-text search across all nodes (supports OR, AND, FUZZY modes)
+- n8n_nodes_search - Full-text search across all nodes (supports OR, AND, FUZZY modes)
 
 **Configuration Tools** (1 consolidated tool)
-- n8n_get_node - Unified node information tool:
+- n8n_node_get - Unified node information tool:
   - detail='minimal'/'standard'/'full': Progressive detail levels
   - mode='docs': Readable markdown documentation
   - mode='search_properties': Find specific properties
   - mode='versions'/'compare'/'breaking'/'migrations': Version management
 
 **Validation Tools** (2 tools)
-- n8n_validate_node - Unified validation with mode='full' or mode='minimal'
-- n8n_validate_workflow_json - Complete workflow validation (nodes, connections, expressions)
+- n8n_node_validate - Unified validation with mode='full' or mode='minimal'
+- n8n_workflow_json_validate - Complete workflow validation (nodes, connections, expressions)
 
 **Template Tools** (2 tools)
-- n8n_get_template - Get complete workflow JSON by ID
-- n8n_search_templates - Unified template search:
+- n8n_template_get - Get complete workflow JSON by ID
+- n8n_templates_search - Unified template search:
   - searchMode='keyword': Text search (default)
   - searchMode='by_nodes': Find templates using specific nodes
   - searchMode='by_task': Curated task-based templates
   - searchMode='by_metadata': Filter by complexity/services
 
 **n8n API Tools** (20 tools, requires N8N_API_URL configuration)
-- n8n_create_workflow - Create new workflows
-- n8n_get_workflow - Get workflow with mode='full'/'details'/'structure'/'minimal'
-- n8n_update_full_workflow - Full workflow replacement
-- n8n_update_partial_workflow - Incremental diff-based updates
-- n8n_delete_workflow - Delete workflow
-- n8n_list_workflows - List workflows with filters
-- n8n_validate_workflow - Validate workflow by ID
-- n8n_autofix_workflow - Auto-fix common issues
-- n8n_test_workflow - Test/trigger workflows (webhook, form, chat, execute)
+- n8n_workflow_create - Create new workflows
+- n8n_workflow_get - Get workflow with mode='full'/'details'/'structure'/'minimal'
+- n8n_workflow_update_full - Full workflow replacement
+- n8n_workflow_update_partial - Incremental diff-based updates
+- n8n_workflow_delete - Delete workflow
+- n8n_workflows_list - List workflows with filters
+- n8n_workflow_validate - Validate workflow by ID
+- n8n_workflow_autofix - Auto-fix common issues
+- n8n_workflow_test - Test/trigger workflows (webhook, form, chat, execute)
 - n8n_executions_get - Get execution details by ID
 - n8n_executions_list - List executions with filters
 - n8n_executions_delete - Delete execution record
@@ -146,12 +146,12 @@ When working with Code nodes, always start by calling the relevant guide:
 - n8n_workflow_versions_delete - Delete versions for a workflow
 - n8n_workflow_versions_prune - Prune versions to keep N most recent
 - n8n_workflow_versions_truncate - Truncate ALL versions (dangerous)
-- n8n_deploy_template - Deploy templates directly to n8n instance
+- n8n_template_deploy - Deploy templates directly to n8n instance
 
 ## Performance Characteristics
-- Instant (<10ms): n8n_search_nodes, n8n_get_node (minimal/standard)
-- Fast (<100ms): n8n_validate_node, n8n_get_template
-- Moderate (100-500ms): n8n_validate_workflow_json, n8n_get_node (full detail)
+- Instant (<10ms): n8n_nodes_search, n8n_node_get (minimal/standard)
+- Fast (<100ms): n8n_node_validate, n8n_template_get
+- Moderate (100-500ms): n8n_workflow_json_validate, n8n_node_get (full detail)
 - Network-dependent: All n8n_* tools
 
 For comprehensive documentation on any tool:
@@ -184,7 +184,7 @@ ${tools.map(toolName => {
 
 ## Usage Notes
 - All node types require the "nodes-base." or "nodes-langchain." prefix
-- Use n8n_get_node() with detail='standard' first for most tasks (~95% smaller than detail='full')
+- Use n8n_node_get() with detail='standard' first for most tasks (~95% smaller than detail='full')
 - Validation profiles: minimal (editing), runtime (default), strict (deployment)
 - n8n API tools only available when N8N_API_URL and N8N_API_KEY are configured
 
@@ -430,8 +430,8 @@ try {
 5. Use descriptive variable names
 
 ## Related Tools
-- n8n_get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
-- n8n_validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
+- n8n_node_get({nodeType: "nodes-base.code"}) - Get Code node configuration details
+- n8n_node_validate({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
 - python_code_node_guide (for Python syntax)`;
 }
 
@@ -699,7 +699,7 @@ except json.JSONDecodeError:
 \`\`\`
 
 ## Related Tools
-- n8n_get_node({nodeType: "nodes-base.code"}) - Get Code node configuration details
-- n8n_validate_node({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
+- n8n_node_get({nodeType: "nodes-base.code"}) - Get Code node configuration details
+- n8n_node_validate({nodeType: "nodes-base.code", config: {...}}) - Validate Code node setup
 - javascript_code_node_guide (for JavaScript syntax)`;
 }

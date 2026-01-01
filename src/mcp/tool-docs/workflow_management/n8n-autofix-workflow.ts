@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const n8nAutofixWorkflowDoc: ToolDocumentation = {
-  name: 'n8n_autofix_workflow',
+  name: 'n8n_workflow_autofix',
   category: 'workflow_management',
   essentials: {
     description: 'Automatically fix common workflow validation errors - expression formats, typeVersions, error outputs, webhook paths, and smart version upgrades',
     keyParameters: ['id', 'applyFixes'],
-    example: 'n8n_autofix_workflow({id: "wf_abc123", applyFixes: false})',
+    example: 'n8n_workflow_autofix({id: "wf_abc123", applyFixes: false})',
     performance: 'Network-dependent (200-1500ms) - fetches, validates, and optionally updates workflow with smart migrations',
     tips: [
       'Use applyFixes: false to preview changes before applying',
@@ -102,14 +102,14 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
   * Step-by-step migration instructions
   * Estimated time for manual changes`,
     examples: [
-      'n8n_autofix_workflow({id: "wf_abc123"}) - Preview all possible fixes including version upgrades',
-      'n8n_autofix_workflow({id: "wf_abc123", applyFixes: true}) - Apply all medium+ confidence fixes',
-      'n8n_autofix_workflow({id: "wf_abc123", applyFixes: true, confidenceThreshold: "high"}) - Only apply high-confidence fixes',
-      'n8n_autofix_workflow({id: "wf_abc123", fixTypes: ["expression-format"]}) - Only fix expression format issues',
-      'n8n_autofix_workflow({id: "wf_abc123", fixTypes: ["webhook-missing-path"]}) - Only fix webhook path issues',
-      'n8n_autofix_workflow({id: "wf_abc123", fixTypes: ["typeversion-upgrade"]}) - NEW: Only upgrade node versions with smart migrations',
-      'n8n_autofix_workflow({id: "wf_abc123", fixTypes: ["typeversion-upgrade", "version-migration"]}) - NEW: Upgrade versions and provide migration guidance',
-      'n8n_autofix_workflow({id: "wf_abc123", applyFixes: true, maxFixes: 10}) - Apply up to 10 fixes'
+      'n8n_workflow_autofix({id: "wf_abc123"}) - Preview all possible fixes including version upgrades',
+      'n8n_workflow_autofix({id: "wf_abc123", applyFixes: true}) - Apply all medium+ confidence fixes',
+      'n8n_workflow_autofix({id: "wf_abc123", applyFixes: true, confidenceThreshold: "high"}) - Only apply high-confidence fixes',
+      'n8n_workflow_autofix({id: "wf_abc123", fixTypes: ["expression-format"]}) - Only fix expression format issues',
+      'n8n_workflow_autofix({id: "wf_abc123", fixTypes: ["webhook-missing-path"]}) - Only fix webhook path issues',
+      'n8n_workflow_autofix({id: "wf_abc123", fixTypes: ["typeversion-upgrade"]}) - NEW: Only upgrade node versions with smart migrations',
+      'n8n_workflow_autofix({id: "wf_abc123", fixTypes: ["typeversion-upgrade", "version-migration"]}) - NEW: Upgrade versions and provide migration guidance',
+      'n8n_workflow_autofix({id: "wf_abc123", applyFixes: true, maxFixes: 10}) - Apply up to 10 fixes'
     ],
     useCases: [
       'Fixing workflows imported from older n8n versions',
@@ -151,10 +151,10 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
       'NEW: Version history is based on registry - unknown nodes cannot be upgraded'
     ],
     relatedTools: [
-      'n8n_validate_workflow',
-      'n8n_validate_workflow_json',
-      'n8n_validate_node',
-      'n8n_update_partial_workflow'
+      'n8n_workflow_validate',
+      'n8n_workflow_json_validate',
+      'n8n_node_validate',
+      'n8n_workflow_update_partial'
     ]
   }
 };

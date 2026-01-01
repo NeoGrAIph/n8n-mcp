@@ -234,7 +234,7 @@ export async function handleUpdatePartialWorkflow(
         // Build recovery guidance based on error types
         const recoverySteps = [];
         if (errorTypes.has('operator_issues')) {
-          recoverySteps.push('Operator structure issue detected. Use n8n_validate_node to check specific nodes.');
+          recoverySteps.push('Operator structure issue detected. Use n8n_node_validate to check specific nodes.');
           recoverySteps.push('Binary operators (equals, contains, greaterThan, etc.) must NOT have singleValue:true');
           recoverySteps.push('Unary operators (isEmpty, isNotEmpty, true, false) REQUIRE singleValue:true');
         }
@@ -254,7 +254,7 @@ export async function handleUpdatePartialWorkflow(
         if (recoverySteps.length === 0) {
           recoverySteps.push('Review the validation errors listed above');
           recoverySteps.push('Fix issues using updateNode or cleanStaleConnections operations');
-          recoverySteps.push('Run n8n_validate_workflow_json again to verify fixes');
+          recoverySteps.push('Run n8n_workflow_json_validate again to verify fixes');
         }
 
         const errorMessage = structureErrors.length === 1
@@ -347,7 +347,7 @@ export async function handleUpdatePartialWorkflow(
       if (workflowBefore && !input.validateOnly) {
         trackWorkflowMutation({
           sessionId,
-          toolName: 'n8n_update_partial_workflow',
+          toolName: 'n8n_workflow_update_partial',
           userIntent: input.intent || 'Partial workflow update',
           operations: input.operations,
           workflowBefore,
@@ -370,7 +370,7 @@ export async function handleUpdatePartialWorkflow(
           nodeCount: finalWorkflow.nodes?.length || 0,
           operationsApplied: diffResult.operationsApplied
         },
-        message: `Workflow "${finalWorkflow.name}" updated successfully. Applied ${diffResult.operationsApplied} operations.${activationMessage} Use n8n_get_workflow with mode 'structure' to verify current state.`,
+        message: `Workflow "${finalWorkflow.name}" updated successfully. Applied ${diffResult.operationsApplied} operations.${activationMessage} Use n8n_workflow_get with mode 'structure' to verify current state.`,
         details: {
           applied: diffResult.applied,
           failed: diffResult.failed,
@@ -383,7 +383,7 @@ export async function handleUpdatePartialWorkflow(
       if (workflowBefore && !input.validateOnly) {
         trackWorkflowMutation({
           sessionId,
-          toolName: 'n8n_update_partial_workflow',
+          toolName: 'n8n_workflow_update_partial',
           userIntent: input.intent || 'Partial workflow update',
           operations: input.operations,
           workflowBefore,

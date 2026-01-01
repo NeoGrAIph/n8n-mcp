@@ -12,8 +12,8 @@
  * - Looking up node metadata
  *
  * **Do NOT use before:**
- * - Creating workflows (n8n_create_workflow)
- * - Updating workflows (n8n_update_workflow)
+ * - Creating workflows (n8n_workflow_create)
+ * - Updating workflows (n8n_workflow_update_full)
  * - Any n8n API calls
  *
  * **IMPORTANT:** The n8n-mcp database stores nodes in SHORT form:

@@ -101,7 +101,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
 
       // Make some requests
       await client.callTool({ name: 'n8n_tools_documentation', arguments: {} });
-      await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http', limit: 5 } });
+      await client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http', limit: 5 } });
 
       // Clean termination
       await client.close();
@@ -141,7 +141,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
 
       // Further operations should fail
       try {
-        await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http' } });
+        await client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http' } });
         expect.fail('Should not be able to make requests after transport close');
       } catch (error) {
         expect(error).toBeDefined();
@@ -179,7 +179,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       await client1.connect(ct1);
 
       // First session operations
-      const response1 = await client1.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http', limit: 3 } });
+      const response1 = await client1.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http', limit: 3 } });
       expect(response1).toBeDefined();
       expect((response1 as any).content).toBeDefined();
       expect((response1 as any).content[0]).toHaveProperty('type', 'text');
@@ -204,7 +204,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       await client2.connect(ct2);
 
       // Second session operations
-      const response2 = await client2.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http', limit: 5 } });
+      const response2 = await client2.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http', limit: 5 } });
       expect(response2).toBeDefined();
       expect((response2 as any).content).toBeDefined();
       expect((response2 as any).content[0]).toHaveProperty('type', 'text');
@@ -261,7 +261,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       await client1.connect(ct1);
 
       // Make some requests
-      await client1.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http', limit: 10 } });
+      await client1.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http', limit: 10 } });
       await client1.close();
       await mcpServer1.close();
 
@@ -420,8 +420,8 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       const promises = [];
 
       for (let i = 0; i < requestCount; i++) {
-        const toolName = i % 2 === 0 ? 'n8n_search_nodes' : 'n8n_tools_documentation';
-        const params = toolName === 'n8n_search_nodes' ? { query: 'http', limit: 1 } : {};
+        const toolName = i % 2 === 0 ? 'n8n_nodes_search' : 'n8n_tools_documentation';
+        const params = toolName === 'n8n_nodes_search' ? { query: 'http', limit: 1 } : {};
         promises.push(client.callTool({ name: toolName as any, arguments: params }));
       }
 
@@ -451,7 +451,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
 
       // Make an error-inducing request
       try {
-        await client.callTool({ name: 'n8n_get_node', arguments: {
+        await client.callTool({ name: 'n8n_node_get', arguments: {
           nodeType: 'invalid-node-type'
         } });
         expect.fail('Should have thrown an error');
@@ -485,9 +485,9 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       // Multiple error-inducing requests
       // Note: get_node_for_task was removed in v2.15.0
       const errorPromises = [
-        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'invalid1' } }).catch(e => e),
-        client.callTool({ name: 'n8n_get_node', arguments: { nodeType: 'invalid2' } }).catch(e => e),
-        client.callTool({ name: 'n8n_search_nodes', arguments: { query: '' } }).catch(e => e) // Empty query should error
+        client.callTool({ name: 'n8n_node_get', arguments: { nodeType: 'invalid1' } }).catch(e => e),
+        client.callTool({ name: 'n8n_node_get', arguments: { nodeType: 'invalid2' } }).catch(e => e),
+        client.callTool({ name: 'n8n_nodes_search', arguments: { query: '' } }).catch(e => e) // Empty query should error
       ];
 
       const errors = await Promise.all(errorPromises);
@@ -496,7 +496,7 @@ describe('MCP Session Management', { timeout: 15000 }, () => {
       });
 
       // Session should still work
-      const response = await client.callTool({ name: 'n8n_search_nodes', arguments: { query: 'http', limit: 1 } });
+      const response = await client.callTool({ name: 'n8n_nodes_search', arguments: { query: 'http', limit: 1 } });
       expect(response).toBeDefined();
 
       await client.close();

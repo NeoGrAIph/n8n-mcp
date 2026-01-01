@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const searchTemplatesDoc: ToolDocumentation = {
-  name: 'n8n_search_templates',
+  name: 'n8n_templates_search',
   category: 'templates',
   essentials: {
     description: 'Unified template search with multiple modes: keyword search, by node types, by task type, or by metadata. 2,700+ templates available.',
     keyParameters: ['searchMode', 'query', 'nodeTypes', 'task', 'limit'],
-    example: 'n8n_search_templates({searchMode: "by_task", task: "webhook_processing"})',
+    example: 'n8n_templates_search({searchMode: "by_task", task: "webhook_processing"})',
     performance: 'Fast (<100ms) - FTS5 full-text search',
     tips: [
       'searchMode="keyword" (default): Search by name/description',
@@ -93,7 +93,7 @@ ai_automation, data_sync, webhook_processing, email_automation, slack_integratio
     },
     returns: `Returns an object containing:
 - templates: Array of matching templates
-  - id: Template ID for n8n_get_template()
+  - id: Template ID for n8n_template_get()
   - name: Template name
   - description: What the workflow does
   - author: Creator information
@@ -128,7 +128,7 @@ ai_automation, data_sync, webhook_processing, email_automation, slack_integratio
       'Use searchMode="by_nodes" when you know which integrations you need',
       'Use searchMode="keyword" for general discovery',
       'Combine by_metadata filters for precise matching',
-      'Use n8n_get_template(id) to get the full workflow JSON'
+      'Use n8n_template_get(id) to get the full workflow JSON'
     ],
     pitfalls: [
       'searchMode="keyword" searches names/descriptions, not node types',
@@ -136,6 +136,6 @@ ai_automation, data_sync, webhook_processing, email_automation, slack_integratio
       'by_metadata filters may return fewer results',
       'Not all templates have complete metadata'
     ],
-    relatedTools: ['n8n_get_template', 'n8n_search_nodes', 'n8n_validate_workflow_json']
+    relatedTools: ['n8n_template_get', 'n8n_nodes_search', 'n8n_workflow_json_validate']
   }
 };

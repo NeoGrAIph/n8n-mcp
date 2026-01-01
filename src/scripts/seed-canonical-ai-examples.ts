@@ -143,7 +143,7 @@ async function seedCanonicalExamples() {
 
     console.log('\n✅ Successfully seeded', totalInserted, 'canonical AI tool examples');
     console.log('\nExamples are now available via:');
-    console.log('  • n8n_search_nodes({query: "HTTP Request Tool", includeExamples: true})');
+    console.log('  • n8n_nodes_search({query: "HTTP Request Tool", includeExamples: true})');
     console.log('  • get_node_essentials({nodeType: "nodes-langchain.toolCode", includeExamples: true})');
 
   } catch (error) {

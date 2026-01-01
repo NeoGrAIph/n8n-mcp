@@ -15,7 +15,7 @@ describe('formatExecutionError', () => {
   it('should format error with both execution ID and workflow ID', () => {
     const result = formatExecutionError('exec_12345', 'wf_abc');
 
-    expect(result).toBe("Workflow wf_abc execution exec_12345 failed. Use n8n_get_execution({id: 'exec_12345', mode: 'preview'}) to investigate the error.");
+    expect(result).toBe("Workflow wf_abc execution exec_12345 failed. Use n8n_executions_get({id: 'exec_12345', mode: 'preview'}) to investigate the error.");
     expect(result).toContain('mode: \'preview\'');
     expect(result).toContain('exec_12345');
     expect(result).toContain('wf_abc');
@@ -24,7 +24,7 @@ describe('formatExecutionError', () => {
   it('should format error with only execution ID', () => {
     const result = formatExecutionError('exec_67890');
 
-    expect(result).toBe("Execution exec_67890 failed. Use n8n_get_execution({id: 'exec_67890', mode: 'preview'}) to investigate the error.");
+    expect(result).toBe("Execution exec_67890 failed. Use n8n_executions_get({id: 'exec_67890', mode: 'preview'}) to investigate the error.");
     expect(result).toContain('mode: \'preview\'');
     expect(result).toContain('exec_67890');
     expect(result).not.toContain('Workflow');
@@ -39,7 +39,7 @@ describe('formatExecutionError', () => {
   it('should format with undefined workflow ID (treated as missing)', () => {
     const result = formatExecutionError('exec_123', undefined);
 
-    expect(result).toBe("Execution exec_123 failed. Use n8n_get_execution({id: 'exec_123', mode: 'preview'}) to investigate the error.");
+    expect(result).toBe("Execution exec_123 failed. Use n8n_executions_get({id: 'exec_123', mode: 'preview'}) to investigate the error.");
   });
 
   it('should properly escape execution ID in suggestion', () => {
@@ -53,9 +53,9 @@ describe('formatNoExecutionError', () => {
   it('should provide guidance to check recent executions', () => {
     const result = formatNoExecutionError();
 
-    expect(result).toBe("Workflow failed to execute. Use n8n_list_executions to find recent executions, then n8n_get_execution with mode='preview' to investigate.");
-    expect(result).toContain('n8n_list_executions');
-    expect(result).toContain('n8n_get_execution');
+    expect(result).toBe("Workflow failed to execute. Use n8n_executions_list to find recent executions, then n8n_executions_get with mode='preview' to investigate.");
+    expect(result).toContain('n8n_executions_list');
+    expect(result).toContain('n8n_executions_get');
     expect(result).toContain("mode='preview'");
   });
 
@@ -138,7 +138,7 @@ describe('Error message integration', () => {
     const message = formatExecutionError(executionId, workflowId);
 
     expect(message).toContain('Workflow wf_webhook_abc execution exec_webhook_123 failed');
-    expect(message).toContain('n8n_get_execution');
+    expect(message).toContain('n8n_executions_get');
     expect(message).toContain("mode: 'preview'");
   });
 
@@ -146,8 +146,8 @@ describe('Error message integration', () => {
     const message = formatNoExecutionError();
 
     expect(message).toContain('Workflow failed to execute');
-    expect(message).toContain('n8n_list_executions');
-    expect(message).toContain('n8n_get_execution');
+    expect(message).toContain('n8n_executions_list');
+    expect(message).toContain('n8n_executions_get');
   });
 
   it('should not include "contact support" in any error message', () => {

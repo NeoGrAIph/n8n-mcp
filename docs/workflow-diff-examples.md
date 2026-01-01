@@ -1,10 +1,10 @@
 # Workflow Diff Examples
 
-This guide demonstrates how to use the `n8n_update_partial_workflow` tool for efficient workflow editing.
+This guide demonstrates how to use the `n8n_workflow_update_partial` tool for efficient workflow editing.
 
 ## Overview
 
-The `n8n_update_partial_workflow` tool allows you to make targeted changes to workflows without sending the entire workflow JSON. This results in:
+The `n8n_workflow_update_partial` tool allows you to make targeted changes to workflows without sending the entire workflow JSON. This results in:
 - 80-90% reduction in token usage
 - More precise edits
 - Clearer intent

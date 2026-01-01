@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const n8nValidateWorkflowDoc: ToolDocumentation = {
-  name: 'n8n_validate_workflow',
+  name: 'n8n_workflow_validate',
   category: 'workflow_management',
   essentials: {
     description: 'Validate workflow from n8n instance by ID - checks nodes, connections, expressions, and returns errors/warnings',
     keyParameters: ['id'],
-    example: 'n8n_validate_workflow({id: "wf_abc123"})',
+    example: 'n8n_workflow_validate({id: "wf_abc123"})',
     performance: 'Network-dependent (100-500ms) - fetches and validates workflow',
     tips: [
       'Use options.profile to control validation strictness (minimal/runtime/ai-friendly/strict)',
@@ -23,7 +23,7 @@ export const n8nValidateWorkflowDoc: ToolDocumentation = {
 - Validates n8n expression syntax in all fields
 - Returns categorized issues with fix suggestions
 
-The validation uses the same engine as n8n_validate_workflow_json but works with workflows already in n8n, making it perfect for validating existing workflows before execution.
+The validation uses the same engine as n8n_workflow_json_validate but works with workflows already in n8n, making it perfect for validating existing workflows before execution.
 
 Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
     parameters: {
@@ -40,9 +40,9 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
     },
     returns: 'ValidationResult object containing isValid boolean, arrays of errors/warnings, and suggestions for fixes',
     examples: [
-      'n8n_validate_workflow({id: "wf_abc123"}) - Validate with default settings',
-      'n8n_validate_workflow({id: "wf_abc123", options: {profile: "strict"}}) - Strict validation',
-      'n8n_validate_workflow({id: "wf_abc123", options: {validateExpressions: false}}) - Skip expression validation'
+      'n8n_workflow_validate({id: "wf_abc123"}) - Validate with default settings',
+      'n8n_workflow_validate({id: "wf_abc123", options: {profile: "strict"}}) - Strict validation',
+      'n8n_workflow_validate({id: "wf_abc123", options: {validateExpressions: false}}) - Skip expression validation'
     ],
     useCases: [
       'Validating workflows before running them in production',
@@ -66,6 +66,6 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
       'Profile affects validation time - strict is slower but more thorough',
       'Expression validation may flag working but non-standard syntax'
     ],
-    relatedTools: ['n8n_validate_workflow_json', 'n8n_get_workflow', 'n8n_health_check', 'n8n_autofix_workflow']
+    relatedTools: ['n8n_workflow_json_validate', 'n8n_workflow_get', 'n8n_health_check', 'n8n_workflow_autofix']
   }
 };

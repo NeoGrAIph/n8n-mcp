@@ -304,10 +304,10 @@ describe('TelemetryManager', () => {
 
     it('should track performance metrics', () => {
       const metadata = { operation: 'database_query' };
-      manager.trackPerformanceMetric('n8n_search_nodes', 1500, metadata);
+      manager.trackPerformanceMetric('n8n_nodes_search', 1500, metadata);
 
       expect(mockEventTracker.trackPerformanceMetric).toHaveBeenCalledWith(
-        'n8n_search_nodes',
+        'n8n_nodes_search',
         1500,
         metadata
       );

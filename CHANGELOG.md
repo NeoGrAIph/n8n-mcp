@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Fixed documentation that incorrectly stated connection keys should be "node IDs" when n8n actually requires "node names".
 
 **Problem:**
-The `n8n_create_workflow` documentation and examples showed using node IDs (e.g., `"webhook_1"`) as connection keys, but the validator requires node names (e.g., `"Webhook"`). This caused workflow creation failures and contributed to low success rates for AI-generated workflows.
+The `n8n_workflow_create` documentation and examples showed using node IDs (e.g., `"webhook_1"`) as connection keys, but the validator requires node names (e.g., `"Webhook"`). This caused workflow creation failures and contributed to low success rates for AI-generated workflows.
 
 **Changes:**
 - Updated `tools-n8n-manager.ts` parameter description: "Keys are source node names (the name field, not id)"
@@ -60,7 +60,7 @@ connections: {
 
 **mcpTrigger Nodes No Longer Incorrectly Flagged as "Disconnected" (Issue #503)**
 
-Fixed a validation bug where `mcpTrigger` nodes were incorrectly flagged as "disconnected nodes" when using `n8n_update_partial_workflow` or `n8n_update_full_workflow`. This blocked ALL updates to MCP server workflows.
+Fixed a validation bug where `mcpTrigger` nodes were incorrectly flagged as "disconnected nodes" when using `n8n_workflow_update_partial` or `n8n_workflow_update_full`. This blocked ALL updates to MCP server workflows.
 
 **Root Cause:**
 The `validateWorkflowStructure()` function only checked `main` connections when building the connected nodes set, ignoring AI connection types (`ai_tool`, `ai_languageModel`, `ai_memory`, `ai_embedding`, `ai_vectorStore`). Additionally, trigger nodes were only checked for outgoing connections, but `mcpTrigger` only receives inbound `ai_tool` connections.
@@ -236,7 +236,7 @@ Added validation to detect when base nodes are incorrectly used as AI tools when
 
 - **New Validation**: `validateAIToolSource()` detects base nodes (e.g., `n8n-nodes-base.supabase`) connected via `ai_tool` output when a Tool variant exists
 - **Clear Error Messages**: Returns actionable error with `WRONG_NODE_TYPE_FOR_AI_TOOL` code explaining which Tool variant to use
-- **Auto-Fix Support**: New `tool-variant-correction` fix type in `n8n_autofix_workflow` automatically replaces base nodes with their Tool variants
+- **Auto-Fix Support**: New `tool-variant-correction` fix type in `n8n_workflow_autofix` automatically replaces base nodes with their Tool variants
 - **High Confidence Fixes**: Tool variant corrections are marked as high confidence since the correct type is known
 
 **New Utility Method:**
@@ -293,7 +293,7 @@ Added comprehensive support for n8n Tool variants - specialized node versions cr
 - `src/services/tool-variant-generator.ts` - **NEW** Tool variant generation service
 - `src/database/node-repository.ts` - Store/retrieve Tool variant fields
 - `src/scripts/rebuild.ts` - Generate Tool variants during rebuild
-- `src/mcp/server.ts` - Add `toolVariantInfo` to n8n_get_node responses
+- `src/mcp/server.ts` - Add `toolVariantInfo` to n8n_node_get responses
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
 
@@ -305,15 +305,15 @@ Added comprehensive support for n8n Tool variants - specialized node versions cr
 
 Optimized 4 workflow management tools to return minimal responses instead of full workflow objects, reducing token usage by 75-90%:
 
-- **n8n_update_partial_workflow**: Returns `{id, name, active, nodeCount, operationsApplied}` instead of full workflow
-- **n8n_create_workflow**: Returns `{id, name, active, nodeCount}` instead of full workflow
-- **n8n_update_full_workflow**: Returns `{id, name, active, nodeCount}` instead of full workflow
-- **n8n_delete_workflow**: Returns `{id, name, deleted: true}` instead of full deleted workflow
+- **n8n_workflow_update_partial**: Returns `{id, name, active, nodeCount, operationsApplied}` instead of full workflow
+- **n8n_workflow_create**: Returns `{id, name, active, nodeCount}` instead of full workflow
+- **n8n_workflow_update_full**: Returns `{id, name, active, nodeCount}` instead of full workflow
+- **n8n_workflow_delete**: Returns `{id, name, deleted: true}` instead of full deleted workflow
 
 **Impact**:
 - ~75-90% reduction in response token usage per operation
-- Messages now guide AI agents to use `n8n_get_workflow` with mode 'structure' if verification needed
-- No functional changes - full workflow data still available via `n8n_get_workflow`
+- Messages now guide AI agents to use `n8n_workflow_get` with mode 'structure' if verification needed
+- No functional changes - full workflow data still available via `n8n_workflow_get`
 
 **Files Modified**:
 - `src/mcp/handlers-workflow-diff.ts` - Optimized partial update response
@@ -343,11 +343,11 @@ Optimized 4 workflow management tools to return minimal responses instead of ful
 
 **Multi-tenant: handleValidateWorkflow missing context parameter (#474)**
 
-Fixed `n8n_validate_workflow` tool failing in multi-tenant mode with error:
+Fixed `n8n_workflow_validate` tool failing in multi-tenant mode with error:
 `"n8n API not configured. Please set N8N_API_URL and N8N_API_KEY environment variables."`
 
 - **Root Cause**: `handleValidateWorkflow` called `handleGetWorkflow` without passing the `context` parameter
-- **Impact**: Multi-tenant deployments could not use the `n8n_validate_workflow` tool
+- **Impact**: Multi-tenant deployments could not use the `n8n_workflow_validate` tool
 - **Solution**: Pass `context` parameter to `handleGetWorkflow` call (line 987)
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
@@ -396,7 +396,7 @@ Fixed test expectations to match v2.28.5 implementation changes:
 
 **Version-Aware Settings Filtering for n8n API Compatibility (#464, #465, #466)**
 
-Fixed `"Invalid request: request/body must NOT have additional properties"` errors when using `n8n_update_partial_workflow` with older n8n instances.
+Fixed `"Invalid request: request/body must NOT have additional properties"` errors when using `n8n_workflow_update_partial` with older n8n instances.
 
 - **Root Cause**: n8n Public API uses strict JSON schema validation. Different n8n versions support different workflow settings properties:
   - All versions: 7 core properties (saveExecutionProgress, saveManualExecutions, saveDataErrorExecution, saveDataSuccessExecution, executionTimeout, errorWorkflow, timezone)
@@ -465,7 +465,7 @@ N8N_MCP_MAX_SESSIONS=1000
 
 ### Bug Fixes
 
-**n8n_test_workflow: webhookId Resolution**
+**n8n_workflow_test: webhookId Resolution**
 
 Fixed critical bug where trigger handlers used `node.id` instead of `node.webhookId` for building webhook URLs. This caused chat/form/webhook triggers to fail with 404 errors when nodes had custom IDs.
 
@@ -473,7 +473,7 @@ Fixed critical bug where trigger handlers used `node.id` instead of `node.webhoo
 - **Fix**: Added `webhookId` to `WorkflowNode` type and updated priority: `params.path` > `webhookId` > `node.id`
 - **Files**: `src/triggers/trigger-detector.ts`, `src/types/n8n-api.ts`
 
-**n8n_test_workflow: Chat Trigger URL Pattern**
+**n8n_workflow_test: Chat Trigger URL Pattern**
 
 Fixed chat triggers using wrong URL pattern. n8n chat triggers require `/webhook/<id>/chat` suffix.
 
@@ -481,7 +481,7 @@ Fixed chat triggers using wrong URL pattern. n8n chat triggers require `/webhook
 - **Fix**: Chat triggers now correctly use `/webhook/<webhookId>/chat` endpoint
 - **Files**: `src/triggers/trigger-detector.ts:284-289`
 
-**n8n_test_workflow: Form Trigger Content-Type**
+**n8n_workflow_test: Form Trigger Content-Type**
 
 Fixed form triggers failing with "Expected multipart/form-data" error.
 
@@ -503,7 +503,7 @@ Enhanced form handler to support all n8n form field types with intelligent handl
 
 ```javascript
 // Example with all field types
-n8n_test_workflow({
+n8n_workflow_test({
   workflowId: "abc123",
   data: {
     "field-0": "text value",
@@ -541,9 +541,9 @@ Fixed false positive "AI Agent has no tools connected" warning when tools were p
 
 ### ✨ Enhancements
 
-**n8n_get_node: expectedFormat for resourceLocator Properties**
+**n8n_node_get: expectedFormat for resourceLocator Properties**
 
-Added `expectedFormat` field to resourceLocator properties in `n8n_get_node` output. This helps AI models understand the correct format for these complex property types.
+Added `expectedFormat` field to resourceLocator properties in `n8n_node_get` output. This helps AI models understand the correct format for these complex property types.
 
 ```json
 {
@@ -557,9 +557,9 @@ Added `expectedFormat` field to resourceLocator properties in `n8n_get_node` out
 }
 ```
 
-**n8n_get_node: versionNotice Field**
+**n8n_node_get: versionNotice Field**
 
-Added `versionNotice` field to make typeVersion more prominent in n8n_get_node output, reducing the chance of AI models using outdated versions.
+Added `versionNotice` field to make typeVersion more prominent in n8n_node_get output, reducing the chance of AI models using outdated versions.
 
 ```json
 {
@@ -574,9 +574,9 @@ Added `versionNotice` field to make typeVersion more prominent in n8n_get_node o
 
 ### ✨ Features
 
-**n8n_test_workflow: Unified Workflow Trigger Tool**
+**n8n_workflow_test: Unified Workflow Trigger Tool**
 
-Replaced `n8n_trigger_webhook_workflow` with a new unified `n8n_test_workflow` tool that supports multiple trigger types with auto-detection.
+Replaced `n8n_trigger_webhook_workflow` with a new unified `n8n_workflow_test` tool that supports multiple trigger types with auto-detection.
 
 #### Key Features
 
@@ -603,10 +603,10 @@ Replaced `n8n_trigger_webhook_workflow` with a new unified `n8n_test_workflow` t
 
 ```javascript
 // Auto-detect trigger type (recommended)
-n8n_test_workflow({workflowId: "123"})
+n8n_workflow_test({workflowId: "123"})
 
 // Webhook with data
-n8n_test_workflow({
+n8n_workflow_test({
   workflowId: "123",
   triggerType: "webhook",
   httpMethod: "POST",
@@ -614,7 +614,7 @@ n8n_test_workflow({
 })
 
 // Chat trigger
-n8n_test_workflow({
+n8n_workflow_test({
   workflowId: "123",
   triggerType: "chat",
   message: "Hello AI assistant",
@@ -622,7 +622,7 @@ n8n_test_workflow({
 })
 
 // Form submission
-n8n_test_workflow({
+n8n_workflow_test({
   workflowId: "123",
   triggerType: "form",
   data: {email: "test@example.com", name: "Test User"}
@@ -632,7 +632,7 @@ n8n_test_workflow({
 #### Breaking Changes
 
 - **Removed**: `n8n_trigger_webhook_workflow` tool
-- **Replaced by**: `n8n_test_workflow` with enhanced capabilities
+- **Replaced by**: `n8n_workflow_test` with enhanced capabilities
 - **Migration**: Change tool name and add `workflowId` parameter (previously `webhookUrl`)
 
 #### Technical Details
@@ -660,7 +660,7 @@ n8n_test_workflow({
 
 ### ✨ Enhanced Features
 
-**n8n_deploy_template: Deploy-First with Auto-Fix**
+**n8n_template_deploy: Deploy-First with Auto-Fix**
 
 Improved the template deployment tool to deploy first, then automatically fix common issues. This change dramatically improves deployment success rates for templates with expression format issues.
 
@@ -684,13 +684,13 @@ Improved the template deployment tool to deploy first, then automatically fix co
 
 ```javascript
 // Deploy with auto-fix (default behavior)
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2776,
   name: "My Workflow"
 })
 
 // Deploy without auto-fix (not recommended)
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2776,
   autoFix: false
 })
@@ -730,7 +730,7 @@ n8n_deploy_template({
 
 **Issue #454: Docker Image Missing Zod Fix from #450**
 
-Fixed Docker image build that was missing the pinned MCP SDK version, causing `n8n_create_workflow` Zod validation errors to persist in the 2.27.0 Docker image.
+Fixed Docker image build that was missing the pinned MCP SDK version, causing `n8n_workflow_create` Zod validation errors to persist in the 2.27.0 Docker image.
 
 #### Root Cause
 
@@ -748,7 +748,7 @@ The Docker runtime stage uses `package.runtime.json` (not `package.json`), and t
 #### Impact
 
 - Docker images now include the correct MCP SDK version with Zod fix
-- `n8n_create_workflow` and other workflow tools work correctly in Docker deployments
+- `n8n_workflow_create` and other workflow tools work correctly in Docker deployments
 - No changes to functionality - this is a build configuration fix
 
 Fixes #454
@@ -759,7 +759,7 @@ Fixes #454
 
 ### ✨ Features
 
-**n8n_deploy_template Tool**
+**n8n_template_deploy Tool**
 
 Added new tool for one-click deployment of n8n.io workflow templates directly to your n8n instance.
 
@@ -774,7 +774,7 @@ Added new tool for one-click deployment of n8n.io workflow templates directly to
 #### Usage
 
 ```javascript
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2639,           // Required: template ID from n8n.io
   name: "My Custom Name",     // Optional: custom workflow name
   autoUpgradeVersions: true,  // Default: upgrade node versions
@@ -795,7 +795,7 @@ n8n_deploy_template({
   - Cleaned up consolidation comments in index.ts
   - Documentation now starts directly with functional content for better AI agent efficiency
   - Estimated savings: ~128 tokens per full documentation request
-  - Affected tools: `n8n_get_node`, `n8n_validate_node`, `n8n_search_templates`, `n8n_executions`, `n8n_get_workflow`, `n8n_update_partial_workflow`
+  - Affected tools: `n8n_node_get`, `n8n_node_validate`, `n8n_templates_search`, `n8n_executions`, `n8n_workflow_get`, `n8n_workflow_update_partial`
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
 
@@ -819,13 +819,13 @@ n8n_deploy_template({
   - Added missing `n8n_workflow_versions` documentation with all 6 modes (list, get, rollback, delete, prune, truncate)
   - Removed non-existent tools (`n8n_diagnostic`, `n8n_list_available_tools`) from documentation exports
   - Fixed 10+ outdated tool name references:
-    - `get_node_essentials` → `n8n_get_node({detail: "standard"})`
-    - `validate_node_operation` → `n8n_validate_node()`
-    - `get_minimal` → `n8n_get_workflow({mode: "minimal"})`
+    - `get_node_essentials` → `n8n_node_get({detail: "standard"})`
+    - `validate_node_operation` → `n8n_node_validate()`
+    - `get_minimal` → `n8n_workflow_get({mode: "minimal"})`
   - Added missing `mode` and `verbose` parameters to `n8n_health_check` documentation
-  - Added missing `mode` parameter to `n8n_get_template` documentation (nodes_only, structure, full)
-  - Updated template count from "399+" to "2,700+" in `n8n_get_template`
-  - Updated node count from "525" to "500+" in `n8n_search_nodes`
+  - Added missing `mode` parameter to `n8n_template_get` documentation (nodes_only, structure, full)
+  - Updated template count from "399+" to "2,700+" in `n8n_template_get`
+  - Updated node count from "525" to "500+" in `n8n_nodes_search`
   - Fixed `relatedTools` arrays to remove references to non-existent tools
 
 **Conceived by Romuald Członkowski - [AiAdvisors](https://www.aiadvisors.pl/en)**
@@ -836,11 +836,11 @@ n8n_deploy_template({
 
 - **Tool Documentation Cleanup**: Synchronized `tool-docs/` with v2.26.0 tool consolidation
   - Deleted 23 obsolete documentation files for removed tools (get_node_info, get_node_essentials, validate_node_operation, etc.)
-  - Created consolidated documentation for `n8n_get_node` (covers all modes: info, docs, search_properties, versions, compare, breaking, migrations)
-  - Created consolidated documentation for `n8n_validate_node` (covers modes: full, minimal; profiles: minimal, runtime, ai-friendly, strict)
+  - Created consolidated documentation for `n8n_node_get` (covers all modes: info, docs, search_properties, versions, compare, breaking, migrations)
+  - Created consolidated documentation for `n8n_node_validate` (covers modes: full, minimal; profiles: minimal, runtime, ai-friendly, strict)
   - Created consolidated documentation for `n8n_executions` (covers actions: get, list, delete)
-  - Updated `n8n_search_templates` documentation with all searchModes (keyword, by_nodes, by_task, by_metadata)
-  - Updated `n8n_get_workflow` documentation with all modes (full, details, structure, minimal)
+  - Updated `n8n_templates_search` documentation with all searchModes (keyword, by_nodes, by_task, by_metadata)
+  - Updated `n8n_workflow_get` documentation with all modes (full, details, structure, minimal)
   - Fixed stale `relatedTools` references pointing to removed tools
   - Updated `tools-documentation.ts` overview to accurately reflect 19 consolidated tools
 
@@ -866,9 +866,9 @@ Major consolidation of MCP tools from 31 tools to 19 tools, using mode-based par
 
 #### Consolidated Tools
 
-**1. Node Tools - `n8n_get_node` Enhanced**
+**1. Node Tools - `n8n_node_get` Enhanced**
 
-The `n8n_get_node` tool now supports additional modes:
+The `n8n_node_get` tool now supports additional modes:
 - `mode='docs'`: Replaces `get_node_documentation` - returns readable docs with examples
 - `mode='search_properties'`: Replaces `search_node_properties` - search within node properties
 
@@ -876,17 +876,17 @@ The `n8n_get_node` tool now supports additional modes:
 // Old: get_node_documentation
 get_node_documentation({nodeType: "nodes-base.slack"})
 // New: mode='docs'
-n8n_get_node({nodeType: "nodes-base.slack", mode: "docs"})
+n8n_node_get({nodeType: "nodes-base.slack", mode: "docs"})
 
 // Old: search_node_properties
 search_node_properties({nodeType: "nodes-base.httpRequest", query: "auth"})
 // New: mode='search_properties'
-n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})
+n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})
 ```
 
-**2. Validation Tools - `n8n_validate_node` Unified**
+**2. Validation Tools - `n8n_node_validate` Unified**
 
-Consolidated `validate_node_operation` and `validate_node_minimal` into single `n8n_validate_node`:
+Consolidated `validate_node_operation` and `validate_node_minimal` into single `n8n_node_validate`:
 - `mode='full'`: Full validation (replaces `validate_node_operation`)
 - `mode='minimal'`: Quick required fields check (replaces `validate_node_minimal`)
 
@@ -894,18 +894,18 @@ Consolidated `validate_node_operation` and `validate_node_minimal` into single `
 // Old: validate_node_operation
 validate_node_operation({nodeType: "nodes-base.slack", config: {...}})
 // New: mode='full' (default)
-n8n_validate_node({nodeType: "nodes-base.slack", config: {...}, mode: "full"})
+n8n_node_validate({nodeType: "nodes-base.slack", config: {...}, mode: "full"})
 
 // Old: validate_node_minimal
 validate_node_minimal({nodeType: "nodes-base.slack", config: {}})
 // New: mode='minimal'
-n8n_validate_node({nodeType: "nodes-base.slack", config: {}, mode: "minimal"})
+n8n_node_validate({nodeType: "nodes-base.slack", config: {}, mode: "minimal"})
 ```
 
-**3. Template Tools - `n8n_search_templates` Enhanced**
+**3. Template Tools - `n8n_templates_search` Enhanced**
 
 Consolidated `list_node_templates`, `search_templates_by_metadata`, and `get_templates_for_task`:
-- `searchMode='keyword'`: Search by keywords (default, was `n8n_search_templates`)
+- `searchMode='keyword'`: Search by keywords (default, was `n8n_templates_search`)
 - `searchMode='by_nodes'`: Search by node types (was `list_node_templates`)
 - `searchMode='by_metadata'`: Search by AI metadata (was `search_templates_by_metadata`)
 - `searchMode='by_task'`: Search by task type (was `get_templates_for_task`)
@@ -914,32 +914,32 @@ Consolidated `list_node_templates`, `search_templates_by_metadata`, and `get_tem
 // Old: list_node_templates
 list_node_templates({nodeTypes: ["n8n-nodes-base.httpRequest"]})
 // New: searchMode='by_nodes'
-n8n_search_templates({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest"]})
+n8n_templates_search({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest"]})
 
 // Old: get_templates_for_task
 get_templates_for_task({task: "webhook_processing"})
 // New: searchMode='by_task'
-n8n_search_templates({searchMode: "by_task", task: "webhook_processing"})
+n8n_templates_search({searchMode: "by_task", task: "webhook_processing"})
 ```
 
-**4. Workflow Getters - `n8n_get_workflow` Enhanced**
+**4. Workflow Getters - `n8n_workflow_get` Enhanced**
 
-Consolidated `n8n_get_workflow_details`, `n8n_get_workflow_structure`, `n8n_get_workflow_minimal`:
+Consolidated `n8n_workflow_get_details`, `n8n_workflow_get_structure`, `n8n_workflow_get_minimal`:
 - `mode='full'`: Complete workflow data (default)
-- `mode='details'`: Workflow with metadata (was `n8n_get_workflow_details`)
-- `mode='structure'`: Nodes and connections only (was `n8n_get_workflow_structure`)
-- `mode='minimal'`: ID, name, active status (was `n8n_get_workflow_minimal`)
+- `mode='details'`: Workflow with metadata (was `n8n_workflow_get_details`)
+- `mode='structure'`: Nodes and connections only (was `n8n_workflow_get_structure`)
+- `mode='minimal'`: ID, name, active status (was `n8n_workflow_get_minimal`)
 
 ```javascript
-// Old: n8n_get_workflow_details
-n8n_get_workflow_details({id: "123"})
+// Old: n8n_workflow_get_details
+n8n_workflow_get_details({id: "123"})
 // New: mode='details'
-n8n_get_workflow({id: "123", mode: "details"})
+n8n_workflow_get({id: "123", mode: "details"})
 
-// Old: n8n_get_workflow_minimal
-n8n_get_workflow_minimal({id: "123"})
+// Old: n8n_workflow_get_minimal
+n8n_workflow_get_minimal({id: "123"})
 // New: mode='minimal'
-n8n_get_workflow({id: "123", mode: "minimal"})
+n8n_workflow_get({id: "123", mode: "minimal"})
 ```
 
 **5. Execution Tools - `n8n_executions` Unified**
@@ -969,17 +969,17 @@ n8n_executions({action: "delete", id: "456"})
 ### 🗑️ Removed Tools
 
 The following tools have been removed (use consolidated equivalents):
-- `get_node_documentation` → `n8n_get_node` with `mode='docs'`
-- `search_node_properties` → `n8n_get_node` with `mode='search_properties'`
-- `get_property_dependencies` → Removed (use `n8n_validate_node` for dependency info)
-- `validate_node_operation` → `n8n_validate_node` with `mode='full'`
-- `validate_node_minimal` → `n8n_validate_node` with `mode='minimal'`
-- `list_node_templates` → `n8n_search_templates` with `searchMode='by_nodes'`
-- `search_templates_by_metadata` → `n8n_search_templates` with `searchMode='by_metadata'`
-- `get_templates_for_task` → `n8n_search_templates` with `searchMode='by_task'`
-- `n8n_get_workflow_details` → `n8n_get_workflow` with `mode='details'`
-- `n8n_get_workflow_structure` → `n8n_get_workflow` with `mode='structure'`
-- `n8n_get_workflow_minimal` → `n8n_get_workflow` with `mode='minimal'`
+- `get_node_documentation` → `n8n_node_get` with `mode='docs'`
+- `search_node_properties` → `n8n_node_get` with `mode='search_properties'`
+- `get_property_dependencies` → Removed (use `n8n_node_validate` for dependency info)
+- `validate_node_operation` → `n8n_node_validate` with `mode='full'`
+- `validate_node_minimal` → `n8n_node_validate` with `mode='minimal'`
+- `list_node_templates` → `n8n_templates_search` with `searchMode='by_nodes'`
+- `search_templates_by_metadata` → `n8n_templates_search` with `searchMode='by_metadata'`
+- `get_templates_for_task` → `n8n_templates_search` with `searchMode='by_task'`
+- `n8n_workflow_get_details` → `n8n_workflow_get` with `mode='details'`
+- `n8n_workflow_get_structure` → `n8n_workflow_get` with `mode='structure'`
+- `n8n_workflow_get_minimal` → `n8n_workflow_get` with `mode='minimal'`
 - `n8n_list_executions` → `n8n_executions` with `action='list'`
 - `n8n_get_execution` → `n8n_executions` with `action='get'`
 - `n8n_delete_execution` → `n8n_executions` with `action='delete'`
@@ -1074,7 +1074,7 @@ Added export/restore functionality for MCP sessions to enable zero-downtime depl
 
 **Unified Node Information Tool**
 
-Introduced `n8n_get_node` - a unified tool that consolidates and enhances node information retrieval with multiple detail levels, version history, and type structure metadata.
+Introduced `n8n_node_get` - a unified tool that consolidates and enhances node information retrieval with multiple detail levels, version history, and type structure metadata.
 
 #### What's New
 
@@ -1106,22 +1106,22 @@ Introduced `n8n_get_node` - a unified tool that consolidates and enhances node i
 
 ```javascript
 // Standard detail (recommended for AI agents)
-n8n_get_node({nodeType: "nodes-base.httpRequest"})
+n8n_node_get({nodeType: "nodes-base.httpRequest"})
 
 // Standard with type info
-n8n_get_node({nodeType: "nodes-base.httpRequest", includeTypeInfo: true})
+n8n_node_get({nodeType: "nodes-base.httpRequest", includeTypeInfo: true})
 
 // Minimal (quick metadata check)
-n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "minimal"})
+n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "minimal"})
 
 // Full detail with examples
-n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "full", includeExamples: true})
+n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "full", includeExamples: true})
 
 // Version history
-n8n_get_node({nodeType: "nodes-base.httpRequest", mode: "versions"})
+n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "versions"})
 
 // Compare versions
-n8n_get_node({
+n8n_node_get({
   nodeType: "nodes-base.httpRequest",
   mode: "compare",
   fromVersion: "3.0",
@@ -1152,23 +1152,23 @@ n8n_get_node({
 
 **Removed Deprecated Tools**
 
-Immediately removed `get_node_info` and `get_node_essentials` in favor of the unified `n8n_get_node` tool:
-- `get_node_info` → Use `n8n_get_node` with `detail='full'`
-- `get_node_essentials` → Use `n8n_get_node` with `detail='standard'` (default)
+Immediately removed `get_node_info` and `get_node_essentials` in favor of the unified `n8n_node_get` tool:
+- `get_node_info` → Use `n8n_node_get` with `detail='full'`
+- `get_node_essentials` → Use `n8n_node_get` with `detail='standard'` (default)
 
 **Migration:**
 ```javascript
 // Old
 get_node_info({nodeType: "nodes-base.httpRequest"})
 // New
-n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "full"})
+n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "full"})
 
 // Old
 get_node_essentials({nodeType: "nodes-base.httpRequest", includeExamples: true})
 // New
-n8n_get_node({nodeType: "nodes-base.httpRequest", includeExamples: true})
+n8n_node_get({nodeType: "nodes-base.httpRequest", includeExamples: true})
 // or
-n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
+n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
 ```
 
 ### 📊 Impact
@@ -1193,7 +1193,7 @@ n8n_get_node({nodeType: "nodes-base.httpRequest", detail: "standard", includeExa
 - Enhanced type structure exposure in node information
 
 **Files Modified:**
-- `src/mcp/tools.ts` - Removed get_node_info and get_node_essentials, added n8n_get_node
+- `src/mcp/tools.ts` - Removed get_node_info and get_node_essentials, added n8n_node_get
 - `src/mcp/server.ts` - Added unified getNode() implementation with all modes
 - `package.json` - Version bump to 2.24.0
 
@@ -1382,7 +1382,7 @@ Conceived by Romuald Członkowski - https://www.aiadvisors.pl/en
 
 **Fix Empty Settings Object Validation Error (#431)**
 
-Fixed critical bug where `n8n_update_partial_workflow` tool failed with "request/body must NOT have additional properties" error when workflows had no settings or only non-whitelisted settings properties.
+Fixed critical bug where `n8n_workflow_update_partial` tool failed with "request/body must NOT have additional properties" error when workflows had no settings or only non-whitelisted settings properties.
 
 #### Root Cause
 - `cleanWorkflowForUpdate()` in `src/services/n8n-validation.ts` was sending empty `settings: {}` objects to the n8n API
@@ -1550,7 +1550,7 @@ Added comprehensive telemetry tracking for workflow mutations to enable more con
 #### Key Improvements
 
 1. **Intent Parameter for Better Context**
-   - Added `intent` parameter to `n8n_update_full_workflow` and `n8n_update_partial_workflow` tools
+   - Added `intent` parameter to `n8n_workflow_update_full` and `n8n_workflow_update_partial` tools
    - Captures user's goals and reasoning behind workflow changes
    - Example: "Add error handling for API failures" or "Migrate to new node versions"
    - Helps AI provide more relevant and context-aware responses
@@ -1682,7 +1682,7 @@ DISABLED_TOOLS=n8n_diagnostic,n8n_health_check
 **Security hardening:**
 ```bash
 # Disable destructive management tools
-DISABLED_TOOLS=n8n_delete_workflow,n8n_update_full_workflow
+DISABLED_TOOLS=n8n_workflow_delete,n8n_workflow_update_full
 ```
 
 **Feature flags:**
@@ -1941,7 +1941,7 @@ Fixed cryptic error message when users mistakenly use `changes` instead of `upda
 
 #### Problem
 
-Users who mistakenly used `changes` instead of `updates` in `n8n_update_partial_workflow` updateNode operations encountered a cryptic error:
+Users who mistakenly used `changes` instead of `updates` in `n8n_workflow_update_partial` updateNode operations encountered a cryptic error:
 
 ```
 Diff engine error: Cannot read properties of undefined (reading 'name')
@@ -2053,7 +2053,7 @@ Conceived by Romuald Członkowski - [www.aiadvisors.pl/en](https://www.aiadvisor
 
 **Issue #399: Workflow Activation via Diff Operations**
 
-Added workflow activation and deactivation as diff operations in `n8n_update_partial_workflow`, using n8n's dedicated API endpoints.
+Added workflow activation and deactivation as diff operations in `n8n_workflow_update_partial`, using n8n's dedicated API endpoints.
 
 #### Problem
 
@@ -2101,7 +2101,7 @@ Implemented activation/deactivation as diff operations, following the establishe
 
 ```javascript
 // Activate workflow
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [{
     type: "activateWorkflow"
@@ -2109,7 +2109,7 @@ n8n_update_partial_workflow({
 })
 
 // Deactivate workflow
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [{
     type: "deactivateWorkflow"
@@ -2117,7 +2117,7 @@ n8n_update_partial_workflow({
 })
 
 // Combine with other operations
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [
     {type: "updateNode", nodeId: "abc", updates: {name: "Updated"}},
@@ -2295,7 +2295,7 @@ Conceived by Romuald Członkowski - https://www.aiadvisors.pl/en
 
 ### 📝 Documentation Fixes
 
-**Issue #292: Corrected Array Property Removal Documentation in n8n_update_partial_workflow**
+**Issue #292: Corrected Array Property Removal Documentation in n8n_workflow_update_partial**
 
 Fixed critical documentation error in property removal patterns that could have led users to write non-functional code.
 
@@ -2332,7 +2332,7 @@ updates: { "parameters.headers[0]": undefined }
 **To remove an array property:**
 ```javascript
 // Correct: Remove entire array
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "wf_012",
   operations: [{
     type: "updateNode",
@@ -2631,7 +2631,7 @@ Fixed issue where users could unintentionally place multiple If node connections
    - Explains the correct branch structure: `main[0]=TRUE branch, main[1]=FALSE branch`
 
 2. **Enhanced Documentation**:
-   - Added **CRITICAL** pitfalls to `n8n_update_partial_workflow` tool documentation
+   - Added **CRITICAL** pitfalls to `n8n_workflow_update_partial` tool documentation
    - Clear guidance that using `sourceIndex=0` for multiple connections puts them ALL on the TRUE branch
    - Examples showing correct vs. incorrect usage
 
@@ -2715,17 +2715,17 @@ Added comprehensive node version upgrade functionality to the autofixer, enablin
 
 ```typescript
 // Preview all fixes including version upgrades
-n8n_autofix_workflow({id: "wf_123"})
+n8n_workflow_autofix({id: "wf_123"})
 
 // Only upgrade versions with smart migrations
-n8n_autofix_workflow({
+n8n_workflow_autofix({
   id: "wf_123",
   fixTypes: ["typeversion-upgrade"],
   applyFixes: true
 })
 
 // Get migration guidance for breaking changes
-n8n_autofix_workflow({
+n8n_workflow_autofix({
   id: "wf_123",
   fixTypes: ["version-migration"]
 })
@@ -2789,7 +2789,7 @@ Added comprehensive workflow versioning, backup, and rollback capabilities with 
 
 ```typescript
 // Automatic backups (default behavior)
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "wf_123",
   operations: [...]
   // createBackup: true is default
@@ -2840,9 +2840,9 @@ n8n_workflow_versions({
 
 #### Integration Points
 
-- `n8n_update_partial_workflow`: Automatic backup before diff operations
-- `n8n_update_full_workflow`: Automatic backup before full replacement
-- `n8n_autofix_workflow`: Automatic backup with fix types metadata
+- `n8n_workflow_update_partial`: Automatic backup before diff operations
+- `n8n_workflow_update_full`: Automatic backup before full replacement
+- `n8n_workflow_autofix`: Automatic backup with fix types metadata
 - `n8n_workflow_versions`: Unified rollback/cleanup interface (6 modes)
 
 **Conceived by Romuald Członkowski - [www.aiadvisors.pl/en](https://www.aiadvisors.pl/en)**
@@ -2853,11 +2853,11 @@ n8n_workflow_versions({
 
 **Issue #357: Fix AI Node Connection Validation in Partial Workflow Updates**
 
-Fixed critical validation issue where `n8n_update_partial_workflow` incorrectly required `main` connections for AI nodes that exclusively use AI-specific connection types (`ai_languageModel`, `ai_memory`, `ai_embedding`, `ai_vectorStore`, `ai_tool`).
+Fixed critical validation issue where `n8n_workflow_update_partial` incorrectly required `main` connections for AI nodes that exclusively use AI-specific connection types (`ai_languageModel`, `ai_memory`, `ai_embedding`, `ai_vectorStore`, `ai_tool`).
 
 #### Problem
 
-Workflows containing AI nodes (OpenAI Chat Model, Postgres Chat Memory, Embeddings OpenAI, Supabase Vector Store) could not be updated via `n8n_update_partial_workflow`, even for trivial changes to unrelated nodes. The validation logic incorrectly expected ALL nodes to have `main` connections, causing false positive errors:
+Workflows containing AI nodes (OpenAI Chat Model, Postgres Chat Memory, Embeddings OpenAI, Supabase Vector Store) could not be updated via `n8n_workflow_update_partial`, even for trivial changes to unrelated nodes. The validation logic incorrectly expected ALL nodes to have `main` connections, causing false positive errors:
 
 ```
 Invalid connections: [
@@ -2938,13 +2938,13 @@ export const workflowConnectionSchema = z.record(
 #### Testing
 
 **Before Fix**:
-- ❌ `n8n_validate_workflow`: Returns `valid: true` (correct)
-- ❌ `n8n_update_partial_workflow`: FAILS with "main connections required" errors
+- ❌ `n8n_workflow_validate`: Returns `valid: true` (correct)
+- ❌ `n8n_workflow_update_partial`: FAILS with "main connections required" errors
 - ❌ Cannot update workflows containing AI nodes at all
 
 **After Fix**:
-- ✅ `n8n_validate_workflow`: Returns `valid: true` (still correct)
-- ✅ `n8n_update_partial_workflow`: SUCCEEDS without validation errors
+- ✅ `n8n_workflow_validate`: Returns `valid: true` (still correct)
+- ✅ `n8n_workflow_update_partial`: SUCCEEDS without validation errors
 - ✅ AI nodes correctly recognized with AI-specific connection types only
 - ✅ All 13 new integration tests passing
 - ✅ Tested with actual workflow `019Vrw56aROeEzVj` from issue #357
@@ -2957,9 +2957,9 @@ export const workflowConnectionSchema = z.record(
 - Validation now correctly matches n8n's actual connection model
 
 **Fixes**:
-- Users can now update AI workflows via `n8n_update_partial_workflow`
+- Users can now update AI workflows via `n8n_workflow_update_partial`
 - AI nodes no longer generate false positive validation errors
-- Consistent validation between `n8n_validate_workflow` and `n8n_update_partial_workflow`
+- Consistent validation between `n8n_workflow_validate` and `n8n_workflow_update_partial`
 
 #### Files Changed
 
@@ -2973,7 +2973,7 @@ export const workflowConnectionSchema = z.record(
 
 #### References
 
-- **Issue**: #357 - n8n_update_partial_workflow incorrectly validates AI nodes requiring 'main' connections
+- **Issue**: #357 - n8n_workflow_update_partial incorrectly validates AI nodes requiring 'main' connections
 - **Workflow**: `019Vrw56aROeEzVj` (WOO_Workflow_21_POST_Chat_Send_AI_Agent)
 - **Investigation**: Deep code analysis by Explore agent identified exact root cause in Zod schema
 - **Confirmation**: n8n-mcp-tester agent verified fix with real workflow
@@ -2986,7 +2986,7 @@ Conceived by Romuald Członkowski - [www.aiadvisors.pl/en](https://www.aiadvisor
 
 **Issue #353: Auto-Update Connection References on Node Rename**
 
-Enhanced `n8n_update_partial_workflow` to automatically update all connection references when renaming nodes, matching n8n UI behavior and eliminating the need for complex manual workarounds.
+Enhanced `n8n_workflow_update_partial` to automatically update all connection references when renaming nodes, matching n8n UI behavior and eliminating the need for complex manual workarounds.
 
 #### Problem
 When renaming a node using the `updateNode` operation, connections still referenced the old node name, causing validation errors:
@@ -3037,7 +3037,7 @@ When you rename a node, **all connection references are automatically updated th
 **Before (v2.20.8 and earlier) - Failed:**
 ```javascript
 // Attempting to rename would fail
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [{
     type: "updateNode",
@@ -3063,7 +3063,7 @@ operations: [
 **After (v2.21.0) - Works Automatically:**
 ```javascript
 // Same operation now succeeds automatically!
-n8n_update_partial_workflow({
+n8n_workflow_update_partial({
   id: "workflow_id",
   operations: [{
     type: "updateNode",
@@ -3632,7 +3632,7 @@ PR #343 (merged 2025-10-21) successfully fixed the MCP protocol error -32600 by 
 - Logs warnings when validation responses exceed 1MB (src/http-server.ts:438-442)
 - Includes actual size in logs for debugging
 - Helps identify performance issues and potential problems
-- **Example:** `Validation tool n8n_validate_workflow_json response is very large (1500000 chars). Truncating for HTTP transport safety.`
+- **Example:** `Validation tool n8n_workflow_json_validate response is very large (1500000 chars). Truncating for HTTP transport safety.`
 
 **4. Response Truncation for Safety**
 - Truncates responses larger than 1MB to 999KB + message (src/http-server.ts:443-444)
@@ -3839,7 +3839,7 @@ Updated 4 tool documentation files to explain auto-sanitization system:
 
 **Issue #331: Prevent Broken Workflows via Partial Updates (Enhanced)**
 
-Fixed critical issue where `n8n_update_partial_workflow` could create corrupted workflows that n8n API accepts but UI cannot render. **Enhanced validation to detect ALL disconnected nodes**, not just workflows with zero connections.
+Fixed critical issue where `n8n_workflow_update_partial` could create corrupted workflows that n8n API accepts but UI cannot render. **Enhanced validation to detect ALL disconnected nodes**, not just workflows with zero connections.
 
 #### Problem
 - Partial workflow updates validated individual operations but not final workflow structure
@@ -5548,7 +5548,7 @@ This release fixes critical bugs that caused ALL AI-specific validation to be si
   - **Root Cause:** Inconsistent `workflowNodeType` construction between result object and examples query
   - **Impact:** Examples existed in database but query used wrong node type (e.g., `n8n-nodes-base.agent` instead of `@n8n/n8n-nodes-langchain.agent`)
   - **Fix:** Use pre-computed `result.workflowNodeType` instead of reconstructing it
-  - **Verification:** Examples now retrieved correctly, matching `n8n_search_nodes` behavior
+  - **Verification:** Examples now retrieved correctly, matching `n8n_nodes_search` behavior
 
 #### Added
 
@@ -6130,7 +6130,7 @@ Phase 0 addressed critical bugs. Future Phase 1 improvements planned:
 ### Fixed
 - **Issue #269: Missing addNode Examples** - Added comprehensive examples for addNode operation in MCP tool documentation
   - Problem: Claude AI didn't know how to use addNode operation correctly due to zero examples in documentation
-  - Solution: Added 4 progressive examples to `n8n_update_partial_workflow` tool documentation:
+  - Solution: Added 4 progressive examples to `n8n_workflow_update_partial` tool documentation:
     1. Basic addNode (minimal configuration)
     2. Complete addNode (full parameters including typeVersion)
     3. addNode + addConnection combo (most common pattern)
@@ -6409,7 +6409,7 @@ get_node_for_task({ task: "receive_webhook" })
 **After (v2.15.0):**
 ```javascript
 // Option 1: Search nodes with examples
-n8n_search_nodes({
+n8n_nodes_search({
   query: "webhook",
   includeExamples: true
 })
@@ -6425,7 +6425,7 @@ get_node_essentials({
 
 ### Added
 
-- **Enhanced `n8n_search_nodes` Tool**
+- **Enhanced `n8n_nodes_search` Tool**
   - New parameter: `includeExamples` (boolean, default: false)
   - Returns top 2 real-world configurations per node from popular templates
   - Includes: configuration, template name, view count
@@ -6462,11 +6462,11 @@ get_node_essentials({
 
 ### Fixed
 
-- **`n8n_search_nodes` includeExamples Support**
+- **`n8n_nodes_search` includeExamples Support**
   - Fixed `includeExamples` parameter not working due to missing FTS5 table
   - Added example support to `searchNodesLIKE` fallback method
   - Now returns template-based examples in all search scenarios
-  - Affects 100% of n8n_search_nodes calls (database lacks nodes_fts table)
+  - Affects 100% of n8n_nodes_search calls (database lacks nodes_fts table)
 
 ### Deprecated
 
@@ -6637,7 +6637,7 @@ get_node_essentials({
 ## [2.14.4] - 2025-09-30
 
 ### Added
-- **Workflow Cleanup Operations**: Two new operations for `n8n_update_partial_workflow`
+- **Workflow Cleanup Operations**: Two new operations for `n8n_workflow_update_partial`
   - `cleanStaleConnections`: Automatically removes connections referencing non-existent nodes
   - `replaceConnections`: Replace entire connections object in a single operation
 - **Graceful Error Handling**: Enhanced `removeConnection` with `ignoreErrors` flag

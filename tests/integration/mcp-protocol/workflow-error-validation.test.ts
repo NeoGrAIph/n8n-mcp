@@ -29,7 +29,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
     await mcpServer.close();
   });
 
-  describe('n8n_validate_workflow_json tool - Error Output Configuration', () => {
+  describe('n8n_workflow_json_validate tool - Error Output Configuration', () => {
     it('should detect incorrect error output configuration via MCP', async () => {
       const workflow = {
         nodes: [
@@ -71,7 +71,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
       };
 
       const response = await client.callTool({
-        name: 'n8n_validate_workflow_json',
+        name: 'n8n_workflow_json_validate',
         arguments: { workflow }
       });
 
@@ -144,7 +144,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
       };
 
       const response = await client.callTool({
-        name: 'n8n_validate_workflow_json',
+        name: 'n8n_workflow_json_validate',
         arguments: { workflow }
       });
 
@@ -238,7 +238,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
 
       for (const workflow of workflows) {
         const response = await client.callTool({
-          name: 'n8n_validate_workflow_json',
+          name: 'n8n_workflow_json_validate',
           arguments: { workflow }
         });
 
@@ -322,7 +322,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
 
       const startTime = Date.now();
       const response = await client.callTool({
-        name: 'n8n_validate_workflow_json',
+        name: 'n8n_workflow_json_validate',
         arguments: { workflow }
       });
       const endTime = Date.now();
@@ -379,7 +379,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
 
       for (const workflow of edgeCaseWorkflows) {
         const response = await client.callTool({
-          name: 'n8n_validate_workflow_json',
+          name: 'n8n_workflow_json_validate',
           arguments: { workflow }
         });
 
@@ -435,7 +435,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
 
       for (const profile of profiles) {
         const response = await client.callTool({
-          name: 'n8n_validate_workflow_json',
+          name: 'n8n_workflow_json_validate',
           arguments: {
             workflow,
             options: { profile }
@@ -498,7 +498,7 @@ describe('MCP Workflow Error Output Validation Integration', () => {
 
       for (const scenario of scenarios) {
         const response = await client.callTool({
-          name: 'n8n_validate_workflow_json',
+          name: 'n8n_workflow_json_validate',
           arguments: { workflow: scenario.workflow }
         });
 

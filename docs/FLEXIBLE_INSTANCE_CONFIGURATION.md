@@ -112,7 +112,7 @@ curl -X POST http://localhost:3000/mcp \
   -H "X-N8n-Key: instance1-api-key" \
   -H "X-Instance-Id: instance-1" \
   -H "X-Session-Id: session-123" \
-  -d '{"method": "n8n_list_workflows", "params": {}, "id": 1}'
+  -d '{"method": "n8n_workflows_list", "params": {}, "id": 1}'
 ```
 
 #### Supported Headers
@@ -145,7 +145,7 @@ const response = await fetch('http://localhost:3000/mcp', {
   method: 'POST',
   headers: headers,
   body: JSON.stringify({
-    method: 'n8n_list_workflows',
+    method: 'n8n_workflows_list',
     params: {},
     id: 1
   })

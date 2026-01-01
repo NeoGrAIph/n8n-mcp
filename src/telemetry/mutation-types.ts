@@ -21,8 +21,8 @@ export enum IntentClassification {
  * Tool names that perform workflow mutations
  */
 export enum MutationToolName {
-  UPDATE_PARTIAL = 'n8n_update_partial_workflow',
-  UPDATE_FULL = 'n8n_update_full_workflow',
+  UPDATE_PARTIAL = 'n8n_workflow_update_partial',
+  UPDATE_FULL = 'n8n_workflow_update_full',
 }
 
 /**

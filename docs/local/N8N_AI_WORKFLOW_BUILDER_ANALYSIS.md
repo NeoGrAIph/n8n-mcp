@@ -75,7 +75,7 @@ n8n Node Type System
 │                                                              │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              7 Builder Tools                         │   │
-│  │  • n8n_search_nodes      • add_nodes                     │   │
+│  │  • n8n_nodes_search      • add_nodes                     │   │
 │  │  • get_node_details  • connect_nodes                 │   │
 │  │  • update_node_parameters  • remove_node             │   │
 │  │  • get_node_parameter                                │   │
@@ -238,7 +238,7 @@ The architecture follows these core principles:
 │ 5. TOOL EXECUTION (Parallel)                                  │
 │                                                               │
 │    Promise.all([                                             │
-│      n8n_search_nodes({queries: [...]}),                         │
+│      n8n_nodes_search({queries: [...]}),                         │
 │      get_node_details({nodeName: "..."}),                    │
 │      // More tools...                                        │
 │    ])                                                         │
@@ -734,7 +734,7 @@ Total Context Window: 200,000 tokens
 
 ## The 7 Builder Tools
 
-### Tool 1: n8n_search_nodes
+### Tool 1: n8n_nodes_search
 
 **Purpose:** Multi-modal search for discovering available node types.
 
@@ -953,7 +953,7 @@ Found 3 nodes matching "http":
 
 ```typescript
 // AI workflow: Discovery → Details → Addition
-1. n8n_search_nodes({queries: [{queryType: "name", query: "http"}]})
+1. n8n_nodes_search({queries: [{queryType: "name", query: "http"}]})
    → Returns: n8n-nodes-base.httpRequest
 
 2. get_node_details({nodeName: "n8n-nodes-base.httpRequest"})
@@ -2280,7 +2280,7 @@ CRITICAL: Do NOT provide commentary between tool calls. Execute tools silently.
 **3. Parallel Execution Guidelines:**
 ```
 ALL tools support parallel execution, including add_nodes
-- Information gathering: Call n8n_search_nodes and get_node_details in parallel
+- Information gathering: Call n8n_nodes_search and get_node_details in parallel
 - Node creation: Add multiple nodes by calling add_nodes multiple times
 - Parameter updates: Update different nodes simultaneously
 ```
@@ -2531,7 +2531,7 @@ async function compactSession(state: WorkflowState) {
 
 ```typescript
 // Sequential execution (slow)
-await n8n_search_nodes();
+await n8n_nodes_search();
 await get_node_details();
 await add_nodes();
 await connect_nodes();
@@ -2539,7 +2539,7 @@ await connect_nodes();
 
 // Parallel execution (fast)
 await Promise.all([
-  n8n_search_nodes(),
+  n8n_nodes_search(),
   get_node_details(),
   add_nodes(),
   connect_nodes()
@@ -2560,7 +2560,7 @@ User sends message: 0ms
 │   ├─ LLM processing: 1800ms
 │   └─ Response parsing: 140ms
 ├─ Tool execution (parallel): 100ms
-│   ├─ n8n_search_nodes: 30ms
+│   ├─ n8n_nodes_search: 30ms
 │   ├─ get_node_details: 40ms
 │   └─ add_nodes: 50ms
 ├─ Process operations: 10ms
@@ -2893,7 +2893,7 @@ const MAX_WORKFLOW_LENGTH_TOKENS = 30_000;   // Workflow JSON limit
 
 ```typescript
 ✅ Good:
-1. n8n_search_nodes({queries: [{queryType: "name", query: "http"}]})
+1. n8n_nodes_search({queries: [{queryType: "name", query: "http"}]})
 2. get_node_details({nodeName: "n8n-nodes-base.httpRequest"})
 3. add_nodes({...})
 

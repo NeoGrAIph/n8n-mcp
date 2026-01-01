@@ -118,7 +118,7 @@ export class EnhancedConfigValidator extends ConfigValidator {
     // Deduplicate errors
     enhancedResult.errors = this.deduplicateErrors(enhancedResult.errors);
     
-    // Examples removed - use n8n_validate_node for configuration guidance
+    // Examples removed - use n8n_node_validate for configuration guidance
     
     // Generate next steps based on errors
     enhancedResult.nextSteps = this.generateNextSteps(enhancedResult);

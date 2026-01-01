@@ -106,7 +106,7 @@ describe('Disabled Tools Additional Coverage (Issue #410)', () => {
   describe('Multi-Tenant Mode Interaction', () => {
     it('should respect DISABLED_TOOLS in multi-tenant mode', () => {
       process.env.ENABLE_MULTI_TENANT = 'true';
-      process.env.DISABLED_TOOLS = 'n8n_delete_workflow,n8n_update_full_workflow';
+      process.env.DISABLED_TOOLS = 'n8n_workflow_delete,n8n_workflow_update_full';
       delete process.env.N8N_API_URL;
       delete process.env.N8N_API_KEY;
 
@@ -114,8 +114,8 @@ describe('Disabled Tools Additional Coverage (Issue #410)', () => {
       const disabledTools = server.testGetDisabledTools();
 
       // Even in multi-tenant mode, disabled tools should be filtered
-      expect(disabledTools.has('n8n_delete_workflow')).toBe(true);
-      expect(disabledTools.has('n8n_update_full_workflow')).toBe(true);
+      expect(disabledTools.has('n8n_workflow_delete')).toBe(true);
+      expect(disabledTools.has('n8n_workflow_update_full')).toBe(true);
       expect(disabledTools.size).toBe(2);
     });
 
@@ -392,9 +392,9 @@ describe('Disabled Tools Additional Coverage (Issue #410)', () => {
     it('should support common security hardening scenario', () => {
       // Disable all write/delete operations in production
       const dangerousTools = [
-        'n8n_delete_workflow',
-        'n8n_update_full_workflow',
-        'n8n_delete_execution',
+        'n8n_workflow_delete',
+        'n8n_workflow_update_full',
+        'n8n_executions_delete',
       ];
 
       process.env.DISABLED_TOOLS = dangerousTools.join(',');
@@ -409,12 +409,12 @@ describe('Disabled Tools Additional Coverage (Issue #410)', () => {
 
     it('should support staging environment scenario', () => {
       // In staging, disable only production-specific tools
-      process.env.DISABLED_TOOLS = 'n8n_trigger_webhook_workflow';
+      process.env.DISABLED_TOOLS = 'n8n_workflow_test';
       server = new TestableN8NMCPServer();
 
       const disabledTools = server.testGetDisabledTools();
 
-      expect(disabledTools.has('n8n_trigger_webhook_workflow')).toBe(true);
+      expect(disabledTools.has('n8n_workflow_test')).toBe(true);
       expect(disabledTools.size).toBe(1);
     });
 

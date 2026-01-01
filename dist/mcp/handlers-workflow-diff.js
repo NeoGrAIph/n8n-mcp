@@ -314,7 +314,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             if (workflowBefore && !input.validateOnly) {
                 trackWorkflowMutation({
                     sessionId,
-                    toolName: 'n8n_update_partial_workflow',
+                    toolName: 'n8n_workflow_update_partial',
                     userIntent: input.intent || 'Partial workflow update',
                     operations: input.operations,
                     workflowBefore,
@@ -336,7 +336,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                     nodeCount: finalWorkflow.nodes?.length || 0,
                     operationsApplied: diffResult.operationsApplied
                 },
-                message: `Workflow "${finalWorkflow.name}" updated successfully. Applied ${diffResult.operationsApplied} operations.${activationMessage} Use n8n_get_workflow with mode 'structure' to verify current state.`,
+                message: `Workflow "${finalWorkflow.name}" updated successfully. Applied ${diffResult.operationsApplied} operations.${activationMessage} Use n8n_workflow_get with mode 'structure' to verify current state.`,
                 details: {
                     applied: diffResult.applied,
                     failed: diffResult.failed,
@@ -349,7 +349,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             if (workflowBefore && !input.validateOnly) {
                 trackWorkflowMutation({
                     sessionId,
-                    toolName: 'n8n_update_partial_workflow',
+                    toolName: 'n8n_workflow_update_partial',
                     userIntent: input.intent || 'Partial workflow update',
                     operations: input.operations,
                     workflowBefore,

@@ -51,7 +51,7 @@ src/
 │   ├── test-workflow-validation.ts # Test workflow validation (NEW in v2.5.0)
 │   ├── test-ai-workflow-validation.ts # Test AI workflow validation (NEW in v2.5.1)
 │   ├── test-mcp-tools.ts      # Test MCP tool enhancements (NEW in v2.5.1)
-│   ├── test-n8n-validate-workflow.ts # Test n8n_validate_workflow tool (NEW in v2.6.3)
+│   ├── test-n8n-validate-workflow.ts # Test n8n_workflow_validate tool (NEW in v2.6.3)
 │   ├── test-typeversion-validation.ts # Test typeVersion validation (NEW in v2.6.1)
 │   ├── test-workflow-diff.ts  # Test workflow diff engine (NEW in v2.7.0)
 │   ├── test-tools-documentation.ts # Test tools documentation (NEW in v2.7.3)

@@ -2,7 +2,7 @@
 
 The `n8n_tools_documentation` tool provides comprehensive documentation for all MCP tools, making it easy for LLMs to understand how to use the tools effectively.
 
-> ✅ This guide uses the current tool set (`n8n_get_node`, `n8n_search_nodes`, `n8n_validate_node`, etc.).
+> ✅ This guide uses the current tool set (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate`, etc.).
 
 ## Basic Usage
 
@@ -12,7 +12,7 @@ The `n8n_tools_documentation` tool provides comprehensive documentation for all 
 {
   "name": "n8n_tools_documentation",
   "arguments": {
-    "tools": ["n8n_search_nodes", "n8n_get_node"]
+    "tools": ["n8n_nodes_search", "n8n_node_get"]
   }
 }
 ```
@@ -68,7 +68,7 @@ Returns a list of all categories and the tools in each category.
 {
   "name": "n8n_tools_documentation",
   "arguments": {
-    "tools": ["n8n_create_workflow"],
+    "tools": ["n8n_workflow_create"],
     "includeQuickReference": true
   }
 }
@@ -89,14 +89,14 @@ The tool returns structured documentation with:
 - **Common Pitfalls**: Mistakes to avoid
 - **Related Tools**: Other tools that work well together
 
-## Example: Learning About n8n_search_nodes
+## Example: Learning About n8n_nodes_search
 
 Request:
 ```json
 {
   "name": "n8n_tools_documentation",
   "arguments": {
-    "tools": ["n8n_search_nodes"]
+    "tools": ["n8n_nodes_search"]
   }
 }
 ```
@@ -120,17 +120,17 @@ Response includes:
 
 The documentation helps build workflows efficiently:
 
-1. **Discovery Phase**: Use `n8n_search_nodes` documentation
-2. **Configuration Phase**: Learn from `n8n_get_node` examples (detail: standard)
+1. **Discovery Phase**: Use `n8n_nodes_search` documentation
+2. **Configuration Phase**: Learn from `n8n_node_get` examples (detail: standard)
 3. **Validation Phase**: Understand validation tool options and profiles
-4. **Creation Phase**: Follow `n8n_create_workflow` best practices
-5. **Update Phase**: Master `n8n_update_partial_workflow` operations
+4. **Creation Phase**: Follow `n8n_workflow_create` best practices
+5. **Update Phase**: Master `n8n_workflow_update_partial` operations
 
 ## Performance Optimization
 
 The documentation emphasizes performance:
 - Which tools are fast (standard/minimal) vs slow (full info)
-- Optimal parameters (e.g., limit: 200+ for n8n_search_nodes)
+- Optimal parameters (e.g., limit: 200+ for n8n_nodes_search)
 - Caching behavior
 - Token savings with partial updates
 

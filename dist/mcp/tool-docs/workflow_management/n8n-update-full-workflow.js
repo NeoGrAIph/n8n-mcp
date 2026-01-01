@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nUpdateFullWorkflowDoc = void 0;
 exports.n8nUpdateFullWorkflowDoc = {
-    name: 'n8n_update_full_workflow',
+    name: 'n8n_workflow_update_full',
     category: 'workflow_management',
     essentials: {
-        description: 'Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_update_partial_workflow.',
+        description: 'Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_workflow_update_partial.',
         keyParameters: ['id', 'nodes', 'connections'],
-        example: 'n8n_update_full_workflow({id: "wf_123", nodes: [...], connections: {...}})',
+        example: 'n8n_workflow_update_full({id: "wf_123", nodes: [...], connections: {...}})',
         performance: 'Network-dependent',
         tips: [
             'Include intent parameter in every call - helps to return better responses',
@@ -26,12 +26,12 @@ exports.n8nUpdateFullWorkflowDoc = {
             settings: { type: 'object', description: 'Workflow settings to update (timezone, error handling, etc.)' },
             intent: { type: 'string', description: 'Intent of the change - helps to return better response. Include in every tool call. Example: "Migrate workflow to new node versions".' }
         },
-        returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_get_workflow with mode "structure" to verify current state if needed.',
+        returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_workflow_get with mode "structure" to verify current state if needed.',
         examples: [
-            'n8n_update_full_workflow({id: "abc", intent: "Rename workflow for clarity", name: "New Name"}) - Rename with intent',
-            'n8n_update_full_workflow({id: "abc", name: "New Name"}) - Rename only',
-            'n8n_update_full_workflow({id: "xyz", intent: "Add error handling nodes", nodes: [...], connections: {...}}) - Full structure update',
-            'const wf = n8n_get_workflow({id}); wf.nodes.push(newNode); n8n_update_full_workflow({...wf, intent: "Add data processing node"}); // Add node'
+            'n8n_workflow_update_full({id: "abc", intent: "Rename workflow for clarity", name: "New Name"}) - Rename with intent',
+            'n8n_workflow_update_full({id: "abc", name: "New Name"}) - Rename only',
+            'n8n_workflow_update_full({id: "xyz", intent: "Add error handling nodes", nodes: [...], connections: {...}}) - Full structure update',
+            'const wf = n8n_workflow_get({id}); wf.nodes.push(newNode); n8n_workflow_update_full({...wf, intent: "Add data processing node"}); // Add node'
         ],
         useCases: [
             'Major workflow restructuring',
@@ -55,7 +55,7 @@ exports.n8nUpdateFullWorkflowDoc = {
             'Can break active workflows',
             'No partial updates - use update_partial instead'
         ],
-        relatedTools: ['n8n_get_workflow', 'n8n_update_partial_workflow', 'validate_workflow', 'n8n_create_workflow']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflow_update_partial', 'validate_workflow', 'n8n_workflow_create']
     }
 };
 //# sourceMappingURL=n8n-update-full-workflow.js.map
