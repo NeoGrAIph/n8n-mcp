@@ -7,6 +7,7 @@ import express from 'express';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { n8nDocumentationToolsFinal } from './mcp/tools';
 import { n8nManagementTools } from './mcp/tools-n8n-manager';
+import { withToolAnnotations } from './mcp/tool-annotations';
 import { N8NDocumentationMCPServer } from './mcp/server';
 import { logger } from './utils/logger';
 import { AuthManager } from './utils/auth';
@@ -398,11 +399,13 @@ export async function startFixedHTTPServer() {
               if (isN8nApiConfigured()) {
                 tools.push(...n8nManagementTools);
               }
+
+              const toolsWithAnnotations = withToolAnnotations(tools);
               
               response = {
                 jsonrpc: '2.0',
                 result: {
-                  tools
+                  tools: toolsWithAnnotations
                 },
                 id: jsonRpcRequest.id
               };
