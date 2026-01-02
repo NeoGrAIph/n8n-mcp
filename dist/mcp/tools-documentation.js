@@ -106,6 +106,12 @@ Guide: n8n_tools_documentation({topic: "workflow_files_resources_guide"})
    - n8n_node_validate({nodeType: "nodes-base.slack", config: {...}}) - Full validation with errors/warnings/suggestions
    - n8n_workflow_json_validate({workflow: {...}}) - Validate entire workflow
 
+## Editing Code/Set Nodes (priority)
+If the change is only in Code node or Set(raw) file contents, prefer:
+- n8n_workflow_file_patch (partial edits with unified diff)
+- resources/read + resources/write (full file updates with expectedEtag)
+Avoid workflow_update_* for code-only changes to prevent accidental full replacements.
+
 ## Tool Categories (33 Tools Total)
 
 **Discovery Tools** (1 tool)

@@ -12,7 +12,8 @@ export const workflowFilesResourcesGuide: ToolDocumentation = {
       'Use resources/list to discover available files before reading or writing',
       'workflowId is the workflow folder name, nodeId is the file name stem',
       'Always pass expectedEtag when writing to avoid conflicts',
-      'For partial changes, use n8n_workflow_file_patch'
+      'For partial changes, use n8n_workflow_file_patch',
+      'Use resource tools for Code/Set edits instead of workflow_update_*'
     ]
   },
   full: {

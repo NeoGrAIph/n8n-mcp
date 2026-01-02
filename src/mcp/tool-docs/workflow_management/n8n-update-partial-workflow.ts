@@ -4,7 +4,7 @@ export const n8nUpdatePartialWorkflowDoc: ToolDocumentation = {
   name: 'n8n_workflow_update_partial',
   category: 'workflow_management',
   essentials: {
-    description: 'Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, rewireConnection, cleanStaleConnections, replaceConnections, updateSettings, updateName, add/removeTag, activateWorkflow, deactivateWorkflow. Supports smart parameters (branch, case) for multi-output nodes. Full support for AI connections (ai_languageModel, ai_tool, ai_memory, ai_embedding, ai_vectorStore, ai_document, ai_textSplitter, ai_outputParser).',
+    description: 'Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, rewireConnection, cleanStaleConnections, replaceConnections, updateSettings, updateName, add/removeTag, activateWorkflow, deactivateWorkflow. Supports smart parameters (branch, case) for multi-output nodes. Full support for AI connections (ai_languageModel, ai_tool, ai_memory, ai_embedding, ai_vectorStore, ai_document, ai_textSplitter, ai_outputParser). For Code/Set file edits, use n8n_workflow_file_patch or resources/write.',
     keyParameters: ['id', 'operations', 'continueOnError'],
     example: 'n8n_workflow_update_partial({id: "wf_123", operations: [{type: "rewireConnection", source: "IF", from: "Old", to: "New", branch: "true"}]})',
     performance: 'Fast (50-200ms)',
@@ -18,6 +18,7 @@ export const n8nUpdatePartialWorkflowDoc: ToolDocumentation = {
       'Set ignoreErrors:true on removeConnection for cleanup',
       'Use continueOnError mode for best-effort bulk operations',
       'Validate with validateOnly first',
+      'Use n8n_workflow_file_patch for Code/Set edits',
       'For AI connections, specify sourceOutput type (ai_languageModel, ai_tool, etc.)',
       'Batch AI component connections for atomic updates',
       'Auto-sanitization: ALL nodes auto-fixed during updates (operator structures, missing metadata)',

@@ -90,7 +90,7 @@ export const n8nManagementTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_workflow_update_full',
-    description: `Replace a workflow's nodes, connections, and settings in n8n. Use this when you want a full overwrite rather than incremental diffs. Provide id and the updated fields; nodes/connections should be complete if you modify structure. Returns basic info about the updated workflow and writes changes to n8n.`,
+    description: `Replace a workflow's nodes, connections, and settings in n8n. Use this for full workflow overwrites. For Code/Set node file edits, prefer n8n_workflow_file_patch or resources/write. Provide id and the updated fields; nodes/connections should be complete if you modify structure. Returns basic info about the updated workflow and writes changes to n8n.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -124,7 +124,7 @@ export const n8nManagementTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_workflow_update_partial',
-    description: `Apply diff-based updates to an existing workflow. Use this when you need targeted changes like add/remove/update nodes or connections. Provide id and an operations[] list plus optional validateOnly and continueOnError. Returns applied/failed operations and writes changes when validateOnly is false.`,
+    description: `Apply diff-based updates to an existing workflow. Use this for targeted structure changes (add/remove/update nodes or connections). For code/Set file edits, prefer n8n_workflow_file_patch or resources/write. Provide id and an operations[] list plus optional validateOnly and continueOnError. Returns applied/failed operations and writes changes when validateOnly is false.`,
     inputSchema: {
       type: 'object',
       additionalProperties: true,  // Allow any extra properties Claude Desktop might add
