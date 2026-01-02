@@ -518,6 +518,115 @@ export async function writeWorkflowResource(
   return { uri, etag, size, lastModified };
 }
 
+export async function patchWorkflowResource(
+  uri: string,
+  patch: string,
+  expectedEtag?: string
+): Promise<WorkflowResourceWriteResult> {
+  const parsed = parseWorkflowResourceUri(uri);
+  const workflowDir = await getWorkflowDir(parsed.workflowId);
+  const fileName = parsed.kind === 'code'
+    ? `${parsed.nodeId}.${parsed.ext}`
+    : `${parsed.nodeId}.set.json`;
+  const filePath = path.join(workflowDir, fileName);
+
+  if (!existsSync(filePath)) {
+    throw new Error(`File not found for URI: ${uri}`);
+  }
+
+  await verifyExpectedEtag(filePath, expectedEtag);
+
+  const current = await fs.readFile(filePath, 'utf-8');
+  const updated = applyUnifiedPatch(current, patch);
+
+  await fs.writeFile(filePath, updated, 'utf-8');
+  await fs.chmod(filePath, 0o666).catch(() => undefined);
+  const { etag, size, lastModified } = await statFile(filePath);
+  return { uri, etag, size, lastModified };
+}
+
+function applyUnifiedPatch(originalText: string, patchText: string): string {
+  const usesCrlf = originalText.includes('\r\n');
+  const normalizedOriginal = originalText.replace(/\r\n/g, '\n');
+  const normalizedPatch = patchText.replace(/\r\n/g, '\n');
+
+  const originalLines = normalizedOriginal.split('\n');
+  const patchLines = normalizedPatch.split('\n');
+
+  let offset = 0;
+  let sawHunk = false;
+
+  for (let i = 0; i < patchLines.length; i++) {
+    const line = patchLines[i];
+    if (!line.startsWith('@@')) {
+      continue;
+    }
+
+    sawHunk = true;
+    const match = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+    if (!match) {
+      throw new Error(`Invalid hunk header: ${line}`);
+    }
+
+    const startOld = Number(match[1]);
+    let index = startOld - 1 + offset;
+    if (index < 0 || index > originalLines.length) {
+      throw new Error(`Hunk out of range: ${line}`);
+    }
+
+    let added = 0;
+    let removed = 0;
+
+    for (i = i + 1; i < patchLines.length; i++) {
+      const hunkLine = patchLines[i];
+      if (hunkLine.startsWith('@@')) {
+        i -= 1;
+        break;
+      }
+      if (hunkLine.startsWith('\\')) {
+        continue;
+      }
+      if (hunkLine.startsWith(' ')) {
+        const expected = hunkLine.slice(1);
+        if (originalLines[index] !== expected) {
+          throw new Error(`Patch context mismatch at line ${index + 1}`);
+        }
+        index += 1;
+        continue;
+      }
+      if (hunkLine.startsWith('-')) {
+        const expected = hunkLine.slice(1);
+        if (originalLines[index] !== expected) {
+          throw new Error(`Patch removal mismatch at line ${index + 1}`);
+        }
+        originalLines.splice(index, 1);
+        removed += 1;
+        continue;
+      }
+      if (hunkLine.startsWith('+')) {
+        const value = hunkLine.slice(1);
+        originalLines.splice(index, 0, value);
+        index += 1;
+        added += 1;
+        continue;
+      }
+      throw new Error(`Invalid patch line: ${hunkLine}`);
+    }
+
+    offset += added - removed;
+  }
+
+  if (!sawHunk) {
+    throw new Error('Patch does not contain any hunks');
+  }
+
+  let result = originalLines.join('\n');
+  if (usesCrlf) {
+    result = result.replace(/\n/g, '\r\n');
+  }
+  return result;
+}
+
 function parseWorkflowResourceUri(
   uri: string
 ):

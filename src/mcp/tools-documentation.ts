@@ -87,6 +87,7 @@ Workflow file access uses MCP Resources. URIs encode workflowId and nodeId:
 - Code: n8n-workflows:///code/{workflowId}/{nodeId}.{ext} (.json for JS, .py for Python)
 - Set(raw): n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 Use resources/list to discover files, resources/read to fetch content, and resources/write with expectedEtag for safe updates.
+For partial updates, use n8n_workflow_file_patch with a unified diff.
 Guide: n8n_tools_documentation({topic: "workflow_files_resources_guide"})
 
 ## Standard Workflow Pattern

@@ -78,6 +78,14 @@ When working with Code nodes, always start by calling the relevant guide:
 - n8n_tools_documentation({topic: "javascript_code_node_guide"}) for JavaScript Code nodes
 - n8n_tools_documentation({topic: "python_code_node_guide"}) for Python Code nodes
 
+## Workflow File Resources (Code + Set)
+Workflow file access uses MCP Resources. URIs encode workflowId and nodeId:
+- Code: n8n-workflows:///code/{workflowId}/{nodeId}.{ext} (.json for JS, .py for Python)
+- Set(raw): n8n-workflows:///set/{workflowId}/{nodeId}.set.json
+Use resources/list to discover files, resources/read to fetch content, and resources/write with expectedEtag for safe updates.
+For partial updates, use n8n_workflow_file_patch with a unified diff.
+Guide: n8n_tools_documentation({topic: "workflow_files_resources_guide"})
+
 ## Standard Workflow Pattern
 
 ⚠️ **CRITICAL**: Always call n8n_node_get() with detail='standard' FIRST before configuring any node!

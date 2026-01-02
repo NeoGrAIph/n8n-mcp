@@ -1416,6 +1416,9 @@ export class N8NDocumentationMCPServer {
       case 'n8n_set_file_write':
         this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
         return workflowFileHandlers.handleWriteSetFile(args);
+      case 'n8n_workflow_file_patch':
+        this.validateToolParams(name, args, ['uri', 'patch']);
+        return workflowFileHandlers.handlePatchWorkflowResource(args);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

@@ -126,5 +126,27 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       },
       required: ['workflowId', 'nodeId', 'content']
     }
+  },
+  {
+    name: 'n8n_workflow_file_patch',
+    description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and expectedEtag to protect against concurrent edits. Returns updated metadata (etag, size, lastModified).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        uri: {
+          type: 'string',
+          description: 'Resource URI: n8n-workflows:///code/{workflowId}/{nodeId}.{ext} or n8n-workflows:///set/{workflowId}/{nodeId}.set.json'
+        },
+        patch: {
+          type: 'string',
+          description: 'Unified diff patch to apply to the file contents'
+        },
+        expectedEtag: {
+          type: 'string',
+          description: 'Optional ETag for optimistic concurrency control'
+        }
+      },
+      required: ['uri', 'patch']
+    }
   }
 ];

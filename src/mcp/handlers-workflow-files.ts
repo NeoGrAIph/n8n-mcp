@@ -9,6 +9,7 @@ import {
   writeCodeFile,
   writeSetFile,
   writeWorkflowResource,
+  patchWorkflowResource,
   listWorkflowResources,
   readWorkflowResource,
   listWorkflowResourceTemplates,
@@ -37,6 +38,12 @@ const writeSetSchema = z.object({
   workflowId: z.string().min(1),
   nodeId: z.string().min(1),
   content: z.string(),
+  expectedEtag: z.string().optional()
+});
+
+const patchSchema = z.object({
+  uri: z.string().min(1),
+  patch: z.string().min(1),
   expectedEtag: z.string().optional()
 });
 
@@ -164,6 +171,24 @@ export async function handleWriteSetFile(args: unknown): Promise<McpToolResponse
       input.workflowId,
       input.nodeId,
       input.content,
+      input.expectedEtag
+    );
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function handlePatchWorkflowResource(args: unknown): Promise<McpToolResponse> {
+  try {
+    ensureWorkflowFilesConfigured();
+    const input = patchSchema.parse(args || {});
+    const result = await patchWorkflowResource(
+      input.uri,
+      input.patch,
       input.expectedEtag
     );
     return {

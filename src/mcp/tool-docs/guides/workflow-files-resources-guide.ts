@@ -11,7 +11,8 @@ export const workflowFilesResourcesGuide: ToolDocumentation = {
     tips: [
       'Use resources/list to discover available files before reading or writing',
       'workflowId is the workflow folder name, nodeId is the file name stem',
-      'Always pass expectedEtag when writing to avoid conflicts'
+      'Always pass expectedEtag when writing to avoid conflicts',
+      'For partial changes, use n8n_workflow_file_patch'
     ]
   },
   full: {
@@ -43,7 +44,8 @@ export const workflowFilesResourcesGuide: ToolDocumentation = {
     bestPractices: [
       'Always call resources/list first to confirm available URIs',
       'Use etag from resources/read when calling resources/write',
-      'Prefer narrow edits to avoid overwriting unrelated changes'
+      'Prefer narrow edits to avoid overwriting unrelated changes',
+      'Use n8n_workflow_file_patch for partial updates instead of full rewrites'
     ],
     pitfalls: [
       'Invalid URI format will return resource not found',

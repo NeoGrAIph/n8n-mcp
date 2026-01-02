@@ -38,6 +38,7 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_set_files_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_set_file_read: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_set_file_write: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+  n8n_workflow_file_patch: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
 };
 
 export function withToolAnnotations(tools: ToolDefinition[]): ToolDefinition[] {

@@ -37,7 +37,8 @@ import {
   n8nCodeFileWriteDoc,
   n8nSetFilesListDoc,
   n8nSetFileReadDoc,
-  n8nSetFileWriteDoc
+  n8nSetFileWriteDoc,
+  n8nWorkflowFilePatchDoc
 } from './workflow_files';
 
 // Combine all tool documentations into a single object
@@ -91,7 +92,8 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_code_file_write: n8nCodeFileWriteDoc,
   n8n_set_files_list: n8nSetFilesListDoc,
   n8n_set_file_read: n8nSetFileReadDoc,
-  n8n_set_file_write: n8nSetFileWriteDoc
+  n8n_set_file_write: n8nSetFileWriteDoc,
+  n8n_workflow_file_patch: n8nWorkflowFilePatchDoc
 };
 
 // Re-export types

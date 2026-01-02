@@ -80,6 +80,15 @@ export const n8nFriendlyDescriptions: Record<string, {
       depth: 'Optional string: "essentials" (default) or "full"',
       topic: 'Optional string tool name like "n8n_nodes_search"'
     }
+  },
+
+  n8n_workflow_file_patch: {
+    description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
+    params: {
+      uri: 'String resource URI like "n8n-workflows:///code/<workflowId>/<nodeId>.json"',
+      patch: 'Unified diff string',
+      expectedEtag: 'Optional string for optimistic concurrency control'
+    }
   }
 };
 
