@@ -9,7 +9,7 @@ import {
   toolsDocumentationDoc,
   n8nHealthCheckDoc
 } from './system';
-import { aiAgentsGuide } from './guides';
+import { aiAgentsGuide, workflowFilesResourcesGuide } from './guides';
 import {
   n8nCreateWorkflowDoc,
   n8nGetWorkflowDoc,
@@ -48,6 +48,7 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
 
   // Guides
   ai_agents_guide: aiAgentsGuide,
+  workflow_files_resources_guide: workflowFilesResourcesGuide,
 
   // Discovery tools
   n8n_nodes_search: searchNodesDoc,
