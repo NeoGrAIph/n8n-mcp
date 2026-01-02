@@ -425,7 +425,7 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
           name: `${workflowId}/${nodeId}.set.json`,
           title: 'n8n Set(raw) node file',
           uri,
-          description: 'Set(raw) node parameters saved as JSON',
+          description: 'Set(raw) node parameters saved as JSON. URI encodes workflowId and nodeId: n8n-workflows:///set/{workflowId}/{nodeId}.set.json',
           mimeType: 'application/json',
           _meta: { workflowId, nodeId, kind: 'set', etag, size, lastModified }
         });
@@ -439,7 +439,7 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
           name: `${workflowId}/${nodeId}.${ext}`,
           title: 'n8n Code node file',
           uri,
-          description: 'Code node source file (JavaScript or Python)',
+          description: 'Code node source file (JavaScript or Python). URI encodes workflowId and nodeId: n8n-workflows:///code/{workflowId}/{nodeId}.{ext}',
           mimeType: resolveCodeMime(ext),
           _meta: { workflowId, nodeId, kind: 'code', language: resolveCodeLanguage(ext), etag, size, lastModified }
         });
