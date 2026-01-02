@@ -471,9 +471,8 @@ Essential patterns for Python in n8n Code nodes.
 - Return format: \`[{"json": {...}}]\` (list of dicts)
 
 **Limitations**:
-- No external libraries (no requests, pandas, numpy)
-- Use built-in functions only
-- No pip install available
+- Custom runner includes extra Python packages (see full guide)
+- No pip install at runtime
 
 **Common Patterns**:
 \`\`\`python
@@ -541,6 +540,25 @@ import re
 import math
 import random
 \`\`\`
+
+### Extra Python Packages (Custom Runner)
+The custom runner image includes these packages:
+- numpy
+- pandas
+- camoufox
+- playwright (1.55.*)
+- pydantic
+- pydantic-ai-slim[anthropic]
+- requests
+- gql[aiohttp]
+- yandexcloud
+- python-dotenv
+- grpcio
+- grpcio-tools
+- googleapis-common-protos
+- boto3
+- beautifulsoup4
+- lxml
 
 ### Date/Time Handling
 \`\`\`python
