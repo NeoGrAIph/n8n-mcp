@@ -586,6 +586,9 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
       if (hunkLine.startsWith('\\')) {
         continue;
       }
+      if (hunkLine === '') {
+        continue;
+      }
       if (hunkLine.startsWith(' ')) {
         const expected = hunkLine.slice(1);
         if (originalLines[index] !== expected) {
