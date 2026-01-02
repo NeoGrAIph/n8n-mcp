@@ -87,7 +87,10 @@ export const n8nFriendlyDescriptions: Record<string, {
     params: {
       uri: 'String resource URI like "n8n-workflows:///code/<workflowId>/<nodeId>.json"',
       patch: 'Unified diff string',
-      expectedEtag: 'Optional string for optimistic concurrency control'
+      expectedEtag: 'Optional string for optimistic concurrency control',
+      minContextLines: 'Optional integer: minimum context lines that must match (default 0)',
+      maxFuzz: 'Optional integer: maximum fuzz allowed (default 0, max 2)',
+      ignoreWhitespaceInContext: 'Optional boolean: ignore whitespace differences in context matching'
     }
   }
 };

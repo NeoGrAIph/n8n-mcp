@@ -518,10 +518,17 @@ export async function writeWorkflowResource(
   return { uri, etag, size, lastModified };
 }
 
+export interface PatchApplyOptions {
+  minContextLines?: number;
+  maxFuzz?: number;
+  ignoreWhitespaceInContext?: boolean;
+}
+
 export async function patchWorkflowResource(
   uri: string,
   patch: string,
-  expectedEtag?: string
+  expectedEtag?: string,
+  options?: PatchApplyOptions
 ): Promise<WorkflowResourceWriteResult> {
   const parsed = parseWorkflowResourceUri(uri);
   const workflowDir = await getWorkflowDir(parsed.workflowId);
@@ -537,7 +544,7 @@ export async function patchWorkflowResource(
   await verifyExpectedEtag(filePath, expectedEtag);
 
   const current = await fs.readFile(filePath, 'utf-8');
-  const updated = applyUnifiedPatch(current, patch);
+  const updated = applyUnifiedPatch(current, patch, options);
 
   await fs.writeFile(filePath, updated, 'utf-8');
   await fs.chmod(filePath, 0o666).catch(() => undefined);
@@ -545,10 +552,15 @@ export async function patchWorkflowResource(
   return { uri, etag, size, lastModified };
 }
 
-function applyUnifiedPatch(originalText: string, patchText: string): string {
+function applyUnifiedPatch(
+  originalText: string,
+  patchText: string,
+  options?: PatchApplyOptions
+): string {
   const usesCrlf = originalText.includes('\r\n');
   const normalizedOriginal = originalText.replace(/\r\n/g, '\n');
   const normalizedPatch = normalizePatchText(patchText);
+  const resolvedOptions = normalizePatchOptions(options);
 
   const originalLines = normalizedOriginal.split('\n');
   const patchLines = normalizedPatch.split('\n');
@@ -563,13 +575,14 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
     }
 
     sawHunk = true;
+    const hunkLines = collectHunkLines(patchLines, i + 1);
+    const hunkEndIndex = i + hunkLines.length;
+
     let startOld: number | null = null;
     const match = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
     if (!match) {
       if (line.trim() === '@@') {
-        const hunkLines = collectHunkLines(patchLines, i + 1);
-        const inferred = inferHunkFromContext(originalLines, hunkLines);
-        startOld = inferred.startOld;
+        startOld = findHunkStart(originalLines, hunkLines, resolvedOptions) + 1;
       } else {
         throw new Error(`Invalid hunk header: ${line}`);
       }
@@ -580,54 +593,27 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
     if (startOld === null) {
       throw new Error(`Invalid hunk header: ${line}`);
     }
+
+    let added = 0;
+    let removed = 0;
     let index = startOld - 1 + offset;
     if (index < 0 || index > originalLines.length) {
       throw new Error(`Hunk out of range: ${line}`);
     }
 
-    let added = 0;
-    let removed = 0;
-
-    for (i = i + 1; i < patchLines.length; i++) {
-      const hunkLine = patchLines[i];
-      if (hunkLine.startsWith('@@')) {
-        i -= 1;
-        break;
+    try {
+      ({ added, removed } = applyHunk(originalLines, index, hunkLines, resolvedOptions));
+    } catch (error) {
+      if (resolvedOptions.maxFuzz > 0 || resolvedOptions.ignoreWhitespaceInContext || resolvedOptions.minContextLines > 0) {
+        const relocated = findHunkStart(originalLines, hunkLines, resolvedOptions);
+        ({ added, removed } = applyHunk(originalLines, relocated, hunkLines, resolvedOptions));
+      } else {
+        throw error;
       }
-      if (hunkLine.startsWith('\\')) {
-        continue;
-      }
-      if (hunkLine === '') {
-        continue;
-      }
-      if (hunkLine.startsWith(' ')) {
-        const expected = hunkLine.slice(1);
-        if (originalLines[index] !== expected) {
-          throw new Error(`Patch context mismatch at line ${index + 1}`);
-        }
-        index += 1;
-        continue;
-      }
-      if (hunkLine.startsWith('-')) {
-        const expected = hunkLine.slice(1);
-        if (originalLines[index] !== expected) {
-          throw new Error(`Patch removal mismatch at line ${index + 1}`);
-        }
-        originalLines.splice(index, 1);
-        removed += 1;
-        continue;
-      }
-      if (hunkLine.startsWith('+')) {
-        const value = hunkLine.slice(1);
-        originalLines.splice(index, 0, value);
-        index += 1;
-        added += 1;
-        continue;
-      }
-      throw new Error(`Invalid patch line: ${hunkLine}`);
     }
 
     offset += added - removed;
+    i = hunkEndIndex;
   }
 
   if (!sawHunk) {
@@ -639,6 +625,18 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
     result = result.replace(/\n/g, '\r\n');
   }
   return result;
+}
+
+function normalizePatchOptions(options?: PatchApplyOptions): Required<PatchApplyOptions> {
+  const minContextLines = Number.isFinite(options?.minContextLines) ? Number(options?.minContextLines) : 0;
+  const maxFuzz = Number.isFinite(options?.maxFuzz) ? Number(options?.maxFuzz) : 0;
+  const ignoreWhitespaceInContext = Boolean(options?.ignoreWhitespaceInContext);
+
+  return {
+    minContextLines: Math.max(0, Math.min(minContextLines, 10)),
+    maxFuzz: Math.max(0, Math.min(maxFuzz, 2)),
+    ignoreWhitespaceInContext
+  };
 }
 
 function normalizePatchText(patchText: string): string {
@@ -674,51 +672,206 @@ function collectHunkLines(patchLines: string[], startIndex: number): string[] {
   return hunkLines;
 }
 
-function inferHunkFromContext(
+function applyHunk(
   originalLines: string[],
-  hunkLines: string[]
-): { startOld: number; oldCount: number; newCount: number } {
-  const pattern: string[] = [];
-  let oldCount = 0;
-  let newCount = 0;
+  startIndex: number,
+  hunkLines: string[],
+  options: Required<PatchApplyOptions>
+): { added: number; removed: number } {
+  let index = startIndex;
+  let added = 0;
+  let removed = 0;
 
-  for (const line of hunkLines) {
-    if (line.startsWith(' ')) {
-      pattern.push(line.slice(1));
-      oldCount += 1;
-      newCount += 1;
-    } else if (line.startsWith('-')) {
-      pattern.push(line.slice(1));
-      oldCount += 1;
-    } else if (line.startsWith('+')) {
-      newCount += 1;
+  for (const hunkLine of hunkLines) {
+    if (hunkLine.startsWith('@@')) {
+      break;
     }
+    if (hunkLine.startsWith('\\')) {
+      continue;
+    }
+    if (hunkLine === '') {
+      continue;
+    }
+    if (hunkLine.startsWith(' ')) {
+      const expected = hunkLine.slice(1);
+      if (!contextMatches(originalLines[index], expected, options)) {
+        throw new Error(`Patch context mismatch at line ${index + 1}`);
+      }
+      index += 1;
+      continue;
+    }
+    if (hunkLine.startsWith('-')) {
+      const expected = hunkLine.slice(1);
+      if (originalLines[index] !== expected) {
+        throw new Error(`Patch removal mismatch at line ${index + 1}`);
+      }
+      originalLines.splice(index, 1);
+      removed += 1;
+      continue;
+    }
+    if (hunkLine.startsWith('+')) {
+      const value = hunkLine.slice(1);
+      originalLines.splice(index, 0, value);
+      index += 1;
+      added += 1;
+      continue;
+    }
+    throw new Error(`Invalid patch line: ${hunkLine}`);
   }
 
-  if (pattern.length === 0) {
+  return { added, removed };
+}
+
+function contextMatches(actual: string | undefined, expected: string, options: Required<PatchApplyOptions>): boolean {
+  if (actual === undefined) return false;
+  if (!options.ignoreWhitespaceInContext) {
+    return actual === expected;
+  }
+  return normalizeWhitespace(actual) === normalizeWhitespace(expected);
+}
+
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function findHunkStart(
+  originalLines: string[],
+  hunkLines: string[],
+  options: Required<PatchApplyOptions>
+): number {
+  const sequence = buildOldSequence(hunkLines);
+  if (sequence.lines.length === 0) {
     throw new Error('Cannot infer hunk range: no context or removals. Use @@ -a,b +c,d @@.');
   }
 
+  let ambiguous = false;
+
+  for (let fuzz = 0; fuzz <= options.maxFuzz; fuzz += 1) {
+    for (let trimStart = 0; trimStart <= fuzz; trimStart += 1) {
+      for (let trimEnd = 0; trimEnd <= fuzz - trimStart; trimEnd += 1) {
+        const trimmed = trimSequence(sequence, trimStart, trimEnd, options.minContextLines);
+        if (!trimmed) {
+          continue;
+        }
+
+        const matches = findSequenceMatches(originalLines, trimmed.lines, trimmed.contextMask, options);
+        if (matches.length === 1) {
+          return matches[0];
+        }
+        if (matches.length > 1) {
+          ambiguous = true;
+        }
+      }
+    }
+  }
+
+  if (ambiguous) {
+    throw new Error('Patch context is ambiguous. Use @@ -a,b +c,d @@.');
+  }
+
+  throw new Error('Patch context not found. Use @@ -a,b +c,d @@.');
+}
+
+function buildOldSequence(hunkLines: string[]): { lines: string[]; contextMask: boolean[] } {
+  const lines: string[] = [];
+  const contextMask: boolean[] = [];
+
+  for (const line of hunkLines) {
+    if (line.startsWith('\\')) {
+      continue;
+    }
+    if (line === '') {
+      continue;
+    }
+    if (line.startsWith(' ')) {
+      lines.push(line.slice(1));
+      contextMask.push(true);
+      continue;
+    }
+    if (line.startsWith('-')) {
+      lines.push(line.slice(1));
+      contextMask.push(false);
+      continue;
+    }
+    if (line.startsWith('+')) {
+      continue;
+    }
+    throw new Error(`Invalid patch line: ${line}`);
+  }
+
+  return { lines, contextMask };
+}
+
+function trimSequence(
+  sequence: { lines: string[]; contextMask: boolean[] },
+  trimStart: number,
+  trimEnd: number,
+  minContextLines: number
+): { lines: string[]; contextMask: boolean[] } | null {
+  let start = 0;
+  let end = sequence.lines.length - 1;
+  let removedStart = 0;
+  let removedEnd = 0;
+
+  while (removedStart < trimStart && start <= end) {
+    if (!sequence.contextMask[start]) {
+      return null;
+    }
+    start += 1;
+    removedStart += 1;
+  }
+
+  while (removedEnd < trimEnd && end >= start) {
+    if (!sequence.contextMask[end]) {
+      return null;
+    }
+    end -= 1;
+    removedEnd += 1;
+  }
+
+  const lines = sequence.lines.slice(start, end + 1);
+  const contextMask = sequence.contextMask.slice(start, end + 1);
+  const contextCount = contextMask.filter(Boolean).length;
+
+  if (contextCount < minContextLines) {
+    return null;
+  }
+
+  return { lines, contextMask };
+}
+
+function findSequenceMatches(
+  originalLines: string[],
+  sequenceLines: string[],
+  contextMask: boolean[],
+  options: Required<PatchApplyOptions>
+): number[] {
   const matches: number[] = [];
-  for (let i = 0; i <= originalLines.length - pattern.length; i++) {
+  if (sequenceLines.length === 0) {
+    return matches;
+  }
+
+  for (let i = 0; i <= originalLines.length - sequenceLines.length; i++) {
     let ok = true;
-    for (let j = 0; j < pattern.length; j++) {
-      if (originalLines[i + j] !== pattern[j]) {
+    for (let j = 0; j < sequenceLines.length; j++) {
+      const actual = originalLines[i + j];
+      const expected = sequenceLines[j];
+      if (contextMask[j]) {
+        if (!contextMatches(actual, expected, options)) {
+          ok = false;
+          break;
+        }
+      } else if (actual !== expected) {
         ok = false;
         break;
       }
     }
-    if (ok) matches.push(i);
+    if (ok) {
+      matches.push(i);
+    }
   }
 
-  if (matches.length === 0) {
-    throw new Error('Patch context not found. Use @@ -a,b +c,d @@.');
-  }
-  if (matches.length > 1) {
-    throw new Error('Patch context is ambiguous. Use @@ -a,b +c,d @@.');
-  }
-
-  return { startOld: matches[0] + 1, oldCount, newCount };
+  return matches;
 }
 
 function parseWorkflowResourceUri(

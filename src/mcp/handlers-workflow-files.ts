@@ -44,7 +44,10 @@ const writeSetSchema = z.object({
 const patchSchema = z.object({
   uri: z.string().min(1),
   patch: z.string().min(1),
-  expectedEtag: z.string().optional()
+  expectedEtag: z.string().optional(),
+  minContextLines: z.number().int().min(0).max(10).optional(),
+  maxFuzz: z.number().int().min(0).max(2).optional(),
+  ignoreWhitespaceInContext: z.boolean().optional()
 });
 
 const RESOURCE_PAGE_SIZE = 200;
@@ -189,7 +192,12 @@ export async function handlePatchWorkflowResource(args: unknown): Promise<McpToo
     const result = await patchWorkflowResource(
       input.uri,
       input.patch,
-      input.expectedEtag
+      input.expectedEtag,
+      {
+        minContextLines: input.minContextLines,
+        maxFuzz: input.maxFuzz,
+        ignoreWhitespaceInContext: input.ignoreWhitespaceInContext
+      }
     );
     return {
       success: true,

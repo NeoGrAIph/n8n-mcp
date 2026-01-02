@@ -144,6 +144,18 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
         expectedEtag: {
           type: 'string',
           description: 'Optional ETag for optimistic concurrency control'
+        },
+        minContextLines: {
+          type: 'integer',
+          description: 'Minimum number of context lines that must match (default: 0)'
+        },
+        maxFuzz: {
+          type: 'integer',
+          description: 'Maximum fuzz to allow when matching context (default: 0, max: 2)'
+        },
+        ignoreWhitespaceInContext: {
+          type: 'boolean',
+          description: 'If true, ignores whitespace changes when matching context lines'
         }
       },
       required: ['uri', 'patch']

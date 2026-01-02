@@ -19,8 +19,11 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
     description: 'Applies a unified diff patch to a workflow file referenced by a resource URI. Works for Code node files (.json/.py) and Set(raw) files (.set.json). Use expectedEtag to prevent overwriting concurrent changes.',
     parameters: {
       uri: { type: 'string', description: 'Resource URI, e.g. n8n-workflows:///code/{workflowId}/{nodeId}.json or n8n-workflows:///set/{workflowId}/{nodeId}.set.json', required: true },
-      patch: { type: 'string', description: 'Unified diff patch content', required: true },
-      expectedEtag: { type: 'string', description: 'Optional ETag for optimistic concurrency control' }
+      patch: { type: 'string', description: 'Unified diff patch content (wrapper lines are tolerated)', required: true },
+      expectedEtag: { type: 'string', description: 'Optional ETag for optimistic concurrency control' },
+      minContextLines: { type: 'integer', description: 'Minimum number of context lines that must match (default 0)' },
+      maxFuzz: { type: 'integer', description: 'Maximum fuzz to allow when matching context (default 0, max 2)' },
+      ignoreWhitespaceInContext: { type: 'boolean', description: 'If true, ignores whitespace changes when matching context lines' }
     },
     returns: 'Object with uri, etag, size, and lastModified after patch is applied.',
     examples: [
@@ -37,6 +40,7 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
       'Always read the file first and pass expectedEtag to prevent conflicts',
       'Validate the patch applies cleanly before running',
       'Prefer unified diff hunks with clear context lines',
+      'Use minContextLines to keep matches safe when fuzz is enabled',
       'If using wrapper-style patches, keep context unique to avoid ambiguous matches'
     ],
     pitfalls: [
