@@ -4,19 +4,20 @@ export const n8nUpdateFullWorkflowDoc: ToolDocumentation = {
   name: 'n8n_workflow_update_full',
   category: 'workflow_management',
   essentials: {
-    description: 'Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_workflow_update_partial.',
+    description: 'Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_workflow_update_partial. For Code/Set file edits, use n8n_workflow_file_patch or resources/write.',
     keyParameters: ['id', 'nodes', 'connections'],
     example: 'n8n_workflow_update_full({id: "wf_123", nodes: [...], connections: {...}})',
     performance: 'Network-dependent',
     tips: [
       'Include intent parameter in every call - helps to return better responses',
       'Must provide complete workflow',
-      'Use update_partial for small changes',
+      'Use update_partial for small structure changes',
+      'Use n8n_workflow_file_patch for Code/Set file edits',
       'Validate before updating'
     ]
   },
   full: {
-    description: 'Performs a complete workflow update by replacing the entire workflow definition. Requires providing the complete nodes array and connections object, even for small changes. This is a full replacement operation - any nodes or connections not included will be removed.',
+    description: 'Performs a complete workflow update by replacing the entire workflow definition. Requires providing the complete nodes array and connections object, even for small changes. This is a full replacement operation - any nodes or connections not included will be removed. Use n8n_workflow_file_patch (or resources/write) for Code/Set file edits.',
     parameters: {
       id: { type: 'string', required: true, description: 'Workflow ID to update' },
       name: { type: 'string', description: 'New workflow name (optional)' },
@@ -44,7 +45,8 @@ export const n8nUpdateFullWorkflowDoc: ToolDocumentation = {
       'Always include intent parameter - it helps provide better responses',
       'Get workflow first, modify, then update',
       'Validate with n8n_workflow_json_validate before updating',
-      'Use update_partial for small changes',
+      'Use update_partial for small structure changes',
+      'Use n8n_workflow_file_patch for Code/Set edits',
       'Test updates in non-production first'
     ],
     pitfalls: [
