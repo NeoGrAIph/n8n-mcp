@@ -83,7 +83,7 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   n8n_workflow_file_patch: {
-    description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
+    description: 'Apply a unified diff patch to a workflow file (Code or Set). Wrapper-style patches (*** Begin/End Patch, ---/+++) are accepted and stripped. Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
     params: {
       uri: 'String resource URI like "n8n-workflows:///code/<workflowId>/<nodeId>.json"',
       patch: 'Unified diff string',

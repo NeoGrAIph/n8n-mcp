@@ -129,7 +129,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_workflow_file_patch',
-    description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and expectedEtag to protect against concurrent edits. Returns updated metadata (etag, size, lastModified).',
+    description: 'Apply a unified diff patch to a workflow file (Code or Set). Wrapper-style patches (*** Begin/End Patch, ---/+++) are accepted and stripped. Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and expectedEtag to protect against concurrent edits. Returns updated metadata (etag, size, lastModified).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -139,7 +139,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
         },
         patch: {
           type: 'string',
-          description: 'Unified diff patch to apply to the file contents'
+          description: 'Unified diff patch to apply to the file contents (wrapper lines are tolerated)'
         },
         expectedEtag: {
           type: 'string',

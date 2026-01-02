@@ -548,7 +548,7 @@ export async function patchWorkflowResource(
 function applyUnifiedPatch(originalText: string, patchText: string): string {
   const usesCrlf = originalText.includes('\r\n');
   const normalizedOriginal = originalText.replace(/\r\n/g, '\n');
-  const normalizedPatch = patchText.replace(/\r\n/g, '\n');
+  const normalizedPatch = normalizePatchText(patchText);
 
   const originalLines = normalizedOriginal.split('\n');
   const patchLines = normalizedPatch.split('\n');
@@ -563,12 +563,23 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
     }
 
     sawHunk = true;
+    let startOld: number | null = null;
     const match = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
     if (!match) {
-      throw new Error(`Invalid hunk header: ${line}`);
+      if (line.trim() === '@@') {
+        const hunkLines = collectHunkLines(patchLines, i + 1);
+        const inferred = inferHunkFromContext(originalLines, hunkLines);
+        startOld = inferred.startOld;
+      } else {
+        throw new Error(`Invalid hunk header: ${line}`);
+      }
+    } else {
+      startOld = Number(match[1]);
     }
 
-    const startOld = Number(match[1]);
+    if (startOld === null) {
+      throw new Error(`Invalid hunk header: ${line}`);
+    }
     let index = startOld - 1 + offset;
     if (index < 0 || index > originalLines.length) {
       throw new Error(`Hunk out of range: ${line}`);
@@ -628,6 +639,86 @@ function applyUnifiedPatch(originalText: string, patchText: string): string {
     result = result.replace(/\n/g, '\r\n');
   }
   return result;
+}
+
+function normalizePatchText(patchText: string): string {
+  const normalized = patchText.replace(/\r\n/g, '\n');
+  const lines = normalized.split('\n');
+  const cleaned: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith('*** Begin Patch')) continue;
+    if (line.startsWith('*** End Patch')) continue;
+    if (line.startsWith('*** Update File:')) continue;
+    if (line.startsWith('*** Add File:')) continue;
+    if (line.startsWith('*** Delete File:')) continue;
+    if (line.startsWith('*** Move to:')) continue;
+    if (line.startsWith('diff --git ')) continue;
+    if (line.startsWith('--- ')) continue;
+    if (line.startsWith('+++ ')) continue;
+    cleaned.push(line);
+  }
+
+  return cleaned.join('\n');
+}
+
+function collectHunkLines(patchLines: string[], startIndex: number): string[] {
+  const hunkLines: string[] = [];
+  for (let j = startIndex; j < patchLines.length; j++) {
+    const line = patchLines[j];
+    if (line.startsWith('@@')) {
+      break;
+    }
+    hunkLines.push(line);
+  }
+  return hunkLines;
+}
+
+function inferHunkFromContext(
+  originalLines: string[],
+  hunkLines: string[]
+): { startOld: number; oldCount: number; newCount: number } {
+  const pattern: string[] = [];
+  let oldCount = 0;
+  let newCount = 0;
+
+  for (const line of hunkLines) {
+    if (line.startsWith(' ')) {
+      pattern.push(line.slice(1));
+      oldCount += 1;
+      newCount += 1;
+    } else if (line.startsWith('-')) {
+      pattern.push(line.slice(1));
+      oldCount += 1;
+    } else if (line.startsWith('+')) {
+      newCount += 1;
+    }
+  }
+
+  if (pattern.length === 0) {
+    throw new Error('Cannot infer hunk range: no context or removals. Use @@ -a,b +c,d @@.');
+  }
+
+  const matches: number[] = [];
+  for (let i = 0; i <= originalLines.length - pattern.length; i++) {
+    let ok = true;
+    for (let j = 0; j < pattern.length; j++) {
+      if (originalLines[i + j] !== pattern[j]) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) matches.push(i);
+  }
+
+  if (matches.length === 0) {
+    throw new Error('Patch context not found. Use @@ -a,b +c,d @@.');
+  }
+  if (matches.length > 1) {
+    throw new Error('Patch context is ambiguous. Use @@ -a,b +c,d @@.');
+  }
+
+  return { startOld: matches[0] + 1, oldCount, newCount };
 }
 
 function parseWorkflowResourceUri(

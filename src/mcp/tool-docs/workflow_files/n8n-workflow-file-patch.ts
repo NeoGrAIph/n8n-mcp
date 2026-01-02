@@ -11,7 +11,8 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
     tips: [
       'Use resources/list to discover valid URIs',
       'Read first to capture expectedEtag and base content',
-      'Patch applies line-by-line; keep hunks small for reliability'
+      'Patch applies line-by-line; keep hunks small for reliability',
+      'Wrapped patches (*** Begin/End Patch or git headers) are accepted and stripped; prefer full @@ -a,b +c,d @@ hunks'
     ]
   },
   full: {
@@ -35,7 +36,8 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
     bestPractices: [
       'Always read the file first and pass expectedEtag to prevent conflicts',
       'Validate the patch applies cleanly before running',
-      'Prefer unified diff hunks with clear context lines'
+      'Prefer unified diff hunks with clear context lines',
+      'If using wrapper-style patches, keep context unique to avoid ambiguous matches'
     ],
     pitfalls: [
       'Patch will fail if context lines do not match current file contents',
