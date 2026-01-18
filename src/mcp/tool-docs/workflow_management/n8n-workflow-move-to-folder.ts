@@ -1,0 +1,50 @@
+import { ToolDocumentation } from '../types';
+
+export const n8nWorkflowMoveToFolderDoc: ToolDocumentation = {
+  name: 'n8n_workflow_move_to_folder',
+  category: 'workflow_management',
+  essentials: {
+    description: 'Move a workflow to a folder by updating parentFolderId.',
+    keyParameters: ['workflowId', 'parentFolderId'],
+    example: 'n8n_workflow_move_to_folder({workflowId: "wf_123", parentFolderId: "fold_ops"})',
+    performance: 'Fast (100-400ms)',
+    tips: [
+      'Use null parentFolderId to move to root',
+      'Use n8n_folders_list to find folder IDs',
+      'Confirm move with n8n_workflow_get'
+    ]
+  },
+  full: {
+    description: 'Moves a workflow to a folder by updating its parentFolderId. This uses the n8n API and should work in tandem with folder management tools.',
+    parameters: {
+      workflowId: { type: 'string', description: 'Workflow ID to move (required)', required: true },
+      parentFolderId: { type: 'string|null', description: 'Target folder ID (null to move to root)', required: true }
+    },
+    returns: 'Updated workflow metadata (id and parentFolderId).',
+    examples: [
+      'n8n_workflow_move_to_folder({workflowId: "wf_123", parentFolderId: "fold_ops"}) - Move to folder',
+      'n8n_workflow_move_to_folder({workflowId: "wf_123", parentFolderId: null}) - Move to root'
+    ],
+    useCases: [
+      'Reorganize workflows into folders',
+      'Align workflow structure with team taxonomy',
+      'Bulk moves after folder restructuring'
+    ],
+    performance: 'Fast - typically sub-second.',
+    bestPractices: [
+      'Validate target folder ID first',
+      'Use n8n_workflow_get to confirm parentFolderId',
+      'Avoid moving workflows across projects unless supported by the server'
+    ],
+    pitfalls: [
+      'Requires N8N_API_URL and N8N_API_KEY configured',
+      'Server may reject invalid folder IDs',
+      'Some n8n versions may not support parentFolderId in public API'
+    ],
+    relatedTools: [
+      'n8n_folders_list',
+      'n8n_folder_move',
+      'n8n_workflow_get'
+    ]
+  }
+};

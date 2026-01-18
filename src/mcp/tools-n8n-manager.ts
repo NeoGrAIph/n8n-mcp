@@ -201,6 +201,129 @@ export const n8nManagementTools: ToolDefinition[] = [
       }
     }
   },
+  // Folder Management Tools (internal REST API)
+  {
+    name: 'n8n_folders_list',
+    description: `List folders in a project via n8n's internal REST API. Use this to browse folder structure and get folder IDs for move/delete operations. Provide projectId and optional filters. Returns folder metadata and pagination cursors when available.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID (required)'
+        },
+        parentFolderId: {
+          type: 'string',
+          description: 'Optional parent folder ID to list direct children only'
+        },
+        filter: {
+          type: 'object',
+          description: 'Optional filter object (will be JSON-stringified and passed as filter=...)'
+        },
+        projectRelation: {
+          type: 'boolean',
+          description: 'Include project relation metadata (internal API flag)'
+        },
+        projectRole: {
+          type: 'boolean',
+          description: 'Include project role metadata (internal API flag)'
+        },
+        cursor: {
+          type: 'string',
+          description: 'Pagination cursor from previous response'
+        },
+        limit: {
+          type: 'integer',
+          description: 'Max folders to return (server-dependent)'
+        }
+      },
+      required: ['projectId']
+    }
+  },
+  {
+    name: 'n8n_folder_create',
+    description: `Create a folder in a project (internal REST API). Use this to create root or nested folders. Provide projectId, name, and optional parentFolderId. Returns the created folder metadata.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID (required)'
+        },
+        name: {
+          type: 'string',
+          description: 'Folder name'
+        },
+        parentFolderId: {
+          type: ['string', 'null'],
+          description: 'Parent folder ID (null or omit for root)'
+        }
+      },
+      required: ['projectId', 'name']
+    }
+  },
+  {
+    name: 'n8n_folder_move',
+    description: `Rename and/or move a folder within a project (internal REST API). Provide projectId and folderId plus name and/or parentFolderId. Returns updated folder metadata.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID (required)'
+        },
+        folderId: {
+          type: 'string',
+          description: 'Folder ID to move/rename'
+        },
+        name: {
+          type: 'string',
+          description: 'New folder name (optional if only moving)'
+        },
+        parentFolderId: {
+          type: ['string', 'null'],
+          description: 'New parent folder ID (null to move to root)'
+        }
+      },
+      required: ['projectId', 'folderId']
+    }
+  },
+  {
+    name: 'n8n_folder_delete',
+    description: `Delete an empty folder in a project (internal REST API). Use this only for empty folders; non-empty deletes should fail. Provide projectId and folderId. Returns confirmation of deletion.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID (required)'
+        },
+        folderId: {
+          type: 'string',
+          description: 'Folder ID to delete (must be empty)'
+        }
+      },
+      required: ['projectId', 'folderId']
+    }
+  },
+  {
+    name: 'n8n_workflow_move_to_folder',
+    description: `Move a workflow to a folder by updating its parentFolderId. Provide workflowId and parentFolderId (null to move to root). Returns the updated workflow metadata.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID to move'
+        },
+        parentFolderId: {
+          type: ['string', 'null'],
+          description: 'Target folder ID (null for root)'
+        }
+      },
+      required: ['workflowId', 'parentFolderId']
+    }
+  },
   {
     name: 'n8n_workflow_validate',
     description: `Validate an existing workflow in n8n by id. Use this when you need server-side validation of nodes, connections, and expressions. Provide id and optional options to control checks and profile. Returns validity, summary, errors, warnings, and suggestions for that workflow.`,

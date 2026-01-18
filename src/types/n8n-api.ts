@@ -65,6 +65,7 @@ export interface Workflow {
   settings?: WorkflowSettings;
   staticData?: Record<string, unknown>;
   tags?: string[];
+  parentFolderId?: string | null;
   updatedAt?: string;
   createdAt?: string;
   versionId?: string;
@@ -131,6 +132,33 @@ export interface Tag {
   workflowIds?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Folder Types (internal REST API)
+export interface Folder {
+  id: string;
+  name: string;
+  parentFolderId?: string | null;
+  projectId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  workflowCount?: number;
+  childFolderCount?: number;
+}
+
+export interface FolderListParams {
+  projectId: string;
+  parentFolderId?: string;
+  filter?: Record<string, unknown> | string;
+  projectRelation?: boolean;
+  projectRole?: boolean;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface FolderListResponse {
+  data: Folder[];
+  nextCursor?: string | null;
 }
 
 // Variable Types

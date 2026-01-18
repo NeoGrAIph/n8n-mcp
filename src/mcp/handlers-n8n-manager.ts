@@ -190,6 +190,11 @@ interface DiagnosticResponseData {
       enabled: boolean;
       description: string;
     };
+    workflowFileTools?: {
+      count: number;
+      enabled: boolean;
+      description: string;
+    };
     totalAvailable: number;
   };
   performance: {
@@ -402,6 +407,42 @@ const listWorkflowsSchema = z.object({
   tags: z.array(z.string()).optional(),
   projectId: z.string().optional(),
   excludePinnedData: z.boolean().optional(),
+});
+
+const listFoldersSchema = z.object({
+  projectId: z.string(),
+  parentFolderId: z.string().optional(),
+  filter: z.union([z.record(z.unknown()), z.string()]).optional(),
+  projectRelation: z.boolean().optional(),
+  projectRole: z.boolean().optional(),
+  cursor: z.string().optional(),
+  limit: z.number().min(1).max(200).optional(),
+});
+
+const createFolderSchema = z.object({
+  projectId: z.string(),
+  name: z.string().min(1),
+  parentFolderId: z.string().nullable().optional(),
+});
+
+const moveFolderSchema = z.object({
+  projectId: z.string(),
+  folderId: z.string(),
+  name: z.string().optional(),
+  parentFolderId: z.string().nullable().optional(),
+}).refine(
+  (data) => data.name !== undefined || data.parentFolderId !== undefined,
+  { message: 'At least one of name or parentFolderId must be provided' }
+);
+
+const deleteFolderSchema = z.object({
+  projectId: z.string(),
+  folderId: z.string(),
+});
+
+const moveWorkflowToFolderSchema = z.object({
+  workflowId: z.string(),
+  parentFolderId: z.string().nullable(),
 });
 
 const validateWorkflowSchema = z.object({
@@ -981,6 +1022,233 @@ export async function handleListWorkflows(args: unknown, context?: InstanceConte
       };
     }
     
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleListFolders(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = listFoldersSchema.parse(args || {});
+
+    const response = await client.listFolders({
+      projectId: input.projectId,
+      parentFolderId: input.parentFolderId,
+      filter: input.filter,
+      projectRelation: input.projectRelation,
+      projectRole: input.projectRole,
+      cursor: input.cursor,
+      limit: input.limit
+    });
+
+    const folders = response.data ?? [];
+    return {
+      success: true,
+      data: {
+        folders,
+        returned: folders.length,
+        nextCursor: response.nextCursor,
+        hasMore: !!response.nextCursor,
+        ...(response.nextCursor ? {
+          _note: "More folders available. Use cursor to get next page."
+        } : {})
+      }
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors }
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleCreateFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = createFolderSchema.parse(args);
+
+    const folder = await client.createFolder(
+      input.projectId,
+      input.name,
+      input.parentFolderId ?? undefined
+    );
+
+    return {
+      success: true,
+      data: {
+        folder
+      },
+      message: `Folder "${folder?.name || input.name}" created successfully.`
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors }
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleMoveFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = moveFolderSchema.parse(args);
+
+    if (input.parentFolderId === input.folderId) {
+      throw new Error('parentFolderId cannot match folderId');
+    }
+
+    const folder = await client.updateFolder(
+      input.projectId,
+      input.folderId,
+      {
+        name: input.name,
+        parentFolderId: input.parentFolderId
+      }
+    );
+
+    return {
+      success: true,
+      data: {
+        folder
+      },
+      message: `Folder "${folder?.name || input.folderId}" moved/renamed successfully.`
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors }
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleDeleteFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = deleteFolderSchema.parse(args);
+
+    await client.deleteFolder(input.projectId, input.folderId);
+
+    return {
+      success: true,
+      data: {
+        id: input.folderId,
+        deleted: true
+      },
+      message: `Folder "${input.folderId}" deleted successfully.`
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors }
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleMoveWorkflowToFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = moveWorkflowToFolderSchema.parse(args);
+
+    const parentFolderId = input.parentFolderId === '' ? null : input.parentFolderId;
+    const updated = await client.moveWorkflowToFolder(input.workflowId, parentFolderId);
+
+    return {
+      success: true,
+      data: {
+        id: updated?.id || input.workflowId,
+        parentFolderId: updated?.parentFolderId ?? parentFolderId
+      },
+      message: `Workflow "${updated?.id || input.workflowId}" moved successfully.`
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors }
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined
+      };
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -1957,8 +2225,10 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
 
   // Check which tools are available
   const documentationTools = 7; // Base documentation tools (after v2.26.0 consolidation)
-  const managementTools = apiConfigured ? 13 : 0; // Management tools requiring API (includes n8n_template_deploy)
-  const totalTools = documentationTools + managementTools;
+  const workflowFileTools = process.env.N8N_WORKFLOWS_ROOT ? 7 : 0;
+  const managementTools = apiConfigured ? 25 : 0; // Management tools requiring API (includes folder tools)
+  const totalTools = documentationTools + managementTools + workflowFileTools;
+  const totalToolsWithApi = documentationTools + workflowFileTools + 25;
 
   // Check npm version
   const versionCheck = await checkNpmVersion();
@@ -1992,6 +2262,13 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
         count: documentationTools,
         enabled: true,
         description: 'Always available - node info, search, validation, etc.'
+      },
+      workflowFileTools: {
+        count: workflowFileTools,
+        enabled: workflowFileTools > 0,
+        description: workflowFileTools > 0 ?
+          'Workflow file tools are ENABLED - edit Code/Set files' :
+          'Workflow file tools are DISABLED - configure N8N_WORKFLOWS_ROOT to enable'
       },
       managementTools: {
         count: managementTools,
@@ -2093,7 +2370,7 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
             example: 'n8n_workflow_json_validate({workflow: {...}})'
           }
         ],
-        note: '14 documentation tools available without API configuration'
+        note: `${documentationTools + workflowFileTools} tools available without API configuration`
       },
       whatYouCannotDo: [
         '✗ Create/update workflows in n8n instance',
@@ -2109,7 +2386,7 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
           '   N8N_API_KEY=your_api_key_here',
           '3. Restart the MCP server',
           '4. Run n8n_health_check with mode="diagnostic" to verify',
-          '5. All 19 tools will be available!'
+          `5. All ${totalToolsWithApi} tools will be available!`
         ],
         documentation: 'https://github.com/czlonkowski/n8n-mcp?tab=readme-ov-file#n8n-management-tools-optional---requires-api-configuration'
       }

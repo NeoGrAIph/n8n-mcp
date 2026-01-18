@@ -13,6 +13,9 @@ import {
   Tag,
   TagListParams,
   TagListResponse,
+  Folder,
+  FolderListParams,
+  FolderListResponse,
   HealthCheckResponse,
   N8nVersionInfo,
   Variable,
@@ -40,6 +43,7 @@ export interface N8nApiClientConfig {
 
 export class N8nApiClient {
   private client: AxiosInstance;
+  private restClient: AxiosInstance;
   private maxRetries: number;
   private baseUrl: string;
   private versionInfo: N8nVersionInfo | null = null;
@@ -51,47 +55,54 @@ export class N8nApiClient {
     this.maxRetries = maxRetries;
     this.baseUrl = baseUrl;
 
-    // Ensure baseUrl ends with /api/v1
-    const apiUrl = baseUrl.endsWith('/api/v1')
-      ? baseUrl
-      : `${baseUrl.replace(/\/$/, '')}/api/v1`;
+    const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+    const apiUrl = normalizedBaseUrl.endsWith('/api/v1')
+      ? normalizedBaseUrl
+      : `${normalizedBaseUrl}/api/v1`;
+    const restBaseUrl = normalizedBaseUrl.replace(/\/api\/v1\/?$/, '');
+    const restUrl = `${restBaseUrl}/rest`;
 
-    this.client = axios.create({
-      baseURL: apiUrl,
-      timeout,
-      headers: {
-        'X-N8N-API-KEY': apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
+    const createClient = (baseURL: string, label: string): AxiosInstance => {
+      const client = axios.create({
+        baseURL,
+        timeout,
+        headers: {
+          'X-N8N-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
 
-    // Request interceptor for logging
-    this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        logger.debug(`n8n API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-          params: config.params,
-          data: config.data,
-        });
-        return config;
-      },
-      (error: unknown) => {
-        logger.error('n8n API Request Error:', error);
-        return Promise.reject(error);
-      }
-    );
+      client.interceptors.request.use(
+        (config: InternalAxiosRequestConfig) => {
+          logger.debug(`n8n API Request (${label}): ${config.method?.toUpperCase()} ${config.url}`, {
+            params: config.params,
+            data: config.data,
+          });
+          return config;
+        },
+        (error: unknown) => {
+          logger.error(`n8n API Request Error (${label}):`, error);
+          return Promise.reject(error);
+        }
+      );
 
-    // Response interceptor for logging
-    this.client.interceptors.response.use(
-      (response: any) => {
-        logger.debug(`n8n API Response: ${response.status} ${response.config.url}`);
-        return response;
-      },
-      (error: unknown) => {
-        const n8nError = handleN8nApiError(error);
-        logN8nError(n8nError, 'n8n API Response');
-        return Promise.reject(n8nError);
-      }
-    );
+      client.interceptors.response.use(
+        (response: any) => {
+          logger.debug(`n8n API Response (${label}): ${response.status} ${response.config.url}`);
+          return response;
+        },
+        (error: unknown) => {
+          const n8nError = handleN8nApiError(error);
+          logN8nError(n8nError, `n8n API Response (${label})`);
+          return Promise.reject(n8nError);
+        }
+      );
+
+      return client;
+    };
+
+    this.client = createClient(apiUrl, 'public');
+    this.restClient = createClient(restUrl, 'rest');
   }
 
   /**
@@ -329,6 +340,86 @@ export class N8nApiClient {
   async deleteExecution(id: string): Promise<void> {
     try {
       await this.client.delete(`/executions/${id}`);
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  // Folder Management (internal REST API)
+  async listFolders(params: FolderListParams): Promise<FolderListResponse> {
+    try {
+      const { projectId, filter, ...rest } = params;
+      const query: Record<string, unknown> = { ...rest };
+      if (filter !== undefined) {
+        query.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
+      }
+      const response = await this.restClient.get(`/projects/${projectId}/folders`, { params: query });
+      return this.validateListResponse<Folder>(response.data, 'folders');
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async createFolder(projectId: string, name: string, parentFolderId?: string | null): Promise<Folder> {
+    try {
+      const payload: Record<string, unknown> = { name };
+      if (parentFolderId !== undefined) {
+        payload.parentFolderId = parentFolderId;
+      }
+      const response = await this.restClient.post(`/projects/${projectId}/folders`, payload);
+      return response.data;
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async updateFolder(
+    projectId: string,
+    folderId: string,
+    updates: { name?: string; parentFolderId?: string | null }
+  ): Promise<Folder> {
+    try {
+      const payload: Record<string, unknown> = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.parentFolderId !== undefined) payload.parentFolderId = updates.parentFolderId;
+
+      try {
+        const response = await this.restClient.patch(`/projects/${projectId}/folders/${folderId}`, payload);
+        return response.data;
+      } catch (patchError: any) {
+        if (patchError?.response?.status === 405) {
+          const response = await this.restClient.put(`/projects/${projectId}/folders/${folderId}`, payload);
+          return response.data;
+        }
+        throw patchError;
+      }
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async deleteFolder(projectId: string, folderId: string): Promise<void> {
+    try {
+      await this.restClient.delete(`/projects/${projectId}/folders/${folderId}`);
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async moveWorkflowToFolder(id: string, parentFolderId: string | null): Promise<Workflow> {
+    try {
+      const payload = { parentFolderId };
+      try {
+        const response = await this.client.patch(`/workflows/${id}`, payload);
+        return response.data;
+      } catch (patchError: any) {
+        if (patchError?.response?.status === 405) {
+          const current = await this.getWorkflow(id);
+          const updated = { ...current, parentFolderId };
+          return await this.updateWorkflow(id, updated);
+        }
+        throw patchError;
+      }
     } catch (error) {
       throw handleN8nApiError(error);
     }

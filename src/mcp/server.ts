@@ -1342,6 +1342,21 @@ export class N8NDocumentationMCPServer {
       case 'n8n_workflows_list':
         // No required parameters
         return n8nHandlers.handleListWorkflows(args, this.instanceContext);
+      case 'n8n_folders_list':
+        this.validateToolParams(name, args, ['projectId']);
+        return n8nHandlers.handleListFolders(args, this.instanceContext);
+      case 'n8n_folder_create':
+        this.validateToolParams(name, args, ['projectId', 'name']);
+        return n8nHandlers.handleCreateFolder(args, this.instanceContext);
+      case 'n8n_folder_move':
+        this.validateToolParams(name, args, ['projectId', 'folderId']);
+        return n8nHandlers.handleMoveFolder(args, this.instanceContext);
+      case 'n8n_folder_delete':
+        this.validateToolParams(name, args, ['projectId', 'folderId']);
+        return n8nHandlers.handleDeleteFolder(args, this.instanceContext);
+      case 'n8n_workflow_move_to_folder':
+        this.validateToolParams(name, args, ['workflowId', 'parentFolderId']);
+        return n8nHandlers.handleMoveWorkflowToFolder(args, this.instanceContext);
       case 'n8n_workflow_validate':
         this.validateToolParams(name, args, ['id']);
         await this.ensureInitialized();
