@@ -16,7 +16,7 @@ export const n8nSetFileWriteDoc: ToolDocumentation = {
   full: {
     description: 'Writes the Set(raw) node JSON file for a workflowId and nodeId. If the file exists, expectedEtag enforces optimistic concurrency. Use this to update raw JSON payloads for Set nodes.',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true },
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true },
       nodeId: { type: 'string', description: 'Node UUID for the Set(raw) node file', required: true },
       content: { type: 'string', description: 'Full JSON contents to write', required: true },
       expectedEtag: { type: 'string', description: 'Optional ETag for optimistic concurrency control' }

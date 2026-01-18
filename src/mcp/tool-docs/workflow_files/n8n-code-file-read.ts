@@ -16,7 +16,7 @@ export const n8nCodeFileReadDoc: ToolDocumentation = {
   full: {
     description: 'Reads the Code node source file for a given workflowId and nodeId. The server resolves the correct extension (.py or .json) automatically. Returns content along with metadata for concurrency control.',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true },
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true },
       nodeId: { type: 'string', description: 'Node UUID for the Code node file', required: true }
     },
     returns: 'Object with content (string), language, uri, etag, size, lastModified, workflowId, and nodeId.',

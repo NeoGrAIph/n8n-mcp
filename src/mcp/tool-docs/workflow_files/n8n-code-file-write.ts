@@ -16,7 +16,7 @@ export const n8nCodeFileWriteDoc: ToolDocumentation = {
   full: {
     description: 'Writes the Code node source file for a workflowId and nodeId. If the file exists, expectedEtag enforces optimistic concurrency. If the file does not exist, language is required to select the extension (.py or .json).',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true },
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true },
       nodeId: { type: 'string', description: 'Node UUID for the Code node file', required: true },
       content: { type: 'string', description: 'Full file contents to write', required: true },
       expectedEtag: { type: 'string', description: 'Optional ETag for optimistic concurrency control' },

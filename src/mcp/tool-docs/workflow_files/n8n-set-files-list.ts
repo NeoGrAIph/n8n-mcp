@@ -16,7 +16,7 @@ export const n8nSetFilesListDoc: ToolDocumentation = {
   full: {
     description: 'Lists Set(raw) node JSON files stored in the workflow folder. Returns metadata only; it does not include file contents. Use this to discover which Set(raw) nodes have file-backed JSON.',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true }
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true }
     },
     returns: 'Object with files[] (metadata entries: workflowId, nodeId, uri, etag, size, lastModified), returned, and workflowId.',
     examples: [
@@ -34,7 +34,7 @@ export const n8nSetFilesListDoc: ToolDocumentation = {
     ],
     pitfalls: [
       'Only Set nodes in raw mode generate .set.json files',
-      'workflowId must match the folder name exactly'
+      'workflowId maps to the workflow ID; directory may be code_nodes_<workflowId>'
     ],
     relatedTools: ['n8n_set_file_read', 'n8n_set_file_write', 'n8n_code_files_list']
   }

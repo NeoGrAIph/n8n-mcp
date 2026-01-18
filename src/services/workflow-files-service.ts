@@ -25,6 +25,7 @@ const WORKFLOW_ID_RE = /^[A-Za-z0-9_-]{8,}$/;
 const NODE_ID_RE = /^[0-9a-fA-F-]{36}$/;
 
 export const WORKFLOWS_ROOT = process.env.N8N_WORKFLOWS_ROOT || process.env.WORKFLOWS_ROOT || '/workflows';
+const CODE_NODES_PREFIX = process.env.N8N_CODE_NODES_PREFIX || 'code_nodes_';
 
 export function isWorkflowFilesConfigured(): boolean {
   return Boolean(WORKFLOWS_ROOT && existsSync(WORKFLOWS_ROOT));
@@ -61,10 +62,19 @@ function buildUri(kind: WorkflowFileKind, workflowId: string, nodeId: string, ex
   return `n8n-workflows:///` + `${kind}/${workflowId}/${filename}`;
 }
 
+function parseWorkflowDirName(dirName: string): string | null {
+  if (dirName.startsWith(CODE_NODES_PREFIX)) {
+    const candidate = dirName.slice(CODE_NODES_PREFIX.length);
+    return WORKFLOW_ID_RE.test(candidate) ? candidate : null;
+  }
+  return WORKFLOW_ID_RE.test(dirName) ? dirName : null;
+}
+
 async function findWorkflowDir(root: string, workflowId: string): Promise<string | null> {
   const queue: string[] = [root];
   let visited = 0;
   const maxVisited = 10000;
+  let legacyMatch: string | null = null;
 
   while (queue.length > 0) {
     const current = queue.shift() as string;
@@ -87,14 +97,18 @@ async function findWorkflowDir(root: string, workflowId: string): Promise<string
       if (entry.name === 'node_modules') continue;
 
       const fullPath = path.join(current, entry.name);
-      if (entry.name === workflowId) {
+      if (entry.name === `${CODE_NODES_PREFIX}${workflowId}`) {
         return fullPath;
+      }
+      if (entry.name === workflowId) {
+        legacyMatch = fullPath;
+        continue;
       }
       queue.push(fullPath);
     }
   }
 
-  return null;
+  return legacyMatch;
 }
 
 async function getWorkflowDir(workflowId: string): Promise<string> {
@@ -410,9 +424,8 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
       if (!setParsed && !codeParsed) continue;
 
       const parentDir = path.basename(current);
-      if (!WORKFLOW_ID_RE.test(parentDir)) continue;
-
-      const workflowId = parentDir;
+      const workflowId = parseWorkflowDirName(parentDir);
+      if (!workflowId) continue;
       const nodeId = setParsed?.nodeId ?? codeParsed?.nodeId;
       if (!nodeId) continue;
 
