@@ -26,6 +26,7 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_workflow_autofix: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   n8n_workflow_test: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_code_node_test: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+  n8n_workflow_execution_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_executions_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_executions_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   n8n_executions_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },

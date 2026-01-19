@@ -16,6 +16,7 @@ export { n8nCodeNodeTestDoc } from './n8n-code-node-test';
 export { n8nExecutionsGetDoc } from './n8n-executions-get';
 export { n8nExecutionsListDoc } from './n8n-executions-list';
 export { n8nExecutionsDeleteDoc } from './n8n-executions-delete';
+export { n8nWorkflowExecutionGetDoc } from './n8n-workflow-execution-get';
 export { n8nWorkflowVersionsListDoc } from './n8n-workflow-versions-list';
 export { n8nWorkflowVersionsGetDoc } from './n8n-workflow-versions-get';
 export { n8nWorkflowVersionsRollbackDoc } from './n8n-workflow-versions-rollback';

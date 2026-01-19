@@ -500,6 +500,7 @@ const codeNodeTestSchema = z.object({
   timeout: z.number().int().positive().optional(),
   diagnostics: z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
   diagnosticsItemsLimit: z.number().int().min(0).optional(),
+  responseMode: z.enum(['result', 'full']).optional(),
   runnerWorkflowId: z.string().optional(),
   runnerWebhookPath: z.string().optional(),
   waitForResponse: z.boolean().optional(),
@@ -1822,6 +1823,62 @@ function extractRunnerMeta(
   return { executionId };
 }
 
+function extractExecutionErrorDetails(responseData: unknown): {
+  errorMessage?: string;
+  errorDetails?: Record<string, unknown>;
+  n8nDetails?: Record<string, unknown>;
+} | undefined {
+  if (!responseData || typeof responseData !== 'object') {
+    return undefined;
+  }
+
+  const data = responseData as Record<string, unknown>;
+  const errorMessage = typeof data.errorMessage === 'string' ? data.errorMessage : undefined;
+  const errorDetails = data.errorDetails && typeof data.errorDetails === 'object'
+    ? (data.errorDetails as Record<string, unknown>)
+    : undefined;
+  const n8nDetails = data.n8nDetails && typeof data.n8nDetails === 'object'
+    ? (data.n8nDetails as Record<string, unknown>)
+    : undefined;
+
+  if (!errorMessage && !errorDetails && !n8nDetails) {
+    return undefined;
+  }
+
+  return { errorMessage, errorDetails, n8nDetails };
+}
+
+function stripMcpMetaFromResult(result: unknown): unknown {
+  if (Array.isArray(result)) {
+    return result.map(item => {
+      if (!item || typeof item !== 'object') {
+        return item;
+      }
+      const record = { ...(item as Record<string, unknown>) };
+      if ('mcpMeta' in record) {
+        delete record.mcpMeta;
+      }
+      if ('meta' in record && record.meta && typeof record.meta === 'object' && 'executionId' in (record.meta as any)) {
+        delete record.meta;
+      }
+      return record;
+    });
+  }
+
+  if (result && typeof result === 'object') {
+    const record = { ...(result as Record<string, unknown>) };
+    if ('mcpMeta' in record) {
+      delete record.mcpMeta;
+    }
+    if ('meta' in record && record.meta && typeof record.meta === 'object' && 'executionId' in (record.meta as any)) {
+      delete record.meta;
+    }
+    return record;
+  }
+
+  return result;
+}
+
 export async function handleTestCodeNode(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
   try {
     const client = ensureApiConfigured(context);
@@ -1832,7 +1889,8 @@ export async function handleTestCodeNode(args: unknown, context?: InstanceContex
     const mode = input.mode ?? 'node';
     const includeUpstream = input.includeUpstream ?? (mode === 'subgraph');
     const includeDownstream = input.includeDownstream ?? (mode === 'subgraph');
-    const diagnosticsMode = input.diagnostics ?? 'summary';
+    const diagnosticsMode = input.diagnostics ?? 'none';
+    const responseMode = input.responseMode ?? 'result';
 
     const targetNodeName = resolveNodeName(workflow, input.nodeId || input.nodeName);
     const targetNode = targetNodeName
@@ -1961,6 +2019,8 @@ export async function handleTestCodeNode(args: unknown, context?: InstanceContex
 
     const metaInfo = extractRunnerMeta(response.data, response.headers);
     const warnings = [...subWorkflowResult.warnings];
+    const errorDetails = extractExecutionErrorDetails(response.data);
+    const isError = response.status >= 400 || !!errorDetails?.errorMessage;
     let diagnostics: unknown = undefined;
 
     if (diagnosticsMode !== 'none') {
@@ -1981,25 +2041,59 @@ export async function handleTestCodeNode(args: unknown, context?: InstanceContex
       }
     }
 
+    const cleanedResult = responseMode === 'full'
+      ? response.data
+      : stripMcpMetaFromResult(response.data);
+
+    const baseData = {
+      workflowId: input.workflowId,
+      nodeId: targetNode?.id,
+      nodeName: targetNode?.name,
+      mode,
+      executionId: metaInfo.executionId,
+      result: cleanedResult,
+    };
+
+    if (isError) {
+      return {
+        success: false,
+        error: errorDetails?.errorMessage || response.statusText || 'Error in workflow',
+        code: response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
+        details: {
+          ...baseData,
+          status: response.status,
+          statusText: response.statusText,
+          error: errorDetails ?? response.data,
+          runnerWorkflowId,
+          runnerWebhookUrl: webhookUrl,
+          runnerMeta: metaInfo.meta,
+          diagnostics: diagnosticsMode !== 'none' ? diagnostics : undefined,
+          warnings: warnings.length > 0 ? warnings : undefined,
+          response: responseMode === 'full' ? response : undefined,
+          selectedNodeNames: responseMode === 'full' ? subWorkflowResult.selectedNodeNames : undefined,
+          subWorkflowName: responseMode === 'full' ? subWorkflowResult.workflow.name : undefined,
+          triggerNodeName: responseMode === 'full' ? subWorkflowResult.triggerNodeName : undefined,
+        },
+        executionId: metaInfo.executionId,
+      };
+    }
+
+    const fullData = {
+      ...baseData,
+      selectedNodeNames: subWorkflowResult.selectedNodeNames,
+      subWorkflowName: subWorkflowResult.workflow.name,
+      triggerNodeName: subWorkflowResult.triggerNodeName,
+      runnerWorkflowId,
+      runnerWebhookUrl: webhookUrl,
+      runnerMeta: metaInfo.meta,
+      response,
+      diagnostics,
+      warnings: warnings.length > 0 ? warnings : undefined,
+    };
+
     return {
       success: true,
-      data: {
-        workflowId: input.workflowId,
-        nodeId: targetNode?.id,
-        nodeName: targetNode?.name,
-        mode,
-        selectedNodeNames: subWorkflowResult.selectedNodeNames,
-        subWorkflowName: subWorkflowResult.workflow.name,
-        triggerNodeName: subWorkflowResult.triggerNodeName,
-        runnerWorkflowId,
-        runnerWebhookUrl: webhookUrl,
-        executionId: metaInfo.executionId,
-        runnerMeta: metaInfo.meta,
-        response,
-        result: response.data,
-        diagnostics,
-        warnings: warnings.length > 0 ? warnings : undefined,
-      },
+      data: responseMode === 'full' || diagnosticsMode !== 'none' ? fullData : baseData,
       executionId: metaInfo.executionId,
       message: `Code node "${targetNode?.name || 'workflow'}" executed via runner`,
     };
@@ -2152,6 +2246,99 @@ export async function handleGetExecution(args: unknown, context?: InstanceContex
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+export async function handleGetWorkflowExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+
+    const schema = z.object({
+      workflowId: z.string(),
+      executionId: z.string(),
+      mode: z.enum(['preview', 'summary', 'filtered', 'full', 'error']).optional(),
+      nodeNames: z.array(z.string()).optional(),
+      itemsLimit: z.number().optional(),
+      includeInputData: z.boolean().optional(),
+      errorItemsLimit: z.number().min(0).max(100).optional(),
+      includeStackTrace: z.boolean().optional(),
+      includeExecutionPath: z.boolean().optional(),
+      fetchWorkflow: z.boolean().optional(),
+    });
+
+    const params = schema.parse(args);
+    const {
+      workflowId,
+      executionId,
+      mode,
+      nodeNames,
+      itemsLimit,
+      includeInputData,
+      errorItemsLimit,
+      includeStackTrace,
+      includeExecutionPath,
+      fetchWorkflow,
+    } = params;
+
+    const execution = await client.getExecution(executionId, true);
+    if (execution.workflowId !== workflowId) {
+      return {
+        success: false,
+        error: 'Execution does not belong to the specified workflow',
+        details: {
+          workflowId,
+          executionId,
+          executionWorkflowId: execution.workflowId,
+        },
+      };
+    }
+
+    const workflow = fetchWorkflow === false ? undefined : await client.getWorkflow(execution.workflowId);
+    const filterOptions: ExecutionFilterOptions = {
+      mode: mode ?? 'summary',
+      nodeNames,
+      itemsLimit,
+      includeInputData,
+      errorItemsLimit,
+      includeStackTrace,
+      includeExecutionPath,
+    };
+
+    const processed = workflow
+      ? processExecution(execution, filterOptions, workflow)
+      : execution;
+
+    return {
+      success: true,
+      data: {
+        workflowId,
+        executionId,
+        status: execution.status,
+        result: processed,
+      },
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors },
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 }

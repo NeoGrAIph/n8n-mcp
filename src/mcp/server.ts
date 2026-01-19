@@ -1010,6 +1010,11 @@ export class N8NDocumentationMCPServer {
           ? { valid: true, errors: [] }
           : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
         break;
+      case 'n8n_workflow_execution_get':
+        validationResult = args.workflowId && args.executionId
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'workflowId/executionId', message: 'workflowId and executionId are required' }] };
+        break;
       case 'n8n_executions_get':
       case 'n8n_executions_delete':
         validationResult = args.id
@@ -1378,6 +1383,9 @@ export class N8NDocumentationMCPServer {
       case 'n8n_code_node_test':
         this.validateToolParams(name, args, ['workflowId']);
         return n8nHandlers.handleTestCodeNode(args, this.instanceContext);
+      case 'n8n_workflow_execution_get':
+        this.validateToolParams(name, args, ['workflowId', 'executionId']);
+        return n8nHandlers.handleGetWorkflowExecution(args, this.instanceContext);
       case 'n8n_executions_get':
         this.validateToolParams(name, args, ['id']);
         return n8nHandlers.handleGetExecution(args, this.instanceContext);

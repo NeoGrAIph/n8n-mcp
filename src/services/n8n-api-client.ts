@@ -461,7 +461,7 @@ export class N8nApiClient {
       // Create a new axios instance for webhook requests to avoid API interceptors
       const webhookClient = axios.create({
         baseURL: new URL('/', webhookUrl).toString(),
-        validateStatus: (status: number) => status < 500, // Don't throw on 4xx
+        validateStatus: (status: number) => status < 600, // Don't throw on 4xx/5xx to allow error payload parsing
       });
 
       const response = await webhookClient.request(config);

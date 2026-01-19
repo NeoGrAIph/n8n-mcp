@@ -455,7 +455,7 @@ export const n8nManagementTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_code_node_test',
-    description: `Test a Code node or branch from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes full|node|subgraph and optional upstream/downstream inclusion. Provide workflowId and nodeId/nodeName (or startNode for subgraph). Returns execution metadata, runner response, and optional diagnostics.`,
+    description: `Test a Code node or branch from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes full|node|subgraph and optional upstream/downstream inclusion. Provide workflowId and nodeId/nodeName (or startNode for subgraph). Returns minimal result by default; use responseMode=full or diagnostics to get full details.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -508,11 +508,16 @@ export const n8nManagementTools: ToolDefinition[] = [
         diagnostics: {
           type: 'string',
           enum: ['none', 'preview', 'summary', 'full', 'error'],
-          description: 'Execution diagnostics mode (default: summary)'
+          description: 'Execution diagnostics mode (default: none)'
         },
         diagnosticsItemsLimit: {
           type: 'integer',
           description: 'Items per node for diagnostics (default: 2)'
+        },
+        responseMode: {
+          type: 'string',
+          enum: ['result', 'full'],
+          description: 'Response shape: minimal result or full diagnostics payload (default: result)'
         },
         runnerWorkflowId: {
           type: 'string',
@@ -528,6 +533,58 @@ export const n8nManagementTools: ToolDefinition[] = [
         }
       },
       required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_workflow_execution_get',
+    description: `Get execution results for a specific workflow. Provide workflowId and executionId to fetch the execution and return processed results. Useful when you only have /workflow/<id>/executions/<executionId> references.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID that owns the execution'
+        },
+        executionId: {
+          type: 'string',
+          description: 'Execution ID to retrieve'
+        },
+        mode: {
+          type: 'string',
+          enum: ['preview', 'summary', 'filtered', 'full', 'error'],
+          description: 'Detail level for execution data (default: summary)'
+        },
+        nodeNames: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Filter to specific nodes (for filtered mode)'
+        },
+        itemsLimit: {
+          type: 'integer',
+          description: 'Items per node to return (for filtered/summary modes)'
+        },
+        includeInputData: {
+          type: 'boolean',
+          description: 'Include input data in results (default: false)'
+        },
+        errorItemsLimit: {
+          type: 'integer',
+          description: 'For mode=error: sample items from upstream node (default: 2)'
+        },
+        includeStackTrace: {
+          type: 'boolean',
+          description: 'For mode=error: include full stack trace (default: false)'
+        },
+        includeExecutionPath: {
+          type: 'boolean',
+          description: 'For mode=error: include execution path leading to error (default: true)'
+        },
+        fetchWorkflow: {
+          type: 'boolean',
+          description: 'Fetch workflow for accurate processing (default: true)'
+        }
+      },
+      required: ['workflowId', 'executionId']
     }
   },
   {

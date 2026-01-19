@@ -95,7 +95,7 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   n8n_code_node_test: {
-    description: 'Execute a Code node or branch from an existing workflow using the utility runner. Supports modes full/node/subgraph and optional diagnostics.',
+    description: 'Execute a Code node or branch from an existing workflow using the utility runner. Supports modes full/node/subgraph and optional diagnostics. Returns minimal result by default; use responseMode="full" for full payload.',
     params: {
       workflowId: 'String workflow ID',
       mode: 'Optional: "full", "node" (default), or "subgraph"',
@@ -108,11 +108,28 @@ export const n8nFriendlyDescriptions: Record<string, {
       items: 'Optional array of items (full n8n items or plain objects)',
       item: 'Optional single object input',
       timeout: 'Optional timeout in ms for runner webhook',
-      diagnostics: 'Optional: "none", "preview", "summary" (default), "full", "error"',
+      diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error"',
       diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+      responseMode: 'Optional: "result" (default) or "full"',
       runnerWorkflowId: 'Optional string runner workflow ID override',
       runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
       waitForResponse: 'Optional boolean (default true)'
+    }
+  },
+
+  n8n_workflow_execution_get: {
+    description: 'Get execution results for a specific workflow. Provide workflowId and executionId to fetch and process execution data.',
+    params: {
+      workflowId: 'String workflow ID',
+      executionId: 'String execution ID',
+      mode: 'Optional: "preview", "summary" (default), "filtered", "full", "error"',
+      nodeNames: 'Optional array of node names to include',
+      itemsLimit: 'Optional integer items limit per node',
+      includeInputData: 'Optional boolean (default false)',
+      errorItemsLimit: 'Optional integer for error mode (default 2)',
+      includeStackTrace: 'Optional boolean (default false)',
+      includeExecutionPath: 'Optional boolean (default true)',
+      fetchWorkflow: 'Optional boolean (default true)'
     }
   }
 };

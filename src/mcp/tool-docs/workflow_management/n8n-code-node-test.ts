@@ -12,7 +12,8 @@ export const n8nCodeNodeTestDoc: ToolDocumentation = {
       'Runner workflow must exist and be ACTIVE',
       'Provide nodeId for precision when multiple similar node names exist',
       'Use items to simulate input data from previous nodes',
-      'Use mode=subgraph with startNode/endNodes for branch testing'
+      'Use mode=subgraph with startNode/endNodes for branch testing',
+      'Default response is minimal (result only). Use responseMode=full for full payload.'
     ]
   },
   full: {
@@ -78,12 +79,17 @@ This is useful for isolated debugging of Code nodes or their surrounding branche
       diagnostics: {
         type: 'string',
         required: false,
-        description: 'Diagnostics mode: none | preview | summary | full | error (default: summary)'
+        description: 'Diagnostics mode: none | preview | summary | full | error (default: none)'
       },
       diagnosticsItemsLimit: {
         type: 'number',
         required: false,
         description: 'Items limit per node for diagnostics output'
+      },
+      responseMode: {
+        type: 'string',
+        required: false,
+        description: 'Response mode: result | full (default: result)'
       },
       runnerWorkflowId: {
         type: 'string',
@@ -101,13 +107,19 @@ This is useful for isolated debugging of Code nodes or their surrounding branche
         description: 'Wait for workflow completion (default: true)'
       }
     },
-    returns: `Runner webhook response plus metadata:
+    returns: `Default response (minimal):
+- workflowId / nodeId / nodeName
+- mode
+- executionId (runner execution, when available)
+- result (workflow output)
+
+Full response (responseMode=full or diagnostics enabled):
 - workflowId / nodeId / nodeName
 - mode + selectedNodeNames
 - subWorkflowName + triggerNodeName
 - runnerWorkflowId + runnerWebhookUrl
-- executionId (runner execution, when available)
-- response (status, data) and result
+- executionId + runnerMeta
+- response (status, data)
 - diagnostics (optional)
 - warnings (optional)`,
     examples: [
@@ -116,7 +128,8 @@ This is useful for isolated debugging of Code nodes or their surrounding branche
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", item: {foo: "bar"}})',
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", items: [{json: {a: 1}}, {json: {a: 2}}]})',
       'n8n_code_node_test({workflowId: "123", mode: "subgraph", startNode: "Prepare Data", endNodes: ["Notify"], diagnostics: "summary"})',
-      'n8n_code_node_test({workflowId: "123", mode: "full", timeout: 180000})'
+      'n8n_code_node_test({workflowId: "123", mode: "full", timeout: 180000})',
+      'n8n_code_node_test({workflowId: "123", mode: "full", responseMode: "full"})'
     ],
     useCases: [
       'Debug Code node logic in isolation',
