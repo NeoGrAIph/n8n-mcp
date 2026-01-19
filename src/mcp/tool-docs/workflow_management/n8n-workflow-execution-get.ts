@@ -85,6 +85,16 @@ export const n8nWorkflowExecutionGetDoc: ToolDocumentation = {
       'Fetch a minimal summary for audit logs',
       'Retrieve filtered node outputs for debugging'
     ],
+    performance: 'Summary/preview is fast; full can be large depending on runData size.',
+    bestPractices: [
+      'Use mode="summary" or "preview" for quick inspection',
+      'Use mode="error" when debugging failures',
+      'Filter by nodeNames + itemsLimit to keep payload small'
+    ],
+    pitfalls: [
+      'mode="full" can be large and slow for big executions',
+      'fetchWorkflow=false returns raw execution without processed summaries'
+    ],
     relatedTools: ['n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_test', 'n8n_workflow_get']
   }
 };
