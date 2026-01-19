@@ -1005,6 +1005,11 @@ export class N8NDocumentationMCPServer {
       case 'n8n_workflow_autofix':
         validationResult = ToolValidation.validateWorkflowId(args);
         break;
+      case 'n8n_code_node_test':
+        validationResult = args.workflowId
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+        break;
       case 'n8n_executions_get':
       case 'n8n_executions_delete':
         validationResult = args.id
@@ -1370,6 +1375,9 @@ export class N8NDocumentationMCPServer {
       case 'n8n_workflow_test':
         this.validateToolParams(name, args, ['workflowId']);
         return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
+      case 'n8n_code_node_test':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleTestCodeNode(args, this.instanceContext);
       case 'n8n_executions_get':
         this.validateToolParams(name, args, ['id']);
         return n8nHandlers.handleGetExecution(args, this.instanceContext);

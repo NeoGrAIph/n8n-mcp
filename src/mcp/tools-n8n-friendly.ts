@@ -92,6 +92,20 @@ export const n8nFriendlyDescriptions: Record<string, {
       maxFuzz: 'Optional integer: maximum fuzz allowed (default 0, max 2)',
       ignoreWhitespaceInContext: 'Optional boolean: ignore whitespace differences in context matching'
     }
+  },
+
+  n8n_code_node_test: {
+    description: 'Execute a Code node from an existing workflow using the utility runner. Provide workflowId and nodeId or nodeName, plus optional items/item for input. Returns the Code node output.',
+    params: {
+      workflowId: 'String workflow ID',
+      nodeId: 'Optional string Code node ID (preferred)',
+      nodeName: 'Optional string Code node name (used if nodeId not provided)',
+      items: 'Optional array of items (full n8n items or plain objects)',
+      item: 'Optional single object input',
+      runnerWorkflowId: 'Optional string runner workflow ID override',
+      runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
+      waitForResponse: 'Optional boolean (default true)'
+    }
   }
 };
 

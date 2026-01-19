@@ -485,6 +485,25 @@ const testWorkflowSchema = z.object({
   waitForResponse: z.boolean().optional(),
 });
 
+const codeNodeTestSchema = z.object({
+  workflowId: z.string(),
+  nodeId: z.string().optional(),
+  nodeName: z.string().optional(),
+  items: z.array(z.unknown()).optional(),
+  item: z.record(z.unknown()).optional(),
+  runnerWorkflowId: z.string().optional(),
+  runnerWebhookPath: z.string().optional(),
+  waitForResponse: z.boolean().optional(),
+}).superRefine((value, ctx) => {
+  if (!value.nodeId && !value.nodeName) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Either nodeId or nodeName is required',
+      path: ['nodeId'],
+    });
+  }
+});
+
 const listExecutionsSchema = z.object({
   limit: z.number().min(1).max(100).optional(),
   cursor: z.string().optional(),
@@ -1682,6 +1701,198 @@ export async function handleTestWorkflow(args: unknown, context?: InstanceContex
   }
 }
 
+const CODE_NODE_RUNNER_NAME = 'MCP Utility - Code Node Runner';
+const CODE_NODE_RUNNER_WEBHOOK_PATH = 'mcp-code-node-runner';
+const CODE_NODE_TYPE = 'n8n-nodes-base.code';
+
+function getN8nBaseUrl(context?: InstanceContext): string | null {
+  const apiUrl = context?.n8nApiUrl || process.env.N8N_API_URL;
+  if (!apiUrl) {
+    return null;
+  }
+  return apiUrl.replace(/\/api\/v\d+\/?$/, '');
+}
+
+async function resolveRunnerWorkflowId(
+  client: N8nApiClient,
+  runnerWorkflowId?: string
+): Promise<string | null> {
+  if (runnerWorkflowId) {
+    return runnerWorkflowId;
+  }
+
+  let cursor: string | undefined | null;
+  do {
+    const response = await client.listWorkflows({ limit: 100, cursor: cursor || undefined });
+    const match = response.data.find(workflow => workflow.name === CODE_NODE_RUNNER_NAME);
+    if (match?.id) {
+      return match.id;
+    }
+    cursor = response.nextCursor;
+  } while (cursor);
+
+  return null;
+}
+
+function buildCodeNodeSubWorkflow(codeNode: WorkflowNode, parentWorkflowName?: string): Workflow {
+  const triggerNode: WorkflowNode = {
+    id: 'mcp-execute-workflow-trigger',
+    name: 'MCP Execute Workflow Trigger',
+    type: 'n8n-nodes-base.executeWorkflowTrigger',
+    typeVersion: 1.1,
+    position: [0, 0],
+    parameters: {
+      inputSource: 'passthrough',
+    },
+  };
+
+  const testNode: WorkflowNode = {
+    ...codeNode,
+    disabled: false,
+  };
+
+  return {
+    name: `MCP Code Test: ${parentWorkflowName || 'Workflow'} / ${codeNode.name}`,
+    nodes: [triggerNode, testNode],
+    connections: {
+      [triggerNode.name]: {
+        main: [
+          [
+            {
+              node: testNode.name,
+              type: 'main',
+              index: 0,
+            },
+          ],
+        ],
+      },
+    },
+    settings: {
+      executionOrder: 'v1',
+    },
+    staticData: {},
+  };
+}
+
+export async function handleTestCodeNode(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = codeNodeTestSchema.parse(args);
+
+    const workflow = await client.getWorkflow(input.workflowId);
+
+    const targetNode = input.nodeId
+      ? workflow.nodes.find(node => node.id === input.nodeId)
+      : workflow.nodes.find(node => node.name === input.nodeName);
+
+    if (!targetNode) {
+      return {
+        success: false,
+        error: 'Code node not found in workflow',
+        details: {
+          workflowId: input.workflowId,
+          nodeId: input.nodeId,
+          nodeName: input.nodeName,
+        },
+      };
+    }
+
+    if (targetNode.type !== CODE_NODE_TYPE) {
+      return {
+        success: false,
+        error: `Node "${targetNode.name}" is not a Code node`,
+        details: {
+          workflowId: input.workflowId,
+          nodeId: targetNode.id,
+          nodeName: targetNode.name,
+          nodeType: targetNode.type,
+        },
+      };
+    }
+
+    const runnerWorkflowId = await resolveRunnerWorkflowId(client, input.runnerWorkflowId);
+    if (!runnerWorkflowId) {
+      return {
+        success: false,
+        error: 'Runner workflow not found',
+        details: {
+          runnerWorkflowId: input.runnerWorkflowId,
+          runnerWorkflowName: CODE_NODE_RUNNER_NAME,
+          hint: 'Create and activate the utility workflow "MCP Utility - Code Node Runner" in n8n dev',
+        },
+      };
+    }
+
+    const baseUrl = getN8nBaseUrl(context);
+    if (!baseUrl) {
+      return {
+        success: false,
+        error: 'Cannot determine n8n base URL',
+        details: {
+          hint: 'Set N8N_API_URL or provide n8nApiUrl in instance context',
+        },
+      };
+    }
+
+    const runnerPath = (input.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');
+    const webhookUrl = `${baseUrl.replace(/\/+$/, '')}/webhook/${runnerWorkflowId}/webhook/${runnerPath}`;
+
+    const payloadItems = Array.isArray(input.items) && input.items.length > 0
+      ? input.items
+      : input.item
+        ? [input.item]
+        : [{ json: {} }];
+
+    const subWorkflow = buildCodeNodeSubWorkflow(targetNode, workflow.name);
+    const webhookPayload = {
+      workflowJson: JSON.stringify(subWorkflow),
+      items: payloadItems,
+    };
+
+    const response = await client.triggerWebhook({
+      webhookUrl,
+      httpMethod: 'POST',
+      data: webhookPayload,
+      waitForResponse: input.waitForResponse ?? true,
+    });
+
+    return {
+      success: true,
+      data: {
+        workflowId: input.workflowId,
+        nodeId: targetNode.id,
+        nodeName: targetNode.name,
+        runnerWorkflowId,
+        runnerWebhookUrl: webhookUrl,
+        response,
+      },
+      message: `Code node "${targetNode.name}" executed via runner`,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: 'Invalid input',
+        details: { errors: error.errors },
+      };
+    }
+
+    if (error instanceof N8nApiError) {
+      return {
+        success: false,
+        error: getUserFriendlyErrorMessage(error),
+        code: error.code,
+        details: error.details as Record<string, unknown> | undefined,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
 export async function handleGetExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
   try {
     const client = ensureApiConfigured(context);
@@ -2226,9 +2437,9 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
   // Check which tools are available
   const documentationTools = 7; // Base documentation tools (after v2.26.0 consolidation)
   const workflowFileTools = process.env.N8N_WORKFLOWS_ROOT ? 7 : 0;
-  const managementTools = apiConfigured ? 25 : 0; // Management tools requiring API (includes folder tools)
+  const managementTools = apiConfigured ? 26 : 0; // Management tools requiring API (includes folder tools)
   const totalTools = documentationTools + managementTools + workflowFileTools;
-  const totalToolsWithApi = documentationTools + workflowFileTools + 25;
+  const totalToolsWithApi = documentationTools + workflowFileTools + 26;
 
   // Check npm version
   const versionCheck = await checkNpmVersion();

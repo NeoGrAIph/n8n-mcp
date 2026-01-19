@@ -454,6 +454,48 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
+    name: 'n8n_code_node_test',
+    description: `Test a Code node from an existing workflow by executing it inside a temporary sub-workflow through the utility runner. Provide workflowId and nodeId or nodeName. Optionally pass item or items to simulate input. Returns the Code node output and metadata.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID that contains the Code node'
+        },
+        nodeId: {
+          type: 'string',
+          description: 'Code node ID (preferred for precision)'
+        },
+        nodeName: {
+          type: 'string',
+          description: 'Code node name (used if nodeId is not provided)'
+        },
+        items: {
+          type: 'array',
+          description: 'Optional array of input items. Each item can be a full n8n item ({json, binary}) or a plain object (will be wrapped as {json}).'
+        },
+        item: {
+          type: 'object',
+          description: 'Optional single input object (used if items is not provided)'
+        },
+        runnerWorkflowId: {
+          type: 'string',
+          description: 'Optional override for the utility runner workflow ID'
+        },
+        runnerWebhookPath: {
+          type: 'string',
+          description: 'Optional override for the runner webhook path (default: mcp-code-node-runner)'
+        },
+        waitForResponse: {
+          type: 'boolean',
+          description: 'Wait for workflow completion (default: true)'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
     name: 'n8n_executions_get',
     description: `Get details for a specific execution by id. Use this when you need to inspect a run for debugging or audit. Provide id plus optional mode/nodeNames/itemsLimit to control response size and error detail. Returns the execution data, possibly filtered or summarized.`,
     inputSchema: {

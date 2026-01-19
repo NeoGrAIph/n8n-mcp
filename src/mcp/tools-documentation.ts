@@ -140,7 +140,7 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
   - searchMode='by_task': Curated task-based templates
   - searchMode='by_metadata': Filter by complexity/services
 
-**n8n API Tools** (25 tools, requires N8N_API_URL configuration)
+**n8n API Tools** (26 tools, requires N8N_API_URL configuration)
 - n8n_workflow_create - Create new workflows
 - n8n_workflow_get - Get workflow with mode='full'/'details'/'structure'/'minimal'
 - n8n_workflow_update_full - Full workflow replacement
