@@ -455,13 +455,18 @@ export const n8nManagementTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_code_node_test',
-    description: `Test a Code node from an existing workflow by executing it inside a temporary sub-workflow through the utility runner. Provide workflowId and nodeId or nodeName. Optionally pass item or items to simulate input. Returns the Code node output and metadata.`,
+    description: `Test a Code node or branch from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes full|node|subgraph and optional upstream/downstream inclusion. Provide workflowId and nodeId/nodeName (or startNode for subgraph). Returns execution metadata, runner response, and optional diagnostics.`,
     inputSchema: {
       type: 'object',
       properties: {
         workflowId: {
           type: 'string',
           description: 'Workflow ID that contains the Code node'
+        },
+        mode: {
+          type: 'string',
+          enum: ['full', 'node', 'subgraph'],
+          description: 'Execution mode: full workflow, single node, or subgraph (default: node)'
         },
         nodeId: {
           type: 'string',
@@ -471,6 +476,23 @@ export const n8nManagementTools: ToolDefinition[] = [
           type: 'string',
           description: 'Code node name (used if nodeId is not provided)'
         },
+        startNode: {
+          type: 'string',
+          description: 'Start node for subgraph mode (node name or id)'
+        },
+        endNodes: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional end nodes to limit subgraph expansion'
+        },
+        includeUpstream: {
+          type: 'boolean',
+          description: 'Include upstream ancestors in subgraph (default: true for subgraph, false for node)'
+        },
+        includeDownstream: {
+          type: 'boolean',
+          description: 'Include downstream descendants in subgraph (default: true for subgraph, false for node)'
+        },
         items: {
           type: 'array',
           description: 'Optional array of input items. Each item can be a full n8n item ({json, binary}) or a plain object (will be wrapped as {json}).'
@@ -478,6 +500,19 @@ export const n8nManagementTools: ToolDefinition[] = [
         item: {
           type: 'object',
           description: 'Optional single input object (used if items is not provided)'
+        },
+        timeout: {
+          type: 'integer',
+          description: 'Timeout in ms for the runner webhook call'
+        },
+        diagnostics: {
+          type: 'string',
+          enum: ['none', 'preview', 'summary', 'full', 'error'],
+          description: 'Execution diagnostics mode (default: summary)'
+        },
+        diagnosticsItemsLimit: {
+          type: 'integer',
+          description: 'Items per node for diagnostics (default: 2)'
         },
         runnerWorkflowId: {
           type: 'string',

@@ -95,13 +95,21 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   n8n_code_node_test: {
-    description: 'Execute a Code node from an existing workflow using the utility runner. Provide workflowId and nodeId or nodeName, plus optional items/item for input. Returns the Code node output.',
+    description: 'Execute a Code node or branch from an existing workflow using the utility runner. Supports modes full/node/subgraph and optional diagnostics.',
     params: {
       workflowId: 'String workflow ID',
+      mode: 'Optional: "full", "node" (default), or "subgraph"',
       nodeId: 'Optional string Code node ID (preferred)',
       nodeName: 'Optional string Code node name (used if nodeId not provided)',
+      startNode: 'Optional start node (name or id) for subgraph mode',
+      endNodes: 'Optional array of end node names/ids to limit subgraph',
+      includeUpstream: 'Optional boolean to include upstream nodes',
+      includeDownstream: 'Optional boolean to include downstream nodes',
       items: 'Optional array of items (full n8n items or plain objects)',
       item: 'Optional single object input',
+      timeout: 'Optional timeout in ms for runner webhook',
+      diagnostics: 'Optional: "none", "preview", "summary" (default), "full", "error"',
+      diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
       runnerWorkflowId: 'Optional string runner workflow ID override',
       runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
       waitForResponse: 'Optional boolean (default true)'

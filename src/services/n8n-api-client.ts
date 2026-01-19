@@ -428,7 +428,7 @@ export class N8nApiClient {
   // Webhook Execution
   async triggerWebhook(request: WebhookRequest): Promise<any> {
     try {
-      const { webhookUrl, httpMethod, data, headers, waitForResponse = true } = request;
+      const { webhookUrl, httpMethod, data, headers, waitForResponse = true, timeoutMs } = request;
 
       // SECURITY: Validate URL for SSRF protection (includes DNS resolution)
       // See: https://github.com/czlonkowski/n8n-mcp/issues/265 (HIGH-03)
@@ -455,7 +455,7 @@ export class N8nApiClient {
         data: httpMethod !== 'GET' ? data : undefined,
         params: httpMethod === 'GET' ? data : undefined,
         // Webhooks might take longer
-        timeout: waitForResponse ? 120000 : 30000,
+        timeout: typeof timeoutMs === 'number' ? timeoutMs : (waitForResponse ? 120000 : 30000),
       };
 
       // Create a new axios instance for webhook requests to avoid API interceptors

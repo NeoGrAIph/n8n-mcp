@@ -334,6 +334,7 @@ export interface WebhookRequest {
   data?: Record<string, unknown>;
   headers?: Record<string, string>;
   waitForResponse?: boolean;
+  timeoutMs?: number;
 }
 
 // MCP Tool Response Type
