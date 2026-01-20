@@ -1977,7 +1977,9 @@ export async function handleTestCodeNode(args: unknown, context?: InstanceContex
     }
 
     const runnerPath = (input.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');
-    const webhookUrl = `${baseUrl.replace(/\/+$/, '')}/webhook/${runnerWorkflowId}/webhook/${runnerPath}`;
+    const baseUrlClean = baseUrl.replace(/\/+$/, '');
+    const standardWebhookUrl = `${baseUrlClean}/webhook/${runnerPath}`;
+    const legacyWebhookUrl = `${baseUrlClean}/webhook/${runnerWorkflowId}/webhook/${runnerPath}`;
 
     let subWorkflowResult: ReturnType<typeof buildSubWorkflow>;
     try {
@@ -2009,16 +2011,29 @@ export async function handleTestCodeNode(args: unknown, context?: InstanceContex
       items: payloadItems,
     };
 
-    const response = await client.triggerWebhook({
-      webhookUrl,
+    const tryWebhook = async (url: string) => client.triggerWebhook({
+      webhookUrl: url,
       httpMethod: 'POST',
       data: webhookPayload,
       waitForResponse: input.waitForResponse ?? true,
       timeoutMs: input.timeout,
     });
 
+    let webhookUrl = standardWebhookUrl;
+    let usedLegacyWebhook = false;
+    let response = await tryWebhook(standardWebhookUrl);
+    const responseMessage = (response?.data as Record<string, unknown>)?.message;
+    if (response?.status === 404 && typeof responseMessage === 'string' && responseMessage.includes('not registered')) {
+      response = await tryWebhook(legacyWebhookUrl);
+      webhookUrl = legacyWebhookUrl;
+      usedLegacyWebhook = true;
+    }
+
     const metaInfo = extractRunnerMeta(response.data, response.headers);
     const warnings = [...subWorkflowResult.warnings];
+    if (usedLegacyWebhook) {
+      warnings.push('Runner webhook used legacy URL pattern /webhook/<workflowId>/webhook/<path>');
+    }
     const errorDetails = extractExecutionErrorDetails(response.data);
     const isError = response.status >= 400 || !!errorDetails?.errorMessage;
     let diagnostics: unknown = undefined;
