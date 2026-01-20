@@ -1832,20 +1832,52 @@ function extractExecutionErrorDetails(responseData: unknown): {
     return undefined;
   }
 
-  const data = responseData as Record<string, unknown>;
-  const errorMessage = typeof data.errorMessage === 'string' ? data.errorMessage : undefined;
-  const errorDetails = data.errorDetails && typeof data.errorDetails === 'object'
-    ? (data.errorDetails as Record<string, unknown>)
-    : undefined;
-  const n8nDetails = data.n8nDetails && typeof data.n8nDetails === 'object'
-    ? (data.n8nDetails as Record<string, unknown>)
-    : undefined;
+  const extractFromRecord = (record: Record<string, unknown>) => {
+    const errorMessage = typeof record.errorMessage === 'string' ? record.errorMessage : undefined;
+    const errorDetails = record.errorDetails && typeof record.errorDetails === 'object'
+      ? (record.errorDetails as Record<string, unknown>)
+      : undefined;
+    const n8nDetails = record.n8nDetails && typeof record.n8nDetails === 'object'
+      ? (record.n8nDetails as Record<string, unknown>)
+      : undefined;
 
-  if (!errorMessage && !errorDetails && !n8nDetails) {
+    if (!errorMessage && !errorDetails && !n8nDetails) {
+      return undefined;
+    }
+    return { errorMessage, errorDetails, n8nDetails };
+  };
+
+  if (Array.isArray(responseData)) {
+    for (const entry of responseData) {
+      if (!entry || typeof entry !== 'object') {
+        continue;
+      }
+      const record = entry as Record<string, unknown>;
+      const direct = extractFromRecord(record);
+      if (direct) {
+        return direct;
+      }
+      const nested = record.json && typeof record.json === 'object'
+        ? extractFromRecord(record.json as Record<string, unknown>)
+        : undefined;
+      if (nested) {
+        return nested;
+      }
+    }
     return undefined;
   }
 
-  return { errorMessage, errorDetails, n8nDetails };
+  const data = responseData as Record<string, unknown>;
+  const direct = extractFromRecord(data);
+  if (direct) {
+    return direct;
+  }
+
+  if (data.json && typeof data.json === 'object') {
+    return extractFromRecord(data.json as Record<string, unknown>);
+  }
+
+  return undefined;
 }
 
 function stripMcpMetaFromResult(result: unknown): unknown {
