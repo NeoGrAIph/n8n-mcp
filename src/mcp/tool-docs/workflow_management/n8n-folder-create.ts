@@ -5,11 +5,12 @@ export const n8nFolderCreateDoc: ToolDocumentation = {
   category: 'workflow_management',
   essentials: {
     description: 'Create a folder in a project (internal REST API). Supports root or nested folders.',
-    keyParameters: ['projectId', 'name', 'parentFolderId'],
-    example: 'n8n_folder_create({projectId: "proj_123", name: "Ops"})',
+    keyParameters: ['name', 'projectId', 'parentFolderId'],
+    example: 'n8n_folder_create({name: "Ops"})',
     performance: 'Fast (100-300ms)',
     tips: [
       'Use parentFolderId to create nested folders',
+      'Omit projectId to use your personal project',
       'Names should be unique within the same parent',
       'Use n8n_folders_list to confirm placement'
     ]
@@ -17,13 +18,13 @@ export const n8nFolderCreateDoc: ToolDocumentation = {
   full: {
     description: 'Creates a folder in a project using n8n internal REST endpoints. You can create a top-level folder (omit parentFolderId) or a nested folder (provide parentFolderId).',
     parameters: {
-      projectId: { type: 'string', description: 'Project ID (required)', required: true },
+      projectId: { type: 'string', description: 'Project ID (optional; defaults to your personal project)' },
       name: { type: 'string', description: 'Folder name (required)', required: true },
       parentFolderId: { type: 'string|null', description: 'Parent folder ID (null or omit for root)' }
     },
     returns: 'Folder metadata for the created folder.',
     examples: [
-      'n8n_folder_create({projectId: "proj_123", name: "Finance"}) - Create a root folder',
+      'n8n_folder_create({name: "Finance"}) - Create a root folder in your personal project',
       'n8n_folder_create({projectId: "proj_123", name: "Q1", parentFolderId: "fold_fin"}) - Create nested folder'
     ],
     useCases: [
@@ -39,6 +40,7 @@ export const n8nFolderCreateDoc: ToolDocumentation = {
     ],
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
+      'Folder tools also require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)',
       'Uses internal REST API (not part of public API)',
       'Folder name collisions may be rejected by server'
     ],

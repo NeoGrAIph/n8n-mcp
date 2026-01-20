@@ -147,13 +147,20 @@ export interface Folder {
 }
 
 export interface FolderListParams {
-  projectId: string;
+  projectId?: string;
   parentFolderId?: string;
   filter?: Record<string, unknown> | string;
   projectRelation?: boolean;
   projectRole?: boolean;
   cursor?: string;
   limit?: number;
+}
+
+export interface Project {
+  id: string;
+  name?: string;
+  type?: string;
+  creatorId?: string;
 }
 
 export interface FolderListResponse {

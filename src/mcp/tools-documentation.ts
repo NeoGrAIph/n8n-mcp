@@ -147,10 +147,10 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
 - n8n_workflow_update_partial - Incremental diff-based updates
 - n8n_workflow_delete - Delete workflow
 - n8n_workflows_list - List workflows with filters
-- n8n_folders_list - List folders in a project
-- n8n_folder_create - Create a folder
-- n8n_folder_move - Move/rename a folder
-- n8n_folder_delete - Delete an empty folder
+- n8n_folders_list - List folders in a project (requires REST auth)
+- n8n_folder_create - Create a folder (requires REST auth)
+- n8n_folder_move - Move/rename a folder (requires REST auth)
+- n8n_folder_delete - Delete an empty folder (requires REST auth)
 - n8n_workflow_move_to_folder - Move workflow between folders
 - n8n_workflow_validate - Validate workflow by ID
 - n8n_workflow_autofix - Auto-fix common issues
@@ -216,6 +216,7 @@ ${tools.map(toolName => {
 - Use n8n_node_get() with detail='standard' first for most tasks (~95% smaller than detail='full')
 - Validation profiles: minimal (editing), runtime (default), strict (deployment)
 - n8n API tools only available when N8N_API_URL and N8N_API_KEY are configured
+- Folder tools additionally require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)
 - Workflow file tools only available when N8N_WORKFLOWS_ROOT points to a readable workflows directory
 
 For detailed documentation on any tool:

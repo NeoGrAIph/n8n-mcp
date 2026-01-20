@@ -6,9 +6,10 @@ export const n8nFoldersListDoc: ToolDocumentation = {
   essentials: {
     description: 'List folders in a project (internal REST API). Returns folder metadata and pagination cursors when available.',
     keyParameters: ['projectId', 'parentFolderId', 'filter'],
-    example: 'n8n_folders_list({projectId: "proj_123"})',
+    example: 'n8n_folders_list({})',
     performance: 'Fast (100-300ms)',
     tips: [
+      'Omit projectId to use your personal project',
       'Use parentFolderId to list direct children',
       'Pass filter object for UI-style filtering',
       'Use cursor when API returns nextCursor'
@@ -17,7 +18,7 @@ export const n8nFoldersListDoc: ToolDocumentation = {
   full: {
     description: 'Lists folders for a project using n8n internal REST endpoints. Useful for browsing folder structure and getting folder IDs for move/delete operations.',
     parameters: {
-      projectId: { type: 'string', description: 'Project ID (required)', required: true },
+      projectId: { type: 'string', description: 'Project ID (optional; defaults to your personal project)' },
       parentFolderId: { type: 'string', description: 'Optional parent folder ID to list direct children only' },
       filter: { type: 'object', description: 'Optional filter object (will be JSON-stringified and passed as filter=...)' },
       projectRelation: { type: 'boolean', description: 'Include project relation metadata (internal API flag)' },
@@ -27,7 +28,7 @@ export const n8nFoldersListDoc: ToolDocumentation = {
     },
     returns: 'Object with: folders array (folder metadata), returned (count), hasMore (boolean), nextCursor (if provided by server), and _note when more data exists.',
     examples: [
-      'n8n_folders_list({projectId: "proj_123"}) - List top-level folders',
+      'n8n_folders_list({}) - List top-level folders in your personal project',
       'n8n_folders_list({projectId: "proj_123", parentFolderId: "fold_1"}) - List child folders',
       'n8n_folders_list({projectId: "proj_123", filter: { state: "active" }}) - Filter folders'
     ],
@@ -44,6 +45,7 @@ export const n8nFoldersListDoc: ToolDocumentation = {
     ],
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
+      'Folder tools also require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)',
       'Uses internal REST API (not part of public API)',
       'Response shape may vary between n8n versions'
     ],

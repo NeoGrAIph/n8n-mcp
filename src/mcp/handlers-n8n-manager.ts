@@ -411,7 +411,7 @@ const listWorkflowsSchema = z.object({
 });
 
 const listFoldersSchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().optional(),
   parentFolderId: z.string().optional(),
   filter: z.union([z.record(z.unknown()), z.string()]).optional(),
   projectRelation: z.boolean().optional(),
@@ -421,13 +421,13 @@ const listFoldersSchema = z.object({
 });
 
 const createFolderSchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().optional(),
   name: z.string().min(1),
   parentFolderId: z.string().nullable().optional(),
 });
 
 const moveFolderSchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().optional(),
   folderId: z.string(),
   name: z.string().optional(),
   parentFolderId: z.string().nullable().optional(),
@@ -437,7 +437,7 @@ const moveFolderSchema = z.object({
 );
 
 const deleteFolderSchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().optional(),
   folderId: z.string(),
 });
 
@@ -2772,6 +2772,8 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
   const envVars = {
     N8N_API_URL: process.env.N8N_API_URL || null,
     N8N_API_KEY: process.env.N8N_API_KEY ? '***configured***' : null,
+    N8N_REST_EMAIL: process.env.N8N_REST_EMAIL ? '***configured***' : null,
+    N8N_REST_PASSWORD: process.env.N8N_REST_PASSWORD ? '***configured***' : null,
     NODE_ENV: process.env.NODE_ENV || 'production',
     MCP_MODE: mcpMode,
     isDocker,
@@ -2827,7 +2829,8 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       config: apiConfig ? {
         baseUrl: apiConfig.baseUrl,
         timeout: apiConfig.timeout,
-        maxRetries: apiConfig.maxRetries
+        maxRetries: apiConfig.maxRetries,
+        restAuthConfigured: Boolean(apiConfig.restEmail && apiConfig.restPassword)
       } : null
     },
     versionInfo: {
@@ -2854,7 +2857,7 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
         count: managementTools,
         enabled: apiConfigured,
         description: apiConfigured ?
-          'Management tools are ENABLED - create, update, execute workflows' :
+          'Management tools are ENABLED - create, update, execute workflows (folder tools require REST auth)' :
           'Management tools are DISABLED - configure N8N_API_URL and N8N_API_KEY to enable'
       },
       totalAvailable: totalTools

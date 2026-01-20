@@ -16,6 +16,7 @@ import {
   Folder,
   FolderListParams,
   FolderListResponse,
+  Project,
   HealthCheckResponse,
   N8nVersionInfo,
   Variable,
@@ -37,6 +38,8 @@ import {
 export interface N8nApiClientConfig {
   baseUrl: string;
   apiKey: string;
+  restEmail?: string;
+  restPassword?: string;
   timeout?: number;
   maxRetries?: number;
 }
@@ -46,21 +49,30 @@ export class N8nApiClient {
   private restClient: AxiosInstance;
   private maxRetries: number;
   private baseUrl: string;
+  private restBaseUrl: string;
+  private restAuthEmail?: string;
+  private restAuthPassword?: string;
+  private restCookie?: string;
+  private restAuthPromise: Promise<void> | null = null;
+  private timeout: number;
   private versionInfo: N8nVersionInfo | null = null;
   private versionPromise: Promise<N8nVersionInfo | null> | null = null;
 
   constructor(config: N8nApiClientConfig) {
-    const { baseUrl, apiKey, timeout = 30000, maxRetries = 3 } = config;
+    const { baseUrl, apiKey, restEmail, restPassword, timeout = 30000, maxRetries = 3 } = config;
 
     this.maxRetries = maxRetries;
     this.baseUrl = baseUrl;
+    this.restAuthEmail = restEmail;
+    this.restAuthPassword = restPassword;
+    this.timeout = timeout;
 
     const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
     const apiUrl = normalizedBaseUrl.endsWith('/api/v1')
       ? normalizedBaseUrl
       : `${normalizedBaseUrl}/api/v1`;
-    const restBaseUrl = normalizedBaseUrl.replace(/\/api\/v1\/?$/, '');
-    const restUrl = `${restBaseUrl}/rest`;
+    this.restBaseUrl = normalizedBaseUrl.replace(/\/api\/v1\/?$/, '');
+    const restUrl = `${this.restBaseUrl}/rest`;
 
     const createClient = (baseURL: string, label: string): AxiosInstance => {
       const client = axios.create({
@@ -103,6 +115,123 @@ export class N8nApiClient {
 
     this.client = createClient(apiUrl, 'public');
     this.restClient = createClient(restUrl, 'rest');
+  }
+
+  private hasRestAuth(): boolean {
+    return Boolean(this.restAuthEmail && this.restAuthPassword);
+  }
+
+  private normalizeSetCookie(setCookie?: string[] | string): string | null {
+    if (!setCookie) return null;
+    const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+    const pairs = cookies
+      .map((cookie) => cookie.split(';')[0]?.trim())
+      .filter((pair) => Boolean(pair));
+    return pairs.length > 0 ? pairs.join('; ') : null;
+  }
+
+  private setRestCookieHeader(cookie: string): void {
+    this.restCookie = cookie;
+    this.restClient.defaults.headers.Cookie = cookie;
+  }
+
+  private async loginRest(): Promise<void> {
+    if (!this.hasRestAuth()) return;
+    const loginUrl = `${this.restBaseUrl}/rest/login`;
+    const response = await axios.post(
+      loginUrl,
+      {
+        emailOrLdapLoginId: this.restAuthEmail,
+        password: this.restAuthPassword,
+      },
+      {
+        timeout: this.timeout,
+        validateStatus: (status) => status < 500,
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error(`REST login failed with HTTP ${response.status}`);
+    }
+
+    const cookie = this.normalizeSetCookie(response.headers?.['set-cookie']);
+    if (!cookie) {
+      throw new Error('REST login succeeded but no session cookie was returned');
+    }
+
+    this.setRestCookieHeader(cookie);
+  }
+
+  private async ensureRestAuth(): Promise<void> {
+    if (!this.hasRestAuth()) return;
+    if (this.restCookie) return;
+    if (this.restAuthPromise) {
+      await this.restAuthPromise;
+      return;
+    }
+
+    this.restAuthPromise = this.loginRest();
+    try {
+      await this.restAuthPromise;
+    } finally {
+      this.restAuthPromise = null;
+    }
+  }
+
+  private async requestRest<T>(config: AxiosRequestConfig): Promise<T> {
+    if (this.hasRestAuth()) {
+      await this.ensureRestAuth();
+    }
+
+    try {
+      const response = await this.restClient.request<T>(config);
+      return response.data;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401) {
+        if (!this.hasRestAuth()) {
+          throw new Error(
+            'REST authentication required. Configure N8N_REST_EMAIL and N8N_REST_PASSWORD to use folder tools.'
+          );
+        }
+        this.restCookie = undefined;
+        await this.ensureRestAuth();
+        const retryResponse = await this.restClient.request<T>(config);
+        return retryResponse.data;
+      }
+      throw error;
+    }
+  }
+
+  private async resolveProjectId(explicitProjectId?: string): Promise<string> {
+    if (explicitProjectId) return explicitProjectId;
+
+    const projects = await this.requestRest<Project[]>({
+      method: 'get',
+      url: '/projects',
+    }).then((data) => {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object' && Array.isArray((data as any).data)) {
+        return (data as any).data as Project[];
+      }
+      return [];
+    });
+
+    if (projects.length === 0) {
+      throw new Error('Unable to resolve projectId: no projects returned by REST API');
+    }
+
+    const personalProjects = projects.filter((p) => p.type === 'personal');
+    if (personalProjects.length === 0) {
+      throw new Error('Unable to resolve projectId: no personal projects found');
+    }
+
+    const email = this.restAuthEmail?.toLowerCase();
+    const match = email
+      ? personalProjects.find((p) => p.name?.toLowerCase().includes(email))
+      : undefined;
+
+    return (match ?? personalProjects[0]).id;
   }
 
   /**
@@ -349,47 +478,63 @@ export class N8nApiClient {
   async listFolders(params: FolderListParams): Promise<FolderListResponse> {
     try {
       const { projectId, filter, ...rest } = params;
+      const resolvedProjectId = await this.resolveProjectId(projectId);
       const query: Record<string, unknown> = { ...rest };
       if (filter !== undefined) {
         query.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
       }
-      const response = await this.restClient.get(`/projects/${projectId}/folders`, { params: query });
-      return this.validateListResponse<Folder>(response.data, 'folders');
+      const response = await this.requestRest<FolderListResponse>({
+        method: 'get',
+        url: `/projects/${resolvedProjectId}/folders`,
+        params: query,
+      });
+      return this.validateListResponse<Folder>(response, 'folders');
     } catch (error) {
       throw handleN8nApiError(error);
     }
   }
 
-  async createFolder(projectId: string, name: string, parentFolderId?: string | null): Promise<Folder> {
+  async createFolder(projectId: string | undefined, name: string, parentFolderId?: string | null): Promise<Folder> {
     try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
       const payload: Record<string, unknown> = { name };
       if (parentFolderId !== undefined) {
         payload.parentFolderId = parentFolderId;
       }
-      const response = await this.restClient.post(`/projects/${projectId}/folders`, payload);
-      return response.data;
+      return await this.requestRest<Folder>({
+        method: 'post',
+        url: `/projects/${resolvedProjectId}/folders`,
+        data: payload,
+      });
     } catch (error) {
       throw handleN8nApiError(error);
     }
   }
 
   async updateFolder(
-    projectId: string,
+    projectId: string | undefined,
     folderId: string,
     updates: { name?: string; parentFolderId?: string | null }
   ): Promise<Folder> {
     try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
       const payload: Record<string, unknown> = {};
       if (updates.name !== undefined) payload.name = updates.name;
       if (updates.parentFolderId !== undefined) payload.parentFolderId = updates.parentFolderId;
 
       try {
-        const response = await this.restClient.patch(`/projects/${projectId}/folders/${folderId}`, payload);
-        return response.data;
+        return await this.requestRest<Folder>({
+          method: 'patch',
+          url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+          data: payload,
+        });
       } catch (patchError: any) {
         if (patchError?.response?.status === 405) {
-          const response = await this.restClient.put(`/projects/${projectId}/folders/${folderId}`, payload);
-          return response.data;
+          return await this.requestRest<Folder>({
+            method: 'put',
+            url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+            data: payload,
+          });
         }
         throw patchError;
       }
@@ -398,9 +543,13 @@ export class N8nApiClient {
     }
   }
 
-  async deleteFolder(projectId: string, folderId: string): Promise<void> {
+  async deleteFolder(projectId: string | undefined, folderId: string): Promise<void> {
     try {
-      await this.restClient.delete(`/projects/${projectId}/folders/${folderId}`);
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      await this.requestRest<void>({
+        method: 'delete',
+        url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+      });
     } catch (error) {
       throw handleN8nApiError(error);
     }

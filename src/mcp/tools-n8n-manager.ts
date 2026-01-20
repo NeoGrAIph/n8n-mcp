@@ -204,13 +204,13 @@ export const n8nManagementTools: ToolDefinition[] = [
   // Folder Management Tools (internal REST API)
   {
     name: 'n8n_folders_list',
-    description: `List folders in a project via n8n's internal REST API. Use this to browse folder structure and get folder IDs for move/delete operations. Provide projectId and optional filters. Returns folder metadata and pagination cursors when available.`,
+    description: `List folders in a project via n8n's internal REST API. Use this to browse folder structure and get folder IDs for move/delete operations. Provide projectId or omit it to use the authenticated user's personal project. Returns folder metadata and pagination cursors when available.`,
     inputSchema: {
       type: 'object',
       properties: {
         projectId: {
           type: 'string',
-          description: 'Project ID (required)'
+          description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
         },
         parentFolderId: {
           type: 'string',
@@ -237,18 +237,18 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Max folders to return (server-dependent)'
         }
       },
-      required: ['projectId']
+      required: []
     }
   },
   {
     name: 'n8n_folder_create',
-    description: `Create a folder in a project (internal REST API). Use this to create root or nested folders. Provide projectId, name, and optional parentFolderId. Returns the created folder metadata.`,
+    description: `Create a folder in a project (internal REST API). Use this to create root or nested folders. Provide name and optional projectId/parentFolderId. If projectId is omitted, the folder is created in the authenticated user's personal project. Returns the created folder metadata.`,
     inputSchema: {
       type: 'object',
       properties: {
         projectId: {
           type: 'string',
-          description: 'Project ID (required)'
+          description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
         },
         name: {
           type: 'string',
@@ -259,18 +259,18 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'Parent folder ID (null or omit for root)'
         }
       },
-      required: ['projectId', 'name']
+      required: ['name']
     }
   },
   {
     name: 'n8n_folder_move',
-    description: `Rename and/or move a folder within a project (internal REST API). Provide projectId and folderId plus name and/or parentFolderId. Returns updated folder metadata.`,
+    description: `Rename and/or move a folder within a project (internal REST API). Provide folderId plus name and/or parentFolderId. ProjectId is optional and defaults to the authenticated user's personal project.`,
     inputSchema: {
       type: 'object',
       properties: {
         projectId: {
           type: 'string',
-          description: 'Project ID (required)'
+          description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
         },
         folderId: {
           type: 'string',
@@ -285,25 +285,25 @@ export const n8nManagementTools: ToolDefinition[] = [
           description: 'New parent folder ID (null to move to root)'
         }
       },
-      required: ['projectId', 'folderId']
+      required: ['folderId']
     }
   },
   {
     name: 'n8n_folder_delete',
-    description: `Delete an empty folder in a project (internal REST API). Use this only for empty folders; non-empty deletes should fail. Provide projectId and folderId. Returns confirmation of deletion.`,
+    description: `Delete an empty folder in a project (internal REST API). Use this only for empty folders; non-empty deletes should fail. Provide folderId and optional projectId. If projectId is omitted, the authenticated user's personal project is used. Returns confirmation of deletion.`,
     inputSchema: {
       type: 'object',
       properties: {
         projectId: {
           type: 'string',
-          description: 'Project ID (required)'
+          description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
         },
         folderId: {
           type: 'string',
           description: 'Folder ID to delete (must be empty)'
         }
       },
-      required: ['projectId', 'folderId']
+      required: ['folderId']
     }
   },
   {

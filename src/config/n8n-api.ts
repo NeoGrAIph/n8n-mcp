@@ -6,6 +6,8 @@ import { logger } from '../utils/logger';
 const n8nApiConfigSchema = z.object({
   N8N_API_URL: z.string().url().optional(),
   N8N_API_KEY: z.string().min(1).optional(),
+  N8N_REST_EMAIL: z.string().min(1).optional(),
+  N8N_REST_PASSWORD: z.string().min(1).optional(),
   N8N_API_TIMEOUT: z.coerce.number().positive().default(30000),
   N8N_API_MAX_RETRIES: z.coerce.number().positive().default(3),
 });
@@ -37,6 +39,8 @@ export function getN8nApiConfig() {
   return {
     baseUrl: config.N8N_API_URL,
     apiKey: config.N8N_API_KEY,
+    restEmail: config.N8N_REST_EMAIL,
+    restPassword: config.N8N_REST_PASSWORD,
     timeout: config.N8N_API_TIMEOUT,
     maxRetries: config.N8N_API_MAX_RETRIES,
   };
@@ -57,6 +61,8 @@ export function getN8nApiConfigFromContext(context: {
   n8nApiKey?: string;
   n8nApiTimeout?: number;
   n8nApiMaxRetries?: number;
+  n8nRestEmail?: string;
+  n8nRestPassword?: string;
 }): N8nApiConfig | null {
   if (!context.n8nApiUrl || !context.n8nApiKey) {
     return null;
@@ -65,6 +71,8 @@ export function getN8nApiConfigFromContext(context: {
   return {
     baseUrl: context.n8nApiUrl,
     apiKey: context.n8nApiKey,
+    restEmail: context.n8nRestEmail,
+    restPassword: context.n8nRestPassword,
     timeout: context.n8nApiTimeout ?? 30000,
     maxRetries: context.n8nApiMaxRetries ?? 3,
   };
