@@ -392,6 +392,8 @@ const createWorkflowSchema = z.object({
     executionTimeout: z.number().optional(),
     errorWorkflow: z.string().optional(),
   }).optional(),
+  parentFolderId: z.string().nullable().optional(),
+  projectId: z.string().optional(),
 });
 
 const updateWorkflowSchema = z.object({
@@ -447,6 +449,7 @@ const deleteFolderSchema = z.object({
 const moveWorkflowToFolderSchema = z.object({
   workflowId: z.string(),
   parentFolderId: z.string().nullable(),
+  projectId: z.string().optional(),
 });
 
 const validateWorkflowSchema = z.object({
@@ -552,10 +555,11 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
   try {
     const client = ensureApiConfigured(context);
     const input = createWorkflowSchema.parse(args);
+    const { parentFolderId, projectId, ...workflowInput } = input;
 
     // Proactively detect SHORT form node types (common mistake)
     const shortFormErrors: string[] = [];
-    input.nodes?.forEach((node: any, index: number) => {
+    workflowInput.nodes?.forEach((node: any, index: number) => {
       if (node.type?.startsWith('nodes-base.') || node.type?.startsWith('nodes-langchain.')) {
         const fullForm = node.type.startsWith('nodes-base.')
           ? node.type.replace('nodes-base.', 'n8n-nodes-base.')
@@ -568,7 +572,7 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
     });
 
     if (shortFormErrors.length > 0) {
-      telemetry.trackWorkflowCreation(input, false);
+      telemetry.trackWorkflowCreation(workflowInput, false);
       return {
         success: false,
         error: 'Node type format error: n8n API requires FULL form node types',
@@ -580,10 +584,10 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
     }
 
     // Validate workflow structure (n8n API expects FULL form: n8n-nodes-base.*)
-    const errors = validateWorkflowStructure(input);
+    const errors = validateWorkflowStructure(workflowInput);
     if (errors.length > 0) {
       // Track validation failure
-      telemetry.trackWorkflowCreation(input, false);
+      telemetry.trackWorkflowCreation(workflowInput, false);
 
       return {
         success: false,
@@ -593,7 +597,13 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
     }
 
     // Create workflow (n8n API expects node types in FULL form)
-    const workflow = await client.createWorkflow(input);
+    const workflow = await client.createWorkflow(workflowInput);
+
+    // Optionally move workflow into a folder (requires REST auth)
+    if (parentFolderId !== undefined || projectId !== undefined) {
+      const targetFolderId = parentFolderId === '' ? null : parentFolderId ?? null;
+      await client.moveWorkflowToFolder(workflow.id as string, targetFolderId, projectId);
+    }
 
     // Track successful workflow creation
     telemetry.trackWorkflowCreation(workflow, true);
@@ -1262,7 +1272,7 @@ export async function handleMoveWorkflowToFolder(args: unknown, context?: Instan
     const input = moveWorkflowToFolderSchema.parse(args);
 
     const parentFolderId = input.parentFolderId === '' ? null : input.parentFolderId;
-    const updated = await client.moveWorkflowToFolder(input.workflowId, parentFolderId);
+    const updated = await client.moveWorkflowToFolder(input.workflowId, parentFolderId, input.projectId);
 
     return {
       success: true,

@@ -585,9 +585,9 @@ export class N8nApiClient {
     }
   }
 
-  async moveWorkflowToFolder(id: string, parentFolderId: string | null): Promise<Workflow> {
+  async moveWorkflowToFolder(id: string, parentFolderId: string | null, projectId?: string): Promise<Workflow> {
     try {
-      const resolvedProjectId = await this.resolveProjectId(undefined);
+      const resolvedProjectId = await this.resolveProjectId(projectId);
       const payload: { destinationProjectId: string; destinationParentFolderId?: string } = {
         destinationProjectId: resolvedProjectId,
       };

@@ -4,7 +4,7 @@ export const n8nCreateWorkflowDoc: ToolDocumentation = {
   name: 'n8n_workflow_create',
   category: 'workflow_management',
   essentials: {
-    description: 'Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID.',
+    description: 'Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID. Optionally place into a folder after creation (REST transfer).',
     keyParameters: ['name', 'nodes', 'connections'],
     example: 'n8n_workflow_create({name: "My Flow", nodes: [...], connections: {...}})',
     performance: 'Network-dependent',
@@ -12,16 +12,19 @@ export const n8nCreateWorkflowDoc: ToolDocumentation = {
       'Workflow created inactive',
       'Returns ID for future updates',
       'Validate first with n8n_workflow_json_validate',
-      'Auto-sanitization fixes operator structures and missing metadata during creation'
+      'Auto-sanitization fixes operator structures and missing metadata during creation',
+      'Use parentFolderId/projectId to place workflow into a folder (requires REST auth)'
     ]
   },
   full: {
-    description: 'Creates a new workflow in n8n with specified nodes and connections. Workflow is created in inactive state. Each node requires: id, name, type, typeVersion, position, and parameters.',
+    description: 'Creates a new workflow in n8n with specified nodes and connections. Workflow is created in inactive state. Each node requires: id, name, type, typeVersion, position, and parameters. If parentFolderId/projectId are provided, the workflow is moved to that folder after creation via REST transfer.',
     parameters: {
       name: { type: 'string', required: true, description: 'Workflow name' },
       nodes: { type: 'array', required: true, description: 'Array of nodes with id, name, type, typeVersion, position, parameters' },
       connections: { type: 'object', required: true, description: 'Node connections. Keys are source node names (not IDs)' },
-      settings: { type: 'object', description: 'Optional workflow settings (timezone, error handling, etc.)' }
+      settings: { type: 'object', description: 'Optional workflow settings (timezone, error handling, etc.)' },
+      parentFolderId: { type: 'string|null', description: 'Optional folder ID to place workflow after creation (requires REST auth)' },
+      projectId: { type: 'string', description: 'Optional destination project ID for folder placement (requires REST auth)' }
     },
     returns: 'Minimal summary (id, name, active, nodeCount) for token efficiency. Use n8n_workflow_get with mode "structure" to verify current state if needed.',
     examples: [
@@ -88,6 +91,7 @@ n8n_workflow_create({
     ],
     pitfalls: [
       '**REQUIRES N8N_API_URL and N8N_API_KEY environment variables** - tool unavailable without n8n API access',
+      'If parentFolderId/projectId are used, REST auth (N8N_REST_EMAIL/N8N_REST_PASSWORD) is required',
       'Workflows created in INACTIVE state - must activate separately',
       'Node IDs must be unique within workflow',
       'Credentials must be configured separately in n8n',

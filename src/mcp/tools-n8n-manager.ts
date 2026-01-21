@@ -63,6 +63,14 @@ export const n8nManagementTools: ToolDefinition[] = [
             executionTimeout: { type: 'integer' },
             errorWorkflow: { type: 'string' }
           }
+        },
+        parentFolderId: {
+          type: ['string', 'null'],
+          description: 'Optional folder ID to place workflow after creation (requires REST auth)'
+        },
+        projectId: {
+          type: 'string',
+          description: 'Optional destination project ID for folder placement (requires REST auth)'
         }
       },
       required: ['name', 'nodes', 'connections']
@@ -308,7 +316,7 @@ export const n8nManagementTools: ToolDefinition[] = [
   },
   {
     name: 'n8n_workflow_move_to_folder',
-    description: `Move a workflow to a folder by updating its parentFolderId. Provide workflowId and parentFolderId (null to move to root). Returns the updated workflow metadata.`,
+    description: `Move a workflow to a folder using REST transfer. Provide workflowId and parentFolderId (null to move to root). Optional projectId to move across projects.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -319,6 +327,10 @@ export const n8nManagementTools: ToolDefinition[] = [
         parentFolderId: {
           type: ['string', 'null'],
           description: 'Target folder ID (null for root)'
+        },
+        projectId: {
+          type: 'string',
+          description: 'Optional destination project ID'
         }
       },
       required: ['workflowId', 'parentFolderId']
