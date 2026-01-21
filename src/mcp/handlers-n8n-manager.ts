@@ -171,6 +171,7 @@ interface DiagnosticResponseData {
       baseUrl: string;
       timeout: number;
       maxRetries: number;
+      restAuthConfigured?: boolean;
     } | null;
   };
   versionInfo: {
