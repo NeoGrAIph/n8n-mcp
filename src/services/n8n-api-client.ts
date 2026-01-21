@@ -395,8 +395,13 @@ export class N8nApiClient {
         const response = await this.client.put(`/workflows/${id}`, cleanedWorkflow);
         return response.data;
       } catch (putError: any) {
+        const status =
+          putError?.response?.status ??
+          putError?.statusCode ??
+          putError?.status ??
+          (putError instanceof N8nApiError ? putError.statusCode : undefined);
         // If PUT fails with 405 (Method Not Allowed), try PATCH
-        if (putError.response?.status === 405) {
+        if (status === 405) {
           logger.debug('PUT method not supported, falling back to PATCH');
           const response = await this.client.patch(`/workflows/${id}`, cleanedWorkflow);
           return response.data;
@@ -589,6 +594,8 @@ export class N8nApiClient {
       } catch (patchError: any) {
         const status =
           patchError?.response?.status ??
+          patchError?.statusCode ??
+          patchError?.status ??
           (patchError instanceof N8nApiError ? patchError.statusCode : undefined);
         if (status === 405) {
           const current = await this.getWorkflow(id);
