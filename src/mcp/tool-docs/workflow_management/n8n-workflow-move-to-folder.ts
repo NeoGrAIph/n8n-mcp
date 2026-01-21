@@ -4,7 +4,7 @@ export const n8nWorkflowMoveToFolderDoc: ToolDocumentation = {
   name: 'n8n_workflow_move_to_folder',
   category: 'workflow_management',
   essentials: {
-    description: 'Move a workflow to a folder by updating parentFolderId.',
+    description: 'Move a workflow to a folder (uses internal REST transfer endpoint).',
     keyParameters: ['workflowId', 'parentFolderId'],
     example: 'n8n_workflow_move_to_folder({workflowId: "wf_123", parentFolderId: "fold_ops"})',
     performance: 'Fast (100-400ms)',
@@ -15,7 +15,7 @@ export const n8nWorkflowMoveToFolderDoc: ToolDocumentation = {
     ]
   },
   full: {
-    description: 'Moves a workflow to a folder by updating its parentFolderId. This uses the n8n API and should work in tandem with folder management tools.',
+    description: 'Moves a workflow to a folder using the internal REST transfer endpoint. Requires REST auth and a resolved destination project.',
     parameters: {
       workflowId: { type: 'string', description: 'Workflow ID to move (required)', required: true },
       parentFolderId: { type: 'string|null', description: 'Target folder ID (null to move to root)', required: true }
@@ -38,8 +38,9 @@ export const n8nWorkflowMoveToFolderDoc: ToolDocumentation = {
     ],
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
-      'Server may reject invalid folder IDs',
-      'Some n8n versions may not support parentFolderId in public API'
+      'Requires REST auth (N8N_REST_EMAIL/N8N_REST_PASSWORD)',
+      'Ensure REST project is configured (N8N_REST_PROJECT_EMAIL or N8N_REST_PROJECT_ID)',
+      'Server may reject invalid folder IDs'
     ],
     relatedTools: [
       'n8n_folders_list',

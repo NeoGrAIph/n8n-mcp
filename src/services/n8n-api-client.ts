@@ -587,23 +587,17 @@ export class N8nApiClient {
 
   async moveWorkflowToFolder(id: string, parentFolderId: string | null): Promise<Workflow> {
     try {
-      const payload = { parentFolderId };
-      try {
-        const response = await this.client.patch(`/workflows/${id}`, payload);
-        return response.data;
-      } catch (patchError: any) {
-        const status =
-          patchError?.response?.status ??
-          patchError?.statusCode ??
-          patchError?.status ??
-          (patchError instanceof N8nApiError ? patchError.statusCode : undefined);
-        if (status === 405) {
-          const current = await this.getWorkflow(id);
-          const updated = { ...current, parentFolderId };
-          return await this.updateWorkflow(id, updated);
-        }
-        throw patchError;
-      }
+      const resolvedProjectId = await this.resolveProjectId(undefined);
+      const payload: { destinationProjectId: string; destinationParentFolderId?: string } = {
+        destinationProjectId: resolvedProjectId,
+      };
+      if (parentFolderId) payload.destinationParentFolderId = parentFolderId;
+      await this.requestRest<void>({
+        method: 'put',
+        url: `/workflows/${id}/transfer`,
+        data: payload,
+      });
+      return { id, parentFolderId } as Workflow;
     } catch (error) {
       throw handleN8nApiError(error);
     }
