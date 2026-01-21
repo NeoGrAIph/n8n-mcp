@@ -587,7 +587,10 @@ export class N8nApiClient {
         const response = await this.client.patch(`/workflows/${id}`, payload);
         return response.data;
       } catch (patchError: any) {
-        if (patchError?.response?.status === 405) {
+        const status =
+          patchError?.response?.status ??
+          (patchError instanceof N8nApiError ? patchError.statusCode : undefined);
+        if (status === 405) {
           const current = await this.getWorkflow(id);
           const updated = { ...current, parentFolderId };
           return await this.updateWorkflow(id, updated);
