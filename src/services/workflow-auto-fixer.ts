@@ -424,8 +424,8 @@ export class WorkflowAutoFixer {
         // Only fix webhook nodes
         if (!node.type?.includes('webhook')) continue;
 
-        // Generate a unique UUID for both path and webhookId
-        const webhookId = crypto.randomUUID();
+        // Generate a unique path value (webhookId will be assigned by n8n)
+        const webhookPath = crypto.randomUUID();
 
         // Check if we need to update typeVersion
         const currentTypeVersion = node.typeVersion || 1;
@@ -436,18 +436,17 @@ export class WorkflowAutoFixer {
           field: 'path',
           type: 'webhook-missing-path',
           before: undefined,
-          after: webhookId,
+          after: webhookPath,
           confidence: 'high',
           description: needsVersionUpdate
-            ? `Generated webhook path and ID: ${webhookId} (also updating typeVersion to 2.1)`
-            : `Generated webhook path and ID: ${webhookId}`
+            ? `Generated webhook path: ${webhookPath} (also updating typeVersion to 2.1)`
+            : `Generated webhook path: ${webhookPath}`
         });
 
-        // Create update operation with both path and webhookId
+        // Create update operation with path only
         // The updates object uses dot notation for nested properties
         const updates: Record<string, any> = {
-          'parameters.path': webhookId,
-          'webhookId': webhookId
+          'parameters.path': webhookPath
         };
 
         // Only update typeVersion if it's older than 2.1

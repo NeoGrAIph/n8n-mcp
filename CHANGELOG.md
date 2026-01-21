@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Avoided calling workflow update when the only requested operation is activate/deactivate, preventing unintended node loss on some n8n instances.
+- Do not send webhookId in workflow create/update payloads (n8n assigns it). This prevents node loss on activation for workflows created with manual webhookId.
 
 ## [2.31.3] - 2025-12-26
 

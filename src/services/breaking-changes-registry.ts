@@ -77,12 +77,8 @@ export const BREAKING_CHANGES_REGISTRY: BreakingChange[] = [
     propertyName: 'webhookId',
     changeType: 'added',
     isBreaking: true,
-    migrationHint: 'In v2.1+, webhooks require a unique "webhookId" field in addition to the path. This ensures webhook persistence across workflow updates. A UUID will be auto-generated if not provided.',
-    autoMigratable: true,
-    migrationStrategy: {
-      type: 'add_property',
-      defaultValue: null // Will be generated as UUID at runtime
-    },
+    migrationHint: 'In v2.1+, webhook URLs stay stable via an internal webhookId. Do not set webhookId in API payloads; let n8n assign it automatically.',
+    autoMigratable: false,
     severity: 'HIGH'
   },
   {

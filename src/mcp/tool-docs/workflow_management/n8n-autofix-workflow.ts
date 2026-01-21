@@ -38,14 +38,13 @@ The auto-fixer can resolve:
    - Leverages NodeSimilarityService with 5-minute caching for performance
 5. **Webhook Path Generation**: Automatically generates UUIDs for webhook nodes missing path configuration:
    - Generates a unique UUID for webhook path
-   - Sets both 'path' parameter and 'webhookId' field to the same UUID
    - Ensures webhook nodes become functional with valid endpoints
    - High confidence fix as UUID generation is deterministic
 6. **Smart Version Upgrades** (NEW): Proactively upgrades nodes to their latest versions:
    - Detects outdated node versions and recommends upgrades
    - Applies smart migrations with auto-migratable property changes
    - Handles breaking changes intelligently (Execute Workflow v1.0→v1.1, Webhook v2.0→v2.1, etc.)
-   - Generates UUIDs for required fields (webhookId), sets sensible defaults
+   - Sets sensible defaults for auto-migrated properties
    - HIGH confidence for non-breaking upgrades, MEDIUM for breaking changes with auto-migration
    - Example: Execute Workflow v1.0→v1.1 adds inputFieldMapping automatically
 7. **Version Migration Guidance** (NEW): Documents complex migrations requiring manual intervention:
@@ -120,7 +119,6 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
       'Migrating workflows between n8n instances with different versions',
       'Repairing webhook nodes that lost their path configuration',
       'Upgrading Execute Workflow nodes from v1.0 to v1.1+ with automatic inputFieldMapping',
-      'Modernizing webhook nodes to v2.1+ with stable webhookId fields',
       'Proactively keeping workflows up-to-date with latest node versions',
       'Getting detailed migration guidance for complex breaking changes'
     ],

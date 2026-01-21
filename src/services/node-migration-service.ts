@@ -272,6 +272,7 @@ export class NodeMigrationService {
     // Only set if not already defined
     if (target[finalKey] === undefined) {
       const value = this.resolveDefaultValue(propertyPath, defaultValue, node);
+      if (value === undefined) return null;
       target[finalKey] = value;
 
       return {
@@ -289,9 +290,9 @@ export class NodeMigrationService {
    * Resolve default value with special handling for certain property types
    */
   private resolveDefaultValue(propertyPath: string, defaultValue: any, node: any): any {
-    // Special case: webhookId needs a UUID
+    // Special case: do not auto-generate webhookId (let n8n assign it)
     if (propertyPath === 'webhookId' || propertyPath.endsWith('.webhookId')) {
-      return uuidv4();
+      return undefined;
     }
 
     // Special case: webhook path needs a unique value
@@ -345,7 +346,7 @@ export class NodeMigrationService {
         errors.push('Webhook node missing required "path" parameter');
       }
       if (node.typeVersion >= 2.1 && !node.webhookId) {
-        warnings.push('Webhook v2.1+ typically requires webhookId');
+        warnings.push('Webhook v2.1+ uses webhookId assigned by n8n; omit it in API payloads');
       }
     }
 
