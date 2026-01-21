@@ -27,7 +27,7 @@ import {
   SourceControlPullResult,
   SourceControlPushResult,
 } from '../types/n8n-api';
-import { handleN8nApiError, logN8nError } from '../utils/n8n-errors';
+import { handleN8nApiError, logN8nError, N8nApiError } from '../utils/n8n-errors';
 import { cleanWorkflowForCreate, cleanWorkflowForUpdate } from './n8n-validation';
 import {
   fetchN8nVersion,
