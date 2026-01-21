@@ -8,6 +8,8 @@ const n8nApiConfigSchema = z.object({
   N8N_API_KEY: z.string().min(1).optional(),
   N8N_REST_EMAIL: z.string().min(1).optional(),
   N8N_REST_PASSWORD: z.string().min(1).optional(),
+  N8N_REST_PROJECT_EMAIL: z.string().min(1).optional(),
+  N8N_REST_PROJECT_ID: z.string().min(1).optional(),
   N8N_API_TIMEOUT: z.coerce.number().positive().default(30000),
   N8N_API_MAX_RETRIES: z.coerce.number().positive().default(3),
 });
@@ -41,6 +43,8 @@ export function getN8nApiConfig() {
     apiKey: config.N8N_API_KEY,
     restEmail: config.N8N_REST_EMAIL,
     restPassword: config.N8N_REST_PASSWORD,
+    restProjectEmail: config.N8N_REST_PROJECT_EMAIL,
+    restProjectId: config.N8N_REST_PROJECT_ID,
     timeout: config.N8N_API_TIMEOUT,
     maxRetries: config.N8N_API_MAX_RETRIES,
   };
@@ -63,6 +67,8 @@ export function getN8nApiConfigFromContext(context: {
   n8nApiMaxRetries?: number;
   n8nRestEmail?: string;
   n8nRestPassword?: string;
+  n8nRestProjectEmail?: string;
+  n8nRestProjectId?: string;
 }): N8nApiConfig | null {
   if (!context.n8nApiUrl || !context.n8nApiKey) {
     return null;
@@ -73,6 +79,8 @@ export function getN8nApiConfigFromContext(context: {
     apiKey: context.n8nApiKey,
     restEmail: context.n8nRestEmail,
     restPassword: context.n8nRestPassword,
+    restProjectEmail: context.n8nRestProjectEmail,
+    restProjectId: context.n8nRestProjectId,
     timeout: context.n8nApiTimeout ?? 30000,
     maxRetries: context.n8nApiMaxRetries ?? 3,
   };

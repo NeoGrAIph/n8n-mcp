@@ -12,6 +12,7 @@ export const n8nFolderMoveDoc: ToolDocumentation = {
       'Provide name to rename; parentFolderId to move',
       'Use null parentFolderId to move to root',
       'Omit projectId to use your personal project',
+      'If REST user is admin, set N8N_REST_PROJECT_EMAIL or N8N_REST_PROJECT_ID to target a specific user project',
       'Confirm results with n8n_folders_list'
     ]
   },
@@ -43,6 +44,7 @@ export const n8nFolderMoveDoc: ToolDocumentation = {
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
       'Folder tools also require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)',
+      'If REST user is admin, configure N8N_REST_PROJECT_EMAIL/ID to avoid moving folders in the wrong project',
       'Uses internal REST API (not part of public API)',
       'Server may reject invalid parentFolderId values'
     ],

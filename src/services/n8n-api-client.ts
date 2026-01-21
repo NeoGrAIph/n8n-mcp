@@ -40,6 +40,8 @@ export interface N8nApiClientConfig {
   apiKey: string;
   restEmail?: string;
   restPassword?: string;
+  restProjectEmail?: string;
+  restProjectId?: string;
   timeout?: number;
   maxRetries?: number;
 }
@@ -52,6 +54,8 @@ export class N8nApiClient {
   private restBaseUrl: string;
   private restAuthEmail?: string;
   private restAuthPassword?: string;
+  private restProjectEmail?: string;
+  private restProjectId?: string;
   private restCookie?: string;
   private restAuthPromise: Promise<void> | null = null;
   private timeout: number;
@@ -59,12 +63,23 @@ export class N8nApiClient {
   private versionPromise: Promise<N8nVersionInfo | null> | null = null;
 
   constructor(config: N8nApiClientConfig) {
-    const { baseUrl, apiKey, restEmail, restPassword, timeout = 30000, maxRetries = 3 } = config;
+    const {
+      baseUrl,
+      apiKey,
+      restEmail,
+      restPassword,
+      restProjectEmail,
+      restProjectId,
+      timeout = 30000,
+      maxRetries = 3
+    } = config;
 
     this.maxRetries = maxRetries;
     this.baseUrl = baseUrl;
     this.restAuthEmail = restEmail;
     this.restAuthPassword = restPassword;
+    this.restProjectEmail = restProjectEmail;
+    this.restProjectId = restProjectId;
     this.timeout = timeout;
 
     const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
@@ -205,6 +220,7 @@ export class N8nApiClient {
 
   private async resolveProjectId(explicitProjectId?: string): Promise<string> {
     if (explicitProjectId) return explicitProjectId;
+    if (this.restProjectId) return this.restProjectId;
 
     const projects = await this.requestRest<Project[]>({
       method: 'get',
@@ -224,6 +240,15 @@ export class N8nApiClient {
     const personalProjects = projects.filter((p) => p.type === 'personal');
     if (personalProjects.length === 0) {
       throw new Error('Unable to resolve projectId: no personal projects found');
+    }
+
+    const targetEmail = this.restProjectEmail?.toLowerCase();
+    if (targetEmail) {
+      const match = personalProjects.find((p) => p.name?.toLowerCase().includes(targetEmail));
+      if (!match) {
+        throw new Error(`Unable to resolve projectId: no personal project found for ${this.restProjectEmail}`);
+      }
+      return match.id;
     }
 
     const email = this.restAuthEmail?.toLowerCase();

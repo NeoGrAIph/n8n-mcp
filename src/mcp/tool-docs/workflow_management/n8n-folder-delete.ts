@@ -12,6 +12,7 @@ export const n8nFolderDeleteDoc: ToolDocumentation = {
       'Only empty folders can be deleted',
       'Use n8n_folders_list to verify emptiness',
       'Omit projectId to use your personal project',
+      'If REST user is admin, set N8N_REST_PROJECT_EMAIL or N8N_REST_PROJECT_ID to target a specific user project',
       'Move workflows out before deleting'
     ]
   },
@@ -39,6 +40,7 @@ export const n8nFolderDeleteDoc: ToolDocumentation = {
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
       'Folder tools also require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)',
+      'If REST user is admin, configure N8N_REST_PROJECT_EMAIL/ID to avoid deleting folders in the wrong project',
       'Uses internal REST API (not part of public API)',
       'Delete will fail if folder is not empty'
     ],

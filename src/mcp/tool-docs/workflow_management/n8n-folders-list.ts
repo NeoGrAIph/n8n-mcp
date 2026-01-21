@@ -10,6 +10,7 @@ export const n8nFoldersListDoc: ToolDocumentation = {
     performance: 'Fast (100-300ms)',
     tips: [
       'Omit projectId to use your personal project',
+      'If REST user is admin, set N8N_REST_PROJECT_EMAIL or N8N_REST_PROJECT_ID to target a specific user project',
       'Use parentFolderId to list direct children',
       'Pass filter object for UI-style filtering',
       'Use cursor when API returns nextCursor'
@@ -46,6 +47,7 @@ export const n8nFoldersListDoc: ToolDocumentation = {
     pitfalls: [
       'Requires N8N_API_URL and N8N_API_KEY configured',
       'Folder tools also require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)',
+      'If REST user is admin, configure N8N_REST_PROJECT_EMAIL/ID to avoid using the wrong personal project',
       'Uses internal REST API (not part of public API)',
       'Response shape may vary between n8n versions'
     ],

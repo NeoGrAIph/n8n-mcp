@@ -17,6 +17,8 @@ export interface InstanceContext {
   n8nApiMaxRetries?: number;
   n8nRestEmail?: string;
   n8nRestPassword?: string;
+  n8nRestProjectEmail?: string;
+  n8nRestProjectId?: string;
 
   /**
    * Instance identification
@@ -118,6 +120,8 @@ export function isInstanceContext(obj: any): obj is InstanceContext {
 
   const hasValidRestEmail = obj.n8nRestEmail === undefined || typeof obj.n8nRestEmail === 'string';
   const hasValidRestPassword = obj.n8nRestPassword === undefined || typeof obj.n8nRestPassword === 'string';
+  const hasValidRestProjectEmail = obj.n8nRestProjectEmail === undefined || typeof obj.n8nRestProjectEmail === 'string';
+  const hasValidRestProjectId = obj.n8nRestProjectId === undefined || typeof obj.n8nRestProjectId === 'string';
 
   const hasValidInstanceId = obj.instanceId === undefined || typeof obj.instanceId === 'string';
   const hasValidSessionId = obj.sessionId === undefined || typeof obj.sessionId === 'string';
@@ -126,6 +130,7 @@ export function isInstanceContext(obj: any): obj is InstanceContext {
 
   return hasValidUrl && hasValidKey && hasValidTimeout && hasValidRetries &&
          hasValidRestEmail && hasValidRestPassword &&
+         hasValidRestProjectEmail && hasValidRestProjectId &&
          hasValidInstanceId && hasValidSessionId && hasValidMetadata;
 }
 

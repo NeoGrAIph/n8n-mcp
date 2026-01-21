@@ -172,6 +172,8 @@ interface DiagnosticResponseData {
       timeout: number;
       maxRetries: number;
       restAuthConfigured?: boolean;
+      restProjectEmail?: string;
+      restProjectId?: string;
     } | null;
   };
   versionInfo: {
@@ -2828,11 +2830,13 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       configured: apiConfigured,
       status: apiStatus,
       config: apiConfig ? {
-        baseUrl: apiConfig.baseUrl,
-        timeout: apiConfig.timeout,
-        maxRetries: apiConfig.maxRetries,
-        restAuthConfigured: Boolean(apiConfig.restEmail && apiConfig.restPassword)
-      } : null
+      baseUrl: apiConfig.baseUrl,
+      timeout: apiConfig.timeout,
+      maxRetries: apiConfig.maxRetries,
+      restAuthConfigured: Boolean(apiConfig.restEmail && apiConfig.restPassword),
+      restProjectEmail: apiConfig.restProjectEmail,
+      restProjectId: apiConfig.restProjectId
+    } : null
     },
     versionInfo: {
       current: versionCheck.currentVersion,
