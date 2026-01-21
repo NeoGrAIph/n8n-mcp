@@ -644,17 +644,16 @@ describe('handlers-workflow-diff', () => {
         const updatedWorkflow = { ...testWorkflow, active: false };
         const activatedWorkflow = { ...testWorkflow, active: true };
 
-        mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
-        mockDiffEngine.applyDiff.mockResolvedValue({
-          success: true,
-          workflow: updatedWorkflow,
-          operationsApplied: 1,
-          message: 'Success',
-          errors: [],
-          shouldActivate: true,
-        });
-        mockApiClient.updateWorkflow.mockResolvedValue(updatedWorkflow);
-        mockApiClient.activateWorkflow = vi.fn().mockResolvedValue(activatedWorkflow);
+      mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
+      mockDiffEngine.applyDiff.mockResolvedValue({
+        success: true,
+        workflow: updatedWorkflow,
+        operationsApplied: 1,
+        message: 'Success',
+        errors: [],
+        shouldActivate: true,
+      });
+      mockApiClient.activateWorkflow = vi.fn().mockResolvedValue(activatedWorkflow);
 
         const result = await handleUpdatePartialWorkflow({
           id: 'test-workflow-id',
@@ -669,27 +668,27 @@ describe('handlers-workflow-diff', () => {
           nodeCount: 2,
           operationsApplied: 1,
         });
-        expect(result.message).toContain('Workflow activated');
-        expect((result.data as any).active).toBe(true);
-        expect(mockApiClient.activateWorkflow).toHaveBeenCalledWith('test-workflow-id');
-      });
+      expect(result.message).toContain('Workflow activated');
+      expect((result.data as any).active).toBe(true);
+      expect(mockApiClient.activateWorkflow).toHaveBeenCalledWith('test-workflow-id');
+      expect(mockApiClient.updateWorkflow).not.toHaveBeenCalled();
+    });
 
       it('should deactivate workflow after successful update', async () => {
         const testWorkflow = createTestWorkflow({ active: true });
         const updatedWorkflow = { ...testWorkflow, active: true };
         const deactivatedWorkflow = { ...testWorkflow, active: false };
 
-        mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
-        mockDiffEngine.applyDiff.mockResolvedValue({
-          success: true,
-          workflow: updatedWorkflow,
-          operationsApplied: 1,
-          message: 'Success',
-          errors: [],
-          shouldDeactivate: true,
-        });
-        mockApiClient.updateWorkflow.mockResolvedValue(updatedWorkflow);
-        mockApiClient.deactivateWorkflow = vi.fn().mockResolvedValue(deactivatedWorkflow);
+      mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
+      mockDiffEngine.applyDiff.mockResolvedValue({
+        success: true,
+        workflow: updatedWorkflow,
+        operationsApplied: 1,
+        message: 'Success',
+        errors: [],
+        shouldDeactivate: true,
+      });
+      mockApiClient.deactivateWorkflow = vi.fn().mockResolvedValue(deactivatedWorkflow);
 
         const result = await handleUpdatePartialWorkflow({
           id: 'test-workflow-id',
@@ -704,39 +703,40 @@ describe('handlers-workflow-diff', () => {
           nodeCount: 2,
           operationsApplied: 1,
         });
-        expect(result.message).toContain('Workflow deactivated');
-        expect((result.data as any).active).toBe(false);
-        expect(mockApiClient.deactivateWorkflow).toHaveBeenCalledWith('test-workflow-id');
-      });
+      expect(result.message).toContain('Workflow deactivated');
+      expect((result.data as any).active).toBe(false);
+      expect(mockApiClient.deactivateWorkflow).toHaveBeenCalledWith('test-workflow-id');
+      expect(mockApiClient.updateWorkflow).not.toHaveBeenCalled();
+    });
 
       it('should handle activation failure after successful update', async () => {
         const testWorkflow = createTestWorkflow({ active: false });
         const updatedWorkflow = { ...testWorkflow, active: false };
 
-        mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
-        mockDiffEngine.applyDiff.mockResolvedValue({
-          success: true,
-          workflow: updatedWorkflow,
-          operationsApplied: 1,
-          message: 'Success',
-          errors: [],
-          shouldActivate: true,
-        });
-        mockApiClient.updateWorkflow.mockResolvedValue(updatedWorkflow);
-        mockApiClient.activateWorkflow = vi.fn().mockRejectedValue(new Error('Activation failed: No trigger nodes'));
+      mockApiClient.getWorkflow.mockResolvedValue(testWorkflow);
+      mockDiffEngine.applyDiff.mockResolvedValue({
+        success: true,
+        workflow: updatedWorkflow,
+        operationsApplied: 1,
+        message: 'Success',
+        errors: [],
+        shouldActivate: true,
+      });
+      mockApiClient.activateWorkflow = vi.fn().mockRejectedValue(new Error('Activation failed: No trigger nodes'));
 
         const result = await handleUpdatePartialWorkflow({
           id: 'test-workflow-id',
           operations: [{ type: 'activateWorkflow' }],
         }, mockRepository);
 
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('Workflow updated successfully but activation failed');
-        expect(result.details).toEqual({
-          workflowUpdated: true,
-          activationError: 'Activation failed: No trigger nodes',
-        });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Workflow updated successfully but activation failed');
+      expect(result.details).toEqual({
+        workflowUpdated: true,
+        activationError: 'Activation failed: No trigger nodes',
       });
+      expect(mockApiClient.updateWorkflow).not.toHaveBeenCalled();
+    });
 
       it('should handle deactivation failure after successful update', async () => {
         const testWorkflow = createTestWorkflow({ active: true });

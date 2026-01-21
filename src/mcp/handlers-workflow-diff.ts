@@ -287,7 +287,13 @@ export async function handleUpdatePartialWorkflow(
 
     // Update workflow via API
     try {
-      const updatedWorkflow = await client.updateWorkflow(input.id, diffResult.workflow!);
+      const hasNonActivationOps = input.operations.some(op =>
+        op.type !== 'activateWorkflow' && op.type !== 'deactivateWorkflow'
+      );
+
+      const updatedWorkflow = hasNonActivationOps
+        ? await client.updateWorkflow(input.id, diffResult.workflow!)
+        : (diffResult.workflow as any);
 
       // Handle activation/deactivation if requested
       let finalWorkflow = updatedWorkflow;
@@ -313,7 +319,13 @@ export async function handleUpdatePartialWorkflow(
 
       if (diffResult.shouldActivate) {
         try {
-          finalWorkflow = await client.activateWorkflow(input.id);
+          const activationResponse = await client.activateWorkflow(input.id);
+          finalWorkflow = {
+            ...updatedWorkflow,
+            ...activationResponse,
+            nodes: updatedWorkflow.nodes ?? activationResponse.nodes,
+            connections: updatedWorkflow.connections ?? activationResponse.connections,
+          } as any;
           activationMessage = ' Workflow activated.';
         } catch (activationError) {
           logger.error('Failed to activate workflow after update', activationError);
@@ -328,7 +340,13 @@ export async function handleUpdatePartialWorkflow(
         }
       } else if (diffResult.shouldDeactivate) {
         try {
-          finalWorkflow = await client.deactivateWorkflow(input.id);
+          const deactivationResponse = await client.deactivateWorkflow(input.id);
+          finalWorkflow = {
+            ...updatedWorkflow,
+            ...deactivationResponse,
+            nodes: updatedWorkflow.nodes ?? deactivationResponse.nodes,
+            connections: updatedWorkflow.connections ?? deactivationResponse.connections,
+          } as any;
           activationMessage = ' Workflow deactivated.';
         } catch (deactivationError) {
           logger.error('Failed to deactivate workflow after update', deactivationError);

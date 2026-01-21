@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Avoided calling workflow update when the only requested operation is activate/deactivate, preventing unintended node loss on some n8n instances.
+
 ## [2.31.3] - 2025-12-26
 
 ### Fixed
