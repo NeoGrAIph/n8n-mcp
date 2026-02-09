@@ -1,30 +1,30 @@
-# n8n-MCP Deployment Guide
+# Руководство по развертыванию n8n-MCP
 
-This guide covers how to deploy n8n-MCP and connect it to your n8n instance. Whether you're testing locally or deploying to production, we'll show you how to set up n8n-MCP for use with n8n's MCP Client Tool node.
+В этом руководстве описано, как развернуть n8n-MCP и подключить его к вашему экземпляру n8n. Независимо от того, тестируете ли вы локально или развертываете продукт, мы покажем вам, как настроить n8n-MCP для использования с узлом клиентского инструмента MCP n8n.
 
-## Table of Contents
-- [Overview](#overview)
-- [Local Testing](#local-testing)
-- [Production Deployment](#production-deployment)
-  - [Same Server as n8n](#same-server-as-n8n)
-  - [Different Server (Cloud Deployment)](#different-server-cloud-deployment)
-- [Connecting n8n to n8n-MCP](#connecting-n8n-to-n8n-mcp)
-- [Security & Best Practices](#security--best-practices)
-- [Troubleshooting](#troubleshooting)
+## Оглавление
+- [Обзор](#overview)
+- [Локальное тестирование](#local-testing)
+- [Производственное развертывание](#production-deployment)
+- [Тот же сервер, что и n8n](#same-server-as-n8n)
+- [Другой сервер (развертывание в облаке)](#different-server-cloud-deployment)
+- [Подключение n8n к n8n-MCP](#connecting-n8n-to-n8n-mcp)
+- [Безопасность и лучшие практики](#security--best-practices)
+- [Устранение неполадок](#troubleshooting)
 
-## Overview
+## Обзор
 
-n8n-MCP is a Model Context Protocol server that provides AI assistants with comprehensive access to n8n node documentation and management capabilities. When connected to n8n via the MCP Client Tool node, it enables:
-- AI-powered workflow creation and validation
-- Access to documentation for 500+ n8n nodes
-- Workflow management through the n8n API
-- Real-time configuration validation
+n8n-MCP — это сервер протокола контекста модели, который предоставляет ИИ-помощникам полный доступ к документации узла n8n и возможностям управления. При подключении к n8n через узел MCP Client Tool он позволяет:
+- Создание и проверка рабочих процессов на базе искусственного интеллекта.
+- Доступ к документации для более чем 500 узлов n8n
+- Управление рабочим процессом через n8n API
+- Проверка конфигурации в реальном времени
 
-## Local Testing
+## Локальное тестирование
 
-### Quick Test Script
+### Сценарий быстрого тестирования
 
-Test n8n-MCP locally with the provided test script:
+Проверьте n8n-MCP локально с помощью предоставленного тестового сценария:
 
 ```bash
 # Clone the repository
@@ -39,21 +39,21 @@ npm run build
 ./scripts/test-n8n-integration.sh
 ```
 
-This script will:
-1. Start a real n8n instance in Docker
-2. Start n8n-MCP server configured for n8n
-3. Guide you through API key setup for workflow management
-4. Test the complete integration between n8n and n8n-MCP
+Этот скрипт будет:
+1. Запустите реальный экземпляр n8n в Docker.
+2. Запустите сервер n8n-MCP, настроенный для n8n.
+3. Поможем вам настроить ключ API для управления рабочими процессами.
+4. Проверьте полную интеграцию между n8n и n8n-MCP.
 
-### Manual Local Setup
+### Локальная настройка вручную
 
-For development or custom testing:
+Для разработки или индивидуального тестирования:
 
-1. **Prerequisites**:
-   - n8n instance running (local or remote)
-   - n8n API key (from n8n Settings → API)
+1. **Предварительные условия**:
+- экземпляр n8n работает (локально или удаленно)
+- Ключ API n8n (из Настройки n8n → API)
 
-2. **Start n8n-MCP**:
+2. **Запустите n8n-MCP**:
 ```bash
 # Set environment variables
 export N8N_MODE=true
@@ -68,7 +68,7 @@ export PORT=3001
 npm start
 ```
 
-3. **Verify it's running**:
+3. **Убедитесь, что он работает**:
 ```bash
 # Check health
 curl http://localhost:3001/health
@@ -78,42 +78,42 @@ curl http://localhost:3001/mcp
 # Should return: {"protocolVersion":"2024-11-05"} for n8n compatibility
 ```
 
-## Environment Variables Reference
+## Справочник по переменным среды
 
-| Variable | Required | Description | Example Value |
+| Переменная | Требуется | Описание | Пример значения |
 |----------|----------|-------------|---------------|
-| `N8N_MODE` | Yes | Enables n8n integration mode | `true` |
-| `MCP_MODE` | Yes | Enables HTTP mode for n8n MCP Client | `http` |
-| `N8N_API_URL` | Yes* | URL of your n8n instance | `http://localhost:5678` |
-| `N8N_API_KEY` | Yes* | n8n API key for workflow management | `n8n_api_xxx...` |
-| `MCP_AUTH_TOKEN` | Yes | Authentication token for MCP requests (min 32 chars) | `secure-random-32-char-token` |
-| `AUTH_TOKEN` | Yes | **MUST match MCP_AUTH_TOKEN exactly** | `secure-random-32-char-token` |
-| `PORT` | No | Port for the HTTP server | `3000` (default) |
-| `LOG_LEVEL` | No | Logging verbosity | `info`, `debug`, `error` |
+| @@КОД0@@ | Да | Включает режим интеграции n8n | `true` |
+| @@КОД0@@ | Да | Включает режим HTTP для клиента MCP n8n | `http` |
+| @@КОД0@@ | Да* | URL-адрес вашего экземпляра n8n | `http://localhost:5678` |
+| @@КОД0@@ | Да* | ключ API n8n для управления рабочими процессами | `n8n_api_xxx...` |
+| @@КОД0@@ | Да | Токен аутентификации для запросов MCP (минимум 32 символа) | `secure-random-32-char-token` |
+| @@КОД0@@ | Да | **ДОЛЖЕН точно соответствовать MCP_AUTH_TOKEN** | `secure-random-32-char-token` |
+| @@КОД0@@ | Нет | Порт для HTTP-сервера | `3000` (по умолчанию) |
+| @@КОД0@@ | Нет | Подробность регистрации | `info`, `debug`, `error` |
 
-*Required only for workflow management features. Documentation tools work without these.
+*Требуется только для функций управления рабочим процессом. Инструменты документирования работают и без них.
 
-## Docker Build Changes (v2.9.2+)
+## Изменения сборки Docker (v2.9.2+)
 
-Starting with version 2.9.2, we use a single optimized Dockerfile for all deployments:
-- The previous `Dockerfile.n8n` has been removed as redundant
-- N8N_MODE functionality is enabled via the `N8N_MODE=true` environment variable
-- This reduces image size by 500MB+ and improves build times from 8+ minutes to 1-2 minutes
-- All examples now use the standard `Dockerfile`
+Начиная с версии 2.9.2 мы используем один оптимизированный Dockerfile для всех развертываний:
+- Предыдущий `Dockerfile.n8n` удален как ненужный.
+- Функциональность N8N_MODE включается через переменную среды `N8N_MODE=true`.
+- Это уменьшает размер образа более чем на 500 МБ и сокращает время сборки с 8+ минут до 1-2 минут.
+- Во всех примерах теперь используется стандарт `Dockerfile`.
 
-## Production Deployment
+## Производственное развертывание
 
-> **⚠️ Critical**: Docker caches images locally. Always run `docker pull ghcr.io/czlonkowski/n8n-mcp:latest` before deploying to ensure you have the latest version. This simple step prevents most deployment issues.
+> **⚠️ Критично**: Docker кэширует изображения локально. Всегда запускайте `docker pull ghcr.io/czlonkowski/n8n-mcp:latest` перед развертыванием, чтобы убедиться, что у вас установлена ​​последняя версия. Этот простой шаг предотвращает большинство проблем с развертыванием.
 
-### Same Server as n8n
+### Тот же сервер, что и у n8n
 
-If you're running n8n-MCP on the same server as your n8n instance:
+Если вы используете n8n-MCP на том же сервере, что и ваш экземпляр n8n:
 
-### Using Pre-built Image (Recommended)
+### Использование готового образа (рекомендуется)
 
-The pre-built images are automatically updated with each release and are the easiest way to get started.
+Предварительно созданные образы автоматически обновляются с каждым выпуском и представляют собой самый простой способ начать работу.
 
-**IMPORTANT**: Always pull the latest image to avoid using cached versions:
+**ВАЖНО**. Всегда загружайте самое последнее изображение, чтобы не использовать кэшированные версии:
 
 ```bash
 # ALWAYS pull the latest image first
@@ -142,9 +142,9 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-### Building from Source (Advanced Users)
+### Сборка из исходного кода (опытные пользователи)
 
-Only build from source if you need custom modifications or are contributing to development:
+Создавайте из исходного кода только в том случае, если вам нужны пользовательские модификации или вы участвуете в разработке:
 
 ```bash
 # Clone and build
@@ -166,7 +166,7 @@ docker run -d \
   n8n-mcp:latest
 ```
 
-### Using systemd (for native installation)
+### Использование systemd (для собственной установки)
 
 ```bash
 # Create service file
@@ -198,13 +198,13 @@ sudo systemctl enable n8n-mcp
 sudo systemctl start n8n-mcp
 ```
 
-### Different Server (Cloud Deployment)
+### Другой сервер (облачное развертывание)
 
-Deploy n8n-MCP on a separate server from your n8n instance:
+Разверните n8n-MCP на сервере, отдельном от вашего экземпляра n8n:
 
-#### Quick Docker Deployment (Recommended)
+#### Быстрое развертывание Docker (рекомендуется)
 
-**Always pull the latest image to ensure you have the current version:**
+**Всегда загружайте последний образ, чтобы убедиться, что у вас актуальная версия:**
 
 ```bash
 # On your cloud server (Hetzner, AWS, DigitalOcean, etc.)
@@ -230,9 +230,9 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-#### Building from Source (Advanced)
+#### Сборка из исходного кода (продвинутый уровень)
 
-Only needed if you're modifying the code:
+Требуется только в том случае, если вы изменяете код:
 
 ```bash
 # Clone and build
@@ -248,14 +248,14 @@ docker run -d \
   n8n-mcp:latest
 ```
 
-#### Full Production Setup (Hetzner/AWS/DigitalOcean)
+#### Полная настройка производства (Hetzner/AWS/DigitalOcean)
 
-1. **Server Requirements**:
-   - **Minimal**: 1 vCPU, 1GB RAM (CX11 on Hetzner)
-   - **Recommended**: 2 vCPU, 2GB RAM
-   - **OS**: Ubuntu 22.04 LTS
+1. **Требования к серверу**:
+- **Минимально**: 1 виртуальный ЦП, 1 ГБ ОЗУ (CX11 на Hetzner)
+- **Рекомендуется**: 2 виртуальных ЦП, 2 ГБ ОЗУ.
+- **ОС**: Ubuntu 22.04 LTS.
 
-2. **Initial Setup**:
+2. **Первоначальная настройка**:
 ```bash
 # SSH into your server
 ssh root@your-server-ip
@@ -265,9 +265,9 @@ apt update && apt upgrade -y
 curl -fsSL https://get.docker.com | sh
 ```
 
-3. **Deploy n8n-MCP with SSL** (using Caddy for automatic HTTPS):
+3. **Развертывание n8n-MCP с SSL** (с использованием Caddy для автоматического HTTPS):
 
-**Using Docker Compose (Recommended)**
+**Использование Docker Compose (рекомендуется)**
 ```bash
 # Create docker-compose.yml
 cat > docker-compose.yml << 'EOF'
@@ -315,9 +315,9 @@ volumes:
 EOF
 ```
 
-**Note**: The `pull_policy: always` ensures you always get the latest version.
+**Примечание**. `pull_policy: always` гарантирует, что вы всегда получите самую последнюю версию.
 
-**Building from Source (if needed)**
+**Сборка из исходного кода (при необходимости)**
 ```bash
 # Only if you need custom modifications
 git clone https://github.com/czlonkowski/n8n-mcp.git
@@ -364,7 +364,7 @@ volumes:
 EOF
 ```
 
-**Complete the Setup**
+**Завершите настройку**
 ```bash
 # Create Caddyfile
 cat > Caddyfile << 'EOF'
@@ -390,28 +390,28 @@ echo "Save this token - you'll need it in n8n MCP Client Tool configuration"
 docker compose up -d
 ```
 
-#### Cloud Provider Tips
+#### Советы облачных провайдеров
 
 **AWS EC2**:
-- Security Group: Open port 3000 (or 443 with HTTPS)
-- Instance Type: t3.micro is sufficient
-- Use Elastic IP for stable addressing
+- Группа безопасности: открыть порт 3000 (или 443 с HTTPS).
+- Тип экземпляра: достаточно t3.micro.
+- Используйте Elastic IP для стабильной адресации.
 
-**DigitalOcean**:
-- Droplet: Basic ($6/month) is enough
-- Enable backups for production use
+**Цифровой океан**:
+- Капелька: достаточно базовой (6 долларов в месяц).
+- Включить резервное копирование для производственного использования.
 
-**Google Cloud**:
-- Machine Type: e2-micro (free tier eligible)
-- Use Cloud Load Balancer for SSL
+**Облако Google**:
+- Тип машины: e2-micro (доступен уровень бесплатного пользования)
+- Используйте Cloud Load Balancer для SSL.
 
-## Connecting n8n to n8n-MCP
+## Подключение n8n к n8n-MCP
 
-### Configure n8n MCP Client Tool
+### Настройка клиентского инструмента n8n MCP
 
-1. **In your n8n workflow**, add the **MCP Client Tool** node
+1. **В рабочий процесс n8n** добавьте узел **Клиентский инструмент MCP**.
 
-2. **Configure the connection**:
+2. **Настройте соединение**:
    ```
    Server URL (MUST include /mcp endpoint): 
    - Same server: http://localhost:3000/mcp
@@ -423,52 +423,52 @@ docker compose up -d
    Transport: HTTP Streamable (SSE)
    ```
    
-   ⚠️ **Critical**: The Server URL must include the `/mcp` endpoint path. Without this, the connection will fail.
+⚠️ **Критично**: URL-адрес сервера должен включать путь к конечной точке `/mcp`. Без этого соединение не удастся.
 
-3. **Test the connection** by selecting a simple tool like `n8n_nodes_search`
+3. **Проверьте соединение**, выбрав простой инструмент, например `n8n_nodes_search`.
 
-### Available Tools
+### Доступные инструменты
 
-Once connected, you can use these MCP tools in n8n:
+После подключения вы можете использовать эти инструменты MCP в n8n:
 
-**Documentation Tools** (No API key required):
-- `n8n_tools_documentation` - Tool docs and usage guidance
-- `n8n_nodes_search` - Search nodes by keyword
-- `n8n_node_get` - Node info (minimal/standard/full), docs, property search, versions
-- `n8n_node_validate` - Validate node configuration
-- `n8n_workflow_json_validate` - Validate workflow configurations
-- `n8n_templates_search` - Search workflow templates
-- `n8n_template_get` - Get template details by ID
+**Инструменты документирования** (ключ API не требуется):
+- `n8n_tools_documentation` - ​​Документация по инструменту и руководство по использованию.
+- `n8n_nodes_search` - ​​Поиск узлов по ключевому слову
+- `n8n_node_get` - ​​Информация об узле (минимальная/стандартная/полная), документы, поиск свойств, версии
+- `n8n_node_validate` - ​​Проверка конфигурации узла.
+- `n8n_workflow_json_validate` - ​​Проверка конфигураций рабочего процесса.
+- `n8n_templates_search` - ​​Поиск шаблонов рабочих процессов
+- `n8n_template_get` - ​​Получить информацию о шаблоне по идентификатору
 
-**Management Tools** (Requires n8n API key):
-- `n8n_workflow_create` - Create new workflows
-- `n8n_workflow_get` - Retrieve workflow details
-- `n8n_workflow_update_full` - Update existing workflows (full replace)
-- `n8n_workflow_update_partial` - Update via diff operations
-- `n8n_workflow_delete` - Delete workflows
-- `n8n_workflows_list` - List workflows
-- `n8n_workflow_validate` - Validate workflows in n8n by ID
-- `n8n_workflow_autofix` - Auto-fix common errors
-- `n8n_workflow_test` - Trigger workflow execution
-- `n8n_executions_get` - Get execution details
-- `n8n_executions_list` - List executions
-- `n8n_executions_delete` - Delete execution records
-- `n8n_health_check` - Check n8n connectivity
-- `n8n_template_deploy` - Deploy templates from n8n.io
-- `n8n_workflow_versions_list` - List workflow version history
-- `n8n_workflow_versions_get` - Get a specific workflow version
-- `n8n_workflow_versions_rollback` - Roll back to a previous version
-- `n8n_workflow_versions_delete` - Delete versions for a workflow
-- `n8n_workflow_versions_prune` - Prune versions to keep N most recent
-- `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
+**Инструменты управления** (требуется ключ API n8n):
+- `n8n_workflow_create` - ​​Создание новых рабочих процессов
+- `n8n_workflow_get` - ​​Получить подробную информацию о рабочем процессе
+- `n8n_workflow_update_full` - ​​Обновление существующих рабочих процессов (полная замена)
+- `n8n_workflow_update_partial` - ​​Обновление через операции сравнения.
+- `n8n_workflow_delete` - ​​Удаление рабочих процессов
+- `n8n_workflows_list` - ​​Список рабочих процессов
+- `n8n_workflow_validate` - ​​Проверка рабочих процессов в n8n по идентификатору.
+- `n8n_workflow_autofix` - ​​Автоматическое исправление распространенных ошибок.
+- `n8n_workflow_test` - ​​Запустить выполнение рабочего процесса.
+- `n8n_executions_get` - ​​Получить подробности выполнения
+- `n8n_executions_list` - ​​Список выполнений
+- `n8n_executions_delete` - ​​Удалить записи выполнения
+- `n8n_health_check` - ​​Проверьте подключение n8n
+- `n8n_template_deploy` - ​​Развертывание шаблонов из n8n.io
+- `n8n_workflow_versions_list` — просмотреть историю версий рабочего процесса.
+- `n8n_workflow_versions_get` - ​​Получить конкретную версию рабочего процесса.
+- `n8n_workflow_versions_rollback` - ​​Откат к предыдущей версии
+- `n8n_workflow_versions_delete` - ​​Удаление версий рабочего процесса.
+- `n8n_workflow_versions_prune` — сократить версии, чтобы сохранить N самых последних версий.
+- `n8n_workflow_versions_truncate` - ​​Усекать ВСЕ версии (опасно)
 
-### Using with AI Agents
+### Использование с ИИ-агентами
 
-Connect n8n-MCP to AI Agent nodes for intelligent automation:
+Подключите n8n-MCP к узлам AI Agent для интеллектуальной автоматизации:
 
-1. **Add an AI Agent node** (e.g., OpenAI, Anthropic)
-2. **Connect MCP Client Tool** to the Agent's tool input
-3. **Configure prompts** for workflow creation:
+1. **Добавьте узел AI Agent** (например, OpenAI, Anthropic).
+2. **Подключите клиентский инструмент MCP** к входу инструмента агента.
+3. **Настройте запросы** для создания рабочего процесса:
 
 ```
 You are an n8n workflow expert. Use the MCP tools to:
@@ -478,55 +478,55 @@ You are an n8n workflow expert. Use the MCP tools to:
 4. Create the workflow if all validations pass
 ```
 
-## Security & Best Practices
+## Безопасность и лучшие практики
 
-### Authentication
-- **MCP_AUTH_TOKEN**: Always use a strong, random token (32+ characters)
-- **N8N_API_KEY**: Only required for workflow management features
-- Store tokens in environment variables or secure vaults
+### Аутентификация
+- **MCP_AUTH_TOKEN**: всегда используйте надежный случайный токен (более 32 символов).
+- **N8N_API_KEY**: требуется только для функций управления рабочим процессом.
+- Храните токены в переменных среды или безопасных хранилищах.
 
-### Network Security
-- **Use HTTPS** in production (Caddy/Nginx/Traefik)
-- **Firewall**: Only expose necessary ports (3000 or 443)
-- **IP Whitelisting**: Consider restricting access to known n8n instances
+### Сетевая безопасность
+- **Использовать HTTPS** в рабочей среде (Caddy/Nginx/Traefik).
+- **Брандмауэр**: открывайте только необходимые порты (3000 или 443).
+- **Белый список IP**: рассмотрите возможность ограничения доступа к известным экземплярам n8n.
 
-### Docker Security
-- **Always pull latest images**: Docker caches images locally, so run `docker pull` before deployment
-- Run containers with `--read-only` flag if possible
-- Use specific image versions instead of `:latest` in production
-- Regular updates: `docker pull ghcr.io/czlonkowski/n8n-mcp:latest`
+### Безопасность докера
+- **Всегда извлекайте последние изображения**: Docker кэширует изображения локально, поэтому запустите `docker pull` перед развертыванием.
+- Запускайте контейнеры с флагом `--read-only`, если это возможно.
+- Используйте определенные версии изображений вместо `:latest` в производстве.
+- Регулярные обновления: `docker pull ghcr.io/czlonkowski/n8n-mcp:latest`
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Docker Image Issues
+### Проблемы с изображениями Docker
 
-**Using Outdated Cached Images**
-- **Symptom**: Missing features, old bugs reappearing, features not working as documented
-- **Cause**: Docker uses locally cached images instead of pulling the latest version
-- **Solution**: Always run `docker pull ghcr.io/czlonkowski/n8n-mcp:latest` before deployment
-- **Verification**: Check image age with `docker images | grep n8n-mcp`
+**Использование устаревших кэшированных изображений**
+- **Симптом**: отсутствуют функции, появляются старые ошибки, функции не работают так, как описано в документации.
+- **Причина**: Docker использует локально кэшированные изображения вместо получения последней версии.
+- **Решение**: всегда запускайте `docker pull ghcr.io/czlonkowski/n8n-mcp:latest` перед развертыванием.
+- **Проверка**: проверьте возраст изображения с помощью `docker images | grep n8n-mcp`.
 
-### Common Configuration Issues
+### Распространенные проблемы с конфигурацией
 
-**Missing `MCP_MODE=http` Environment Variable**
-- **Symptom**: n8n MCP Client Tool cannot connect, server doesn't respond on `/mcp` endpoint
-- **Solution**: Add `MCP_MODE=http` to your environment variables
-- **Why**: Without this, the server runs in stdio mode which is incompatible with n8n
+**Отсутствует переменная среды `MCP_MODE=http`**
+- **Симптом**: клиентский инструмент n8n MCP не может подключиться, сервер не отвечает на конечной точке `/mcp`.
+- **Решение**: добавьте `MCP_MODE=http` в переменные среды.
+- **Почему**: без этого сервер работает в режиме stdio, который несовместим с n8n.
 
-**Server URL Missing `/mcp` Endpoint**
-- **Symptom**: "Connection refused" or "Invalid response" in n8n MCP Client Tool
-- **Solution**: Ensure your Server URL includes `/mcp` (e.g., `http://localhost:3000/mcp`)
-- **Why**: n8n connects to the `/mcp` endpoint specifically, not the root URL
+**Отсутствует URL-адрес сервера `/mcp` Конечная точка**
+- **Симптом**: «Соединение отклонено» или «Неверный ответ» в клиентском инструменте n8n MCP.
+- **Решение**: убедитесь, что URL-адрес вашего сервера включает `/mcp` (например, `http://localhost:3000/mcp`).
+- **Почему**: n8n подключается именно к конечной точке `/mcp`, а не к корневому URL-адресу.
 
-**Mismatched Auth Tokens**
-- **Symptom**: "Authentication failed" or "Invalid auth token"
-- **Solution**: Ensure both `MCP_AUTH_TOKEN` and `AUTH_TOKEN` have the same value
-- **Why**: Both variables must match for proper authentication
+**Несовпадающие токены аутентификации**
+- **Симптом**: «Ошибка аутентификации» или «Неверный токен аутентификации».
+- **Решение**: убедитесь, что `MCP_AUTH_TOKEN` и `AUTH_TOKEN` имеют одинаковое значение.
+- **Почему**: для правильной аутентификации обе переменные должны совпадать.
 
-### Connection Issues
+### Проблемы с подключением
 
-**"Connection refused" in n8n MCP Client Tool**
-1. **Check n8n-MCP is running**:
+** «Соединение отклонено» в клиентском инструменте n8n MCP**
+1. **Проверьте, работает ли n8n-MCP**:
    ```bash
    # Docker
    docker ps | grep n8n-mcp
@@ -537,7 +537,7 @@ You are an n8n workflow expert. Use the MCP tools to:
    journalctl -u n8n-mcp --tail 20
    ```
 
-2. **Verify endpoints are accessible**:
+2. **Убедитесь, что конечные точки доступны**:
    ```bash
    # Health check (should return status info)
    curl http://your-server:3000/health
@@ -546,7 +546,7 @@ You are an n8n workflow expert. Use the MCP tools to:
    curl http://your-server:3000/mcp
    ```
 
-3. **Check firewall and networking**:
+3. **Проверьте брандмауэр и сеть**:
    ```bash
    # Test port accessibility from n8n server
    telnet your-mcp-server 3000
@@ -558,8 +558,8 @@ You are an n8n workflow expert. Use the MCP tools to:
    netstat -tlnp | grep :3000
    ```
 
-**"Invalid auth token" or "Authentication failed"**
-1. **Verify token format**:
+** «Неверный токен аутентификации» или «Ошибка аутентификации»**
+1. **Проверьте формат токена**:
    ```bash
    # Check token length (should be 64 chars for hex-32)
    echo $MCP_AUTH_TOKEN | wc -c
@@ -569,41 +569,41 @@ You are an n8n workflow expert. Use the MCP tools to:
    echo "AUTH_TOKEN: $AUTH_TOKEN"
    ```
 
-2. **Common token issues**:
-   - Token too short (minimum 32 characters)
-   - Extra whitespace or newlines in token
-   - Different values for `MCP_AUTH_TOKEN` and `AUTH_TOKEN`
-   - Special characters not properly escaped in environment files
+2. **Распространенные проблемы с токенами**:
+- Токен слишком короткий (минимум 32 символа).
+- Дополнительные пробелы или новые строки в токене.
+- Различные значения для `MCP_AUTH_TOKEN` и `AUTH_TOKEN`.
+- Специальные символы не экранируются должным образом в файлах окружения.
 
-**"Cannot connect to n8n API"**
-1. **Verify n8n configuration**:
+**"Невозможно подключиться к API n8n"**
+1. **Проверьте конфигурацию n8n**:
    ```bash
    # Test n8n API accessibility
    curl -H "X-N8N-API-KEY: your-api-key" \
         https://your-n8n-instance.com/api/v1/workflows
    ```
 
-2. **Common n8n API issues**:
-   - `N8N_API_URL` missing protocol (http:// or https://)
-   - n8n API key expired or invalid
-   - n8n instance not accessible from n8n-MCP server
-   - n8n API disabled in settings
+2. **Распространённые проблемы с API n8n**:
+- `N8N_API_URL` отсутствует протокол (http:// или https://)
+- Срок действия ключа API n8n истек или недействителен.
+- Экземпляр n8n недоступен с сервера n8n-MCP
+- n8n API отключен в настройках
 
-### Version Compatibility Issues
+### Проблемы совместимости версий
 
-**"Features Not Working as Expected"**
-- **Symptom**: Missing features, old bugs, or compatibility issues
-- **Solution**: Pull the latest image: `docker pull ghcr.io/czlonkowski/n8n-mcp:latest`
-- **Check**: Verify image date with `docker inspect ghcr.io/czlonkowski/n8n-mcp:latest | grep Created`
+**"Функции не работают должным образом"**
+- **Симптом**: отсутствуют функции, старые ошибки или проблемы совместимости.
+- **Решение**: извлеките последнее изображение: `docker pull ghcr.io/czlonkowski/n8n-mcp:latest`.
+- **Проверка**: проверьте дату изображения с помощью `docker inspect ghcr.io/czlonkowski/n8n-mcp:latest | grep Created`.
 
-**"Protocol version mismatch"**
-- n8n-MCP automatically uses version 2024-11-05 for n8n compatibility
-- Update to latest n8n-MCP version if issues persist
-- Verify `/mcp` endpoint returns correct version
+**"Несоответствие версии протокола"**
+- n8n-MCP автоматически использует версию 2024-11-05 для совместимости с n8n.
+- Обновите до последней версии n8n-MCP, если проблемы не исчезнут.
+- Убедитесь, что конечная точка `/mcp` возвращает правильную версию.
 
-### Environment Variable Issues
+### Проблемы с переменными среды
 
-**Complete Environment Variable Checklist**:
+**Полный контрольный список переменных среды**:
 ```bash
 # Required for all deployments
 export N8N_MODE=true                                    # Enables n8n integration
@@ -620,16 +620,16 @@ export PORT=3000                                       # HTTP port (default: 300
 export LOG_LEVEL=info                                  # Logging level
 ```
 
-### Docker-Specific Issues
+### Проблемы, специфичные для Docker
 
-**Container Build Failures**
+**Ошибки сборки контейнера**
 ```bash
 # Clear Docker cache and rebuild
 docker system prune -f
 docker build --no-cache -t n8n-mcp:latest .
 ```
 
-**Container Runtime Issues**
+**Проблемы выполнения контейнера**
 ```bash
 # Check container logs for detailed errors
 docker logs n8n-mcp -f --timestamps
@@ -641,9 +641,9 @@ docker exec n8n-mcp env | grep -E "(N8N|MCP|AUTH)"
 docker exec n8n-mcp curl -f http://localhost:3000/health
 ```
 
-### Network and SSL Issues
+### Проблемы с сетью и SSL
 
-**HTTPS/SSL Problems**
+**Проблемы HTTPS/SSL**
 ```bash
 # Test SSL certificate
 openssl s_client -connect mcp.yourdomain.com:443
@@ -652,7 +652,7 @@ openssl s_client -connect mcp.yourdomain.com:443
 docker logs caddy -f --tail 50
 ```
 
-**Docker Network Issues**
+**Проблемы с сетью Docker**
 ```bash
 # Check if containers can communicate
 docker network ls
@@ -662,9 +662,9 @@ docker network inspect bridge
 docker exec n8n curl http://n8n-mcp:3000/health
 ```
 
-### Debugging Steps
+### Шаги отладки
 
-1. **Enable comprehensive logging**:
+1. **Включить комплексное ведение журнала**:
 ```bash
 # For Docker
 docker run -d \
@@ -680,7 +680,7 @@ Environment="DEBUG_MCP=true"
 Environment="LOG_LEVEL=debug"
 ```
 
-2. **Test all endpoints systematically**:
+2. **Систематически тестируйте все конечные точки**:
 ```bash
 # 1. Health check (basic server functionality)
 curl -v http://localhost:3000/health
@@ -701,7 +701,7 @@ curl -X POST http://localhost:3000/mcp \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_database_statistics","arguments":{}},"id":2}'
 ```
 
-3. **Common log patterns to look for**:
+3. **Общие шаблоны журналов, на которые следует обратить внимание**:
 ```bash
 # Success patterns
 grep "Server started" /var/log/n8n-mcp.log
@@ -713,11 +713,11 @@ grep -i "auth\|token" /var/log/n8n-mcp.log
 grep -i "connection\|network" /var/log/n8n-mcp.log
 ```
 
-### Getting Help
+### Получение помощи
 
-If you're still experiencing issues:
+Если у вас все еще возникают проблемы:
 
-1. **Gather diagnostic information**:
+1. **Соберите диагностическую информацию**:
 ```bash
 # System info
 docker --version
@@ -735,7 +735,7 @@ docker ps | grep n8n-mcp
 docker stats n8n-mcp --no-stream
 ```
 
-2. **Create a minimal test setup**:
+2. **Создайте минимальную тестовую установку**:
 ```bash
 # Test with minimal configuration
 docker run -d \
@@ -753,22 +753,22 @@ curl http://localhost:3001/health
 curl http://localhost:3001/mcp
 ```
 
-3. **Report issues**: Include the diagnostic information when opening an issue on [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+3. **Сообщить о проблемах**: включите диагностическую информацию при открытии проблемы на [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
 
-## Performance Tips
+## Советы по производительности
 
-- **Minimal deployment**: 1 vCPU, 1GB RAM is sufficient
-- **Database**: Pre-built SQLite database (~15MB) loads quickly
-- **Response time**: Average 12ms for queries
-- **Caching**: Built-in 15-minute cache for repeated queries
+- **Минимальное развертывание**: достаточно 1 виртуального ЦП и 1 ГБ ОЗУ.
+- **База данных**: предварительно созданная база данных SQLite (~15 МБ) загружается быстро.
+- **Время ответа**: в среднем 12 мс для запросов.
+- **Кэширование**: встроенный 15-минутный кеш для повторяющихся запросов.
 
-## Next Steps
+## Следующие шаги
 
-- Test your setup with the [MCP Client Tool in n8n](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.mcpclienttool/)
-- Explore [available MCP tools](../README.md#-available-mcp-tools)
-- Build AI-powered workflows with [AI Agent nodes](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmagent/)
-- Join the [n8n Community](https://community.n8n.io) for ideas and support
+- Проверьте свою настройку с помощью [MCP Client Tool в n8n](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.mcpclienttool/)
+- Изучите [доступные инструменты MCP](../README.md#-available-mcp-tools)
+- Создавайте рабочие процессы на основе искусственного интеллекта с помощью [узлов AI Agent](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmagent/)
+- Присоединяйтесь к [n8n Community](https://community.n8n.io) для идей и поддержки.
 
 ---
 
-Need help? Open an issue on [GitHub](https://github.com/czlonkowski/n8n-mcp/issues) or check the [n8n forums](https://community.n8n.io)
+Нужна помощь? Откройте проблему на [GitHub](https://github.com/czlonkowski/n8n-mcp/issues) или посетите [форумы n8n](https://community.n8n.io)

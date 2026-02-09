@@ -9,7 +9,7 @@ import {
   toolsDocumentationDoc,
   n8nHealthCheckDoc
 } from './system';
-import { aiAgentsGuide, workflowFilesResourcesGuide } from './guides';
+import { aiAgentsGuide, workflowFilesResourcesGuide, synestraCamelKDebeziumMcpN8nDevGuide } from './guides';
 import {
   n8nCreateWorkflowDoc,
   n8nGetWorkflowDoc,
@@ -57,6 +57,7 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   // Guides
   ai_agents_guide: aiAgentsGuide,
   workflow_files_resources_guide: workflowFilesResourcesGuide,
+  synestra_camelk_debezium_mcp_n8n_dev_guide: synestraCamelKDebeziumMcpN8nDevGuide,
 
   // Discovery tools
   n8n_nodes_search: searchNodesDoc,

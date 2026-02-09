@@ -1,49 +1,49 @@
-# Session Persistence API - Production Guide
+# API сохранения сеансов — Руководство по производству
 
-## Overview
+## Обзор
 
-The Session Persistence API enables zero-downtime container deployments in multi-tenant n8n-mcp environments. It allows you to export active MCP session state before shutdown and restore it after restart, maintaining session continuity across container lifecycle events.
+API сохранения сеансов обеспечивает развертывание контейнеров без простоев в мультитенантных средах n8n-mcp. Он позволяет экспортировать активное состояние сеанса MCP перед выключением и восстанавливать его после перезапуска, поддерживая непрерывность сеанса на протяжении всего жизненного цикла контейнера.
 
-**Version:** 2.24.1+
-**Status:** Production-ready
-**Use Cases:** Multi-tenant SaaS, Kubernetes deployments, container orchestration, rolling updates
+**Версия:** 2.24.1+
+**Статус:** Готово к производству
+**Примеры использования**: мультитенантное SaaS, развертывание Kubernetes, оркестровка контейнеров, непрерывные обновления.
 
-## Architecture
+## Архитектура
 
-### Session State Components
+### Компоненты состояния сеанса
 
-Each persisted session contains:
+Каждый сохраняемый сеанс содержит:
 
-1. **Session Metadata**
-   - `sessionId`: Unique session identifier (UUID v4)
-   - `createdAt`: ISO 8601 timestamp of session creation
-   - `lastAccess`: ISO 8601 timestamp of last activity
+1. **Метаданные сеанса**
+- `sessionId`: уникальный идентификатор сеанса (UUID v4).
+- `createdAt`: временная метка создания сеанса в формате ISO 8601.
+- `lastAccess`: временная метка последнего действия в формате ISO 8601.
 
-2. **Instance Context**
-   - `n8nApiUrl`: n8n instance API endpoint
-   - `n8nApiKey`: n8n API authentication key (plaintext)
-   - `instanceId`: Optional tenant/instance identifier
-   - `sessionId`: Optional session-specific identifier
-   - `metadata`: Optional custom application data
+2. **Контекст экземпляра**
+- `n8nApiUrl`: конечная точка API экземпляра n8n.
+- `n8nApiKey`: ключ аутентификации API n8n (открытый текст)
+- `instanceId`: дополнительный идентификатор клиента/экземпляра.
+- `sessionId`: необязательный идентификатор сеанса.
+- `metadata`: дополнительные данные пользовательского приложения.
 
-3. **Dormant Session Pattern**
-   - Transport and MCP server objects are NOT persisted
-   - Recreated automatically on first request after restore
-   - Reduces memory footprint during restore
+3. **Шаблон бездействующего сеанса**
+- Объекты транспортного сервера и сервера MCP НЕ сохраняются.
+- Воссоздается автоматически по первому запросу после восстановления.
+- Уменьшает объем памяти во время восстановления.
 
-## API Reference
+## Справочник по API
 
 ### N8NMCPEngine.exportSessionState()
 
-Exports all active session state for persistence before shutdown.
+Экспортирует все активное состояние сеанса для сохранения перед выключением.
 
 ```typescript
 exportSessionState(): SessionState[]
 ```
 
-**Returns:** Array of session state objects containing metadata and credentials
+**Возвраты:** Массив объектов состояния сеанса, содержащий метаданные и учетные данные.
 
-**Example:**
+**Пример:**
 ```typescript
 const sessions = engine.exportSessionState();
 // sessions = [
@@ -63,45 +63,45 @@ const sessions = engine.exportSessionState();
 // ]
 ```
 
-**Key Behaviors:**
-- Exports only non-expired sessions (within sessionTimeout)
-- Detects and warns about duplicate session IDs
-- Logs security event with session count
-- Returns empty array if no active sessions
+**Основные правила поведения:**
+- Экспортирует только сеансы с неистёкшим сроком действия (в пределах sessionTimeout)
+- Обнаруживает и предупреждает о повторяющихся идентификаторах сеансов.
+- Регистрирует события безопасности с количеством сеансов.
+- Возвращает пустой массив, если нет активных сессий
 
 ### N8NMCPEngine.restoreSessionState()
 
-Restores sessions from previously exported state after container restart.
+Восстанавливает сеансы из ранее экспортированного состояния после перезапуска контейнера.
 
 ```typescript
 restoreSessionState(sessions: SessionState[]): number
 ```
 
-**Parameters:**
-- `sessions`: Array of session state objects from `exportSessionState()`
+**Параметры:**
+- `sessions`: Массив объектов состояния сеанса из `exportSessionState()`.
 
-**Returns:** Number of sessions successfully restored
+**Возвраты:** Количество успешно восстановленных сеансов.
 
-**Example:**
+**Пример:**
 ```typescript
 const sessions = await loadFromEncryptedStorage();
 const count = engine.restoreSessionState(sessions);
 console.log(`Restored ${count} sessions`);
 ```
 
-**Key Behaviors:**
-- Validates session metadata (timestamps, required fields)
-- Skips expired sessions (age > sessionTimeout)
-- Skips duplicate sessions (idempotent)
-- Respects MAX_SESSIONS limit (default 100, configurable via N8N_MCP_MAX_SESSIONS env var)
-- Recreates transports/servers lazily on first request
-- Logs security events for restore success/failure
+**Основные правила поведения:**
+- Проверяет метаданные сеанса (метки времени, обязательные поля)
+- Пропускает просроченные сеансы (возраст > sessionTimeout)
+- Пропускает дублирующиеся сеансы (идемпотент)
+- Соблюдает ограничение MAX_SESSIONS (по умолчанию 100, настраивается через N8N_MCP_MAX_SESSIONS env var)
+- Лениво воссоздает транспорты/серверы по первому запросу.
+- Регистрирует события безопасности для успешного/неудачного восстановления.
 
-## Security Considerations
+## Вопросы безопасности
 
-### Critical: Encrypt Before Storage
+### Критично: шифрование перед сохранением
 
-**The exported session state contains plaintext n8n API keys.** You MUST encrypt this data before persisting to disk.
+**Экспортированное состояние сеанса содержит ключи API n8n в виде открытого текста.** Вы ДОЛЖНЫ зашифровать эти данные перед их сохранением на диске.
 
 ```typescript
 // ❌ NEVER DO THIS
@@ -112,7 +112,7 @@ const encrypted = await encryptSessionData(sessions, encryptionKey);
 await saveToSecureStorage(encrypted);
 ```
 
-### Recommended Encryption Approach
+### Рекомендуемый подход к шифрованию
 
 ```typescript
 import crypto from 'crypto';
@@ -168,18 +168,18 @@ async function decryptSessionData(
 }
 ```
 
-### Key Management
+### Управление ключами
 
-Store encryption keys securely:
-- **Kubernetes:** Use Kubernetes Secrets with encryption at rest
-- **AWS:** Use AWS Secrets Manager or Parameter Store with KMS
-- **Azure:** Use Azure Key Vault
-- **GCP:** Use Secret Manager
-- **Local Dev:** Use environment variables (NEVER commit to git)
+Надежно храните ключи шифрования:
+- **Kubernetes:** используйте секреты Kubernetes с неактивным шифрованием.
+- **AWS:** Используйте AWS Secrets Manager или хранилище параметров с KMS.
+- **Azure:** используйте Azure Key Vault.
+- **GCP:** использовать диспетчер секретов.
+- **Локальная разработка:** Используйте переменные среды (НИКОГДА не используйте git).
 
-### Security Logging
+### Ведение журнала безопасности
 
-All session persistence operations are logged with `[SECURITY]` prefix:
+Все операции сохранения сеанса протоколируются с префиксом `[SECURITY]`:
 
 ```
 [SECURITY] session_export { timestamp, count }
@@ -188,11 +188,11 @@ All session persistence operations are logged with `[SECURITY]` prefix:
 [SECURITY] max_sessions_reached { timestamp, count }
 ```
 
-Monitor these logs in production for audit trails and security analysis.
+Отслеживайте эти журналы в рабочей среде для отслеживания журналов аудита и анализа безопасности.
 
-## Implementation Examples
+## Примеры реализации
 
-### 1. Express.js Multi-Tenant Backend
+### 1. Мультитенантный бэкэнд Express.js
 
 ```typescript
 import express from 'express';
@@ -248,7 +248,7 @@ await startup();
 app.listen(3000);
 ```
 
-### 2. Kubernetes Deployment with Init Container
+### 2. Развертывание Kubernetes с помощью Init-контейнера
 
 **deployment.yaml:**
 ```yaml
@@ -342,7 +342,7 @@ curl -X POST http://localhost:3000/internal/export-sessions
 echo "Sessions exported successfully"
 ```
 
-### 3. Docker Compose with Redis
+### 3. Docker Compose с Redis
 
 **docker-compose.yml:**
 ```yaml
@@ -377,7 +377,7 @@ volumes:
   redis-data:
 ```
 
-**Application code:**
+**Код приложения:**
 ```typescript
 import { N8NMCPEngine } from 'n8n-mcp';
 import Redis from 'ioredis';
@@ -423,11 +423,11 @@ async function startup() {
 }
 ```
 
-## Best Practices
+## Лучшие практики
 
-### 1. Session Timeout Configuration
+### 1. Настройка таймаута сеанса
 
-Choose appropriate timeout based on use case:
+Выберите подходящий тайм-аут в зависимости от варианта использования:
 
 ```typescript
 const engine = new N8NMCPEngine({
@@ -444,29 +444,29 @@ sessionTimeout: 1800000 - 3600000
 sessionTimeout: 7200000 - 14400000
 ```
 
-### 2. Storage Backend Selection
+### 2. Выбор серверной части хранилища
 
-**Redis (Recommended for Production)**
-- Fast read/write for session data
-- TTL support for automatic cleanup
-- Pub/sub for distributed coordination
-- Atomic operations for consistency
+**Redis (рекомендуется для производства)**
+- Быстрое чтение/запись данных сеанса
+- Поддержка TTL для автоматической очистки
+- Pub/sub для распределенной координации
+- Атомарные операции для обеспечения согласованности
 
-**Database (PostgreSQL/MySQL)**
-- JSONB column for session state
-- Good for audit requirements
-- Slower than Redis
-- Requires periodic cleanup
+**База данных (PostgreSQL/MySQL)**
+- Столбец JSONB для состояния сеанса.
+- Хорошо подходит для требований аудита
+- Медленнее, чем Redis
+- Требует периодической очистки.
 
-**S3/Cloud Storage**
-- Good for disaster recovery backups
-- Not suitable for hot session restore
-- High latency
-- Good for long-term session archival
+**S3/Облачное хранилище**
+- Хорошо подходит для резервного копирования после аварийного восстановления.
+- Не подходит для горячего восстановления сеанса.
+- Высокая задержка
+- Подходит для долгосрочного архивирования сеансов.
 
-### 3. Monitoring and Alerting
+### 3. Мониторинг и оповещение
 
-Monitor these metrics:
+Следите за этими показателями:
 
 ```typescript
 // Session export metrics
@@ -489,15 +489,15 @@ metrics.gauge('mcp.sessions.active', info.active ? 1 : 0);
 metrics.gauge('mcp.sessions.age_seconds', info.age || 0);
 ```
 
-Alert on:
-- Export failures (should be rare)
-- Low restore success rate (<95%)
-- MAX_SESSIONS limit reached
-- High session age (potential leaks)
+Оповещение:
+- Сбои при экспорте (должны быть редки)
+- Низкая вероятность успешного восстановления (<95%)
+- Достигнут предел: MAX_SESSIONS
+- Высокий возраст сеанса (потенциальные утечки)
 
-### 4. Graceful Shutdown Timing
+### 4. Грамотное завершение работы
 
-Ensure sufficient time for session export:
+Обеспечьте достаточно времени для экспорта сеанса:
 
 ```typescript
 // Kubernetes terminationGracePeriodSeconds
@@ -528,9 +528,9 @@ process.on('SIGTERM', async () => {
 });
 ```
 
-### 5. Idempotency Handling
+### 5. Обработка идемпотентности
 
-Sessions can be restored multiple times safely:
+Сеансы можно безопасно восстанавливать несколько раз:
 
 ```typescript
 // First restore
@@ -542,14 +542,14 @@ const count2 = engine.restoreSessionState(sessions);
 // count2 = 0 (all already exist)
 ```
 
-This is safe for:
-- Init container retries
-- Manual recovery operations
-- Disaster recovery scenarios
+Это безопасно для:
+- Повторные попытки инициализации контейнера
+- Ручные операции восстановления
+- Сценарии аварийного восстановления.
 
-### 6. Multi-Instance Coordination
+### 6. Координация нескольких экземпляров
 
-For multiple container instances:
+Для нескольких экземпляров контейнера:
 
 ```typescript
 // Option 1: Per-instance storage (simple)
@@ -565,9 +565,9 @@ try {
 }
 ```
 
-## Performance Considerations
+## Вопросы производительности
 
-### Memory Usage
+### Использование памяти
 
 ```typescript
 // Each session: ~1-2 KB in memory
@@ -580,7 +580,7 @@ const sizeKB = JSON.stringify(sessions).length / 1024;
 console.log(`Export size: ${sizeKB.toFixed(2)} KB`);
 ```
 
-### Export/Restore Speed
+### Скорость экспорта/восстановления
 
 ```typescript
 // Export: O(n) where n = active sessions
@@ -593,9 +593,9 @@ console.log(`Export size: ${sizeKB.toFixed(2)} KB`);
 // AES-256-GCM: ~1ms per 100 sessions
 ```
 
-### MAX_SESSIONS Limit
+### Ограничение: MAX_SESSIONS
 
-Default limit: 100 sessions per container (configurable via `N8N_MCP_MAX_SESSIONS` env var)
+Ограничение по умолчанию: 100 сеансов на контейнер (настраивается через `N8N_MCP_MAX_SESSIONS` env var)
 
 ```typescript
 // Restore respects limit
@@ -604,26 +604,26 @@ const restored = engine.restoreSessionState(sessions);
 // restored = 100 (only first 100 restored, or N8N_MCP_MAX_SESSIONS value)
 ```
 
-For higher session limits:
-- Set `N8N_MCP_MAX_SESSIONS=1000` (or desired limit)
-- Monitor memory usage as sessions consume resources
-- Alternatively, deploy multiple containers with session routing/sharding
+Для более высоких лимитов сеансов:
+- Установите `N8N_MCP_MAX_SESSIONS=1000` (или желаемый лимит)
+- Мониторинг использования памяти, поскольку сеансы потребляют ресурсы.
+- В качестве альтернативы можно развернуть несколько контейнеров с маршрутизацией/шардингом сеанса.
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Issue: No sessions restored
+### Проблема: ни один сеанс не восстановлен.
 
-**Symptoms:**
+**Симптомы:**
 ```
 Restored 0 sessions
 ```
 
-**Causes:**
-1. All sessions expired (age > sessionTimeout)
-2. Invalid date format in metadata
-3. Missing required context fields
+**Причины:**
+1. Срок действия всех сессий истек (возраст > sessionTimeout)
+2. Неверный формат даты в метаданных.
+3. Отсутствуют обязательные поля контекста.
 
-**Debug:**
+**Отлаживать:**
 ```typescript
 const sessions = await loadFromEncryptedStorage();
 console.log('Loaded sessions:', sessions.length);
@@ -635,19 +635,19 @@ sessions.forEach((s, i) => {
 });
 ```
 
-### Issue: Restore fails with "invalid context"
+### Проблема: восстановление завершается сбоем из-за «недопустимого контекста».
 
-**Symptoms:**
+**Симптомы:**
 ```
 [SECURITY] session_restore_failed { sessionId: '...', reason: 'invalid context: ...' }
 ```
 
-**Causes:**
-1. Missing n8nApiUrl or n8nApiKey
-2. Invalid URL format
-3. Corrupted session data
+**Причины:**
+1. Отсутствует n8nApiUrl или n8nApiKey.
+2. Неверный формат URL.
+3. Поврежденные данные сеанса.
 
-**Fix:**
+**Исправить:**
 ```typescript
 // Validate before restore
 const valid = sessions.filter(s => {
@@ -667,20 +667,20 @@ const valid = sessions.filter(s => {
 const count = engine.restoreSessionState(valid);
 ```
 
-### Issue: MAX_SESSIONS limit hit
+### Проблема: достигнут лимит MAX_SESSIONS
 
-**Symptoms:**
+**Симптомы:**
 ```
 Reached MAX_SESSIONS limit (100), skipping remaining sessions
 ```
 
-**Solutions:**
+**Решения:**
 
-1. Increase limit: Set `N8N_MCP_MAX_SESSIONS=1000` (or desired value)
-2. Scale horizontally (more containers)
-3. Implement session sharding
-4. Reduce sessionTimeout
-5. Clean up inactive sessions
+1. Увеличение лимита: установите `N8N_MCP_MAX_SESSIONS=1000` (или желаемое значение).
+2. Масштабируйте по горизонтали (больше контейнеров)
+3. Реализовать сегментирование сеанса
+4. Уменьшите sessionTimeout
+5. Очистите неактивные сеансы
 
 ```typescript
 // Pre-filter by activity
@@ -692,24 +692,24 @@ const recentSessions = sessions.filter(s => {
 const count = engine.restoreSessionState(recentSessions);
 ```
 
-### Issue: Duplicate session IDs
+### Проблема: повторяющиеся идентификаторы сеансов
 
-**Symptoms:**
+**Симптомы:**
 ```
 Duplicate sessionId detected during export: 550e8400-...
 ```
 
-**Cause:** Bug in session management logic
+**Причина:** Ошибка в логике управления сеансом.
 
-**Fix:** This is a warning, not an error. The duplicate is automatically skipped. If persistent, investigate session creation logic.
+**Исправление.** Это предупреждение, а не ошибка. Дубликат автоматически пропускается. Если проблема не исчезнет, ​​изучите логику создания сеанса.
 
-### Issue: High memory usage after restore
+### Проблема: высокое использование памяти после восстановления.
 
-**Symptoms:** Container OOM after restoring many sessions
+**Симптомы:** Контейнер OOM после восстановления многих сеансов.
 
-**Cause:** Too many sessions for container resources
+**Причина.** Слишком много сеансов для ресурсов контейнера.
 
-**Solution:**
+**Решение:**
 ```typescript
 // Restore in batches
 async function restoreInBatches(sessions: SessionState[], batchSize = 25) {
@@ -728,31 +728,31 @@ async function restoreInBatches(sessions: SessionState[], batchSize = 25) {
 }
 ```
 
-## Version Compatibility
+## Совместимость версий
 
-| Feature | Version | Status |
+| Особенность | Версия | Статус |
 |---------|---------|--------|
-| exportSessionState() | 2.3.0+ | Stable |
-| restoreSessionState() | 2.3.0+ | Stable |
-| Security logging | 2.24.1+ | Stable |
-| Duplicate detection | 2.24.1+ | Stable |
-| Race condition fix | 2.24.1+ | Stable |
-| Date validation | 2.24.1+ | Stable |
-| Optional instanceId | 2.24.1+ | Stable |
+| экспортСессионСтате() | 2.3.0+ | Стабильный |
+| восстановитьSessionState() | 2.3.0+ | Стабильный |
+| Журналирование безопасности | 2.24.1+ | Стабильный |
+| Обнаружение дубликатов | 2.24.1+ | Стабильный |
+| Исправление условий гонки | 2.24.1+ | Стабильный |
+| Проверка даты | 2.24.1+ | Стабильный |
+| Необязательный идентификатор экземпляра | 2.24.1+ | Стабильный |
 
-## Additional Resources
+## Дополнительные ресурсы
 
-- [HTTP Deployment Guide](./HTTP_DEPLOYMENT.md) - Multi-tenant HTTP server setup
-- [Library Usage Guide](./LIBRARY_USAGE.md) - Embedding n8n-mcp in your app
-- [Docker Guide](./DOCKER_README.md) - Container deployment
-- [Flexible Instance Configuration](./FLEXIBLE_INSTANCE_CONFIGURATION.md) - Multi-tenant patterns
+- [Руководство по развертыванию HTTP](./HTTP_DEPLOYMENT.md) - Настройка мультитенантного HTTP-сервера
+- [Руководство по использованию библиотеки](./LIBRARY_USAGE.md) - Встраивание n8n-mcp в ваше приложение
+- [Руководство по Docker](./DOCKER_README.md) - Развертывание контейнера
+- [Гибкая конфигурация экземпляра](./FLEXIBLE_INSTANCE_CONFIGURATION.md) - Шаблоны мультитенантности
 
-## Support
+## Поддерживать
 
-For issues or questions:
-- GitHub Issues: https://github.com/czlonkowski/n8n-mcp/issues
-- Documentation: https://github.com/czlonkowski/n8n-mcp#readme
+По вопросам или проблемам:
+- Проблемы с GitHub: https://github.com/czlonkowski/n8n-mcp/issues.
+- Документация: https://github.com/czlonkowski/n8n-mcp#readme.
 
 ---
 
-Conceived by Romuald Członkowski - https://www.aiadvisors.pl/en
+Автор идеи Ромуальд Члонковский - https://www.aiadvisors.pl/en

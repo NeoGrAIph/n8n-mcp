@@ -60,11 +60,51 @@ exports.n8nFriendlyDescriptions = {
         }
     },
     n8n_workflow_file_patch: {
-        description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
+        description: 'Apply a unified diff patch to a workflow file (Code or Set). Wrapper-style patches (*** Begin/End Patch, ---/+++) are accepted and stripped. Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
         params: {
             uri: 'String resource URI like "n8n-workflows:///code/<workflowId>/<nodeId>.json"',
             patch: 'Unified diff string',
-            expectedEtag: 'Optional string for optimistic concurrency control'
+            expectedEtag: 'Optional string for optimistic concurrency control',
+            minContextLines: 'Optional integer: minimum context lines that must match (default 0)',
+            maxFuzz: 'Optional integer: maximum fuzz allowed (default 0, max 2)',
+            ignoreWhitespaceInContext: 'Optional boolean: ignore whitespace differences in context matching'
+        }
+    },
+    n8n_code_node_test: {
+        description: 'Execute a Code node or branch from an existing workflow using the utility runner. Supports modes full/node/subgraph and optional diagnostics. Returns minimal result by default; use responseMode="full" for full payload.',
+        params: {
+            workflowId: 'String workflow ID',
+            mode: 'Optional: "full", "node" (default), or "subgraph"',
+            nodeId: 'Optional string Code node ID (preferred)',
+            nodeName: 'Optional string Code node name (used if nodeId not provided)',
+            startNode: 'Optional start node (name or id) for subgraph mode',
+            endNodes: 'Optional array of end node names/ids to limit subgraph',
+            includeUpstream: 'Optional boolean to include upstream nodes',
+            includeDownstream: 'Optional boolean to include downstream nodes',
+            items: 'Optional array of items (full n8n items or plain objects)',
+            item: 'Optional single object input',
+            timeout: 'Optional timeout in ms for runner webhook',
+            diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error"',
+            diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+            responseMode: 'Optional: "result" (default) or "full"',
+            runnerWorkflowId: 'Optional string runner workflow ID override',
+            runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
+            waitForResponse: 'Optional boolean (default true)'
+        }
+    },
+    n8n_workflow_execution_get: {
+        description: 'Get execution results for a specific workflow. Provide workflowId and executionId to fetch and process execution data.',
+        params: {
+            workflowId: 'String workflow ID',
+            executionId: 'String execution ID',
+            mode: 'Optional: "preview", "summary" (default), "filtered", "full", "error"',
+            nodeNames: 'Optional array of node names to include',
+            itemsLimit: 'Optional integer items limit per node',
+            includeInputData: 'Optional boolean (default false)',
+            errorItemsLimit: 'Optional integer for error mode (default 2)',
+            includeStackTrace: 'Optional boolean (default false)',
+            includeExecutionPath: 'Optional boolean (default true)',
+            fetchWorkflow: 'Optional boolean (default true)'
         }
     }
 };

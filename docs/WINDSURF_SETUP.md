@@ -1,27 +1,27 @@
-# Windsurf Setup
+# Настройка виндсерфинга
 
-Connect n8n-MCP to Windsurf IDE for enhanced n8n workflow development with AI assistance.
+Подключите n8n-MCP к Windsurf IDE, чтобы улучшить рабочий процесс n8n с помощью искусственного интеллекта.
 
-[![n8n-mcp Windsurf Setup Tutorial](./img/windsurf_tut.png)](https://www.youtube.com/watch?v=klxxT1__izg)
+[![n8n-mcp Руководство по настройке Windsurf](./img/windsurf_tut.png)](https://www.youtube.com/watch?v=klxxT1__izg)
 
-## Video Tutorial
+## Видеоурок
 
-Watch the complete setup process: [n8n-MCP Windsurf Setup Tutorial](https://www.youtube.com/watch?v=klxxT1__izg)
+Посмотрите полный процесс установки: [Руководство по настройке n8n-MCP Windsurf](https://www.youtube.com/watch?v=klxxT1__izg)
 
-## Setup Process
+## Процесс установки
 
-### 1. Access MCP Configuration
+### 1. Доступ к конфигурации MCP
 
-1. Go to Settings in Windsurf
-2. Navigate to Windsurf Settings
-3. Go to MCP Servers > Manage Plugins
-4. Click "View Raw Config"
+1. Зайдите в настройки виндсерфинга.
+2. Перейдите к настройкам виндсерфинга.
+3. Перейдите в раздел «Серверы MCP» > «Управление плагинами».
+4. Нажмите «Просмотреть необработанную конфигурацию».
 
-### 2. Add n8n-MCP Configuration
+### 2. Добавьте конфигурацию n8n-MCP
 
-Copy the configuration from this repository and add it to your MCP config:
+Скопируйте конфигурацию из этого репозитория и добавьте ее в свою конфигурацию MCP:
 
-**Basic configuration (documentation tools only):**
+**Базовая конфигурация (только инструменты документирования):**
 ```json
 {
   "mcpServers": {
@@ -38,7 +38,7 @@ Copy the configuration from this repository and add it to your MCP config:
 }
 ```
 
-**Full configuration (with n8n management tools):**
+**Полная конфигурация (с инструментами управления n8n):**
 ```json
 {
   "mcpServers": {
@@ -57,13 +57,13 @@ Copy the configuration from this repository and add it to your MCP config:
 }
 ```
 
-### 3. Configure n8n Connection
+### 3. Настройте соединение n8n
 
-1. Replace `https://your-n8n-instance.com` with your actual n8n URL
-2. Replace `your-api-key` with your n8n API key
-3. Click refresh to apply the changes
+1. Замените `https://your-n8n-instance.com` своим фактическим URL-адресом n8n.
+2. Замените `your-api-key` своим ключом API n8n.
+3. Нажмите «Обновить», чтобы применить изменения.
 
-### 4. Set Up Project Instructions
+### 4. Настройка инструкций по проекту
 
-1. Create a `.windsurfrules` file in your project root
-2. Copy the Claude Project instructions from the [main README's Claude Project Setup section](../README.md#-claude-project-setup)
+1. Создайте файл `.windsurfrules` в корне вашего проекта.
+2. Скопируйте инструкции проекта Claude из [основного раздела настройки проекта Claude в README](../README.md#-claude-project-setup)

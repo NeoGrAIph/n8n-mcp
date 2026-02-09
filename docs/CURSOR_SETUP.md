@@ -1,22 +1,22 @@
-# Cursor Setup
+# Настройка курсора
 
-Connect n8n-MCP to Cursor IDE for enhanced n8n workflow development with AI assistance.
+Подключите n8n-MCP к Cursor IDE для усовершенствованной разработки рабочих процессов n8n с помощью искусственного интеллекта.
 
-[![n8n-mcp Cursor Setup Tutorial](./img/cursor_tut.png)](https://www.youtube.com/watch?v=hRmVxzLGJWI)
+[![n8n-mcp Учебное пособие по настройке курсора](./img/cursor_tut.png)](https://www.youtube.com/watch?v=hRmVxzLGJWI)
 
-## Video Tutorial
+## Видеоурок
 
-Watch the complete setup process: [n8n-MCP Cursor Setup Tutorial](https://www.youtube.com/watch?v=hRmVxzLGJWI)
+Посмотрите полный процесс установки: [Руководство по настройке курсора n8n-MCP](https://www.youtube.com/watch?v=hRmVxzLGJWI)
 
-## Setup Process
+## Процесс установки
 
-### 1. Create MCP Configuration
+### 1. Создайте конфигурацию MCP
 
-1. Create a `.cursor` folder in your project root
-2. Create `mcp.json` file inside the `.cursor` folder
-3. Copy the configuration from this repository
+1. Создайте папку `.cursor` в корне вашего проекта.
+2. Создайте файл `mcp.json` в папке `.cursor`.
+3. Скопируйте конфигурацию из этого репозитория.
 
-**Basic configuration (documentation tools only):**
+**Базовая конфигурация (только инструменты документирования):**
 ```json
 {
   "mcpServers": {
@@ -33,7 +33,7 @@ Watch the complete setup process: [n8n-MCP Cursor Setup Tutorial](https://www.yo
 }
 ```
 
-**Full configuration (with n8n management tools):**
+**Полная конфигурация (с инструментами управления n8n):**
 ```json
 {
   "mcpServers": {
@@ -52,22 +52,22 @@ Watch the complete setup process: [n8n-MCP Cursor Setup Tutorial](https://www.yo
 }
 ```
 
-### 2. Configure n8n Connection
+### 2. Настройте соединение n8n
 
-1. Replace `https://your-n8n-instance.com` with your actual n8n URL
-2. Replace `your-api-key` with your n8n API key
+1. Замените `https://your-n8n-instance.com` своим фактическим URL-адресом n8n.
+2. Замените `your-api-key` своим ключом API n8n.
 
-### 3. Enable MCP Server
+### 3. Включите MCP-сервер
 
-1. Click "Enable MCP Server" button in Cursor
-2. Go to Cursor Settings
-3. Search for "mcp"
-4. Confirm MCP is working
+1. Нажмите кнопку «Включить MCP-сервер» в курсоре.
+2. Перейдите в настройки курсора.
+3. Найдите «MCP»
+4. Убедитесь, что MCP работает.
 
-### 4. Set Up Project Instructions
+### 4. Настройка инструкций по проекту
 
-1. In your Cursor chat, invoke "create rule" and hit Tab
-2. Name the rule (e.g., "n8n-mcp")
-3. Set rule type to "always"
-4. Copy the Claude Project instructions from the [main README's Claude Project Setup section](../README.md#-claude-project-setup)
+1. В чате курсора вызовите «Создать правило» и нажмите Tab.
+2. Назовите правило (например, «n8n-mcp»).
+3. Установите тип правила «всегда».
+4. Скопируйте инструкции проекта Claude из [основного раздела настройки проекта Claude в README](../README.md#-claude-project-setup)
 

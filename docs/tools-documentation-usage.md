@@ -1,12 +1,12 @@
-# MCP Tools Documentation Usage Guide
+# Руководство по использованию документации MCP Tools
 
-The `n8n_tools_documentation` tool provides comprehensive documentation for all MCP tools, making it easy for LLMs to understand how to use the tools effectively.
+Инструмент `n8n_tools_documentation` предоставляет исчерпывающую документацию для всех инструментов MCP, что позволяет специалистам LLM понять, как эффективно использовать эти инструменты.
 
-> ✅ This guide uses the current tool set (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate`, etc.).
+> ✅ В этом руководстве используется текущий набор инструментов (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate` и т. д.).
 
-## Basic Usage
+## Базовое использование
 
-### 1. Get Documentation for Specific Tools
+### 1. Получите документацию по конкретным инструментам
 
 ```json
 {
@@ -17,9 +17,9 @@ The `n8n_tools_documentation` tool provides comprehensive documentation for all 
 }
 ```
 
-Returns detailed documentation including parameters, examples, and best practices for the specified tools.
+Возвращает подробную документацию, включая параметры, примеры и рекомендации для указанных инструментов.
 
-### 2. Search Tools by Keyword
+### 2. Инструменты поиска по ключевому слову
 
 ```json
 {
@@ -30,9 +30,9 @@ Returns detailed documentation including parameters, examples, and best practice
 }
 ```
 
-Finds all tools related to validation, including their descriptions and use cases.
+Находит все инструменты, связанные с проверкой, включая их описания и варианты использования.
 
-### 3. Browse Tools by Category
+### 3. Просмотр инструментов по категориям
 
 ```json
 {
@@ -43,15 +43,15 @@ Finds all tools related to validation, including their descriptions and use case
 }
 ```
 
-Available categories:
-- **discovery**: Tools for finding and exploring nodes
-- **configuration**: Tools for configuring nodes
-- **validation**: Tools for validating configurations
-- **workflow_management**: Tools for creating and updating workflows
-- **execution**: Tools for running workflows
-- **templates**: Tools for working with workflow templates
+Доступные категории:
+- **discovery**: инструменты для поиска и изучения узлов.
+- **конфигурация**: инструменты для настройки узлов.
+- **проверка**: инструменты для проверки конфигураций.
+- **workflow_management**: инструменты для создания и обновления рабочих процессов.
+- **execution**: инструменты для запуска рабочих процессов.
+- **шаблоны**: инструменты для работы с шаблонами рабочих процессов.
 
-### 4. Get All Categories
+### 4. Получить все категории
 
 ```json
 {
@@ -60,9 +60,9 @@ Available categories:
 }
 ```
 
-Returns a list of all categories and the tools in each category.
+Возвращает список всех категорий и инструментов в каждой категории.
 
-### 5. Include Quick Reference Guide
+### 5. Включите краткое справочное руководство
 
 ```json
 {
@@ -74,24 +74,24 @@ Returns a list of all categories and the tools in each category.
 }
 ```
 
-Includes a quick reference guide with workflow building process, performance tips, and common patterns.
+Включает краткое справочное руководство с описанием процесса построения рабочего процесса, советами по производительности и распространенными шаблонами.
 
-## Response Format
+## Формат ответа
 
-The tool returns structured documentation with:
+Инструмент возвращает структурированную документацию с:
 
-- **Parameters**: Complete parameter descriptions with types, requirements, and defaults
-- **Return Format**: Example of what the tool returns
-- **Common Use Cases**: Real-world scenarios where the tool is useful
-- **Examples**: Working examples with input and expected output
-- **Performance Notes**: Speed and efficiency considerations
-- **Best Practices**: Recommended usage patterns
-- **Common Pitfalls**: Mistakes to avoid
-- **Related Tools**: Other tools that work well together
+- **Параметры**: полное описание параметров с указанием типов, требований и значений по умолчанию.
+- **Формат возврата**: пример того, что возвращает инструмент.
+- **Распространенные случаи использования**: реальные сценарии, в которых этот инструмент полезен.
+- **Примеры**: рабочие примеры с входными данными и ожидаемым результатом.
+- **Примечания по производительности**: соображения скорости и эффективности.
+– **Рекомендации**: рекомендуемые шаблоны использования.
+– **Распространенные ловушки**: ошибок, которых следует избегать.
+- **Связанные инструменты**: другие инструменты, которые хорошо работают вместе.
 
-## Example: Learning About n8n_nodes_search
+## Пример: изучение n8n_nodes_search
 
-Request:
+Запрос:
 ```json
 {
   "name": "n8n_tools_documentation",
@@ -101,37 +101,37 @@ Request:
 }
 ```
 
-Response includes:
-- How to search effectively (single words work best)
-- Performance characteristics (fast, cached)
-- Common searches (http, webhook, email, database, slack)
-- Pitfalls to avoid (multi-word searches use OR logic)
-- Related tools for next steps
+Ответ включает в себя:
+- Как эффективно искать (лучше всего работают отдельные слова)
+- Производительность (быстрая, кэшированная)
+- Общие поисковые запросы (http, вебхук, электронная почта, база данных, Slack)
+- Подводные камни, которых следует избегать (при поиске по нескольким словам используется логика ИЛИ)
+- Сопутствующие инструменты для следующих шагов.
 
-## Tips for LLMs
+## Советы для LLM
 
-1. **Start with categories**: Browse available tools by category to understand what's possible
-2. **Search by task**: Use search to find tools for specific tasks like "validation" or "workflow"
-3. **Learn tool combinations**: Check "Related Tools" to understand workflow patterns
-4. **Check examples**: Every tool has working examples to copy and modify
-5. **Avoid pitfalls**: Pay attention to "Common Pitfalls" to prevent errors
+1. **Начните с категорий**. Просмотрите доступные инструменты по категориям, чтобы понять, что возможно.
+2. **Поиск по задаче**. Используйте поиск, чтобы найти инструменты для конкретных задач, например «проверка» или «рабочий процесс».
+3. **Изучите комбинации инструментов**: выберите «Связанные инструменты», чтобы понять закономерности рабочих процессов.
+4. **Проверьте примеры**: у каждого инструмента есть рабочие примеры, которые можно копировать и изменять.
+5. **Избегайте ошибок**. Обратите внимание на «Распространенные ошибки», чтобы избежать ошибок.
 
-## Integration with Workflow Building
+## Интеграция с построением рабочих процессов
 
-The documentation helps build workflows efficiently:
+Документация помогает эффективно выстраивать рабочие процессы:
 
-1. **Discovery Phase**: Use `n8n_nodes_search` documentation
-2. **Configuration Phase**: Learn from `n8n_node_get` examples (detail: standard)
-3. **Validation Phase**: Understand validation tool options and profiles
-4. **Creation Phase**: Follow `n8n_workflow_create` best practices
-5. **Update Phase**: Master `n8n_workflow_update_partial` operations
+1. **Этап обнаружения**: используйте документацию `n8n_nodes_search`.
+2. **Этап настройки**: изучение примеров `n8n_node_get` (детализация: стандартная).
+3. **Этап проверки**: понимание опций и профилей инструментов проверки.
+4. **Этап создания**: следуйте рекомендациям `n8n_workflow_create`.
+5. **Фаза обновления**: освоение операций `n8n_workflow_update_partial`.
 
-## Performance Optimization
+## Оптимизация производительности
 
-The documentation emphasizes performance:
-- Which tools are fast (standard/minimal) vs slow (full info)
-- Optimal parameters (e.g., limit: 200+ for n8n_nodes_search)
-- Caching behavior
-- Token savings with partial updates
+В документации подчеркивается производительность:
+- Какие инструменты быстрые (стандартные/минимальные) и медленные (полная информация)
+- Оптимальные параметры (например, предел: 200+ для n8n_nodes_search)
+- Поведение кэширования
+- Экономия токенов при частичных обновлениях
 
-This documentation system ensures LLMs can use the MCP tools effectively without trial and error.
+Эта система документации гарантирует, что LLM могут эффективно использовать инструменты MCP без проб и ошибок.

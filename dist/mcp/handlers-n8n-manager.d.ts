@@ -15,10 +15,17 @@ export declare function handleGetWorkflowMinimal(args: unknown, context?: Instan
 export declare function handleUpdateWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleDeleteWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleListWorkflows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleListFolders(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleCreateFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleMoveFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleDeleteFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleMoveWorkflowToFolder(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleValidateWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleAutofixWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleTestCodeNode(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleGetExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleGetWorkflowExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleListExecutions(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleDeleteExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleHealthCheck(context?: InstanceContext): Promise<McpToolResponse>;

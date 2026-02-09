@@ -1,16 +1,16 @@
-# n8n Dependency Updates Guide
+# Руководство по обновлению зависимостей n8n
 
-This guide explains how n8n-MCP keeps its n8n dependencies up to date with the weekly n8n release cycle.
+В этом руководстве объясняется, как n8n-MCP поддерживает актуальность своих зависимостей n8n в соответствии с еженедельным циклом выпуска n8n.
 
-## 🔄 Overview
+## 🔄 Обзор
 
-n8n releases new versions weekly, typically on Wednesdays. To ensure n8n-MCP stays compatible and includes the latest nodes, we've implemented automated dependency update systems.
+n8n выпускает новые версии еженедельно, обычно по средам. Чтобы обеспечить совместимость n8n-MCP и включать новейшие узлы, мы внедрили системы автоматического обновления зависимостей.
 
-## 🚀 Update Methods
+## 🚀 Методы обновления
 
-### 1. Manual Update Script
+### 1. Скрипт ручного обновления
 
-Run the update script locally:
+Запустите скрипт обновления локально:
 
 ```bash
 # Check for updates (dry run)
@@ -23,103 +23,103 @@ npm run update:n8n
 node scripts/update-n8n-deps.js --skip-tests
 ```
 
-The script will:
-1. Check npm for latest versions of n8n packages
-2. Update package.json
-3. Run `npm install` to update lock file
-4. Rebuild the node database
-5. Run validation tests
-6. Generate an update summary
+Скрипт будет:
+1. Проверьте npm на наличие последних версий пакетов n8n.
+2. Обновите package.json.
+3. Запустите `npm install`, чтобы обновить файл блокировки.
+4. Перестройте базу данных узлов.
+5. Запустите проверочные тесты
+6. Создайте сводку обновлений.
 
-### 2. GitHub Actions (Automated)
+### 2. Действия GitHub (автоматизированные)
 
-A GitHub Action runs every Monday at 9 AM UTC to:
-1. Check for n8n updates
-2. Apply updates if available
-3. Create a PR with the changes
-4. Run all tests in the PR
+Действие GitHub запускается каждый понедельник в 9 утра по всемирному координированному времени для:
+1. Проверьте наличие обновлений n8n.
+2. Примените обновления, если они доступны.
+3. Создайте PR с изменениями
+4. Запускаем все тесты в ПР
 
-You can also trigger it manually:
-1. Go to Actions → "Update n8n Dependencies"
-2. Click "Run workflow"
-3. Choose options:
-   - **Create PR**: Creates a pull request for review
-   - **Auto-merge**: Automatically merges if tests pass
+Вы также можете запустить его вручную:
+1. Перейдите в Действия → «Обновить зависимости n8n».
+2. Нажмите «Запустить рабочий процесс».
+3. Выберите параметры:
+- **Создать PR**: создает запрос на включение для проверки.
+- **Автоматическое объединение**: автоматически объединяется, если тесты пройдены.
 
-### 3. Renovate Bot (Alternative)
+### 3. Обновление бота (альтернативный вариант)
 
-If you prefer Renovate over the custom solution:
-1. Enable Renovate on your repository
-2. The included `renovate.json` will:
-   - Check for n8n updates weekly
-   - Group all n8n packages together
-   - Create PRs with update details
-   - Include links to release notes
+Если вы предпочитаете Renovate индивидуальному решению:
+1. Включите Renovate в вашем репозитории.
+2. Включенный `renovate.json` будет:
+- Проверяйте обновления n8n еженедельно.
+- Сгруппируйте все пакеты n8n вместе.
+- Создавайте PR с подробностями обновления.
+- Включите ссылки на примечания к выпуску.
 
-## 📦 Tracked Dependencies
+## 📦 Отслеживаемые зависимости
 
-The update system tracks these n8n packages:
-- `n8n` - Main package (includes n8n-nodes-base)
-- `n8n-core` - Core functionality
-- `n8n-workflow` - Workflow types and utilities
-- `@n8n/n8n-nodes-langchain` - AI/LangChain nodes
+Система обновлений отслеживает следующие пакеты n8n:
+- `n8n` - ​​Основной пакет (включает n8n-nodes-base)
+- `n8n-core` - ​​Основные функции
+- `n8n-workflow` - ​​Типы рабочих процессов и утилиты.
+- `@n8n/n8n-nodes-langchain` - ​​узлы AI/LangChain
 
-## 🔍 What Happens During Updates
+## 🔍 Что происходит во время обновлений
 
-1. **Version Check**: Compares current vs latest npm versions
-2. **Package Update**: Updates package.json with new versions
-3. **Dependency Install**: Runs npm install to update lock file
-4. **Database Rebuild**: Rebuilds the SQLite database with new node definitions
-5. **Validation**: Runs tests to ensure:
-   - All nodes load correctly
-   - Properties are extracted
-   - Critical nodes work
-   - Database is valid
+1. **Проверка версий**: сравнивает текущие и последние версии npm.
+2. **Обновление пакета**: обновляет package.json новыми версиями.
+3. **Установка зависимостей**: запускает установку npm для обновления файла блокировки.
+4. **Перестроение базы данных**: перестраивает базу данных SQLite с новыми определениями узлов.
+5. **Проверка**. Запускает тесты, чтобы гарантировать:
+- Все узлы загружаются корректно
+- Свойства извлечены
+- Работа критических узлов
+- База данных действительна
 
-## ⚠️ Important Considerations
+## ⚠️ Важные соображения
 
-### Breaking Changes
+### Критические изменения
 
-Always review n8n release notes for breaking changes:
-- Check [n8n Release Notes](https://docs.n8n.io/release-notes/)
-- Look for changes in node definitions
-- Test critical functionality after updates
+Всегда просматривайте примечания к выпуску n8n на предмет критических изменений:
+- Проверьте [Примечания к выпуску n8n](https://docs.n8n.io/release-notes/)
+- Ищите изменения в определениях узлов.
+- Тестирование критически важных функций после обновлений.
 
-### Database Compatibility
+### Совместимость баз данных
 
-When n8n adds new nodes or changes existing ones:
-- The database rebuild process will capture changes
-- New properties/operations will be extracted
-- Documentation mappings may need updates
+Когда n8n добавляет новые узлы или изменяет существующие:
+- В процессе восстановления базы данных будут зафиксированы изменения.
+- Будут извлечены новые свойства/операции.
+- Сопоставления документации могут нуждаться в обновлениях.
 
-### Failed Updates
+### Неудачные обновления
 
-If an update fails:
+Если обновление не удалось:
 
-1. **Check the logs** for specific errors
-2. **Review release notes** for breaking changes
-3. **Run validation manually**:
+1. **Проверьте журналы** на наличие конкретных ошибок.
+2. **Просмотрите примечания к выпуску** на предмет критических изменений.
+3. **Запустите проверку вручную**:
    ```bash
    npm run build
    npm run rebuild
    npm run validate
    ```
-4. **Fix any issues** before merging
+4. **Устраните проблемы** перед объединением
 
-## 🛠️ Customization
+## 🛠️ Кастомизация
 
-### Modify Update Schedule
+### Изменить расписание обновлений
 
-Edit `.github/workflows/update-n8n-deps.yml`:
+Изменить `.github/workflows/update-n8n-deps.yml`:
 ```yaml
 schedule:
   # Run every Wednesday at 10 AM UTC (after n8n typically releases)
   - cron: '0 10 * * 3'
 ```
 
-### Add More Packages
+### Добавить больше пакетов
 
-Edit `scripts/update-n8n-deps.js`:
+Изменить `scripts/update-n8n-deps.js`:
 ```javascript
 this.n8nPackages = [
   'n8n',
@@ -130,17 +130,17 @@ this.n8nPackages = [
 ];
 ```
 
-### Customize PR Creation
+### Настройка создания PR
 
-Modify the GitHub Action to:
-- Add more reviewers
-- Change labels
-- Update PR template
-- Add additional checks
+Измените действие GitHub так:
+- Добавить больше рецензентов
+- Изменить ярлыки
+- Обновление шаблона PR.
+- Добавить дополнительные проверки
 
-## 📊 Monitoring Updates
+## 📊 Мониторинг обновлений
 
-### Check Update Status
+### Проверьте статус обновления
 
 ```bash
 # See current versions
@@ -153,15 +153,15 @@ npm view n8n-workflow version
 npm view @n8n/n8n-nodes-langchain version
 ```
 
-### View Update History
+### Просмотр истории обновлений
 
-- Check GitHub Actions history
-- Review merged PRs with "dependencies" label
-- Look at git log for "chore: update n8n dependencies" commits
+- Проверьте историю действий GitHub.
+– Просмотрите объединенные запросы на запросы с меткой «зависимости».
+— Посмотрите в журнале git наличие коммитов «работа: обновление зависимостей n8n».
 
-## 🚨 Troubleshooting
+## 🚨 Устранение неполадок
 
-### Update Script Fails
+### Скрипт обновления не работает
 
 ```bash
 # Run with more logging
@@ -176,14 +176,14 @@ npm run rebuild
 npm run validate
 ```
 
-### GitHub Action Fails
+### Действие GitHub не выполнено
 
-1. Check Action logs in GitHub
-2. Run the update locally to reproduce
-3. Fix issues and push manually
-4. Re-run the Action
+1. Проверьте журналы действий на GitHub.
+2. Запустите обновление локально для воспроизведения.
+3. Исправьте проблемы и отправьте вручную
+4. Перезапустите действие.
 
-### Database Issues After Update
+### Проблемы с базой данных после обновления
 
 ```bash
 # Force rebuild
@@ -197,31 +197,31 @@ npm run test-nodes
 npm run validate
 ```
 
-## 🔐 Security
+## 🔐 Безопасность
 
-- Updates are tested before merging
-- PRs require review (unless auto-merge is enabled)
-- All changes are tracked in git
-- Rollback is possible via git revert
+- Обновления проверяются перед объединением
+– Запросы на запросы требуют проверки (если не включено автоматическое объединение)
+- Все изменения отслеживаются в git
+- Возможен откат через git revert
 
-## 🎯 Best Practices
+## 🎯 Лучшие практики
 
-1. **Review PRs carefully** - Check for breaking changes
-2. **Test after updates** - Ensure core functionality works
-3. **Monitor n8n releases** - Stay informed about major changes
-4. **Update regularly** - Weekly updates are easier than monthly
-5. **Document issues** - Help future updates by documenting problems
+1. **Внимательно проверяйте запросы**. Проверьте наличие критических изменений.
+2. **Проверка после обновлений**. Убедитесь, что основные функции работают.
+3. **Отслеживайте выпуски n8n** – будьте в курсе основных изменений.
+4. **Обновляйте регулярно**. Еженедельные обновления удобнее, чем ежемесячные.
+5. **Проблемы с документацией** – помогайте в будущих обновлениях, документируя проблемы.
 
-## 📝 Manual Update Checklist
+## 📝 Контрольный список обновления вручную
 
-If updating manually:
+При обновлении вручную:
 
-- [ ] Check n8n release notes
-- [ ] Run `npm run update:n8n:check`
-- [ ] Review proposed changes
-- [ ] Run `npm run update:n8n`
-- [ ] Test core functionality
-- [ ] Commit and push changes
-- [ ] Create PR with update details
-- [ ] Run full test suite
-- [ ] Merge after review
+- [ ] Ознакомьтесь с примечаниями к выпуску n8n
+- [ ] Запустить `npm run update:n8n:check`
+- [ ] Рассмотрите предлагаемые изменения
+- [ ] Запустить `npm run update:n8n`
+- [ ] Тестирование основных функций
+- [ ] Зафиксировать и отправить изменения
+- [ ] Создать PR с подробностями обновления
+- [ ] Запустить полный набор тестов
+- [ ] Объединить после проверки

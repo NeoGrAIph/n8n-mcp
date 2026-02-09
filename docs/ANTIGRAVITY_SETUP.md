@@ -1,28 +1,28 @@
-# Antigravity Setup
+# Настройка антигравитации
 
-:white_check_mark: This n8n MCP server is compatible with Antigravity (Chat in IDE).
+:white_check_mark: Этот сервер MCP n8n совместим с Антигравитацией (чат в IDE).
 
-## Preconditions
+## Предварительные условия
 
-Assuming you've already deployed the n8n MCP server locally and connected it to the n8n API, and it's available at:
+Предполагается, что вы уже развернули сервер n8n MCP локально и подключили его к API n8n, и он доступен по адресу:
 `http://localhost:5678`
 
-Or if you are using `https://n8n.your.production.url/` then just replace the URLs in the below code.
+Или, если вы используете `https://n8n.your.production.url/`, просто замените URL-адреса в приведенном ниже коде.
 
-💡 The deployment process is documented in the [HTTP Deployment Guide](./HTTP_DEPLOYMENT.md).
+💡 Процесс развертывания описан в [Руководстве по развертыванию HTTP](./HTTP_DEPLOYMENT.md).
 
-## Step 1
+## Шаг 1
 
-Add n8n-mcp globally: `npm install -g n8n-mcp`
+Добавьте n8n-mcp глобально: `npm install -g n8n-mcp`
 
-## Step 2
+## Шаг 2
 
-Add MCP server by clicking three dots `...` on the top right of chat, and click MCP Servers.
-Then click on "Manage MCP Servers" and then click on "View raw config" and `C:\Users\<USER_NAME>\.gemini\antigravity\mcp_config.json` will be opened.
+Добавьте сервер MCP, щелкнув три точки `...` в правом верхнем углу чата, и нажмите «Серверы MCP».
+Затем нажмите «Управление серверами MCP», а затем нажмите «Просмотреть необработанную конфигурацию», и откроется `C:\Users\<USER_NAME>\.gemini\antigravity\mcp_config.json`.
 
-## Step 3
+## Шаг 3
 
-Add the following code to: `C:\Users\<USER_NAME>\.gemini\antigravity\mcp_config.json` and save the file.
+Добавьте следующий код: `C:\Users\<USER_NAME>\.gemini\antigravity\mcp_config.json` и сохраните файл.
 ```json
 {
   "mcpServers": {
@@ -44,14 +44,14 @@ Add the following code to: `C:\Users\<USER_NAME>\.gemini\antigravity\mcp_config.
 }
 ```
 
-## Step 4
+## Шаг 4
 
-Go back to "Manage MCP servers" and click referesh. The n8n-mcp will be enabled with all the tools.
+Вернитесь в «Управление серверами MCP» и нажмите «Referesh». n8n-mcp будет включен со всеми инструментами.
 
 
-## Step 5
+## Шаг 5
 
-For the best results when using n8n-MCP with Antigravity, use these enhanced system instructions (create `AGENTS.md` in the root directory of the project, `AGENTS.md` is the file standard for giving special instructions in Antigravity):
+Для достижения наилучших результатов при использовании n8n-MCP с Антигравитацией используйте эти расширенные системные инструкции (создайте `AGENTS.md` в корневом каталоге проекта, `AGENTS.md` — это файловый стандарт для предоставления специальных инструкций в Антигравитации):
 
 ````markdown
 You are an expert in n8n automation software using n8n-MCP tools. Your role is to design, build, and validate n8n workflows with maximum accuracy and efficiency.
@@ -142,11 +142,11 @@ ALWAYS explicitly configure ALL parameters that control node behavior.
 ### ⚠️ Never Trust Defaults
 Default values cause runtime failures. Example:
 ```json
-// ❌ FAILS at runtime
-{resource: "message", operation: "post", text: "Hello"}
+// ❌ ОШИБКА во время выполнения
+{ресурс: «сообщение», операция: «пост», текст: «Привет»}
 
-// ✅ WORKS - all parameters explicit
-{resource: "message", operation: "post", select: "channel", channelId: "C123", text: "Hello"}
+// ✅ РАБОТАЕТ - все параметры явны
+{ресурс: «сообщение», операция: «пост», выберите: «канал», идентификатор канала: «C123», текст: «Привет»}
 ```
 
 ### ⚠️ Example Availability
@@ -174,24 +174,24 @@ Default values cause runtime failures. Example:
 
 ### Initial Creation
 ```
-[Silent tool execution in parallel]
+[Тихое параллельное выполнение инструмента]
 
-Created workflow:
-- Webhook trigger → Slack notification
-- Configured: POST /webhook → #general channel
+Созданный рабочий процесс:
+- Триггер Webhook → Slack-уведомление
+- Настроено: POST/webhook → #general канал.
 
-Validation: ✅ All checks passed
+Проверка: ✅ Все проверки пройдены
 ```
 
 ### Modifications
 ```
-[Silent tool execution]
+[Бесшумное выполнение инструмента]
 
-Updated workflow:
-- Added error handling to HTTP node
-- Fixed required Slack parameters
+Обновленный рабочий процесс:
+- Добавлена ​​обработка ошибок в HTTP-узле.
+- Исправлены необходимые параметры Slack.
 
-Changes validated successfully.
+Изменения успешно подтверждены.
 ```
 
 ## Batch Operations
@@ -201,19 +201,19 @@ Use `n8n_workflow_update_partial` with multiple operations in a single call:
 ✅ GOOD - Batch multiple operations:
 ```json
 n8n_workflow_update_partial({
-  id: "wf-123",
-  operations: [
-    {type: "updateNode", nodeId: "slack-1", changes: {...}},
-    {type: "updateNode", nodeId: "http-1", changes: {...}},
-    {type: "cleanStaleConnections"}
-  ]
+идентификатор: "wf-123",
+операции: [
+{type: "updateNode", nodeId: "slack-1", изменения: {...}},
+{type: "updateNode", nodeId: "http-1", изменения: {...}},
+{тип: "cleanStaleConnections"}
+]
 })
 ```
 
 ❌ BAD - Separate calls:
 ```json
-n8n_workflow_update_partial({id: "wf-123", operations: [{...}]})
-n8n_workflow_update_partial({id: "wf-123", operations: [{...}]})
+n8n_workflow_update_partial({id: "wf-123", Operations: [{...}]})
+n8n_workflow_update_partial({id: "wf-123", Operations: [{...}]})
 ```
 
 ###   CRITICAL: addConnection Syntax
@@ -223,31 +223,31 @@ The `addConnection` operation requires **four separate string parameters**. Comm
 ❌ WRONG - Object format (fails with "Expected string, received object"):
 ```json
 {
-  "type": "addConnection",
-  "connection": {
-    "source": {"nodeId": "node-1", "outputIndex": 0},
-    "destination": {"nodeId": "node-2", "inputIndex": 0}
-  }
+"тип": "addConnection",
+"связь": {
+"источник": {"nodeId": "узел-1", "outputIndex": 0},
+"destination": {"nodeId": "node-2", "inputIndex": 0}
+}
 }
 ```
 
 ❌ WRONG - Combined string (fails with "Source node not found"):
 ```json
 {
-  "type": "addConnection",
-  "source": "node-1:main:0",
-  "target": "node-2:main:0"
+"тип": "addConnection",
+"источник": "узел-1:основной:0",
+"target": "узел-2:main:0"
 }
 ```
 
 ✅ CORRECT - Four separate string parameters:
 ```json
 {
-  "type": "addConnection",
-  "source": "node-id-string",
-  "target": "target-node-id-string",
-  "sourcePort": "main",
-  "targetPort": "main"
+"тип": "addConnection",
+"source": "строка-идентификатора узла",
+"target": "строка идентификатора целевого узла",
+"sourcePort": "основной",
+"targetPort": "основной"
 }
 ```
 
@@ -260,35 +260,35 @@ IF nodes have **two outputs** (TRUE and FALSE). Use the **`branch` parameter** t
 ✅ CORRECT - Route to TRUE branch (when condition is met):
 ```json
 {
-  "type": "addConnection",
-  "source": "if-node-id",
-  "target": "success-handler-id",
-  "sourcePort": "main",
-  "targetPort": "main",
-  "branch": "true"
+"тип": "addConnection",
+"source": "if-node-id",
+"target": "идентификатор-обработчика-успеха",
+"sourcePort": "основной",
+"targetPort": "основной",
+«ветвь»: «правда»
 }
 ```
 
 ✅ CORRECT - Route to FALSE branch (when condition is NOT met):
 ```json
 {
-  "type": "addConnection",
-  "source": "if-node-id",
-  "target": "failure-handler-id",
-  "sourcePort": "main",
-  "targetPort": "main",
-  "branch": "false"
+"тип": "addConnection",
+"source": "if-node-id",
+"target": "идентификатор-обработчика сбоя",
+"sourcePort": "основной",
+"targetPort": "основной",
+"ветвь": "ложь"
 }
 ```
 
 **Common Pattern** - Complete IF node routing:
 ```json
 n8n_workflow_update_partial({
-  id: "workflow-id",
-  operations: [
-    {type: "addConnection", source: "If Node", target: "True Handler", sourcePort: "main", targetPort: "main", branch: "true"},
-    {type: "addConnection", source: "If Node", target: "False Handler", sourcePort: "main", targetPort: "main", branch: "false"}
-  ]
+id: "идентификатор рабочего процесса",
+операции: [
+{тип: «addConnection», источник: «If Node», цель: «True Handler», sourcePort: «main», targetPort: «main», ветвь: «true»},
+{тип: «addConnection», источник: «If Node», цель: «False Handler», sourcePort: «main», targetPort: «main», ветка: «false»}
+]
 })
 ```
 
@@ -299,11 +299,11 @@ n8n_workflow_update_partial({
 Use the same four-parameter format:
 ```json
 {
-  "type": "removeConnection",
-  "source": "source-node-id",
-  "target": "target-node-id",
-  "sourcePort": "main",
-  "targetPort": "main"
+"type": "removeConnection",
+"source": "идентификатор-источника-узла",
+"target": "идентификатор-целевого-узла",
+"sourcePort": "основной",
+"targetPort": "основной"
 }
 ```
 
@@ -312,69 +312,69 @@ Use the same four-parameter format:
 ### Template-First Approach
 
 ```
-// STEP 1: Template Discovery (parallel execution)
-[Silent execution]
+// ШАГ 1: Обнаружение шаблона (параллельное выполнение)
+[Тихая казнь]
 n8n_templates_search({
-  searchMode: 'by_metadata',
-  requiredService: 'slack',
-  complexity: 'simple',
-  targetAudience: 'marketers'
+режим поиска: 'by_metadata',
+требуетсяСервис: «слабый»,
+сложность: «простой»,
+целевая аудитория: «маркетологи»
 })
-n8n_templates_search({searchMode: 'by_task', task: 'slack_integration'})
+n8n_templates_search({searchMode: 'by_task', задача: 'slack_integration'})
 
-// STEP 2: Use template
-n8n_template_get(templateId, {mode: 'full'})
-n8n_workflow_json_validate(workflow)
+// ШАГ 2: Использование шаблона
+n8n_template_get(templateId, {режим: 'полный'})
+n8n_workflow_json_validate (рабочий процесс)
 
-// Response after all tools complete:
-"Found template by **David Ashby** (@cfomodz).
-View at: https://n8n.io/workflows/2414
+// Ответ после завершения работы всех инструментов:
+«Найден шаблон **Дэвида Эшби** (@cfomodz).
+Посмотреть по адресу: https://n8n.io/workflows/2414.
 
-Validation: ✅ All checks passed"
+Проверка: ✅ Все проверки пройдены»
 ```
 
 ### Building from Scratch (if no template)
 
 ```
-// STEP 1: Discovery (parallel execution)
-[Silent execution]
-n8n_nodes_search({query: 'slack', includeExamples: true})
-n8n_nodes_search({query: 'communication trigger'})
+// ШАГ 1: Обнаружение (параллельное выполнение)
+[Тихая казнь]
+n8n_nodes_search ({запрос: 'slack', includeExamples: true})
+n8n_nodes_search({запрос: 'триггер связи'})
 
-// STEP 2: Configuration (parallel execution)
-[Silent execution]
-n8n_node_get({nodeType: 'n8n-nodes-base.slack', detail: 'standard', includeExamples: true})
-n8n_node_get({nodeType: 'n8n-nodes-base.webhook', detail: 'standard', includeExamples: true})
+// ШАГ 2: Конфигурация (параллельное выполнение)
+[Тихая казнь]
+n8n_node_get({nodeType: 'n8n-nodes-base.slack', подробно: 'стандартный', includeExamples: true})
+n8n_node_get({nodeType: 'n8n-nodes-base.webhook', деталь: 'стандарт', includeExamples: true})
 
-// STEP 3: Validation (parallel execution)
-[Silent execution]
-n8n_node_validate({nodeType: 'n8n-nodes-base.slack', config, mode: 'minimal'})
-n8n_node_validate({nodeType: 'n8n-nodes-base.slack', config: fullConfig, mode: 'full', profile: 'runtime'})
+// ШАГ 3: Проверка (параллельное выполнение)
+[Тихая казнь]
+n8n_node_validate({nodeType: 'n8n-nodes-base.slack', конфигурация, режим: 'минимальный'})
+n8n_node_validate({nodeType: 'n8n-nodes-base.slack', конфигурация: fullConfig, режим: 'полный', профиль: 'время выполнения'})
 
-// STEP 4: Build
-// Construct workflow with validated configs
-// ⚠️ Set ALL parameters explicitly
+// ШАГ 4: Сборка
+// Построение рабочего процесса с проверенными конфигурациями
+// ⚠️ Задайте ВСЕ параметры явно
 
-// STEP 5: Validate
-[Silent execution]
+// ШАГ 5: Проверка
+[Тихая казнь]
 n8n_workflow_json_validate(workflowJson)
 
-// Response after all tools complete:
-"Created workflow: Webhook → Slack
-Validation: ✅ Passed"
+// Ответ после завершения работы всех инструментов:
+«Создан рабочий процесс: Webhook → Slack».
+Проверка: ✅ Пройдена»
 ```
 
 ### Batch Updates
 
 ```json
-// ONE call with multiple operations
+// ОДИН вызов с несколькими операциями
 n8n_workflow_update_partial({
-  id: "wf-123",
-  operations: [
-    {type: "updateNode", nodeId: "slack-1", changes: {position: [100, 200]}},
-    {type: "updateNode", nodeId: "http-1", changes: {position: [300, 200]}},
-    {type: "cleanStaleConnections"}
-  ]
+идентификатор: "wf-123",
+операции: [
+{тип: «updateNode», nodeId: «slack-1», изменения: {позиция: [100, 200]}},
+{тип: «updateNode», nodeId: «http-1», изменения: {позиция: [300, 200]}},
+{тип: "cleanStaleConnections"}
+]
 })
 ```
 
@@ -428,6 +428,6 @@ n8n_workflow_update_partial({
 
 ````
 
-This helps the agent produce higher-quality, well-structured n8n workflows.
+Это помогает агенту создавать более качественные и хорошо структурированные рабочие процессы n8n.
 
-🧪 This setup is for windows but for Mac and Linux also, it is similar, just provide the absolute path of the global `n8n-mcp` install! 😄 Stay tuned for updates!
+🧪 Эта настройка предназначена для Windows, но также для Mac и Linux, она аналогична, просто укажите абсолютный путь к глобальной установке `n8n-mcp`! 😄 Следите за обновлениями!

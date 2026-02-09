@@ -11,6 +11,8 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
     tips: [
       'Use resources/list to discover valid URIs',
       'Read first to capture expectedEtag and base content',
+      'After a successful write/patch, always follow up with resources/read and use the new ETag; a controller may rewrite/normalize the file. (RU: после успешного write/patch всегда делай resources/read и бери новый etag, т.к. контроллер может переписать файл)',
+      'Synestra dev: see n8n_tools_documentation({topic: "synestra_camelk_debezium_mcp_n8n_dev_guide"}) for Camel K + Debezium interactions',
       'Patch applies line-by-line; keep hunks small for reliability',
       'Wrapped patches (*** Begin/End Patch or git headers) are accepted and stripped; prefer full @@ -a,b +c,d @@ hunks'
     ]
@@ -38,6 +40,7 @@ export const n8nWorkflowFilePatchDoc: ToolDocumentation = {
     performance: 'Typically <50ms per patch, depends on storage latency.',
     bestPractices: [
       'Always read the file first and pass expectedEtag to prevent conflicts',
+      'After a successful write/patch, always follow up with resources/read and use the new ETag; a controller may rewrite/normalize the file. (RU: после успешного write/patch всегда делай resources/read и бери новый etag, т.к. контроллер может переписать файл)',
       'Validate the patch applies cleanly before running',
       'Prefer unified diff hunks with clear context lines',
       'Use minContextLines to keep matches safe when fuzz is enabled',

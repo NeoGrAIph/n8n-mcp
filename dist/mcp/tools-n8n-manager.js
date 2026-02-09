@@ -57,6 +57,14 @@ exports.n8nManagementTools = [
                         executionTimeout: { type: 'integer' },
                         errorWorkflow: { type: 'string' }
                     }
+                },
+                parentFolderId: {
+                    type: ['string', 'null'],
+                    description: 'Optional folder ID to place workflow after creation (requires REST auth)'
+                },
+                projectId: {
+                    type: 'string',
+                    description: 'Optional destination project ID for folder placement (requires REST auth)'
                 }
             },
             required: ['name', 'nodes', 'connections']
@@ -196,6 +204,132 @@ exports.n8nManagementTools = [
         }
     },
     {
+        name: 'n8n_folders_list',
+        description: `List folders in a project via n8n's internal REST API. Use this to browse folder structure and get folder IDs for move/delete operations. Provide projectId or omit it to use the authenticated user's personal project. Returns folder metadata and pagination cursors when available.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                projectId: {
+                    type: 'string',
+                    description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
+                },
+                parentFolderId: {
+                    type: 'string',
+                    description: 'Optional parent folder ID to list direct children only'
+                },
+                filter: {
+                    type: 'object',
+                    description: 'Optional filter object (will be JSON-stringified and passed as filter=...)'
+                },
+                projectRelation: {
+                    type: 'boolean',
+                    description: 'Include project relation metadata (internal API flag)'
+                },
+                projectRole: {
+                    type: 'boolean',
+                    description: 'Include project role metadata (internal API flag)'
+                },
+                cursor: {
+                    type: 'string',
+                    description: 'Pagination cursor from previous response'
+                },
+                limit: {
+                    type: 'integer',
+                    description: 'Max folders to return (server-dependent)'
+                }
+            },
+            required: []
+        }
+    },
+    {
+        name: 'n8n_folder_create',
+        description: `Create a folder in a project (internal REST API). Use this to create root or nested folders. Provide name and optional projectId/parentFolderId. If projectId is omitted, the folder is created in the authenticated user's personal project. Returns the created folder metadata.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                projectId: {
+                    type: 'string',
+                    description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
+                },
+                name: {
+                    type: 'string',
+                    description: 'Folder name'
+                },
+                parentFolderId: {
+                    type: ['string', 'null'],
+                    description: 'Parent folder ID (null or omit for root)'
+                }
+            },
+            required: ['name']
+        }
+    },
+    {
+        name: 'n8n_folder_move',
+        description: `Rename and/or move a folder within a project (internal REST API). Provide folderId plus name and/or parentFolderId. ProjectId is optional and defaults to the authenticated user's personal project.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                projectId: {
+                    type: 'string',
+                    description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
+                },
+                folderId: {
+                    type: 'string',
+                    description: 'Folder ID to move/rename'
+                },
+                name: {
+                    type: 'string',
+                    description: 'New folder name (optional if only moving)'
+                },
+                parentFolderId: {
+                    type: ['string', 'null'],
+                    description: 'New parent folder ID (null to move to root)'
+                }
+            },
+            required: ['folderId']
+        }
+    },
+    {
+        name: 'n8n_folder_delete',
+        description: `Delete an empty folder in a project (internal REST API). Use this only for empty folders; non-empty deletes should fail. Provide folderId and optional projectId. If projectId is omitted, the authenticated user's personal project is used. Returns confirmation of deletion.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                projectId: {
+                    type: 'string',
+                    description: 'Project ID (optional; defaults to the authenticated user\'s personal project)'
+                },
+                folderId: {
+                    type: 'string',
+                    description: 'Folder ID to delete (must be empty)'
+                }
+            },
+            required: ['folderId']
+        }
+    },
+    {
+        name: 'n8n_workflow_move_to_folder',
+        description: `Move a workflow to a folder using REST transfer. Provide workflowId and parentFolderId (null to move to root). Optional projectId to move across projects.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID to move'
+                },
+                parentFolderId: {
+                    type: ['string', 'null'],
+                    description: 'Target folder ID (null for root)'
+                },
+                projectId: {
+                    type: 'string',
+                    description: 'Optional destination project ID'
+                }
+            },
+            required: ['workflowId', 'parentFolderId']
+        }
+    },
+    {
         name: 'n8n_workflow_validate',
         description: `Validate an existing workflow in n8n by id. Use this when you need server-side validation of nodes, connections, and expressions. Provide id and optional options to control checks and profile. Returns validity, summary, errors, warnings, and suggestions for that workflow.`,
         inputSchema: {
@@ -317,6 +451,140 @@ exports.n8nManagementTools = [
                 }
             },
             required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_code_node_test',
+        description: `Test a Code node or branch from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes full|node|subgraph and optional upstream/downstream inclusion. Provide workflowId and nodeId/nodeName (or startNode for subgraph). Returns minimal result by default; use responseMode=full or diagnostics to get full details.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID that contains the Code node'
+                },
+                mode: {
+                    type: 'string',
+                    enum: ['full', 'node', 'subgraph'],
+                    description: 'Execution mode: full workflow, single node, or subgraph (default: node)'
+                },
+                nodeId: {
+                    type: 'string',
+                    description: 'Code node ID (preferred for precision)'
+                },
+                nodeName: {
+                    type: 'string',
+                    description: 'Code node name (used if nodeId is not provided)'
+                },
+                startNode: {
+                    type: 'string',
+                    description: 'Start node for subgraph mode (node name or id)'
+                },
+                endNodes: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'Optional end nodes to limit subgraph expansion'
+                },
+                includeUpstream: {
+                    type: 'boolean',
+                    description: 'Include upstream ancestors in subgraph (default: true for subgraph, false for node)'
+                },
+                includeDownstream: {
+                    type: 'boolean',
+                    description: 'Include downstream descendants in subgraph (default: true for subgraph, false for node)'
+                },
+                items: {
+                    type: 'array',
+                    description: 'Optional array of input items. Each item can be a full n8n item ({json, binary}) or a plain object (will be wrapped as {json}).'
+                },
+                item: {
+                    type: 'object',
+                    description: 'Optional single input object (used if items is not provided)'
+                },
+                timeout: {
+                    type: 'integer',
+                    description: 'Timeout in ms for the runner webhook call'
+                },
+                diagnostics: {
+                    type: 'string',
+                    enum: ['none', 'preview', 'summary', 'full', 'error'],
+                    description: 'Execution diagnostics mode (default: none)'
+                },
+                diagnosticsItemsLimit: {
+                    type: 'integer',
+                    description: 'Items per node for diagnostics (default: 2)'
+                },
+                responseMode: {
+                    type: 'string',
+                    enum: ['result', 'full'],
+                    description: 'Response shape: minimal result or full diagnostics payload (default: result)'
+                },
+                runnerWorkflowId: {
+                    type: 'string',
+                    description: 'Optional override for the utility runner workflow ID'
+                },
+                runnerWebhookPath: {
+                    type: 'string',
+                    description: 'Optional override for the runner webhook path (default: mcp-code-node-runner)'
+                },
+                waitForResponse: {
+                    type: 'boolean',
+                    description: 'Wait for workflow completion (default: true)'
+                }
+            },
+            required: ['workflowId']
+        }
+    },
+    {
+        name: 'n8n_workflow_execution_get',
+        description: `Get execution results for a specific workflow. Provide workflowId and executionId to fetch the execution and return processed results. Useful when you only have /workflow/<id>/executions/<executionId> references.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                workflowId: {
+                    type: 'string',
+                    description: 'Workflow ID that owns the execution'
+                },
+                executionId: {
+                    type: 'string',
+                    description: 'Execution ID to retrieve'
+                },
+                mode: {
+                    type: 'string',
+                    enum: ['preview', 'summary', 'filtered', 'full', 'error'],
+                    description: 'Detail level for execution data (default: summary)'
+                },
+                nodeNames: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'Filter to specific nodes (for filtered mode)'
+                },
+                itemsLimit: {
+                    type: 'integer',
+                    description: 'Items per node to return (for filtered/summary modes)'
+                },
+                includeInputData: {
+                    type: 'boolean',
+                    description: 'Include input data in results (default: false)'
+                },
+                errorItemsLimit: {
+                    type: 'integer',
+                    description: 'For mode=error: sample items from upstream node (default: 2)'
+                },
+                includeStackTrace: {
+                    type: 'boolean',
+                    description: 'For mode=error: include full stack trace (default: false)'
+                },
+                includeExecutionPath: {
+                    type: 'boolean',
+                    description: 'For mode=error: include execution path leading to error (default: true)'
+                },
+                fetchWorkflow: {
+                    type: 'boolean',
+                    description: 'Fetch workflow for accurate processing (default: true)'
+                }
+            },
+            required: ['workflowId', 'executionId']
         }
     },
     {

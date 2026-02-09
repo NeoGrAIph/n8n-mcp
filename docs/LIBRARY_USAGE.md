@@ -1,27 +1,27 @@
-# Library Usage Guide - Multi-Tenant / Hosted Deployments
+# Руководство по использованию библиотеки — многопользовательские/размещенные развертывания
 
-This guide covers using n8n-mcp as a library dependency for building multi-tenant hosted services.
+В этом руководстве рассматривается использование n8n-mcp в качестве зависимости библиотеки для создания мультитенантных размещенных служб.
 
-## Overview
+## Обзор
 
-n8n-mcp can be used as a Node.js library to build multi-tenant backends that provide MCP services to multiple users or instances. The package exports all necessary components for integration into your existing services.
+n8n-mcp можно использовать в качестве библиотеки Node.js для создания многопользовательских серверов, которые предоставляют услуги MCP нескольким пользователям или экземплярам. Пакет экспортирует все необходимые компоненты для интеграции в существующие сервисы.
 
-## Installation
+## Установка
 
 ```bash
 npm install n8n-mcp
 ```
 
-## Core Concepts
+## Основные понятия
 
-### Library Mode vs CLI Mode
+### Режим библиотеки и режим CLI
 
-- **CLI Mode** (default): Single-player usage via `npx n8n-mcp` or Docker
-- **Library Mode**: Multi-tenant usage by importing and using the `N8NMCPEngine` class
+- **Режим CLI** (по умолчанию): использование в одиночной игре через `npx n8n-mcp` или Docker.
+- **Режим библиотеки**: многопользовательское использование путем импорта и использования класса `N8NMCPEngine`.
 
-### Instance Context
+### Контекст экземпляра
 
-The `InstanceContext` type allows you to pass per-request configuration to the MCP engine:
+Тип `InstanceContext` позволяет передавать конфигурацию каждого запроса в механизм MCP:
 
 ```typescript
 interface InstanceContext {
@@ -40,7 +40,7 @@ interface InstanceContext {
 }
 ```
 
-## Basic Example
+## Базовый пример
 
 ```typescript
 import express from 'express';
@@ -66,9 +66,9 @@ app.post('/mcp', async (req, res) => {
 app.listen(3000);
 ```
 
-## Multi-Tenant Backend Example
+## Пример многотенантного бэкэнда
 
-This example shows a complete multi-tenant implementation with user authentication and instance management:
+В этом примере показана полная мультитенантная реализация с аутентификацией пользователей и управлением экземплярами:
 
 ```typescript
 import express from 'express';
@@ -164,11 +164,11 @@ process.on('SIGTERM', async () => {
 app.listen(3000);
 ```
 
-## API Reference
+## Справочник по API
 
 ### N8NMCPEngine
 
-#### Constructor
+#### Конструктор
 
 ```typescript
 new N8NMCPEngine(options?: {
@@ -177,18 +177,18 @@ new N8NMCPEngine(options?: {
 })
 ```
 
-#### Methods
+#### Методы
 
 ##### `async processRequest(req, res, context?)`
 
-Process a single MCP request with optional instance context.
+Обработайте один запрос MCP с дополнительным контекстом экземпляра.
 
-**Parameters:**
-- `req`: Express request object
-- `res`: Express response object
-- `context` (optional): InstanceContext with per-instance configuration
+**Параметры:**
+- `req`: объект экспресс-запроса.
+- `res`: объект экспресс-ответа.
+- `context` (необязательно): InstanceContext с настройкой для каждого экземпляра.
 
-**Example:**
+**Пример:**
 ```typescript
 const context: InstanceContext = {
   n8nApiUrl: 'https://instance1.n8n.cloud',
@@ -201,9 +201,9 @@ await engine.processRequest(req, res, context);
 
 ##### `async healthCheck()`
 
-Get engine health status for monitoring.
+Получите состояние здоровья двигателя для мониторинга.
 
-**Returns:** `EngineHealth`
+**Возврат:** `EngineHealth`
 ```typescript
 {
   status: 'healthy' | 'unhealthy';
@@ -218,7 +218,7 @@ Get engine health status for monitoring.
 }
 ```
 
-**Example:**
+**Пример:**
 ```typescript
 app.get('/health', async (req, res) => {
   const health = await engine.healthCheck();
@@ -228,9 +228,9 @@ app.get('/health', async (req, res) => {
 
 ##### `getSessionInfo()`
 
-Get current session information for debugging.
+Получите текущую информацию о сеансе для отладки.
 
-**Returns:**
+**Возвраты:**
 ```typescript
 {
   active: boolean;
@@ -248,13 +248,13 @@ Get current session information for debugging.
 
 ##### `async start()`
 
-Start the engine (for standalone mode). Not needed when using `processRequest()` directly.
+Запустите двигатель (для автономного режима). Не требуется при непосредственном использовании `processRequest()`.
 
 ##### `async shutdown()`
 
-Graceful shutdown for service lifecycle management.
+Плавное завершение работы для управления жизненным циклом службы.
 
-**Example:**
+**Пример:**
 ```typescript
 process.on('SIGTERM', async () => {
   await engine.shutdown();
@@ -262,11 +262,11 @@ process.on('SIGTERM', async () => {
 });
 ```
 
-### Types
+### Типы
 
-#### InstanceContext
+#### Контекст экземпляра
 
-Configuration for a specific user instance:
+Конфигурация для конкретного экземпляра пользователя:
 
 ```typescript
 interface InstanceContext {
@@ -280,13 +280,13 @@ interface InstanceContext {
 }
 ```
 
-#### Validation Functions
+#### Функции проверки
 
 ##### `validateInstanceContext(context: InstanceContext)`
 
-Validate and sanitize instance context.
+Проверьте и очистите контекст экземпляра.
 
-**Returns:**
+**Возвраты:**
 ```typescript
 {
   valid: boolean;
@@ -294,7 +294,7 @@ Validate and sanitize instance context.
 }
 ```
 
-**Example:**
+**Пример:**
 ```typescript
 import { validateInstanceContext } from 'n8n-mcp';
 
@@ -306,9 +306,9 @@ if (!validation.valid) {
 
 ##### `isInstanceContext(obj: any)`
 
-Type guard to check if an object is a valid InstanceContext.
+Введите Guard, чтобы проверить, является ли объект допустимым InstanceContext.
 
-**Example:**
+**Пример:**
 ```typescript
 import { isInstanceContext } from 'n8n-mcp';
 
@@ -318,21 +318,21 @@ if (isInstanceContext(req.body.context)) {
 }
 ```
 
-## Session Management
+## Управление сеансами
 
-### Session Strategies
+### Стратегии сеансов
 
-The MCP engine supports flexible session ID formats:
+Движок MCP поддерживает гибкие форматы идентификаторов сеансов:
 
-- **UUIDv4**: Internal n8n-mcp format (default)
-- **Instance-prefixed**: `instance-{userId}-{hash}-{uuid}` for multi-tenant isolation
-- **Custom formats**: Any non-empty string for mcp-remote and other proxies
+- **UUIDv4**: внутренний формат n8n-mcp (по умолчанию).
+- **Префикс экземпляра**: `instance-{userId}-{hash}-{uuid}` для многопользовательской изоляции.
+- **Пользовательские форматы**: любая непустая строка для mcp-remote и других прокси.
 
-Session validation happens via transport lookup, not format validation. This ensures compatibility with all MCP clients.
+Проверка сеанса происходит посредством поиска транспорта, а не проверки формата. Это обеспечивает совместимость со всеми клиентами MCP.
 
-### Multi-Tenant Configuration
+### Мультитенантная конфигурация
 
-Set these environment variables for multi-tenant mode:
+Установите эти переменные среды для многопользовательского режима:
 
 ```bash
 # Enable multi-tenant mode
@@ -342,22 +342,22 @@ ENABLE_MULTI_TENANT=true
 MULTI_TENANT_SESSION_STRATEGY=instance
 ```
 
-**Session Strategies:**
+**Стратегии сеансов:**
 
-- **instance** (recommended): Each tenant gets isolated sessions
-  - Session ID: `instance-{instanceId}-{configHash}-{uuid}`
-  - Better isolation and security
-  - Easier debugging per tenant
+- **экземпляр** (рекомендуется): каждый арендатор получает изолированные сеансы.
+- Идентификатор сеанса: `instance-{instanceId}-{configHash}-{uuid}`
+- Лучшая изоляция и безопасность
+- Упрощенная отладка для каждого арендатора.
 
-- **shared**: Multiple tenants share sessions with context switching
-  - More efficient for high tenant count
-  - Requires careful context management
+- **совместно**: несколько арендаторов совместно используют сеансы с переключением контекста.
+- Более эффективен при большом количестве арендаторов.
+- Требует тщательного управления контекстом.
 
-## Security Considerations
+## Вопросы безопасности
 
-### API Key Management
+### Управление ключами API
 
-Always encrypt API keys server-side:
+Всегда шифруйте ключи API на стороне сервера:
 
 ```typescript
 import { createCipheriv, createDecipheriv } from 'crypto';
@@ -381,9 +381,9 @@ const context: InstanceContext = {
 };
 ```
 
-### Input Validation
+### Проверка ввода
 
-Always validate instance context before processing:
+Всегда проверяйте контекст экземпляра перед обработкой:
 
 ```typescript
 import { validateInstanceContext } from 'n8n-mcp';
@@ -394,9 +394,9 @@ if (!validation.valid) {
 }
 ```
 
-### Rate Limiting
+### Ограничение скорости
 
-Implement rate limiting per tenant:
+Внедрить ограничение скорости на одного арендатора:
 
 ```typescript
 import rateLimit from 'express-rate-limit';
@@ -412,9 +412,9 @@ app.post('/api/instances/:instanceId/mcp', authenticate, limiter, async (req, re
 });
 ```
 
-## Error Handling
+## Обработка ошибок
 
-Always wrap MCP requests in try-catch blocks:
+Всегда заключайте запросы MCP в блоки try-catch:
 
 ```typescript
 app.post('/api/instances/:instanceId/mcp', authenticate, async (req, res) => {
@@ -434,11 +434,11 @@ app.post('/api/instances/:instanceId/mcp', authenticate, async (req, res) => {
 });
 ```
 
-## Monitoring
+## Мониторинг
 
-### Health Checks
+### Проверки работоспособности
 
-Set up periodic health checks:
+Настройте периодические проверки работоспособности:
 
 ```typescript
 setInterval(async () => {
@@ -458,9 +458,9 @@ setInterval(async () => {
 }, 60000); // Every minute
 ```
 
-### Session Monitoring
+### Мониторинг сеансов
 
-Track active sessions:
+Отслеживайте активные сеансы:
 
 ```typescript
 app.get('/admin/sessions', authenticate, async (req, res) => {
@@ -473,9 +473,9 @@ app.get('/admin/sessions', authenticate, async (req, res) => {
 });
 ```
 
-## Testing
+## Тестирование
 
-### Unit Testing
+### Модульное тестирование
 
 ```typescript
 import { N8NMCPEngine, InstanceContext } from 'n8n-mcp';
@@ -508,7 +508,7 @@ describe('MCP Engine', () => {
 });
 ```
 
-### Integration Testing
+### Интеграционное тестирование
 
 ```typescript
 import request from 'supertest';
@@ -543,9 +543,9 @@ describe('Multi-tenant MCP API', () => {
 });
 ```
 
-## Deployment Considerations
+## Рекомендации по развертыванию
 
-### Environment Variables
+### Переменные среды
 
 ```bash
 # Required for multi-tenant mode
@@ -564,7 +564,7 @@ N8N_MCP_MAX_SESSIONS=100  # Maximum concurrent sessions (default: 100)
 NODE_ENV=production
 ```
 
-### Docker Deployment
+### Развертывание Docker
 
 ```dockerfile
 FROM node:20-alpine
@@ -585,7 +585,7 @@ EXPOSE 3000
 CMD ["node", "dist/server.js"]
 ```
 
-### Kubernetes Deployment
+### Развертывание Kubernetes
 
 ```yaml
 apiVersion: apps/v1
@@ -633,18 +633,18 @@ spec:
           periodSeconds: 10
 ```
 
-## Examples
+## Примеры
 
-### Complete Multi-Tenant SaaS Example
+### Полный пример мультитенантного SaaS
 
-For a complete implementation example, see:
-- [n8n-mcp-backend](https://github.com/czlonkowski/n8n-mcp-backend) - Full hosted service implementation
+Полный пример реализации см. в разделе:
+- [n8n-mcp-backend](https://github.com/czlonkowski/n8n-mcp-backend) - Полная реализация размещенного сервиса.
 
-### Migration from Single-Player
+### Миграция из одиночной игры
 
-If you're migrating from single-player (CLI/Docker) to multi-tenant:
+Если вы переходите с однопользовательской игры (CLI/Docker) на многопользовательскую:
 
-1. **Keep backward compatibility** - Use environment fallback:
+1. **Сохранять обратную совместимость** – использовать резервную версию среды:
 ```typescript
 const context: InstanceContext = {
   n8nApiUrl: instanceUrl || process.env.N8N_API_URL,
@@ -653,7 +653,7 @@ const context: InstanceContext = {
 };
 ```
 
-2. **Gradual rollout** - Start with a feature flag:
+2. **Постепенное внедрение**. Начните с отметки функции:
 ```typescript
 const isMultiTenant = process.env.ENABLE_MULTI_TENANT === 'true';
 
@@ -666,13 +666,13 @@ if (isMultiTenant) {
 }
 ```
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Common Issues
+### Распространенные проблемы
 
-#### Module Resolution Errors
+#### Ошибки разрешения модуля
 
-If you see `Cannot find module 'n8n-mcp'`:
+Если вы видите `Cannot find module 'n8n-mcp'`:
 
 ```bash
 # Clear node_modules and reinstall
@@ -686,17 +686,17 @@ npm info n8n-mcp
 npx tsc --noEmit
 ```
 
-#### Session ID Validation Errors
+#### Ошибки проверки идентификатора сеанса
 
-If you see `Invalid session ID format` errors:
+Если вы видите ошибки `Invalid session ID format`:
 
-- Ensure you're using n8n-mcp v2.18.9 or later
-- Session IDs can be any non-empty string
-- No need to generate UUIDs - use your own format
+- Убедитесь, что вы используете n8n-mcp v2.18.9 или новее.
+- Идентификаторы сеансов могут быть любой непустой строкой.
+- Нет необходимости генерировать UUID - используйте свой собственный формат
 
-#### Memory Leaks
+#### Утечки памяти
 
-If memory usage grows over time:
+Если использование памяти со временем увеличивается:
 
 ```typescript
 // Ensure proper cleanup
@@ -710,15 +710,15 @@ const sessionInfo = engine.getSessionInfo();
 console.log('Active sessions:', sessionInfo.sessions?.active);
 ```
 
-## Further Reading
+## Дальнейшее чтение
 
-- [MCP Protocol Specification](https://modelcontextprotocol.io/docs)
-- [n8n API Documentation](https://docs.n8n.io/api/)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-- [n8n-mcp Main README](../README.md)
+- [Спецификация протокола MCP](https://modelcontextprotocol.io/docs)
+- [Документация по API n8n](https://docs.n8n.io/api/)
+- [Руководство по Express.js](https://expressjs.com/en/guide/routing.html)
+- [Основной README n8n-mcp](../README.md)
 
-## Support
+## Поддерживать
 
-- **Issues**: [GitHub Issues](https://github.com/czlonkowski/n8n-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/czlonkowski/n8n-mcp/discussions)
-- **Security**: For security issues, see [SECURITY.md](../SECURITY.md)
+- **Проблемы**: [Проблемы GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+- **Обсуждения**: [Обсуждения GitHub](https://github.com/czlonkowski/n8n-mcp/discussions)
+- **Безопасность**. По вопросам безопасности см. [SECURITY.md](../SECURITY.md)

@@ -1,70 +1,70 @@
-# Interview with Claude: On the Value of n8n-MCP
+# Интервью с Клодом: о ценности n8n-MCP
 
-*This interview was conducted to understand how AI assistants experience building n8n workflows with and without the MCP service.*
+*Это интервью было проведено, чтобы понять, как ИИ-помощники создают рабочие процессы n8n с сервисом MCP и без него.*
 
-> Note: This interview references historical tool names (e.g., `get_node_essentials`).  
-> In current versions, use `n8n_node_get` with `detail`/`mode` (see README “Tool Name Changes”).
-
----
-
-**Interviewer:** Claude, you recently tested the n8n MCP service. What was your honest first impression?
-
-**Claude:** You know what? I was genuinely surprised. I've built plenty of n8n workflows before, and I thought I knew what I was doing. But when I tried creating the same workflow both ways - with and without the MCP - it was like night and day.
-
-Without MCP, I was basically playing a guessing game. "Is it `scheduleTrigger` or `schedule`? Does it take `interval` or `rule`?" I'd write what seemed logical, but n8n has its own conventions that you can't just intuit. I made six different configuration errors in a simple HackerNews scraper. Six!
-
-**Interviewer:** What changed when you used the MCP?
-
-**Claude:** Everything just... worked. Instead of guessing, I could ask `get_node_essentials()` and get exactly what I needed - not a 100KB JSON dump, but the actual 5-10 properties that matter. 
-
-The real "aha moment" was when I discovered features I didn't even know existed. Like the `neverError` option on HTTP requests, or the proper way to handle duplicate checking with Google Sheets. These aren't things you stumble upon - they're buried deep in documentation you'd never think to look for.
-
-**Interviewer:** Would you say it's just about saving time?
-
-**Claude:** It's more than that. Yes, what took 45 minutes now takes 3 minutes. But it's also about confidence. When you're building automation workflows, uncertainty is expensive. One wrong parameter and your workflow fails at 3 AM. With MCP, I could validate my configuration before deployment. That's not just time saved - that's peace of mind.
-
-**Interviewer:** Can you give a specific example of how MCP helped?
-
-**Claude:** Sure! I was building a workflow to monitor HackerNews for AI-related posts. Without MCP, here's what happened:
-
-1. I guessed the schedule trigger was called `scheduleTrigger` (wrong - it's `schedule`)
-2. I used `interval` as a property (wrong - it's `rule`)
-3. I tried `GET` as the HTTP method (wrong - it needs to be lowercase `get`)
-4. I didn't know about the `neverError` option, so my workflow would fail on any HTTP hiccup
-5. I had no idea Google Sheets had built-in duplicate detection
-6. I structured the output data wrong for the Sheet node
-
-With MCP, I could query each node, see real examples, and understand the exact schema. What's more, I discovered the workflow could be half the size because Google Sheets could handle the duplicate checking internally.
-
-**Interviewer:** Who would benefit most from this?
-
-**Claude:** Anyone who's ever opened 15 browser tabs trying to figure out how to connect two n8n nodes! But seriously, it's transformative for:
-
-- **AI Agents** building workflows - We can now create sophisticated automations that actually work on the first try
-- **Developers** new to n8n - Skip the learning curve and build with confidence
-- **Teams** using AI assistants - Your AI can now build production-ready workflows without constant human correction
-- **Anyone** tired of trial-and-error workflow building
-
-**Interviewer:** What surprised you most about the MCP implementation?
-
-**Claude:** The `get_node_essentials()` tool. When I first saw there was a "simplified" version, I was skeptical. But it's brilliant - instead of drowning in 200+ properties, you get the 10-20 that actually matter, with examples. It's like having an expert highlight exactly what you need to know.
-
-Also, the property dependency detection. Did you know that some properties only appear when others are set to specific values? Without MCP, you'd never know why a property isn't showing up. With MCP, it tells you "set authentication to 'OAuth2' to see OAuth properties."
-
-**Interviewer:** Any final thoughts?
-
-**Claude:** The n8n community has built something special here. This isn't just documentation - it's institutional knowledge, codified and made accessible. It's the difference between having a manual and having an expert sitting next to you. 
-
-If I had to sum it up: **Before MCP, I was translating. Now I'm composing.** And that changes everything about how we can build automation.
+> Примечание. В этом интервью упоминаются исторические названия инструментов (например, `get_node_essentials`).
+> В текущих версиях используйте `n8n_node_get` с `detail`/`mode` (см. README «Изменение имени инструмента»).
 
 ---
 
-## Key Takeaways
+**Интервьюер:** Клод, вы недавно тестировали сервис n8n MCP. Каким было ваше честное первое впечатление?
 
-1. **45 minutes → 3 minutes** - Dramatic time savings in workflow creation
-2. **6 errors → 0 errors** - First-try success instead of trial-and-error
-3. **Guessing → Knowing** - Confidence in configuration choices
-4. **Basic → Advanced** - Discovery of powerful features that would otherwise be missed
-5. **Translation → Composition** - Focus on business logic instead of syntax struggles
+**Клод:** Знаешь что? Я был искренне удивлен. Раньше я создавал множество рабочих процессов n8n и думал, что знаю, что делаю. Но когда я попытался создать один и тот же рабочий процесс в обоих направлениях — с MCP и без него — это было похоже на день и ночь.
 
-*"This isn't just documentation - it's institutional knowledge, codified and made accessible."*
+Без MCP я фактически играл в угадайку. "Это `scheduleTrigger` или `schedule`? Это нужно `interval` или `rule`?" Я бы написал то, что казалось логичным, но у n8n есть свои соглашения, которые невозможно уловить интуитивно. Я допустил шесть различных ошибок конфигурации в простом парсере HackerNews. Шесть!
+
+**Интервьюер:** Что изменилось, когда вы использовали MCP?
+
+**Клод:** Всё просто... сработало. Вместо того, чтобы гадать, я мог бы спросить `get_node_essentials()` и получить именно то, что мне нужно - не дамп JSON размером 100 КБ, а реальные 5-10 важных свойств.
+
+Настоящий «момент ага» наступил, когда я обнаружил функции, о существовании которых даже не подозревал. Например, опция `neverError` в HTTP-запросах или правильный способ проверки дубликатов с помощью Google Sheets. Это не те вещи, на которые вы наткнетесь — они похоронены глубоко в документации, которую вы даже не подумали бы искать.
+
+**Интервьюер:** Вы хотите сказать, что это просто экономия времени?
+
+**Клод:** Это нечто большее. Да, то, что заняло 45 минут, теперь занимает 3 минуты. Но это также вопрос уверенности. Когда вы создаете рабочие процессы автоматизации, неопределенность обходится дорого. Один неверный параметр, и ваш рабочий процесс завершится сбоем в 3 часа ночи. С MCP я мог проверить свою конфигурацию перед развертыванием. Это не просто экономия времени – это душевное спокойствие.
+
+**Интервьюер:** Можете ли вы привести конкретный пример того, как MCP помог?
+
+**Клод:** Конечно! Я создавал рабочий процесс для мониторинга HackerNews на предмет публикаций, связанных с ИИ. Без MCP получилось вот что:
+
+1. Я предположил, что триггер расписания называется `scheduleTrigger` (ошибочно - это `schedule`)
+2. Я использовал `interval` в качестве свойства (неправильно - это `rule`)
+3. Я попробовал `GET` в качестве HTTP-метода (неправильно — `get` должен быть в нижнем регистре)
+4. Я не знал об опции `neverError`, поэтому мой рабочий процесс завершался сбоем при любом сбое HTTP.
+5. Я понятия не имел, что в Google Таблицах есть встроенное обнаружение дубликатов.
+6. Я неправильно структурировал выходные данные для узла Лист.
+
+С помощью MCP я мог запросить каждый узел, увидеть реальные примеры и понять точную схему. Более того, я обнаружил, что рабочий процесс может быть вдвое меньше, поскольку Google Таблицы могут выполнять внутреннюю проверку дубликатов.
+
+**Интервьюер:** Кто от этого больше всего выиграет?
+
+**Клод:** Любой, кто когда-либо открывал 15 вкладок браузера, пытался понять, как соединить два узла n8n! А если серьезно, это преобразует:
+
+- **Агенты ИИ** создают рабочие процессы. - Теперь мы можем создавать сложные средства автоматизации, которые работают с первой попытки.
+- **Разработчики** - новички в n8n. - Не тратьте время на обучение и создавайте с уверенностью.
+- **Команды** используют ИИ-помощников. - Ваш ИИ теперь может создавать готовые к производству рабочие процессы без постоянной коррекции со стороны человека.
+- **Все** устали от построения рабочего процесса методом проб и ошибок.
+
+**Интервьюер:** Что вас больше всего удивило в реализации MCP?
+
+**Клод:** Инструмент `get_node_essentials()`. Когда я впервые увидел «упрощенную» версию, я был настроен скептически. Но это гениально — вместо того, чтобы утонуть в более чем 200 объектах, вы получаете 10-20 действительно важных, с примерами. Это похоже на то, как если бы эксперт выделил именно то, что вам нужно знать.
+
+Кроме того, обнаружение зависимости свойств. Знаете ли вы, что некоторые свойства появляются только тогда, когда другим присвоены определенные значения? Без MCP вы бы никогда не узнали, почему свойство не отображается. В случае с MCP вам будет предложено «установить аутентификацию на OAuth2, чтобы увидеть свойства OAuth».
+
+**Интервьюер:** Есть какие-нибудь заключительные мысли?
+
+**Клод:** Сообщество n8n создало здесь нечто особенное. Это не просто документация – это институциональные знания, систематизированные и доступные. В этом разница между наличием руководства и экспертом, сидящим рядом с вами.
+
+Если бы мне пришлось подвести итог: **До MCP я переводил. Теперь я сочиняю.** И это меняет все, что касается автоматизации.
+
+---
+
+## Ключевые выводы
+
+1. **45 минут → 3 минуты** — существенная экономия времени при создании рабочего процесса.
+2. **6 ошибок → 0 ошибок** – успех с первой попытки, а не методом проб и ошибок.
+3. **Угадай → Знай** – уверенность в выборе конфигурации.
+4. **Базовый → Расширенный** – обнаружение мощных функций, которые в противном случае были бы упущены.
+5. **Перевод → Композиция**. Сосредоточьтесь на бизнес-логике, а не на синтаксических проблемах.
+
+*"Это не просто документация - это институциональные знания, систематизированные и доступные."*

@@ -1,12 +1,12 @@
-# n8n-mcp Performance Benchmarks
+# Тесты производительности n8n-mcp
 
-## Overview
+## Обзор
 
-The n8n-mcp project includes comprehensive performance benchmarks to ensure optimal performance across all critical operations. These benchmarks help identify performance regressions and guide optimization efforts.
+Проект n8n-mcp включает в себя комплексные тесты производительности для обеспечения оптимальной производительности всех критически важных операций. Эти тесты помогают выявить снижение производительности и направить усилия по оптимизации.
 
-## Running Benchmarks
+## Запуск тестов
 
-### Local Development
+### Местное развитие
 
 ```bash
 # Run all benchmarks
@@ -22,89 +22,89 @@ npm run benchmark:ui
 npm run benchmark tests/benchmarks/node-loading.bench.ts
 ```
 
-### Continuous Integration
+### Непрерывная интеграция
 
-Benchmarks run automatically on:
-- Every push to `main` branch
-- Every pull request
-- Manual workflow dispatch
+Бенчмарки запускаются автоматически:
+- Каждое нажатие на ветку `main`
+- Каждый запрос на вытягивание
+- Ручная диспетчеризация рабочего процесса
 
-Results are:
-- Tracked over time using GitHub Actions
-- Displayed in PR comments
-- Available at: https://czlonkowski.github.io/n8n-mcp/benchmarks/
+Результаты:
+- Отслеживается с течением времени с помощью GitHub Actions.
+- Отображается в PR-комментариях
+- Доступно по адресу: https://czlonkowski.github.io/n8n-mcp/benchmarks/.
 
-## Benchmark Suites
+## Эталонные люксы
 
-### 1. Node Loading Performance
-Tests the performance of loading n8n node packages and parsing their metadata.
+### 1. Производительность загрузки узлов
+Тестирует производительность загрузки пакетов узлов n8n и анализа их метаданных.
 
-**Key Metrics:**
-- Package loading time (< 100ms target)
-- Individual node file loading (< 5ms target)
-- Package.json parsing (< 1ms target)
+**Ключевые показатели:**
+- Время загрузки пакета (целевое значение < 100 мс)
+- Загрузка файла отдельного узла (целевое время < 5 мс)
+- Анализ Package.json (цель < 1 мс)
 
-### 2. Database Query Performance
-Measures database operation performance including queries, inserts, and updates.
+### 2. Производительность запросов к базе данных
+Измеряет производительность операций базы данных, включая запросы, вставки и обновления.
 
-**Key Metrics:**
-- Node retrieval by type (< 5ms target)
-- Search operations (< 50ms target)
-- Bulk operations (< 100ms target)
+**Ключевые показатели:**
+- Извлечение узла по типу (целевое время < 5 мс)
+- Операции поиска (целевое время < 50 мс)
+- Массовые операции (целевое время < 100 мс)
 
-### 3. Search Operations
-Tests various search modes and their performance characteristics.
+### 3. Поисковые операции
+Тестирует различные режимы поиска и их рабочие характеристики.
 
-**Key Metrics:**
-- Simple word search (< 10ms target)
-- Multi-word OR search (< 20ms target)
-- Fuzzy search (< 50ms target)
+**Ключевые показатели:**
+- Простой поиск слов (цель < 10 мс)
+- Поиск по нескольким словам ИЛИ (целевое время < 20 мс)
+- Нечеткий поиск (цель < 50 мс)
 
-### 4. Validation Performance
-Measures configuration and workflow validation speed.
+### 4. Производительность проверки
+Измеряет скорость проверки конфигурации и рабочего процесса.
 
-**Key Metrics:**
-- Simple config validation (< 1ms target)
-- Complex config validation (< 10ms target)
-- Workflow validation (< 50ms target)
+**Ключевые показатели:**
+- Простая проверка конфигурации (целевое время < 1 мс)
+- Сложная проверка конфигурации (целевое время < 10 мс)
+- Проверка рабочего процесса (целевое время < 50 мс)
 
-### 5. MCP Tool Execution
-Tests the overhead of MCP tool execution.
+### 5. Выполнение инструмента MCP
+Тестирует накладные расходы на выполнение инструмента MCP.
 
-**Key Metrics:**
-- Tool invocation overhead (< 5ms target)
-- Complex tool operations (< 50ms target)
+**Ключевые показатели:**
+- Накладные расходы на вызов инструмента (целевое время < 5 мс)
+- Сложные операции с инструментом (целевое время < 50 мс)
 
-## Performance Targets
+## Цели производительности
 
-| Operation Category | Target | Warning | Critical |
+| Категория операции | Цель | Предупреждение | Критический |
 |-------------------|--------|---------|----------|
-| Node Loading | < 100ms | > 150ms | > 200ms |
-| Database Query | < 5ms | > 10ms | > 20ms |
-| Search (simple) | < 10ms | > 20ms | > 50ms |
-| Search (complex) | < 50ms | > 100ms | > 200ms |
-| Validation | < 10ms | > 20ms | > 50ms |
-| MCP Tools | < 50ms | > 100ms | > 200ms |
+| Загрузка узла | < 100 мс | > 150 мс | > 200 мс |
+| Запрос к базе данных | < 5 мс | > 10 мс | > 20 мс |
+| Поиск (простой) | < 10 мс | > 20 мс | > 50 мс |
+| Поиск (комплексный) | < 50 мс | > 100 мс | > 200 мс |
+| Проверка | < 10 мс | > 20 мс | > 50 мс |
+| Инструменты MCP | < 50 мс | > 100 мс | > 200 мс |
 
-## Optimization Guidelines
+## Рекомендации по оптимизации
 
-### Current Optimizations
+### Текущие оптимизации
 
-1. **In-memory caching**: Frequently accessed nodes are cached
-2. **Indexed database**: Key fields are indexed for fast lookups
-3. **Lazy loading**: Large properties are loaded on demand
-4. **Batch operations**: Multiple operations are batched when possible
+1. **Кэширование в памяти**: часто используемые узлы кэшируются.
+2. **Индексированная база данных**: ключевые поля индексируются для быстрого поиска.
+3. **Отложенная загрузка**: большие объекты загружаются по требованию.
+4. **Пакетные операции**: по возможности несколько операций группируются.
 
-### Future Optimizations
+### Будущие оптимизации
 
-1. **FTS5 Search**: Implement SQLite FTS5 for faster full-text search
-2. **Connection pooling**: Reuse database connections
-3. **Query optimization**: Analyze and optimize slow queries
-4. **Parallel loading**: Load multiple packages concurrently
+1. **Поиск FTS5**. Внедрите SQLite FTS5 для более быстрого полнотекстового поиска.
+2. **Пул соединений**: повторное использование подключений к базе данных.
+3. **Оптимизация запросов**. Анализируйте и оптимизируйте медленные запросы.
+4. **Параллельная загрузка**: загрузка нескольких пакетов одновременно.
 
-## Benchmark Implementation
+## Тестовая реализация
 
-### Writing New Benchmarks
+### Написание новых тестов
 
 ```typescript
 import { bench, describe } from 'vitest';
@@ -121,65 +121,65 @@ describe('My Performance Suite', () => {
 });
 ```
 
-### Best Practices
+### Лучшие практики
 
-1. **Isolate operations**: Benchmark specific operations, not entire workflows
-2. **Use realistic data**: Load actual n8n nodes for accurate measurements
-3. **Include warmup**: Allow JIT compilation to stabilize
-4. **Consider memory**: Monitor memory usage for memory-intensive operations
-5. **Statistical significance**: Run enough iterations for reliable results
+1. **Изолируйте операции**. Сравнивайте отдельные операции, а не все рабочие процессы.
+2. **Используйте реалистичные данные**: загружайте реальные узлы n8n для точных измерений.
+3. **Включить прогрев**: разрешить JIT-компиляцию для стабилизации.
+4. **Учитывайте использование памяти**: отслеживайте использование памяти для операций с интенсивным использованием памяти.
+5. **Статистическая значимость**. Для получения надежных результатов выполните достаточное количество итераций.
 
-## Interpreting Results
+## Интерпретация результатов
 
-### Key Metrics
+### Ключевые показатели
 
-- **hz**: Operations per second (higher is better)
-- **mean**: Average time per operation (lower is better)
-- **p99**: 99th percentile (worst-case performance)
-- **rme**: Relative margin of error (lower is more reliable)
+- **hz**: операций в секунду (чем выше, тем лучше)
+- **mean**: среднее время на операцию (чем меньше, тем лучше).
+- **p99**: 99-й процентиль (наихудший случай).
+- **rme**: относительная погрешность (чем ниже, тем надежнее).
 
-### Performance Regression Detection
+### Обнаружение снижения производительности
 
-A performance regression is flagged when:
-1. Operation time increases by >10% from baseline
-2. Multiple related operations show degradation
-3. P99 latency exceeds critical thresholds
+Снижение производительности отмечается, когда:
+1. Время операции увеличивается >10 % по сравнению с базовым уровнем.
+2. Несколько связанных операций демонстрируют деградацию.
+3. Задержка P99 превышает критические пороги.
 
-### Analyzing Trends
+### Анализ тенденций
 
-1. **Gradual degradation**: Often indicates growing technical debt
-2. **Sudden spikes**: Usually from specific code changes
-3. **Seasonal patterns**: May indicate cache effectiveness
-4. **Outliers**: Check p99 vs mean for consistency
+1. **Постепенная деградация**: часто указывает на рост технического долга.
+2. **Внезапные скачки**: обычно из-за определенных изменений кода.
+3. **Сезонность**: может указывать на эффективность кэша.
+4. **Выбросы**. Сравните p99 со средним значением на предмет согласованности.
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Common Issues
+### Распространенные проблемы
 
-1. **Inconsistent results**: Increase warmup iterations
-2. **High variance**: Check for background processes
-3. **Memory issues**: Reduce iteration count
-4. **CI failures**: Verify runner resources
+1. **Непостоянные результаты**. Увеличьте количество итераций прогрева.
+2. **Высокая дисперсия**: проверьте наличие фоновых процессов.
+3. **Проблемы с памятью**. Уменьшите количество итераций.
+4. **Ошибки CI**: проверьте ресурсы бегуна.
 
-### Performance Debugging
+### Отладка производительности
 
-1. Use `--reporter=verbose` for detailed output
-2. Profile with `node --inspect` for bottlenecks
-3. Check database query plans
-4. Monitor memory allocation patterns
+1. Используйте `--reporter=verbose` для подробного вывода.
+2. Профиль с `node --inspect` для устранения узких мест.
+3. Проверьте планы запросов к базе данных.
+4. Отслеживайте закономерности распределения памяти.
 
-## Contributing
+## Вклад
 
-When submitting performance improvements:
+При отправке улучшений производительности:
 
-1. Run benchmarks before and after changes
-2. Include benchmark results in PR description
-3. Explain optimization approach
-4. Consider trade-offs (memory vs speed)
-5. Add new benchmarks for new features
+1. Запустите тесты до и после изменений
+2. Включите результаты тестов в описание PR.
+3. Объясните подход к оптимизации
+4. Рассмотрите компромиссы (память или скорость)
+5. Добавьте новые тесты для новых функций.
 
-## References
+## Ссылки
 
-- [Vitest Benchmark Documentation](https://vitest.dev/guide/features.html#benchmarking)
-- [GitHub Action Benchmark](https://github.com/benchmark-action/github-action-benchmark)
-- [SQLite Performance Tuning](https://www.sqlite.org/optoverview.html)
+- [Документация Vitest Benchmark](https://vitest.dev/guide/features.html#benchmarking)
+- [Бенчмарк действий GitHub](https://github.com/benchmark-action/github-action-benchmark)
+- [Настройка производительности SQLite](https://www.sqlite.org/optoverview.html)

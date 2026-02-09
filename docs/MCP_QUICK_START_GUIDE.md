@@ -1,12 +1,12 @@
-# MCP Implementation Quick Start Guide
+# Краткое руководство по внедрению MCP
 
-This guide shows how to implement the **consolidated `n8n_node_get` tool** with detail levels and property search.
+В этом руководстве показано, как реализовать **объединенный инструмент `n8n_node_get`** с уровнями детализации и поиском по свойствам.
 
-## Immediate Actions (Day 1)
+## Немедленные действия (день 1)
 
-### 1. Create Essential Properties Configuration
+### 1. Создайте конфигурацию основных свойств
 
-Create `src/data/essential-properties.json`:
+Создайте `src/data/essential-properties.json`:
 ```json
 {
   "nodes-base.httpRequest": {
@@ -44,9 +44,9 @@ Create `src/data/essential-properties.json`:
 }
 ```
 
-### 2. Implement `n8n_node_get` (detail: standard/minimal)
+### 2. Реализовать `n8n_node_get` (детализация: стандартная/минимальная)
 
-Add to `src/mcp/server.ts`:
+Добавьте в `src/mcp/server.ts`:
 
 ```typescript
 // Add to tool implementations
@@ -131,9 +131,9 @@ function findPropertyByName(properties: any[], name: string): any {
 }
 ```
 
-### 3. Add Tool Definition
+### 3. Добавьте определение инструмента
 
-Add to tool definitions:
+Добавьте в определения инструментов:
 
 ```typescript
 {
@@ -167,9 +167,9 @@ Add to tool definitions:
 }
 ```
 
-### 4. Create Property Parser Service
+### 4. Создание службы синтаксического анализа свойств
 
-Create `src/services/property-parser.ts`:
+Создайте `src/services/property-parser.ts`:
 
 ```typescript
 export class PropertyParser {
@@ -223,9 +223,9 @@ export class PropertyParser {
 }
 ```
 
-### 5. Quick Test Script
+### 5. Сценарий быстрого тестирования
 
-Create `scripts/test-essentials.ts`:
+Создайте `scripts/test-essentials.ts`:
 
 ```typescript
 import { MCPClient } from "../src/mcp/client";
@@ -265,9 +265,9 @@ async function testEssentials() {
 testEssentials().catch(console.error);
 ```
 
-## Day 2-3: Implement search_properties mode
+## День 2–3: реализация режима search_properties
 
-Add a branch inside the `n8n_node_get` handler:
+Добавьте ветку внутри обработчика `n8n_node_get`:
 
 ```typescript
 if (mode === "search_properties") {
@@ -297,9 +297,9 @@ if (mode === "search_properties") {
 }
 ```
 
-## Day 4-5: Implement task templates (via n8n_templates_search)
+## День 4–5. Реализация шаблонов задач (через n8n_templates_search)
 
-Create `src/data/task-templates.json` and expose task search via `n8n_templates_search` (`searchMode: "by_task"`). Example entry:
+Создайте `src/data/task-templates.json` и откройте поиск задач через `n8n_templates_search` (`searchMode: "by_task"`). Пример записи:
 
 ```json
 {
@@ -326,32 +326,32 @@ Create `src/data/task-templates.json` and expose task search via `n8n_templates_
 }
 ```
 
-## Testing Checklist
+## Контрольный список тестирования
 
-- [ ] Test `n8n_node_get` (detail: standard) with HTTP Request node
-- [ ] Verify size reduction is >90%
-- [ ] Test with Webhook, Agent, and Code nodes
-- [ ] Validate examples work correctly
-- [ ] Test `mode: "search_properties"` functionality
-- [ ] Verify task templates are valid
-- [ ] Check backward compatibility
-- [ ] Measure response times (<100ms)
+- [ ] Проверка `n8n_node_get` (детализация: стандартная) с узлом HTTP-запроса.
+- [ ] Убедитесь, что уменьшение размера составляет >90 %.
+- [ ] Тестирование с узлами Webhook, Agent и Code.
+- [ ] Проверьте правильность работы примеров.
+- [ ] Проверка функциональности `mode: "search_properties"`
+- [ ] Проверка правильности шаблонов задач.
+- [ ] Проверить обратную совместимость
+- [ ] Измерение времени отклика (<100 мс)
 
-## Success Indicators
+## Индикаторы успеха
 
-1. **Immediate (Day 1)**:
-   - `n8n_node_get` (detail: standard) returns <5KB for HTTP Request
-   - Response includes working examples
-   - No errors with top 10 nodes
+1. **Немедленно (день 1)**:
+- `n8n_node_get` (детализация: стандартная) возвращает <5 КБ для HTTP-запроса.
+- Ответ включает рабочие примеры.
+- Никаких ошибок с топ-10 узлами
 
-2. **Week 1**:
-   - 90% reduction in response size
-   - Property search working
-   - 5+ task templates created
-   - Positive AI agent feedback
+2. **Неделя 1**:
+- Уменьшение размера ответа на 90 %.
+- Работает поиск недвижимости
+- Создано более 5 шаблонов задач
+- Положительные отзывы об ИИ-агентах
 
-3. **Month 1**:
-   - All tools implemented
-   - 50+ nodes optimized
-   - Configuration time <1 minute
-   - Error rate <10%
+3. **Месяц 1**:
+- Все инструменты реализованы
+- Оптимизировано более 50 узлов
+- Время настройки <1 минута
+- Частота ошибок <10%

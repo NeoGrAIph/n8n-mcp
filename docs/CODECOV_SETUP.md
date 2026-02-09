@@ -1,67 +1,67 @@
-# Codecov Setup Guide
+# Руководство по настройке Codecov
 
-This guide explains how to set up and configure Codecov for the n8n-MCP project.
+В этом руководстве объясняется, как установить и настроить Codecov для проекта n8n-MCP.
 
-## Prerequisites
+## Предварительные условия
 
-1. A Codecov account (sign up at https://codecov.io)
-2. Repository admin access to add the CODECOV_TOKEN secret
+1. Аккаунт Codecov (зарегистрируйтесь на https://codecov.io)
+2. Доступ администратора репозитория для добавления секрета CODECOV_TOKEN.
 
-## Setup Steps
+## Шаги настройки
 
-### 1. Get Your Codecov Token
+### 1. Получите токен Codecov
 
-1. Sign in to [Codecov](https://codecov.io)
-2. Add your repository: `czlonkowski/n8n-mcp`
-3. Copy the upload token from the repository settings
+1. Войдите в [Codecov](https://codecov.io)
+2. Добавьте свой репозиторий: `czlonkowski/n8n-mcp`
+3. Скопируйте токен загрузки из настроек репозитория.
 
-### 2. Add Token to GitHub Secrets
+### 2. Добавьте токен в секреты GitHub
 
-1. Go to your GitHub repository settings
-2. Navigate to `Settings` → `Secrets and variables` → `Actions`
-3. Click "New repository secret"
-4. Name: `CODECOV_TOKEN`
-5. Value: Paste your Codecov token
-6. Click "Add secret"
+1. Перейдите в настройки репозитория GitHub.
+2. Перейдите к `Settings` → `Secrets and variables` → `Actions`.
+3. Нажмите «Новый секрет репозитория».
+4. Имя: `CODECOV_TOKEN`
+5. Значение: вставьте свой токен Codecov.
+6. Нажмите «Добавить секрет»
 
-### 3. Update the Badge Token
+### 3. Обновите токен значка
 
-Edit the README.md file and replace `YOUR_TOKEN` in the Codecov badge with your actual token:
+Отредактируйте файл README.md и замените `YOUR_TOKEN` в значке Codecov своим фактическим токеном:
 
 ```markdown
 [![codecov](https://codecov.io/gh/czlonkowski/n8n-mcp/graph/badge.svg?token=YOUR_ACTUAL_TOKEN)](https://codecov.io/gh/czlonkowski/n8n-mcp)
 ```
 
-Note: The token in the badge URL is a read-only token and safe to commit.
+Примечание. Токен в URL-адресе значка доступен только для чтения и его можно безопасно зафиксировать.
 
-## Configuration Details
+## Подробности конфигурации
 
 ### codecov.yml
 
-The configuration file sets:
-- **Target coverage**: 80% for both project and patch
-- **Coverage precision**: 2 decimal places
-- **Comment behavior**: Comments on all PRs with coverage changes
-- **Ignored files**: Test files, scripts, node_modules, and build outputs
+В конфигурационном файле устанавливаются:
+- **Целевой охват**: 80 % как для проекта, так и для патча.
+- **Точность покрытия**: 2 десятичных знака.
+- **Поведение комментариев**: комментарии ко всем PR с изменением покрытия.
+- **Игнорируемые файлы**: тестовые файлы, сценарии, node_modules и выходные данные сборки.
 
-### GitHub Actions
+### Действия GitHub
 
-The workflow:
-1. Runs tests with coverage using `npm run test:coverage`
-2. Generates LCOV format coverage report
-3. Uploads to Codecov using the official action
-4. Fails the build if upload fails
+Рабочий процесс:
+1. Запускает тесты с покрытием, используя `npm run test:coverage`.
+2. Создает отчет о покрытии в формате LCOV.
+3. Загружает в Codecov с помощью официального действия.
+4. Сбой сборки, если загрузка не удалась.
 
-### Vitest Configuration
+### Конфигурация Витеста
 
-Coverage settings in `vitest.config.ts`:
-- **Provider**: V8 (fast and accurate)
-- **Reporters**: text, json, html, and lcov
-- **Thresholds**: 80% lines, 80% functions, 75% branches, 80% statements
+Настройки покрытия в `vitest.config.ts`:
+- **Поставщик**: V8 (быстро и точно)
+– **Репортеры**: текст, json, html и lcov.
+– **Пороги**: 80 % строк, 80 % функций, 75 % ветвей, 80 % операторов.
 
-## Viewing Coverage
+## Просмотр покрытия
 
-### Local Coverage
+### Местное покрытие
 
 ```bash
 # Generate coverage report
@@ -71,43 +71,43 @@ npm run test:coverage
 open coverage/index.html
 ```
 
-### Online Coverage
+### Онлайн-покрытие
 
-1. Visit https://codecov.io/gh/czlonkowski/n8n-mcp
-2. View detailed reports, graphs, and file-by-file coverage
-3. Check PR comments for coverage changes
+1. Посетите https://codecov.io/gh/czlonkowski/n8n-mcp.
+2. Просмотр подробных отчетов, графиков и отдельных файлов.
+3. Проверьте комментарии по связям с общественностью на предмет изменений в освещении.
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Coverage Not Uploading
+### Покрытие не загружается
 
-1. Verify CODECOV_TOKEN is set in GitHub secrets
-2. Check GitHub Actions logs for errors
-3. Ensure coverage/lcov.info is generated
+1. Убедитесь, что CODECOV_TOKEN установлен в секретах GitHub.
+2. Проверьте журналы действий GitHub на наличие ошибок.
+3. Убедитесь, что файл Cover/lcov.info создан.
 
-### Badge Not Showing
+Значок ### не отображается
 
-1. Wait a few minutes after first upload
-2. Verify the token in the badge URL is correct
-3. Check if the repository is public/private settings match
+1. Подождите несколько минут после первой загрузки.
+2. Убедитесь, что токен в URL-адресе значка верен.
+3. Проверьте, совпадают ли настройки публичного и частного репозитория.
 
-### Low Coverage Areas
+### Области с низким покрытием
 
-Current areas with lower coverage that could be improved:
-- HTTP server implementations
-- MCP index files
-- Some edge cases in validators
+Текущие области с более низким охватом, которые можно улучшить:
+- Реализации HTTP-сервера
+- Индексные файлы MCP
+- Некоторые крайние случаи в валидаторах
 
-## Best Practices
+## Лучшие практики
 
-1. **Write tests first**: Aim for TDD when adding features
-2. **Focus on critical paths**: Prioritize testing core functionality
-3. **Mock external dependencies**: Use MSW for HTTP, mock for databases
-4. **Keep coverage realistic**: 80% is good, 100% isn't always practical
-5. **Monitor trends**: Watch coverage over time, not just absolute numbers
+1. **Сначала напишите тесты**: стремитесь к TDD при добавлении функций.
+2. **Сосредоточьтесь на критических путях**: уделите приоритетное внимание тестированию основных функций.
+3. **Имитация внешних зависимостей**: используйте MSW для HTTP, имитируйте базы данных.
+4. **Сохраняйте реалистичность охвата**: 80 % — это хорошо, 100 % — не всегда практично.
+5. **Отслеживайте тенденции**: следите за освещением событий в динамике, а не только за абсолютными цифрами.
 
-## Resources
+## Ресурсы
 
-- [Codecov Documentation](https://docs.codecov.io/)
-- [Vitest Coverage](https://vitest.dev/guide/coverage.html)
-- [GitHub Actions + Codecov](https://github.com/codecov/codecov-action)
+- [Документация кодеков](https://docs.codecov.io/)
+- [Покрытие Vitest](https://vitest.dev/guide/coverage.html)
+- [Действия GitHub + Codecov](https://github.com/codecov/codecov-action)

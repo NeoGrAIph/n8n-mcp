@@ -1,95 +1,95 @@
-# Type Structure Validation
+# Проверка структуры типа
 
-## Overview
+## Обзор
 
-Type Structure Validation is an automatic validation system that ensures complex n8n node configurations conform to their expected data structures. Implemented as part of the n8n-mcp validation system, it provides zero-configuration validation for special n8n types that have complex nested structures.
+Проверка структуры типов — это автоматическая система проверки, которая гарантирует, что сложные конфигурации узлов n8n соответствуют ожидаемым структурам данных. Реализованный как часть системы проверки n8n-mcp, он обеспечивает проверку без конфигурации для специальных типов n8n, которые имеют сложные вложенные структуры.
 
-**Status:** Production (v2.22.21+)
-**Performance:** 100% pass rate on 776 real-world validations
-**Speed:** 0.01ms average validation time (500x faster than target)
+**Статус:** Производство (v2.22.21+)
+**Производительность:** 100 % успешность прохождения 776 реальных проверок.
+**Скорость:** Среднее время проверки 0,01 мс (в 500 раз быстрее целевого значения)
 
-The system automatically validates node configurations without requiring any additional setup or configuration from users or AI assistants.
+Система автоматически проверяет конфигурации узлов, не требуя каких-либо дополнительных настроек или настроек от пользователей или помощников искусственного интеллекта.
 
-## Supported Types
+## Поддерживаемые типы
 
-The validation system supports four special n8n types that have complex structures:
+Система валидации поддерживает четыре специальных типа n8n, которые имеют сложную структуру:
 
-### 1. **filter** (FilterValue)
-Complex filtering conditions with boolean operators, comparison operations, and nested logic.
+### 1. **фильтр** (FilterValue)
+Сложные условия фильтрации с логическими операторами, операциями сравнения и вложенной логикой.
 
-**Structure:**
-- `combinator`: "and" | "or" - How conditions are combined
-- `conditions`: Array of filter conditions
-  - Each condition has: `leftValue`, `operator` (type + operation), `rightValue`
-  - Supports 40+ operations: equals, contains, exists, notExists, gt, lt, regex, etc.
+**Структура:**
+- `combinator`: "и" | «или» — как объединяются условия
+- `conditions`: Массив условий фильтра.
+- Каждое условие имеет: `leftValue`, `operator` (тип + операция), `rightValue`.
+- Поддерживает более 40 операций: равно, содержит, существует, не существует, gt, lt, регулярное выражение и т. д.
 
-**Example Usage:** IF node, Switch node condition filtering
+**Пример использования**: узел IF, фильтрация условий узла переключения.
 
 ### 2. **resourceMapper** (ResourceMapperValue)
-Data mapping configuration for transforming data between different formats.
+Конфигурация сопоставления данных для преобразования данных между различными форматами.
 
-**Structure:**
-- `mappingMode`: "defineBelow" | "autoMapInputData" | "mapManually"
-- `value`: Field mappings or expressions
-- `matchingColumns`: Column matching configuration
-- `schema`: Target schema definition
+**Структура:**
+- `mappingMode`: "defineBelow" | "autoMapInputData" | "картаВручную"
+- `value`: сопоставления полей или выражения.
+- `matchingColumns`: конфигурация сопоставления столбцов.
+- `schema`: определение целевой схемы.
 
-**Example Usage:** Google Sheets node, Airtable node data mapping
+**Пример использования**: узел Google Sheets, сопоставление данных узла Airtable.
 
 ### 3. **assignmentCollection** (AssignmentCollectionValue)
-Variable assignments for setting multiple values at once.
+Назначения переменных для установки нескольких значений одновременно.
 
-**Structure:**
-- `assignments`: Array of name-value pairs
-  - Each assignment has: `name`, `value`, `type`
+**Структура:**
+- `assignments`: Массив пар имя-значение.
+- Каждое задание имеет: `name`, `value`, `type`.
 
-**Example Usage:** Set node, Code node variable assignments
+**Пример использования:** Установить узел, назначить переменные узла кода.
 
 ### 4. **resourceLocator** (INodeParameterResourceLocator)
-Resource selection with multiple lookup modes (ID, name, URL, etc.).
+Выбор ресурса с несколькими режимами поиска (ID, имя, URL и т. д.).
 
-**Structure:**
-- `mode`: "id" | "list" | "url" | "name"
-- `value`: Resource identifier (string, number, or expression)
-- `cachedResultName`: Optional cached display name
-- `cachedResultUrl`: Optional cached URL
+**Структура:**
+- `mode`: "id" | "список" | "URL-адрес" | "имя"
+- `value`: идентификатор ресурса (строка, число или выражение).
+- `cachedResultName`: необязательное кэшированное отображаемое имя.
+- `cachedResultUrl`: дополнительный кэшированный URL-адрес.
 
-**Example Usage:** Google Sheets spreadsheet selection, Slack channel selection
+**Пример использования**: выбор таблицы Google Sheets, выбор канала Slack.
 
-## Performance & Results
+## Производительность и результаты
 
-The validation system was tested against real-world n8n.io workflow templates:
+Система проверки была протестирована на реальных шаблонах рабочих процессов n8n.io:
 
-| Metric | Result |
+| Метрическая | Результат |
 |--------|--------|
-| **Templates Tested** | 91 (top by popularity) |
-| **Nodes Validated** | 616 nodes with special types |
-| **Total Validations** | 776 property validations |
-| **Pass Rate** | 100.00% (776/776) |
-| **False Positive Rate** | 0.00% |
-| **Average Time** | 0.01ms per validation |
-| **Max Time** | 1.00ms per validation |
-| **Performance vs Target** | 500x faster than 50ms target |
+| **Шаблоны протестированы** | 91 (топ по популярности) |
+| **Узлы проверены** | 616 узлов особых типов |
+| **Всего проверок** | 776 проверок недвижимости |
+| **Процент сдачи** | 100,00% (776/776) |
+| **Доля ложноположительных результатов** | 0,00% |
+| **Среднее время** | 0,01 мс на проверку |
+| **Максимальное время** | 1,00 мс на проверку |
+| **Эффективность и цель** | В 500 раз быстрее, чем целевое значение 50 мс |
 
-### Type-Specific Results
+### Результаты для конкретного типа
 
-- `filter`: 93/93 passed (100.00%)
-- `resourceMapper`: 69/69 passed (100.00%)
-- `assignmentCollection`: 213/213 passed (100.00%)
-- `resourceLocator`: 401/401 passed (100.00%)
+- `filter`: 93/93 пройдено (100,00%)
+- `resourceMapper`: пройдено 69/69 (100,00%)
+- `assignmentCollection`: 213 из 213 пройдено (100,00%)
+- `resourceLocator`: 401/401 пройдено (100,00%)
 
-## How It Works
+## Как это работает
 
-### Automatic Integration
+### Автоматическая интеграция
 
-Structure validation is automatically applied during node configuration validation. When you call `n8n_node_validate` (mode: `full` or `minimal`), the system:
+Проверка структуры автоматически применяется во время проверки конфигурации узла. Когда вы вызываете `n8n_node_validate` (режим: `full` или `minimal`), система:
 
-1. **Identifies Special Types**: Detects properties that use filter, resourceMapper, assignmentCollection, or resourceLocator types
-2. **Validates Structure**: Checks that the configuration matches the expected structure for that type
-3. **Validates Operations**: For filter types, validates that operations are supported for the data type
-4. **Provides Context**: Returns specific error messages with property paths and fix suggestions
+1. **Идентифицирует специальные типы**. Обнаруживает свойства, использующие типы filter, resourcesMapper, присваиванияCollection или resourcesLocator.
+2. **Проверка структуры**: проверяет, соответствует ли конфигурация ожидаемой структуре для этого типа.
+3. **Проверяет операции**: для типов фильтров проверяет, поддерживаются ли операции для типа данных.
+4. **Предоставляет контекст**: возвращает конкретные сообщения об ошибках с путями к свойствам и предложениями по исправлению.
 
-### Validation Flow
+### Порядок проверки
 
 ```
 User/AI provides node config
@@ -105,25 +105,25 @@ TypeStructureService.validateStructure()
 Returns validation result with errors/warnings/suggestions
 ```
 
-### Edge Cases Handled
+### Краевые случаи обработаны
 
-**1. Credential-Provided Fields**
-- Fields like Google Sheets `sheetId` that come from n8n credentials at runtime are excluded from validation
-- No false positives for fields that aren't in the configuration
+**1. Поля, предоставленные учетными данными**
+- Такие поля, как Google Таблицы `sheetId`, которые получены из учетных данных n8n во время выполнения, исключаются из проверки.
+- Никаких ложных срабатываний для полей, которых нет в конфигурации.
 
-**2. Filter Operations**
-- Universal operations (`exists`, `notExists`, `isNotEmpty`) work across all data types
-- Type-specific operations validated (e.g., `regex` only for strings, `gt`/`lt` only for numbers)
+**2. Фильтрация операций**
+- Универсальные операции (`exists`, `notExists`, `isNotEmpty`) работают со всеми типами данных.
+- Подтверждены операции, специфичные для типа (например, `regex` только для строк, `gt`/`lt` только для чисел).
 
-**3. Node-Specific Logic**
-- Custom validation logic for specific nodes (Google Sheets, Slack, etc.)
-- Context-aware error messages that understand the node's operation
+**3. Специфическая для узла логика**
+- Пользовательская логика проверки для конкретных узлов (Google Таблицы, Slack и т. д.)
+- Контекстно-зависимые сообщения об ошибках, которые понимают работу узла.
 
-## Example Validation Error
+## Пример ошибки проверки
 
-### Invalid Filter Structure
+### Неверная структура фильтра
 
-**Configuration:**
+**Конфигурация:**
 ```json
 {
   "conditions": {
@@ -142,7 +142,7 @@ Returns validation result with errors/warnings/suggestions
 }
 ```
 
-**Validation Error:**
+**Ошибка проверки:**
 ```json
 {
   "valid": false,
@@ -157,83 +157,83 @@ Returns validation result with errors/warnings/suggestions
 }
 ```
 
-## Technical Details
+## Технические подробности
 
-### Implementation
+### Выполнение
 
-- **Type Definitions**: `src/types/type-structures.ts` (301 lines)
-- **Type Structures**: `src/constants/type-structures.ts` (741 lines, 22 complete type structures)
-- **Service Layer**: `src/services/type-structure-service.ts` (427 lines)
-- **Validator Integration**: `src/services/enhanced-config-validator.ts` (line 270)
-- **Node-Specific Logic**: `src/services/node-specific-validators.ts`
+- **Определения типов**: `src/types/type-structures.ts` (301 строка)
+- **Структуры типов**: `src/constants/type-structures.ts` (741 строка, 22 полные структуры типов)
+- **Сервисный уровень**: `src/services/type-structure-service.ts` (427 строк)
+- **Интеграция валидатора**: `src/services/enhanced-config-validator.ts` (строка 270)
+- **Логика, специфичная для узла**: `src/services/node-specific-validators.ts`
 
-### Test Coverage
+### Тестовое покрытие
 
-- **Unit Tests**:
-  - `tests/unit/types/type-structures.test.ts` (14 tests)
-  - `tests/unit/constants/type-structures.test.ts` (39 tests)
-  - `tests/unit/services/type-structure-service.test.ts` (64 tests)
-  - `tests/unit/services/enhanced-config-validator-type-structures.test.ts`
+- **Юнит-тесты**:
+- `tests/unit/types/type-structures.test.ts` (14 тестов)
+- `tests/unit/constants/type-structures.test.ts` (39 тестов)
+- `tests/unit/services/type-structure-service.test.ts` (64 теста)
+- `tests/unit/services/enhanced-config-validator-type-structures.test.ts`
 
-- **Integration Tests**:
-  - `tests/integration/validation/real-world-structure-validation.test.ts` (8 tests, 388ms)
+- **Интеграционные тесты**:
+- `tests/integration/validation/real-world-structure-validation.test.ts` (8 тестов, 388мс)
 
-- **Validation Scripts**:
-  - `scripts/test-structure-validation.ts` - Standalone validation against 100 templates
+- **Скрипты проверки**:
+- `scripts/test-structure-validation.ts` - ​​Автономная проверка по 100 шаблонам.
 
-### Documentation
+### Документация
 
-- **Implementation Plan**: `docs/local/v3/implementation-plan-final.md` - Complete technical specifications
-- **Phase Results**: Phases 1-3 completed with 100% success criteria met
+- **План реализации**: `docs/local/v3/implementation-plan-final.md` - ​​Полные технические характеристики
+- **Результаты этапов**: этапы 1–3 завершены с соблюдением 100 % критериев успеха.
 
-## For Developers
+## Для разработчиков
 
-### Adding New Type Structures
+### Добавление новых структур типов
 
-1. Define the type structure in `src/constants/type-structures.ts`
-2. Add validation logic in `TypeStructureService.validateStructure()`
-3. Add tests in `tests/unit/constants/type-structures.test.ts`
-4. Test against real templates using `scripts/test-structure-validation.ts`
+1. Определите структуру типов в `src/constants/type-structures.ts`.
+2. Добавьте логику проверки в `TypeStructureService.validateStructure()`.
+3. Добавьте тесты в `tests/unit/constants/type-structures.test.ts`
+4. Протестируйте реальные шаблоны, используя `scripts/test-structure-validation.ts`.
 
-### Testing Structure Validation
+### Проверка структуры тестирования
 
-**Run Unit Tests:**
+**Запуск модульных тестов:**
 ```bash
 npm run test:unit -- tests/unit/services/enhanced-config-validator-type-structures.test.ts
 ```
 
-**Run Integration Tests:**
+**Запустите интеграционные тесты:**
 ```bash
 npm run test:integration -- tests/integration/validation/real-world-structure-validation.test.ts
 ```
 
-**Run Full Validation:**
+**Выполнить полную проверку:**
 ```bash
 npm run test:structure-validation
 ```
 
-### Relevant Test Files
+### Соответствующие тестовые файлы
 
-- **Type Tests**: `tests/unit/types/type-structures.test.ts`
-- **Structure Tests**: `tests/unit/constants/type-structures.test.ts`
-- **Service Tests**: `tests/unit/services/type-structure-service.test.ts`
-- **Validator Tests**: `tests/unit/services/enhanced-config-validator-type-structures.test.ts`
-- **Integration Tests**: `tests/integration/validation/real-world-structure-validation.test.ts`
-- **Real-World Validation**: `scripts/test-structure-validation.ts`
+- **Типовые испытания**: `tests/unit/types/type-structures.test.ts`
+- **Структурные тесты**: `tests/unit/constants/type-structures.test.ts`
+- **Сервисные тесты**: `tests/unit/services/type-structure-service.test.ts`
+- **Тесты валидатора**: `tests/unit/services/enhanced-config-validator-type-structures.test.ts`
+- **Интеграционные тесты**: `tests/integration/validation/real-world-structure-validation.test.ts`
+- **Проверка в реальных условиях**: `scripts/test-structure-validation.ts`
 
-## Production Readiness
+## Готовность производства
 
-✅ **All Tests Passing**: 100% pass rate on unit and integration tests
-✅ **Performance Validated**: 0.01ms average (500x better than 50ms target)
-✅ **Zero Breaking Changes**: Fully backward compatible
-✅ **Real-World Validation**: 91 templates, 616 nodes, 776 validations
-✅ **Production Deployment**: Successfully deployed in v2.22.21
-✅ **Edge Cases Handled**: Credential fields, filter operations, node-specific logic
+✅ **Прохождение всех тестов**: 100% процент прохождения модульных и интеграционных тестов.
+✅ **Производительность проверена**: в среднем 0,01 мс (в 500 раз лучше целевого показателя в 50 мс)
+✅ **Ноль критических изменений**: полная обратная совместимость.
+✅ **Проверка в реальных условиях**: 91 шаблон, 616 узлов, 776 проверок.
+✅ **Производственное развертывание**: успешно развернуто в версии 2.22.21.
+✅ **Обработка пограничных случаев**: поля учетных данных, операции фильтрации, логика, специфичная для узла.
 
-## Version History
+## История версий
 
-- **v2.22.21** (2025-11-21): Type structure validation system completed (Phases 1-3)
-  - 22 complete type structures defined
-  - 100% pass rate on real-world validation
-  - 0.01ms average validation time
-  - Zero false positives
+- **v2.22.21** (21 ноября 2025 г.): система проверки структуры типа завершена (этапы 1–3).
+- Определено 22 полные структуры типов.
+- 100% проходимость при проверке в реальных условиях
+- Среднее время проверки 0,01 мс
+- Ноль ложных срабатываний

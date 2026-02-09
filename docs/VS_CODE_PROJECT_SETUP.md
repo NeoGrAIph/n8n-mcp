@@ -1,24 +1,24 @@
-# Visual Studio Code Setup
+# Настройка кода Visual Studio
 
-:white_check_mark: This n8n MCP server is compatible with VS Code + GitHub Copilot (Chat in IDE).
+:white_check_mark: Этот сервер MCP n8n совместим с VS Code + GitHub Copilot (чат в IDE).
 
-> ✅ **Using current tool names**  
-> This guide uses the consolidated tool set: `n8n_node_get` (detail/mode) + `n8n_nodes_search`.
+> ✅ **Использование текущих названий инструментов**
+> В этом руководстве используется объединенный набор инструментов: `n8n_node_get` (детализация/режим) + `n8n_nodes_search`.
 
-## Preconditions
+## Предварительные условия
 
-Assuming you've already deployed the n8n MCP server and connected it to the n8n API, and it's available at:
+Предполагается, что вы уже развернули сервер n8n MCP и подключили его к API n8n, и он доступен по адресу:
 `https://n8n.your.production.url/`
 
-💡 The deployment process is documented in the [HTTP Deployment Guide](./HTTP_DEPLOYMENT.md).
+💡 Процесс развертывания описан в [Руководстве по развертыванию HTTP](./HTTP_DEPLOYMENT.md).
 
-## Step 1
+## Шаг 1
 
-Start by creating a new VS Code project folder.
+Начните с создания новой папки проекта VS Code.
 
-## Step 2
+## Шаг 2
 
-Create a file: `.vscode/mcp.json`
+Создайте файл: `.vscode/mcp.json`
 ```json
 {
     "inputs": [
@@ -41,21 +41,21 @@ Create a file: `.vscode/mcp.json`
 }
 ```
 
-💡 The `inputs` block ensures the token is requested interactively — no need to hardcode secrets.
+💡 Блок `inputs` обеспечивает интерактивный запрос токена — нет необходимости жестко запрограммировать секреты.
 
-## Step 3
+## Шаг 3
 
-GitHub Copilot does not provide access to "thinking models" for unpaid users. To improve results, install the official [Sequential Thinking MCP server](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) referenced in the [VS Code docs](https://code.visualstudio.com/mcp#:~:text=Install%20Linear-,Sequential%20Thinking,-Model%20Context%20Protocol). This lightweight add-on can turn any LLM into a thinking model by enabling step-by-step reasoning. It's highly recommended to use the n8n-mcp server in combination with a sequential thinking model to generate more accurate outputs.
+GitHub Copilot не предоставляет доступ к «моделям мышления» для бесплатных пользователей. Чтобы улучшить результаты, установите официальный [сервер Sequential Thinking MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking), указанный в [документации VS Code](https://code.visualstudio.com/mcp#:~:text=Install%20Linear-,Sequential%20Thinking,-Model%20Context%20Protocol). Это легкое дополнение может превратить любой LLM в модель мышления, обеспечивая пошаговое рассуждение. Настоятельно рекомендуется использовать сервер n8n-mcp в сочетании с моделью последовательного мышления для получения более точных результатов.
 
-🔧 Alternatively, you can try enabling this setting in Copilot to unlock "thinking mode" behavior:
+🔧 Альтернативно вы можете попробовать включить этот параметр в Copilot, чтобы разблокировать поведение «режима мышления»:
 
-![VS Code Settings > GitHub > Copilot > Chat > Agent: Thinking Tool](./img/vsc_ghcp_chat_thinking_tool.png)
+![Настройки VS Code > GitHub > Copilot > Чат > Агент: Инструмент мышления](./img/vsc_ghcp_chat_thinking_tool.png)
 
-_(Note: I haven’t tested this setting myself, as I use the Sequential Thinking MCP instead)_
+_(Примечание: я сам не проверял эту настройку, так как вместо этого использую MCP последовательного мышления)_
 
-## Step 4
+## Шаг 4
 
-For the best results when using n8n-MCP with VS Code, use these enhanced system instructions (copy to your project’s `.github/copilot-instructions.md`):
+Для достижения наилучших результатов при использовании n8n-MCP с VS Code используйте эти расширенные системные инструкции (скопируйте их в `.github/copilot-instructions.md` вашего проекта):
 
 ```markdown
 You are an expert in n8n automation software using n8n-MCP tools. Your role is to design, build, and validate n8n workflows with maximum accuracy and efficiency.
@@ -173,21 +173,21 @@ n8n_workflow_update_partial({
 - FIX all errors before proceeding
 ```
 
-This helps the agent produce higher-quality, well-structured n8n workflows.
+Это помогает агенту создавать более качественные и хорошо структурированные рабочие процессы n8n.
 
-🔧 Important: To ensure the instructions are always included, make sure this checkbox is enabled in your Copilot settings:
+🔧 Важно: чтобы инструкции всегда были включены, убедитесь, что этот флажок установлен в настройках Copilot:
 
-![VS Code Settings > GitHub > Copilot > Chat > Code Generation: Use Instruction Files](./img/vsc_ghcp_chat_instruction_files.png)
+![Настройки VS Code > GitHub > Copilot > Чат > Генерация кода: использовать файлы инструкций](./img/vsc_ghcp_chat_instruction_files.png)
 
-## Step 5
+## Шаг 5
 
-Switch GitHub Copilot to Agent mode:
+Переключите GitHub Copilot в режим агента:
 
-![VS Code > GitHub Copilot Chat > Edit files in your workspace in agent mode](./img/vsc_ghcp_chat_agent_mode.png)
+![VS Code > Чат GitHub Copilot > Редактируйте файлы в рабочей области в режиме агента](./img/vsc_ghcp_chat_agent_mode.png)
 
-## Step 6 - Try it!
+## Шаг 6 — Попробуйте!
 
-Here’s an example prompt I used:
+Вот пример приглашения, которое я использовал:
 ```
 #fetch https://blog.n8n.io/rag-chatbot/
 
@@ -195,4 +195,4 @@ use #sequentialthinking and #n8n-mcp tools to build a new n8n workflow step-by-s
 In the end, please deploy a fully-functional n8n workflow.
 ```
 
-🧪 My result wasn’t perfect (a bit messy workflow), but I'm genuinely happy that it created anything autonomously 😄 Stay tuned for updates!
+🧪 Мой результат не был идеальным (немного беспорядочный рабочий процесс), но я искренне рад, что он создал что-то автономно 😄 Следите за обновлениями!

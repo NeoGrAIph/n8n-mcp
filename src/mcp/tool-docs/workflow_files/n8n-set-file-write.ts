@@ -10,7 +10,9 @@ export const n8nSetFileWriteDoc: ToolDocumentation = {
     performance: 'Fast (writes a single file).',
     tips: [
       'Pass expectedEtag from a prior read to avoid overwrites',
-      'Ensure content is valid JSON'
+      'Ensure content is valid JSON',
+      'After a successful write/patch, always follow up with resources/read and use the new ETag; a controller may rewrite/normalize the file. (RU: после успешного write/patch всегда делай resources/read и бери новый etag, т.к. контроллер может переписать файл)',
+      'Synestra dev: see n8n_tools_documentation({topic: "synestra_camelk_debezium_mcp_n8n_dev_guide"}) for Camel K + Debezium interactions'
     ]
   },
   full: {
@@ -33,6 +35,7 @@ export const n8nSetFileWriteDoc: ToolDocumentation = {
     performance: 'Typically <50ms per write, depends on storage latency.',
     bestPractices: [
       'Always read first and use expectedEtag to prevent concurrent overwrites',
+      'After a successful write/patch, always follow up with resources/read and use the new ETag; a controller may rewrite/normalize the file. (RU: после успешного write/patch всегда делай resources/read и бери новый etag, т.к. контроллер может переписать файл)',
       'Validate JSON content before writing'
     ],
     pitfalls: [

@@ -1,12 +1,12 @@
-# Codex Setup
+# Настройка Кодекса
 
-Connect n8n-MCP to Codex for enhanced n8n workflow development.
+Подключите n8n-MCP к Codex для улучшения разработки рабочих процессов n8n.
 
-## Update your Codex configuration
+## Обновите конфигурацию Кодекса
 
-Go to your Codex settings at `~/.codex/config.toml` and add the following configuration:
+Перейдите в настройки Кодекса по адресу `~/.codex/config.toml` и добавьте следующую конфигурацию:
 
-### Basic configuration (documentation tools only):
+### Базовая конфигурация (только инструменты документирования):
 ```toml
 [mcp_servers.n8n]
 command = "npx"
@@ -14,7 +14,7 @@ args = ["n8n-mcp"]
 env = { "MCP_MODE" = "stdio", "LOG_LEVEL" = "error", "DISABLE_CONSOLE_OUTPUT" = "true" }
 ```
 
-### Full configuration (with n8n management tools):
+### Полная конфигурация (со средствами управления n8n):
 ```toml
 [mcp_servers.n8n]
 command = "npx"
@@ -22,13 +22,13 @@ args = ["n8n-mcp"]
 env = { "MCP_MODE" = "stdio", "LOG_LEVEL" = "error", "DISABLE_CONSOLE_OUTPUT" = "true", "N8N_API_URL" = "https://your-n8n-instance.com", "N8N_API_KEY" = "your-api-key" }
 ```
 
-Make sure to replace `https://your-n8n-instance.com` with your actual n8n URL and `your-api-key` with your n8n API key.
+Обязательно замените `https://your-n8n-instance.com` своим фактическим URL-адресом n8n и `your-api-key` своим ключом API n8n.
 
-## Managing Your MCP Server
-Enter the Codex CLI and use the `/mcp` command to see server status and available tools.
+## Управление вашим сервером MCP
+Войдите в CLI Кодекса и используйте команду `/mcp`, чтобы просмотреть состояние сервера и доступные инструменты.
 
-![n8n-MCP connected and showing 39 tools available](./img/codex_connected.png)
+![n8n-MCP подключен и показывает 39 доступных инструментов](./img/codex_connected.png)
 
-## Project Instructions
+## Инструкции по проекту
 
-For optimal results, create a `AGENTS.md` file in your project root with the instructions same with [main README's Claude Project Setup section](../README.md#-claude-project-setup).
+Для достижения оптимальных результатов создайте файл `AGENTS.md` в корне вашего проекта, следуя инструкциям, аналогичным [основному разделу настройки проекта Claude в README](../README.md#-claude-project-setup).

@@ -5,21 +5,26 @@ export const n8nCodeNodeTestDoc: ToolDocumentation = {
   category: 'workflow_management',
   essentials: {
     description: 'Execute a Code node or branch from an existing workflow using the utility runner (webhook + Execute Sub-workflow). Supports full/node/subgraph modes.',
-    keyParameters: ['workflowId', 'mode', 'nodeId', 'nodeName', 'startNode', 'items'],
+    keyParameters: ['workflowId', 'mode', 'nodeId', 'nodeName', 'includeUpstream', 'includeDownstream', 'startNode', 'endNodes', 'items'],
     example: 'n8n_code_node_test({workflowId: "123", nodeName: "My Code"})',
     performance: 'Immediate trigger, response time depends on code execution',
     tips: [
       'Runner workflow must exist and be ACTIVE',
       'Provide nodeId for precision when multiple similar node names exist',
+      'In mode=node and mode=subgraph, nodeId/nodeName selects the target Code node. startNode does NOT replace it.',
       'Use items to simulate input data from previous nodes',
-      'Use mode=subgraph with startNode/endNodes for branch testing',
+      'Use mode=subgraph + includeUpstream/includeDownstream to include related non-Code nodes (e.g., Set) around the Code node',
       'Default response is minimal (result only). Use responseMode=full for full payload.'
     ]
   },
   full: {
     description: `Test a Code node or branch by running a generated sub-workflow. Depending on the mode, the tool selects nodes from the source workflow, removes trigger nodes, adds an Execute Workflow Trigger, and connects it to the subgraph roots. The utility runner webhook then executes the generated workflow JSON.
 
-This is useful for isolated debugging of Code nodes or their surrounding branches without modifying the original workflow.`,
+This is useful for isolated debugging of Code nodes or their surrounding branches without modifying the original workflow.
+
+Important note for mode=subgraph:
+- nodeId/nodeName is still used to identify the Code node this tool is testing (and to validate the node type).
+- startNode only affects which part of the workflow graph is selected; it does not replace nodeId/nodeName.`,
     parameters: {
       workflowId: {
         type: 'string',
@@ -34,32 +39,32 @@ This is useful for isolated debugging of Code nodes or their surrounding branche
       nodeId: {
         type: 'string',
         required: false,
-        description: 'Code node ID (preferred for precision)'
+        description: 'Code node ID (preferred for precision). Required for mode=node and mode=subgraph if nodeName is not provided.'
       },
       nodeName: {
         type: 'string',
         required: false,
-        description: 'Code node name (used if nodeId is not provided)'
+        description: 'Code node name (used if nodeId is not provided). Required for mode=node and mode=subgraph if nodeId is not provided.'
       },
       startNode: {
         type: 'string',
         required: false,
-        description: 'Start node for subgraph mode (node name or id)'
+        description: 'Start node for subgraph selection (node name or id). Does NOT replace nodeId/nodeName; use startNode to choose where traversal begins.'
       },
       endNodes: {
         type: 'array',
         required: false,
-        description: 'Optional end nodes to limit subgraph traversal'
+        description: 'Optional end nodes to limit subgraph traversal (node names or ids)'
       },
       includeUpstream: {
         type: 'boolean',
         required: false,
-        description: 'Include upstream ancestors in the generated subgraph'
+        description: 'Include upstream ancestors in the generated subgraph (default: true for mode=subgraph)'
       },
       includeDownstream: {
         type: 'boolean',
         required: false,
-        description: 'Include downstream descendants in the generated subgraph'
+        description: 'Include downstream descendants in the generated subgraph (default: true for mode=subgraph)'
       },
       items: {
         type: 'array',
@@ -127,7 +132,8 @@ Full response (responseMode=full or diagnostics enabled):
       'n8n_code_node_test({workflowId: "123", nodeName: "Code in Python (Native)"})',
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", item: {foo: "bar"}})',
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", items: [{json: {a: 1}}, {json: {a: 2}}]})',
-      'n8n_code_node_test({workflowId: "123", mode: "subgraph", startNode: "Prepare Data", endNodes: ["Notify"], diagnostics: "summary"})',
+      'n8n_code_node_test({workflowId: "123", mode: "subgraph", nodeName: "Code", includeUpstream: true, responseMode: "full"})',
+      'n8n_code_node_test({workflowId: "123", mode: "subgraph", nodeName: "Code", startNode: "Prepare Data", includeDownstream: true, endNodes: ["Notify"], diagnostics: "summary"})',
       'n8n_code_node_test({workflowId: "123", mode: "full", timeout: 180000})',
       'n8n_code_node_test({workflowId: "123", mode: "full", responseMode: "full"})'
     ],
@@ -151,6 +157,7 @@ Full response (responseMode=full or diagnostics enabled):
       'If items are omitted, the tool uses a single empty item',
       'Code node side effects still occur if the code triggers external actions',
       'Runner webhook URL depends on your n8n base URL configuration',
+      'In mode=subgraph, startNode alone is not enough: you still must pass nodeId/nodeName to select the target Code node, otherwise you may get "Target node not found in workflow"',
       'Trigger nodes are removed in generated sub-workflows, so trigger-specific context may be missing'
     ],
     relatedTools: ['n8n_workflow_get', 'n8n_workflow_test', 'n8n_executions_get', 'n8n_executions_list']

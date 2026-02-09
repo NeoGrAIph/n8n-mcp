@@ -1,29 +1,29 @@
-# Docker Troubleshooting Guide
+# Руководство по устранению неполадок Docker
 
-This guide helps resolve common issues when running n8n-mcp with Docker, especially when connecting to n8n instances.
+Это руководство помогает решить распространенные проблемы при запуске n8n-mcp с Docker, особенно при подключении к экземплярам n8n.
 
-## Table of Contents
-- [Common Issues](#common-issues)
-  - [502 Bad Gateway Errors](#502-bad-gateway-errors)
-  - [Custom Database Path Not Working](#custom-database-path-not-working-v27160)
-  - [Container Name Conflicts](#container-name-conflicts)
-  - [n8n API Connection Issues](#n8n-api-connection-issues)
-- [Docker Networking](#docker-networking)
-- [Quick Solutions](#quick-solutions)
-- [Debugging Steps](#debugging-steps)
+## Оглавление
+- [Общие проблемы](#common-issues)
+- [502 неверные ошибки шлюза](#502-bad-gateway-errors)
+- [Пользовательский путь к базе данных не работает](#custom-database-path-not-working-v27160)
+- [Конфликты имен контейнеров](#container-name-conflicts)
+- [Проблемы с подключением к API n8n](#n8n-api-connection-issues)
+- [Сеть Docker](#docker-networking)
+- [Быстрые решения](#quick-solutions)
+- [Шаги отладки](#debugging-steps)
 
-## Common Issues
+## Распространенные проблемы
 
-### Docker Configuration File Not Working (v2.8.2+)
+### Файл конфигурации Docker не работает (v2.8.2+)
 
-**Symptoms:**
-- Config file mounted but environment variables not set
-- Container starts but ignores configuration
-- Getting "permission denied" errors
+**Симптомы:**
+- Файл конфигурации установлен, но переменные среды не заданы.
+- Контейнер запускается, но игнорирует конфигурацию
+- Получение ошибок «отказано в разрешении»
 
-**Solutions:**
+**Решения:**
 
-1. **Ensure file is mounted correctly:**
+1. **Убедитесь, что файл смонтирован правильно:**
 ```bash
 # Correct - mount as read-only
 docker run -v $(pwd)/config.json:/app/config.json:ro ...
@@ -32,40 +32,40 @@ docker run -v $(pwd)/config.json:/app/config.json:ro ...
 docker exec n8n-mcp cat /app/config.json
 ```
 
-2. **Verify JSON syntax:**
+2. **Проверьте синтаксис JSON:**
 ```bash
 # Validate JSON file
 cat config.json | jq .
 ```
 
-3. **Check Docker logs for parsing errors:**
+3. **Проверьте журналы Docker на наличие ошибок анализа:**
 ```bash
 docker logs n8n-mcp | grep -i config
 ```
 
-4. **Common issues:**
-- Invalid JSON syntax (use a JSON validator)
-- File permissions (should be readable)
-- Wrong mount path (must be `/app/config.json`)
-- Dangerous variables blocked (PATH, LD_PRELOAD, etc.)
+4. **Распространенные проблемы:**
+- Неверный синтаксис JSON (используйте валидатор JSON).
+- Права доступа к файлам (должны быть доступны для чтения)
+- Неправильный путь монтирования (должен быть `/app/config.json`)
+- Заблокированы опасные переменные (PATH, LD_PRELOAD и т. д.)
 
-### Custom Database Path Not Working (v2.7.16+)
+### Пользовательский путь к базе данных не работает (v2.7.16+)
 
-**Symptoms:**
-- `NODE_DB_PATH` environment variable is set but ignored
-- Database always created at `/app/data/nodes.db`
-- Custom path setting has no effect
+**Симптомы:**
+- Переменная среды `NODE_DB_PATH` установлена, но игнорируется.
+- База данных всегда создается по адресу `/app/data/nodes.db`.
+- Пользовательская настройка пути не имеет эффекта.
 
-**Root Cause:** Fixed in v2.7.16. Earlier versions had hardcoded paths in docker-entrypoint.sh.
+**Основная причина:** исправлено в версии 2.7.16. В более ранних версиях пути были жестко закодированы в docker-entrypoint.sh.
 
-**Solutions:**
+**Решения:**
 
-1. **Update to v2.7.16 or later:**
+1. **Обновите версию 2.7.16 или более позднюю:**
 ```bash
 docker pull ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-2. **Ensure path ends with .db:**
+2. **Убедитесь, что путь заканчивается на .db:**
 ```bash
 # Correct
 NODE_DB_PATH=/app/data/custom/my-nodes.db
@@ -74,7 +74,7 @@ NODE_DB_PATH=/app/data/custom/my-nodes.db
 NODE_DB_PATH=/app/data/custom/my-nodes
 ```
 
-3. **Use path within mounted volume for persistence:**
+3. **Используйте путь внутри смонтированного тома для сохранения:**
 ```yaml
 services:
   n8n-mcp:
@@ -84,20 +84,20 @@ services:
       - n8n-mcp-data:/app/data  # Ensure parent directory is mounted
 ```
 
-### 502 Bad Gateway Errors
+### 502 Неверные ошибки шлюза
 
-**Symptoms:**
-- `n8n_health_check` returns 502 error
-- All n8n management API calls fail
-- n8n web UI is accessible but API is not
+**Симптомы:**
+- `n8n_health_check` возвращает ошибку 502.
+- Все вызовы API управления n8n завершаются неудачно.
+- Веб-интерфейс n8n доступен, но API нет
 
-**Root Cause:** Network connectivity issues between n8n-mcp container and n8n instance.
+**Основная причина:** Проблемы с сетевым подключением между контейнером n8n-mcp и экземпляром n8n.
 
-**Solutions:**
+**Решения:**
 
-#### 1. When n8n runs in Docker on same machine
+#### 1. Когда n8n работает в Docker на том же компьютере
 
-Use Docker's special hostnames instead of `localhost`:
+Используйте специальные имена хостов Docker вместо `localhost`:
 
 ```json
 {
@@ -115,12 +115,12 @@ Use Docker's special hostnames instead of `localhost`:
 }
 ```
 
-**Alternative hostnames to try:**
-- `host.docker.internal` (Docker Desktop on macOS/Windows)
-- `172.17.0.1` (Default Docker bridge IP on Linux)
-- Your machine's actual IP address (e.g., `192.168.1.100`)
+**Альтернативные имена хостов, которые стоит попробовать:**
+- `host.docker.internal` (Docker Desktop в macOS/Windows)
+- `172.17.0.1` (IP-адрес моста Docker по умолчанию в Linux)
+- Фактический IP-адрес вашего устройства (например, `192.168.1.100`)
 
-#### 2. When both containers are in same Docker network
+#### 2. Когда оба контейнера находятся в одной сети Docker
 
 ```bash
 # Create a shared network
@@ -138,7 +138,7 @@ docker run -d --name n8n --network n8n-network -p 5678:5678 n8nio/n8n
 }
 ```
 
-#### 3. For Docker Compose setups
+#### 3. Для настроек Docker Compose
 
 ```yaml
 # docker-compose.yml
@@ -164,18 +164,18 @@ networks:
     driver: bridge
 ```
 
-### Container Cleanup Issues (Fixed in v2.7.20+)
+### Проблемы с очисткой контейнера (исправлено в версии 2.7.20+)
 
-**Symptoms:**
-- Containers accumulate after Claude Desktop restarts
-- Containers show as "unhealthy" but don't clean up
-- `--rm` flag doesn't work as expected
+**Симптомы:**
+- Контейнеры накапливаются после перезагрузки Claude Desktop.
+- Контейнеры отображаются как «нездоровые», но не очищаются.
+- Флаг `--rm` не работает должным образом.
 
-**Root Cause:** Fixed in v2.7.20 - containers weren't handling termination signals properly.
+**Основная причина:** Исправлено в версии 2.7.20: контейнеры неправильно обрабатывали сигналы завершения.
 
-**Solutions:**
+**Решения:**
 
-1. **Update to v2.7.20+ and use --init flag (Recommended):**
+1. **Обновите версию 2.7.20+ и используйте флаг --init (рекомендуется):**
 ```json
 {
   "command": "docker",
@@ -186,26 +186,26 @@ networks:
 }
 ```
 
-2. **Manual cleanup of old containers:**
+2. **Ручная очистка старых контейнеров:**
 ```bash
 # Remove all stopped n8n-mcp containers
 docker ps -a | grep n8n-mcp | grep Exited | awk '{print $1}' | xargs -r docker rm
 ```
 
-3. **For versions before 2.7.20:**
-- Manually clean up containers periodically
-- Consider using HTTP mode instead
+3. **Для версий до 2.7.20:**
+- Периодически очищайте контейнеры вручную.
+– Вместо этого рассмотрите возможность использования режима HTTP.
 
 ### Webhooks to Local n8n Fail (v2.16.3+)
 
-**Symptoms:**
-- `n8n_workflow_test` fails with "SSRF protection" error
-- Error message: "SSRF protection: Localhost access is blocked"
-- Webhooks work from n8n UI but not from n8n-MCP
+**Симптомы:**
+- `n8n_workflow_test` завершается с ошибкой «Защита SSRF».
+- Сообщение об ошибке: «Защита SSRF: доступ к локальному хосту заблокирован».
+- Вебхуки работают с пользовательским интерфейсом n8n, но не с n8n-MCP.
 
-**Root Cause:** Default strict SSRF protection blocks localhost access to prevent attacks.
+**Основная причина:** Строгая защита SSRF по умолчанию блокирует доступ к локальному узлу для предотвращения атак.
 
-**Solution:** Use moderate security mode for local development
+**Решение.** Используйте умеренный режим безопасности для локальной разработки.
 
 ```bash
 # For Docker run
@@ -224,27 +224,27 @@ services:
       WEBHOOK_SECURITY_MODE: moderate
 ```
 
-**Security Modes Explained:**
-- `strict` (default): Blocks localhost + private IPs + cloud metadata (production)
-- `moderate`: Allows localhost, blocks private IPs + cloud metadata (local development)
-- `permissive`: Allows localhost + private IPs, blocks cloud metadata (testing only)
+**Описание режимов безопасности:**
+- `strict` (по умолчанию): блокирует локальный хост + частные IP-адреса + облачные метаданные (производственная версия).
+- `moderate`: разрешает локальный хост, блокирует частные IP-адреса + облачные метаданные (локальная разработка)
+- `permissive`: разрешает локальный хост + частные IP-адреса, блокирует облачные метаданные (только тестирование)
 
-**Important:** Always use `strict` mode in production. Cloud metadata is blocked in all modes.
+**Важно!** Всегда используйте режим `strict` в рабочей среде. Облачные метаданные блокируются во всех режимах.
 
-### n8n API Connection Issues
+### Проблемы с подключением к API n8n
 
-**Symptoms:**
-- API calls fail but n8n web UI works
-- Authentication errors
-- API endpoints return 404
+**Симптомы:**
+- Вызовы API завершаются сбоем, но веб-интерфейс n8n работает.
+- Ошибки аутентификации
+- Конечные точки API возвращают 404.
 
-**Solutions:**
+**Решения:**
 
-1. **Verify n8n API is enabled:**
-   - Check n8n settings → REST API is enabled
-   - Ensure API key is valid and not expired
+1. **Убедитесь, что API n8n включен:**
+- Проверьте настройки n8n → REST API включен.
+- Убедитесь, что ключ API действителен и срок его действия не истек.
 
-2. **Test API directly:**
+2. **Проверьте API напрямую:**
 ```bash
 # From host machine
 curl -H "X-N8N-API-KEY: your-key" http://localhost:5678/api/v1/workflows
@@ -255,7 +255,7 @@ docker run --rm curlimages/curl \
   http://host.docker.internal:5678/api/v1/workflows
 ```
 
-3. **Check n8n environment variables:**
+3. **Проверьте переменные среды n8n:**
 ```yaml
 environment:
   - N8N_BASIC_AUTH_ACTIVE=true
@@ -263,18 +263,18 @@ environment:
   - N8N_BASIC_AUTH_PASSWORD=password
 ```
 
-## Docker Networking
+## Сеть Docker
 
-### Understanding Docker Network Modes
+### Понимание сетевых режимов Docker
 
-| Scenario | Use This URL | Why |
+| Сценарий | Используйте этот URL | Почему |
 |----------|--------------|-----|
-| n8n on host, n8n-mcp in Docker | `http://host.docker.internal:5678` | Docker can't reach host's localhost |
-| Both in same Docker network | `http://container-name:5678` | Direct container-to-container |
-| n8n behind reverse proxy | `http://your-domain.com` | Use public URL |
-| Local development | `http://YOUR_LOCAL_IP:5678` | Use machine's IP address |
+| n8n на хосте, n8n-mcp в Docker | @@КОД0@@ | Docker не может связаться с локальным хостом хоста |
+| Оба в одной сети Docker | @@КОД0@@ | Прямой контейнер-контейнер |
+| n8n за обратным прокси | @@КОД0@@ | Использовать общедоступный URL |
+| Местное развитие | @@КОД0@@ | Использовать IP-адрес машины |
 
-### Finding Your Configuration
+### Поиск вашей конфигурации
 
 ```bash
 # Check if n8n is running in Docker
@@ -294,9 +294,9 @@ ifconfig | grep "inet " | grep -v 127.0.0.1
 ipconfig | findstr IPv4
 ```
 
-## Quick Solutions
+## Быстрые решения
 
-### Solution 1: Use Host Network (Linux only)
+### Решение 1. Используйте хост-сеть (только Linux)
 ```json
 {
   "command": "docker",
@@ -309,15 +309,15 @@ ipconfig | findstr IPv4
 }
 ```
 
-### Solution 2: Use Your Machine's IP
+### Решение 2. Используйте IP-адрес вашего компьютера
 ```json
 {
   "N8N_API_URL": "http://192.168.1.100:5678"  // Replace with your IP
 }
 ```
 
-### Solution 3: HTTP Mode Deployment
-Deploy n8n-mcp as HTTP server to avoid stdio/Docker issues:
+### Решение 3. Развертывание в режиме HTTP
+Разверните n8n-mcp в качестве HTTP-сервера, чтобы избежать проблем со stdio/Docker:
 
 ```bash
 # Start HTTP server
@@ -332,9 +332,9 @@ docker run -d \
 # Configure Claude with mcp-remote
 ```
 
-## Debugging Steps
+## Шаги отладки
 
-### 1. Enable Debug Logging
+### 1. Включить ведение журнала отладки
 ```json
 {
   "env": {
@@ -344,14 +344,14 @@ docker run -d \
 }
 ```
 
-### 2. Test Connectivity
+### 2. Проверка подключения
 ```bash
 # Test from n8n-mcp container
 docker run --rm ghcr.io/czlonkowski/n8n-mcp:latest \
   sh -c "apk add curl && curl -v http://host.docker.internal:5678/api/v1/workflows"
 ```
 
-### 3. Check Docker Logs
+### 3. Проверьте журналы Docker
 ```bash
 # View n8n-mcp logs
 docker logs $(docker ps -q -f ancestor=ghcr.io/czlonkowski/n8n-mcp:latest)
@@ -360,14 +360,14 @@ docker logs $(docker ps -q -f ancestor=ghcr.io/czlonkowski/n8n-mcp:latest)
 docker logs n8n
 ```
 
-### 4. Validate Environment
+### 4. Проверка среды
 ```bash
 # Check what n8n-mcp sees
 docker run --rm ghcr.io/czlonkowski/n8n-mcp:latest \
   sh -c "env | grep N8N"
 ```
 
-### 5. Network Diagnostics
+### 5. Диагностика сети
 ```bash
 # Check Docker networks
 docker network inspect bridge
@@ -376,31 +376,31 @@ docker network inspect bridge
 docker run --rm busybox nslookup host.docker.internal
 ```
 
-## Platform-Specific Notes
+## Примечания для конкретных платформ
 
-### Docker Desktop (macOS/Windows)
-- `host.docker.internal` works out of the box
-- Ensure Docker Desktop is running
-- Check Docker Desktop settings → Resources → Network
+### Рабочий стол Docker (macOS/Windows)
+- `host.docker.internal` работает «из коробки»
+- Убедитесь, что Docker Desktop работает.
+- Проверьте настройки Docker Desktop → Ресурсы → Сеть.
 
-### Linux
-- `host.docker.internal` requires Docker 20.10+
-- Alternative: Use `--add-host=host.docker.internal:host-gateway`
-- Or use the Docker bridge IP: `172.17.0.1`
+### Линукс
+- `host.docker.internal` требует Docker 20.10+.
+- Альтернатива: используйте `--add-host=host.docker.internal:host-gateway`.
+- Или используйте IP-адрес моста Docker: `172.17.0.1`.
 
-### Windows with WSL2
-- Use `host.docker.internal` or WSL2 IP
-- Check firewall rules for port 5678
-- Ensure n8n binds to `0.0.0.0` not `127.0.0.1`
+### Windows с WSL2
+- Используйте `host.docker.internal` или IP-адрес WSL2.
+- Проверьте правила брандмауэра для порта 5678.
+- Убедитесь, что n8n привязан к `0.0.0.0`, а не к `127.0.0.1`.
 
-## Still Having Issues?
+## Все еще возникают проблемы?
 
-1. **Check n8n logs** for API-related errors
-2. **Verify firewall/security** isn't blocking connections
-3. **Try simpler setup** - Run n8n-mcp on host instead of Docker
-4. **Report issue** with debug logs at [GitHub Issues](https://github.com/czlonkowski/n8n-mcp/issues)
+1. **Проверьте журналы n8n** на наличие ошибок, связанных с API.
+2. **Убедитесь, что брандмауэр/безопасность** не блокирует соединения.
+3. **Попробуйте более простую настройку** — запустите n8n-mcp на хосте вместо Docker.
+4. **Сообщите о проблеме** с помощью журналов отладки на странице [GitHub Issues](https://github.com/czlonkowski/n8n-mcp/issues)
 
-## Useful Commands
+## Полезные команды
 
 ```bash
 # Remove all n8n-mcp containers

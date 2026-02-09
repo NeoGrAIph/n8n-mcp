@@ -1,18 +1,18 @@
-# Installation Guide
+# Руководство по установке
 
-This guide covers all installation methods for n8n-MCP.
+В этом руководстве описаны все способы установки n8n-MCP.
 
-## Table of Contents
+## Оглавление
 
-- [Quick Start](#quick-start)
-- [Docker Installation](#docker-installation)
-- [Manual Installation](#manual-installation)
-- [Development Setup](#development-setup)
-- [Troubleshooting](#troubleshooting)
+- [Быстрый старт](#quick-start)
+- [Установка Docker](#docker-installation)
+- [Ручная установка](#manual-installation)
+- [Настройка разработки](#development-setup)
+- [Устранение неполадок](#troubleshooting)
 
-## Quick Start
+## Быстрый старт
 
-The fastest way to get n8n-MCP running:
+Самый быстрый способ запустить n8n-MCP:
 
 ```bash
 # Using Docker (recommended)
@@ -23,21 +23,21 @@ EOF
 docker compose up -d
 ```
 
-## Docker Installation
+## Установка докера
 
-### Prerequisites
+### Предварительные условия
 
-- Docker Engine (install via package manager or Docker Desktop)
-- Docker Compose V2 (included with modern Docker installations)
+- Docker Engine (устанавливается через менеджер пакетов или Docker Desktop)
+- Docker Compose V2 (входит в состав современных установок Docker)
 
-### Method 1: Using Pre-built Images
+### Способ 1: использование готовых изображений
 
-1. **Create a project directory:**
+1. **Создайте каталог проекта:**
    ```bash
    mkdir n8n-mcp && cd n8n-mcp
    ```
 
-2. **Create docker-compose.yml:**
+2. **Создайте docker-compose.yml:**
    ```yaml
    version: '3.8'
    
@@ -72,40 +72,40 @@ docker compose up -d
        driver: local
    ```
 
-3. **Create .env file:**
+3. **Создайте файл .env:**
    ```bash
    echo "AUTH_TOKEN=$(openssl rand -base64 32)" > .env
    ```
 
-4. **Start the container:**
+4. **Запустите контейнер:**
    ```bash
    docker compose up -d
    ```
 
-5. **Verify installation:**
+5. **Проверьте установку:**
    ```bash
    curl http://localhost:3000/health
    ```
 
-### Method 2: Building from Source
+### Способ 2: сборка из исходного кода
 
-1. **Clone the repository:**
+1. **Клонировать репозиторий:**
    ```bash
    git clone https://github.com/czlonkowski/n8n-mcp.git
    cd n8n-mcp
    ```
 
-2. **Build the image:**
+2. **Создайте изображение:**
    ```bash
    docker build -t n8n-mcp:local .
    ```
 
-3. **Run with docker-compose:**
+3. **Запустите с помощью docker-compose:**
    ```bash
    docker compose up -d
    ```
 
-### Docker Management Commands
+### Команды управления Docker
 
 ```bash
 # View logs
@@ -128,62 +128,62 @@ docker compose exec n8n-mcp npm run validate
 docker cp n8n-mcp:/app/data/nodes.db ./nodes-backup.db
 ```
 
-## Manual Installation
+## Ручная установка
 
-### Prerequisites
+### Предварительные условия
 
-- Node.js v16+ (v20+ recommended)
-- npm or yarn
-- Git
+- Node.js v16+ (рекомендуется v20+)
+- нпм или пряжа
+- Гит
 
-### Step-by-Step Installation
+### Пошаговая установка
 
-1. **Clone the repository:**
+1. **Клонировать репозиторий:**
    ```bash
    git clone https://github.com/czlonkowski/n8n-mcp.git
    cd n8n-mcp
    ```
 
-2. **Clone n8n documentation (optional but recommended):**
+2. **Клонировать документацию n8n (необязательно, но рекомендуется):**
    ```bash
    git clone https://github.com/n8n-io/n8n-docs.git ../n8n-docs
    ```
 
-3. **Install dependencies:**
+3. **Установить зависимости:**
    ```bash
    npm install
    ```
 
-4. **Build the project:**
+4. **Создайте проект:**
    ```bash
    npm run build
    ```
 
-5. **Initialize the database:**
+5. **Инициализируйте базу данных:**
    ```bash
    npm run rebuild
    ```
 
-6. **Validate installation:**
+6. **Проверка установки:**
    ```bash
    npm run test-nodes
    ```
 
-### Running the Server
+### Запуск сервера
 
-#### stdio Mode (for Claude Desktop)
+#### режим stdio (для Claude Desktop)
 ```bash
 npm start
 ```
 
-#### HTTP Mode (for remote access)
+#### Режим HTTP (для удаленного доступа)
 ```bash
 npm run start:http
 ```
 
-### Environment Configuration
+### Конфигурация среды
 
-Create a `.env` file in the project root:
+Создайте файл `.env` в корне проекта:
 
 ```env
 # Server configuration
@@ -201,30 +201,30 @@ NODE_DB_PATH=./data/nodes.db
 REBUILD_ON_START=false
 ```
 
-## Development Setup
+## Настройка разработки
 
-### Prerequisites
+### Предварительные условия
 
-- All manual installation prerequisites
-- TypeScript knowledge
-- Familiarity with MCP protocol
+- Все необходимые условия для ручной установки.
+- Знание TypeScript
+- Знание протокола MCP.
 
-### Setup Steps
+### Этапы настройки
 
-1. **Clone and install:**
+1. **Клонируйте и установите:**
    ```bash
    git clone https://github.com/czlonkowski/n8n-mcp.git
    cd n8n-mcp
    npm install
    ```
 
-2. **Set up development environment:**
+2. **Настройте среду разработки:**
    ```bash
    cp .env.example .env
    # Edit .env with your settings
    ```
 
-3. **Development commands:**
+3. **Команды разработки:**
    ```bash
    # Run in development mode with auto-reload
    npm run dev
@@ -239,14 +239,14 @@ REBUILD_ON_START=false
    npm run lint
    ```
 
-### Docker Development
+### Разработка Docker
 
-1. **Use docker-compose override:**
+1. **Используйте переопределение docker-compose:**
    ```bash
    cp docker-compose.override.yml.example docker-compose.override.yml
    ```
 
-2. **Edit override for development:**
+2. **Изменить переопределение для разработки:**
    ```yaml
    version: '3.8'
    
@@ -261,16 +261,16 @@ REBUILD_ON_START=false
          - ./dist:/app/dist
    ```
 
-3. **Run with live reload:**
+3. **Запуск с живой перезагрузкой:**
    ```bash
    docker compose up --build
    ```
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Common Issues
+### Распространенные проблемы
 
-#### Port Already in Use
+#### Порт уже используется
 ```bash
 # Find process using port 3000
 lsof -i :3000
@@ -279,7 +279,7 @@ lsof -i :3000
 PORT=3001 docker compose up -d
 ```
 
-#### Database Initialization Failed
+#### Не удалось инициализировать базу данных
 ```bash
 # For Docker
 docker compose exec n8n-mcp npm run rebuild
@@ -288,7 +288,7 @@ docker compose exec n8n-mcp npm run rebuild
 npm run rebuild
 ```
 
-#### Permission Denied Errors
+#### Ошибки отказа в доступе
 ```bash
 # Fix permissions (Linux/macOS)
 sudo chown -R $(whoami) ./data
@@ -297,8 +297,8 @@ sudo chown -R $(whoami) ./data
 docker compose exec n8n-mcp chown -R nodejs:nodejs /app/data
 ```
 
-#### Node Version Mismatch
-The project includes automatic fallback to sql.js for compatibility. If you still have issues:
+#### Несоответствие версии узла
+Проект включает автоматический переход на sql.js для обеспечения совместимости. Если у вас все еще есть проблемы:
 ```bash
 # Check Node version
 node --version
@@ -307,29 +307,29 @@ node --version
 nvm use 20
 ```
 
-### Getting Help
+### Получение помощи
 
-1. Check the logs:
-   - Docker: `docker compose logs`
-   - Manual: Check console output or `LOG_LEVEL=debug npm start`
+1. Проверьте логи:
+- Докер: `docker compose logs`
+- Вручную: проверьте вывод консоли или `LOG_LEVEL=debug npm start`.
 
-2. Validate the database:
+2. Проверьте базу данных:
    ```bash
    npm run validate
    ```
 
-3. Run tests:
+3. Запустите тесты:
    ```bash
    npm test
    ```
 
-4. Report issues:
-   - GitHub Issues: https://github.com/czlonkowski/n8n-mcp/issues
-   - Include logs and environment details
+4. Сообщить о проблемах:
+- Проблемы с GitHub: https://github.com/czlonkowski/n8n-mcp/issues.
+- Включите журналы и сведения о среде.
 
-## Next Steps
+## Следующие шаги
 
-After installation, configure Claude Desktop to use n8n-MCP:
-- See [Claude Desktop Setup Guide](./README_CLAUDE_SETUP.md)
-- For remote deployments, see [HTTP Deployment Guide](./HTTP_DEPLOYMENT.md)
-- For Docker details, see [Docker README](../DOCKER_README.md)
+После установки настройте Claude Desktop на использование n8n-MCP:
+- См. [Руководство по установке Claude Desktop](./README_CLAUDE_SETUP.md)
+- Для удаленного развертывания см. [Руководство по развертыванию HTTP](./HTTP_DEPLOYMENT.md)
+- Подробности о Docker см. в [Docker README](../DOCKER_README.md).

@@ -1,25 +1,25 @@
-# n8n MCP Essentials Tools - User Guide
+# n8n MCP Essentials Tools — Руководство пользователя
 
-## Overview
+## Обзор
 
-n8n MCP now exposes a single `n8n_node_get` tool for node information. Use its **detail levels** to get only what you need:
-- `detail: "standard"` for essential properties + examples (recommended default)
-- `detail: "minimal"` for the smallest possible response
-- `detail: "full"` only when you truly need exhaustive data
+n8n MCP теперь предоставляет единственный инструмент `n8n_node_get` для информации об узлах. Используйте **уровни детализации**, чтобы получить только то, что вам нужно:
+- `detail: "standard"` для основных свойств + примеры (рекомендуется по умолчанию)
+- `detail: "minimal"` для минимально возможного ответа
+- `detail: "full"` только тогда, когда вам действительно нужны исчерпывающие данные.
 
-This guide focuses on **essential configuration** using `n8n_node_get` with `detail: "standard"`.
+В этом руководстве основное внимание уделяется **основной настройке** с использованием `n8n_node_get` и `detail: "standard"`.
 
-## Core Tool: `n8n_node_get` (detail: standard/minimal)
+## Основной инструмент: `n8n_node_get` (детализация: стандартная/минимальная)
 
-**Purpose**: Get only the 10-20 most important properties for a node instead of 200+
+**Цель**: получить только 10–20 наиболее важных свойств узла вместо 200+.
 
-**When to use**:
-- Starting to configure a new node
-- Need quick access to common properties
-- Want working examples
-- Building basic workflows
+**Когда использовать**:
+- Начинаем настраивать новую ноду
+- Нужен быстрый доступ к общим свойствам
+- Хотите рабочие примеры
+- Построение базовых рабочих процессов.
 
-**Example usage**:
+**Пример использования**:
 ```json
 {
   "name": "n8n_node_get",
@@ -31,7 +31,7 @@ This guide focuses on **essential configuration** using `n8n_node_get` with `det
 }
 ```
 
-**Response structure (standard)**:
+**Структура ответа (стандартная)**:
 ```json
 {
   "nodeType": "nodes-base.httpRequest",
@@ -77,24 +77,24 @@ This guide focuses on **essential configuration** using `n8n_node_get` with `det
 }
 ```
 
-**Benefits**:
-- 95% smaller response (5KB vs 100KB+)
-- Only shows properties you actually need
-- Includes working examples
-- No duplicate or confusing properties
-- Clear indication of what's required
+**Преимущества**:
+- На 95% меньше ответа (5 КБ против 100 КБ+)
+- Показывает только те свойства, которые вам действительно нужны
+- Включает рабочие примеры.
+- Никаких дублирующих или запутанных свойств.
+- Четкое указание того, что необходимо.
 
-## Search Properties with `n8n_node_get` (mode: search_properties)
+## Поиск свойств с помощью `n8n_node_get` (режим: search_properties)
 
-**Purpose**: Find specific properties within a node without downloading everything
+**Цель**: найти определенные свойства внутри узла, не загружая все.
 
-**When to use**:
-- Looking for authentication options
-- Finding specific configuration like headers or body
-- Exploring what options are available
-- Need to configure advanced features
+**Когда использовать**:
+- Ищем варианты аутентификации
+- Поиск конкретной конфигурации, такой как заголовки или тело
+- Изучение возможных вариантов.
+- Необходимо настроить расширенные функции
 
-**Example usage**:
+**Пример использования**:
 ```json
 {
   "name": "n8n_node_get",
@@ -106,7 +106,7 @@ This guide focuses on **essential configuration** using `n8n_node_get` with `det
 }
 ```
 
-**Response structure**:
+**Структура ответа**:
 ```json
 {
   "nodeType": "nodes-base.httpRequest",
@@ -129,50 +129,50 @@ This guide focuses on **essential configuration** using `n8n_node_get` with `det
 }
 ```
 
-## Recommended Workflow
+## Рекомендуемый рабочий процесс
 
-### For Basic Configuration
+### Для базовой конфигурации
 
-1. **Start with essentials**:
+1. **Начните с самого необходимого**:
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
 
-2. **Use the provided examples**:
-   - Start with `minimal` example
-   - Upgrade to `common` for typical use cases
-   - Modify based on your needs
+2. **Используйте предоставленные примеры**:
+- Начните с примера `minimal`.
+- Обновите до `common` для типичных случаев использования.
+- Изменить в соответствии с вашими потребностями
 
-3. **Search for specific features** (if needed):
+3. **Поиск конкретных функций** (при необходимости):
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "header"})
    ```
 
-### For Complex Configuration
+### Для сложной конфигурации
 
-1. **Get documentation first**:
+1. **Сначала получите документацию**:
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "docs"})
    ```
 
-2. **Get essentials for the basics**:
+2. **Получите все самое необходимое**:
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true})
    ```
 
-3. **Search for advanced properties**:
+3. **Поиск дополнительных свойств**:
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "proxy"})
    ```
 
-4. **Only use full detail if absolutely necessary**:
+4. **Используйте полную информацию только в случае крайней необходимости**:
    ```
    n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "full"})
    ```
 
-## Common Patterns
+## Общие шаблоны
 
-### Making API Calls
+### Выполнение вызовов API
 ```javascript
 // Start with essentials
 const essentials = n8n_node_get({ nodeType: "nodes-base.httpRequest", detail: "standard", includeExamples: true });
@@ -185,7 +185,7 @@ config.url = "https://api.myservice.com/endpoint";
 config.jsonBody = JSON.stringify({ my: "data" });
 ```
 
-### Setting up Webhooks
+### Настройка вебхуков
 ```javascript
 // Get webhook essentials
 const essentials = n8n_node_get({ nodeType: "nodes-base.webhook", detail: "standard", includeExamples: true });
@@ -195,7 +195,7 @@ const config = essentials.examples.minimal;
 config.path = "my-webhook-endpoint";
 ```
 
-### Database Operations
+### Операции с базой данных
 ```javascript
 // Get database essentials
 const essentials = n8n_node_get({ nodeType: "nodes-base.postgres", detail: "standard", includeExamples: true });
@@ -207,21 +207,21 @@ const operations = essentials.operations;
 const config = essentials.examples.common;
 ```
 
-## Tips for AI Agents
+## Советы для ИИ-агентов
 
-1. **Always start with n8n_node_get (detail: standard)** - It has everything needed for 90% of use cases
-2. **Use examples as templates** - They're tested, working configurations
-3. **Search before diving deep** - Use search_properties to find specific options
-4. **Check metadata** - Know if you need credentials, if it's a trigger, etc.
-5. **Progressive disclosure** - Start simple, add complexity only when needed
+1. **Всегда начинайте с n8n_node_get (детализация: стандартная)** — в нем есть все необходимое для 90 % случаев использования.
+2. **Используйте примеры в качестве шаблонов**. Это проверенные рабочие конфигурации.
+3. **Искать, прежде чем углубляться**. Используйте search_properties, чтобы найти конкретные параметры.
+4. **Проверьте метаданные**. Узнайте, нужны ли вам учетные данные, является ли это триггером и т. д.
+5. **Постепенное раскрытие информации**. Начните с простого, усложняйте только при необходимости.
 
-## Supported Nodes
+## Поддерживаемые узлы
 
-The essentials flow has optimized configurations for 20+ commonly used nodes:
+В потоке Essentials оптимизированы конфигурации для более чем 20 часто используемых узлов:
 
-- **Core**: httpRequest, webhook, code, set, if, merge, splitInBatches
-- **Databases**: postgres, mysql, mongodb, redis
-- **Communication**: slack, email, discord
-- **Files**: ftp, ssh, googleSheets
-- **AI**: openAi, agent
-- **Utilities**: executeCommand, function
+- **Ядро**: httpRequest, вебхук, код, набор, if, слияние, SplitInBatches.
+- **Базы данных**: postgres, mysql, mongodb, redis.
+- **Общение**: слабина, электронная почта, разногласия.
+- **Файлы**: ftp, ssh, googleSheets.
+- **AI**: openAi, агент
+- **Утилиты**: ExecuteCommand, функция.

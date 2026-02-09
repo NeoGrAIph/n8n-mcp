@@ -1,38 +1,38 @@
-# Final AI Node Validation Specification
+# Окончательная спецификация проверки узла AI
 
-> ✅ This spec uses the current tool set (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate`, etc.).
+> ✅ В этой спецификации используется текущий набор инструментов (`n8n_node_get`, `n8n_nodes_search`, `n8n_node_validate` и т. д.).
 
-## AI Agent Deep Architecture Analysis
+## Глубокий анализ архитектуры AI-агента
 
-### 1. Prompt Construction and Message Flow
+### 1. Быстрое создание и поток сообщений
 
-The AI Agent node handles user prompts through two distinct modes controlled by `promptType`:
+Узел AI Agent обрабатывает запросы пользователя в двух различных режимах, управляемых `promptType`:
 
-#### Mode 1: Auto (Connected Chat Trigger)
+#### Режим 1: Авто (триггер подключенного чата)
 ```typescript
 {
   "promptType": "auto",
   "text": "={{ $json.chatInput }}"  // Default value
 }
 ```
-- **Behavior**: Expects input from Chat Trigger node via `main` connection
-- **User Message Source**: `$json.chatInput` from Chat Trigger
-- **Use Case**: Interactive chatbots with ongoing conversations
-- **Validation**: MUST have Chat Trigger → AI Agent main connection
+- **Поведение**: ожидает ввода от узла Chat Trigger через соединение `main`.
+- **Источник сообщений пользователя**: `$json.chatInput` из Chat Trigger.
+- **Пример использования**: интерактивные чат-боты с постоянным общением.
+- **Проверка**: ОБЯЗАТЕЛЬНО наличие основного соединения Chat Trigger → AI Agent.
 
-#### Mode 2: Define Below
+#### Режим 2: Определите ниже
 ```typescript
 {
   "promptType": "define",
   "text": "Your custom prompt or ={{ $json.someField }}"
 }
 ```
-- **Behavior**: User message defined in node parameters
-- **User Message Source**: Static text or expression from previous node
-- **Use Case**: Automated processing, data transformations, batch operations
-- **Validation**: Text field is REQUIRED when promptType="define"
+- **Поведение**: сообщение пользователя, определенное в параметрах узла.
+- **Источник сообщения пользователя**: статический текст или выражение из предыдущего узла.
+- **Сценарий использования**: автоматическая обработка, преобразование данных, пакетные операции.
+- **Проверка**: текстовое поле НЕОБХОДИМО, если PromptType="define"
 
-**Real-World Examples**:
+**Примеры из реальной жизни**:
 ```typescript
 // Example 1: WhatsApp message processing
 {
@@ -47,11 +47,11 @@ The AI Agent node handles user prompts through two distinct modes controlled by 
 }
 ```
 
-### 2. System Message: The Agent's Core Instructions
+### 2. Системное сообщение: основные инструкции агента
 
-System messages define the agent's **role, capabilities, constraints, and output format**. This is the most critical parameter for AI Agent behavior.
+Системные сообщения определяют **роль, возможности, ограничения и формат вывода** агента. Это наиболее важный параметр поведения AI-агента.
 
-#### System Message Structure Pattern:
+#### Шаблон структуры системного сообщения:
 ```typescript
 {
   "options": {
@@ -75,9 +75,9 @@ System messages define the agent's **role, capabilities, constraints, and output
 }
 ```
 
-#### Real-World System Message Examples:
+#### Примеры реальных системных сообщений:
 
-**Example 1: Database Assistant** (Template 2985)
+**Пример 1: Помощник по работе с базами данных** (шаблон 2985)
 ```typescript
 {
   "options": {
@@ -85,9 +85,9 @@ System messages define the agent's **role, capabilities, constraints, and output
   }
 }
 ```
-**Pattern**: Clear role, specific domain, behavior constraints
+**Шаблон**: четкая роль, конкретная сфера деятельности, ограничения поведения.
 
-**Example 2: Content Generator with Output Format** (Template 214907)
+**Пример 2. Генератор контента с форматом вывода** (шаблон 214907)
 ```typescript
 {
   "options": {
@@ -95,9 +95,9 @@ System messages define the agent's **role, capabilities, constraints, and output
   }
 }
 ```
-**Pattern**: Detailed rules, strict output format (JSON), validation constraints
+**Шаблон**: подробные правила, строгий формат вывода (JSON), ограничения проверки.
 
-**Example 3: Multi-Step Process Agent** (Template 5296)
+**Пример 3: Агент многоэтапной обработки** (шаблон 5296)
 ```typescript
 {
   "options": {
@@ -105,33 +105,33 @@ System messages define the agent's **role, capabilities, constraints, and output
   }
 }
 ```
-**Pattern**: Step-by-step process flow, tool usage instructions, aggregation logic
+**Шаблон**: пошаговый процесс, инструкции по использованию инструментов, логика агрегирования.
 
-#### System Message Best Practices:
-1. **Always define the role** - What is the agent's purpose?
-2. **Specify constraints** - What should it NOT do?
-3. **Define output format** - JSON, markdown, specific structure?
-4. **Include tool usage guidance** - When to call which tools?
-5. **Add validation rules** - What makes a valid response?
+#### Рекомендации по работе с системными сообщениями:
+1. **Всегда определяйте роль**. Какова цель агента?
+2. **Укажите ограничения**. Чего НЕ следует делать?
+3. **Определить формат вывода** – JSON, уценка, конкретная структура?
+4. **Включить руководство по использованию инструментов**. Когда какие инструменты вызывать?
+5. **Добавить правила проверки**. Что делает ответ действительным?
 
-### 3. Fallback Models: Reliability Enhancement
+### 3. Резервные модели: повышение надежности
 
-Fallback models provide automatic failover when the primary LLM fails (rate limits, errors, downtime).
+Резервные модели обеспечивают автоматическое переключение при сбое основного LLM (ограничения скорости, ошибки, время простоя).
 
-#### Configuration:
+#### Конфигурация:
 ```typescript
 {
   "needsFallback": true  // Default: false, only in version 2.1+
 }
 ```
 
-#### Connection Pattern:
+#### Схема подключения:
 ```
 [Primary LLM] --ai_languageModel[0]--> [AI Agent]
 [Fallback LLM] --ai_languageModel[1]--> [AI Agent]
 ```
 
-#### Validation Rules:
+#### Правила проверки:
 ```typescript
 if (node.parameters.needsFallback === true) {
   const languageModelConnections = reverseConnections
@@ -159,35 +159,35 @@ if (node.parameters.needsFallback === true) {
 }
 ```
 
-#### When to Use Fallback Models:
-- **Production systems** with high availability requirements
-- **Multi-LLM strategies** (e.g., GPT-4 primary, Claude fallback)
-- **Cost optimization** (expensive primary, cheaper fallback)
-- **Rate limit mitigation** (automatic switch on 429 errors)
+#### Когда использовать резервные модели:
+- **Производственные системы** с высокими требованиями к доступности
+- **Стратегии мульти-LLM** (например, основной GPT-4, резервный вариант Claude)
+– **Оптимизация затрат** (дорогая основная, более дешевая резервная версия).
+- **Уменьшение ограничения скорости** (автоматическое включение при 429 ошибках)
 
-### 4. Output Parsers: Structured Data Enforcement
+### 4. Анализаторы вывода: обеспечение соблюдения структурированных данных
 
-Output parsers ensure the LLM returns data in a specific, machine-readable format (JSON, XML, structured text).
+Синтаксические анализаторы вывода гарантируют, что LLM возвращает данные в определенном машиночитаемом формате (JSON, XML, структурированный текст).
 
-#### Configuration:
+#### Конфигурация:
 ```typescript
 {
   "hasOutputParser": true  // Default: false
 }
 ```
 
-#### Connection Pattern:
+#### Схема подключения:
 ```
 [Output Parser] --ai_outputParser--> [AI Agent]
 ```
 
-#### Available Output Parsers:
-- **Structured Output Parser**: JSON with strict schema validation
-- **Auto-fixing Output Parser**: Attempts to fix malformed JSON
-- **Markdown Output Parser**: Structured markdown
-- **Custom Output Parser**: User-defined format
+#### Доступные парсеры вывода:
+- **Парсер структурированного вывода**: JSON со строгой проверкой схемы.
+- **Парсер вывода с автоматическим исправлением**: пытается исправить неверный формат JSON.
+- **Парсер вывода уценки**: структурированная уценка.
+- **Пользовательский анализатор вывода**: определяемый пользователем формат.
 
-#### Validation Rules:
+#### Правила проверки:
 ```typescript
 if (node.parameters.hasOutputParser === true) {
   const outputParserConnections = reverseConnections
@@ -208,7 +208,7 @@ if (node.parameters.hasOutputParser === true) {
 }
 ```
 
-#### Real-World Usage (Template 214907):
+#### Реальное использование (шаблон 214907):
 ```typescript
 {
   "hasOutputParser": true,
@@ -219,11 +219,11 @@ if (node.parameters.hasOutputParser === true) {
 // Connected to Structured Output Parser with JSON schema
 ```
 
-**Pattern**: System message defines format rules, output parser enforces schema validation
+**Шаблон**: системное сообщение определяет правила формата, синтаксический анализатор вывода обеспечивает проверку схемы.
 
-### 5. Additional Options Collection
+### 5. Коллекция дополнительных опций
 
-The `options` collection contains advanced configuration:
+Коллекция `options` содержит расширенную конфигурацию:
 
 ```typescript
 {
@@ -237,7 +237,7 @@ The `options` collection contains advanced configuration:
 }
 ```
 
-#### maxIterations
+#### макситераций
 ```typescript
 {
   "options": {
@@ -245,9 +245,9 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- **Purpose**: Prevents infinite tool-calling loops
-- **Use Case**: Complex multi-tool workflows (e.g., research → search → summarize → verify)
-- **Validation**: Should be reasonable (1-50), warn if > 20
+- **Цель**: предотвращает бесконечные циклы вызова инструментов.
+- **Пример использования**: сложные рабочие процессы с использованием нескольких инструментов (например, исследование → поиск → обобщение → проверка).
+- **Проверка**: должно быть разумным (1–50), предупреждение, если > 20.
 
 #### returnIntermediateSteps
 ```typescript
@@ -257,10 +257,10 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- **Purpose**: Returns step-by-step reasoning and tool calls
-- **Use Case**: Debugging, transparency, audit trails
-- **Output**: Includes intermediate thoughts, tool inputs/outputs
-- **Performance**: Increases token usage and response time
+- **Цель**: возвращает пошаговые рассуждения и вызовы инструментов.
+- **Сценарий использования**: отладка, прозрачность, контрольный журнал.
+- **Выход**: включает промежуточные мысли, входные/выходные данные инструментов.
+- **Производительность**: увеличивает использование токена и время отклика.
 
 #### passthroughBinaryImages
 ```typescript
@@ -270,11 +270,11 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- **Purpose**: Enables vision models to process images
-- **Use Case**: Image analysis, OCR, visual question answering
-- **Requirement**: LLM must support vision (GPT-4 Vision, Claude 3 Opus)
+- **Цель**: позволяет моделям машинного зрения обрабатывать изображения.
+- **Сценарий использования**: анализ изображений, распознавание текста, визуальный ответ на вопросы.
+- **Требование**: LLM должен поддерживать видение (GPT-4 Vision, Claude 3 Opus).
 
-#### batching
+#### пакетная обработка
 ```typescript
 {
   "options": {
@@ -285,13 +285,13 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- **Purpose**: Process multiple inputs in parallel
-- **Use Case**: Bulk data processing, batch API calls
-- **Optimization**: Reduces total execution time
+- **Цель**: параллельная обработка нескольких входов.
+- **Пример использования**: массовая обработка данных, пакетные вызовы API.
+- **Оптимизация**: сокращает общее время выполнения.
 
-### 6. Version Differences and Migration
+### 6. Различия версий и миграция
 
-#### Version 1.x (Legacy)
+#### Версия 1.x (устаревшая)
 ```typescript
 {
   "typeVersion": 1.7,
@@ -304,11 +304,11 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- No `needsFallback` option
-- No `hasOutputParser` option
-- Limited options collection
+- Нет опции `needsFallback`
+- Нет опции `hasOutputParser`
+- Ограниченная коллекция опций
 
-#### Version 2.1+ (Current)
+#### Версия 2.1+ (текущая)
 ```typescript
 {
   "typeVersion": 2.2,
@@ -327,12 +327,12 @@ The `options` collection contains advanced configuration:
   }
 }
 ```
-- Added `needsFallback` flag
-- Added `hasOutputParser` flag
-- Expanded options collection
-- Better streaming support
+- Добавлен флаг `needsFallback`.
+- Добавлен флаг `hasOutputParser`.
+- Расширенная коллекция опций
+- Улучшенная поддержка потоковой передачи
 
-#### Validation Considerations:
+#### Рекомендации по проверке:
 ```typescript
 function validateAIAgentVersion(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -348,7 +348,7 @@ function validateAIAgentVersion(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-### 7. Complete AI Agent Validation Specification
+### 7. Полная спецификация проверки агента AI.
 
 ```typescript
 interface AIAgentRequirements {
@@ -431,11 +431,11 @@ interface AIAgentRequirements {
 }
 ```
 
-### 8. Improving MCP Tool Responses for AI Agent
+### 8. Улучшение ответов инструмента MCP для агента AI
 
-Based on this analysis, MCP tools should return:
+На основе этого анализа инструменты MCP должны вернуть:
 
-#### For `n8n_node_get` (detail: standard/minimal):
+#### Для `n8n_node_get` (детализация: стандартная/минимальная):
 ```typescript
 {
   "essentials": {
@@ -476,7 +476,7 @@ Based on this analysis, MCP tools should return:
 }
 ```
 
-#### For `n8n_nodes_search` with query "AI Agent":
+#### Для `n8n_nodes_search` с запросом «Агент AI»:
 ```typescript
 {
   "results": [
@@ -505,7 +505,7 @@ Based on this analysis, MCP tools should return:
 }
 ```
 
-#### For `n8n_node_get` (mode: "docs"):
+#### Для `n8n_node_get` (режим: "документы"):
 ```markdown
 # AI Agent
 
@@ -550,11 +550,11 @@ The AI Agent node orchestrates complex workflows by combining language models, t
 4. Streaming mode + main output → Response lost
 ```
 
-## Critical Architecture: Connection Flow Direction
+## Критическая архитектура: направление потока соединений
 
-### CRITICAL INSIGHT: AI Connections Flow TO Consumers
+### CRITICAL INSIGHT: поток подключений ИИ к потребителям
 
-Unlike standard n8n nodes where data flows FROM source TO target via `main` connections, **AI-specific connections flow TO the AI Agent/Chain nodes**, not from them:
+В отличие от стандартных узлов n8n, где данные передаются ОТ источника К цели через соединения `main`, **соединения, специфичные для AI, передаются К узлам AI Agent/Chain**, а не от них:
 
 ```
 Standard n8n pattern:
@@ -568,12 +568,12 @@ AI pattern (REVERSED):
 [AI Agent]       --main (optional)--> [Next Node]
 ```
 
-**Why This Matters for Validation:**
-- Standard validation checks: `workflow.connections[sourceName][outputType]`
-- AI validation needs: **Reverse connection map** to check what connects TO each node
-- Must build: `Map<targetNodeName, Connection[]>` to validate AI nodes
+**Почему это важно для проверки:**
+- Стандартные проверки: `workflow.connections[sourceName][outputType]`
+- Для проверки ИИ необходимо: **обратная карта соединений**, чтобы проверить, что соединяется с каждым узлом.
+- Необходимо построить: `Map<targetNodeName, Connection[]>` для проверки узлов AI.
 
-**Real Example from Template #2985:**
+**Реальный пример из шаблона №2985:**
 ```json
 {
   "connections": {
@@ -595,50 +595,50 @@ AI pattern (REVERSED):
 }
 ```
 
-Notice: Connections are defined in **source nodes** but flow **TO the AI Agent**.
+Примечание. Соединения определяются в **исходных узлах**, но передаются **К AI-агенту**.
 
-## Complete AI Tool Ecosystem
+## Полная экосистема инструментов искусственного интеллекта
 
-We have **269 nodes total** that can be used as AI tools in our database:
-- **21 nodes** from `@n8n/n8n-nodes-langchain` (AI components)
-- **248 nodes** from `n8n-nodes-base` (regular nodes)
+В нашей базе данных **всего 269 узлов**, которые можно использовать в качестве инструментов ИИ:
+- **21 узел** от `@n8n/n8n-nodes-langchain` (компоненты AI)
+- **248 узлов** из `n8n-nodes-base` (обычные узлы)
 
-### Purpose-Built AI Tool Sub-Nodes
+### Специальные подузлы инструментов искусственного интеллекта
 
-These are the **13 specialized tool nodes** from `@n8n/n8n-nodes-langchain` designed specifically for AI Agent tool connections:
+Это **13 специализированных узлов инструментов** от `@n8n/n8n-nodes-langchain`, разработанных специально для подключения инструментов AI Agent:
 
-| Node Type | Display Name | Purpose | Special Requirements |
+| Тип узла | Отображаемое имя | Цель | Особые требования |
 |-----------|--------------|---------|---------------------|
-| `toolExecutor` | Tool Executor | Execute tools without AI Agent | No AI Agent connection needed |
-| `agentTool` | AI Agent Tool | AI Agent packaged as a tool | Must have ai_languageModel |
-| `toolWorkflow` | Call n8n Sub-Workflow Tool | Execute sub-workflows | Sub-workflow must exist |
-| `toolCode` | Code Tool | JavaScript/Python execution | Should have input schema |
-| `toolHttpRequest` | HTTP Request Tool | HTTP API calls | Should have placeholder definitions |
-| `mcpClientTool` | MCP Client Tool | Connect MCP Server tools | Requires MCP server config |
-| `toolThink` | Think Tool | AI reflection/thinking | No special requirements |
-| `toolVectorStore` | Vector Store Q&A Tool | RAG from vector store | Requires ai_vectorStore + ai_embedding chain |
-| `toolCalculator` | Calculator | Arithmetic operations | No special requirements |
-| `toolSearXng` | SearXNG | SearXNG search | Requires credentials |
-| `toolSerpApi` | SerpApi (Google Search) | Google search via SerpAPI | Requires credentials |
-| `toolWikipedia` | Wikipedia | Wikipedia search | No special requirements |
-| `toolWolframAlpha` | Wolfram\|Alpha | Computational queries | Requires credentials |
+| @@КОД0@@ | Инструмент «Исполнитель» | Запуск инструментов без AI-агента | Подключение AI-агента не требуется |
+| @@КОД0@@ | Инструмент AI-агента | AI-агент в виде инструмента | Должно быть ai_languageModel |
+| @@КОД0@@ | Вызов инструмента дополнительного рабочего процесса n8n | Выполнение дополнительных рабочих процессов | Подпроцесс должен существовать |
+| @@КОД0@@ | Инструмент кода | Выполнение JavaScript/Python | Должна иметь входную схему |
+| @@КОД0@@ | Инструмент HTTP-запросов | Вызовы HTTP API | Должны быть определения заполнителей |
+| @@КОД0@@ | Клиентский инструмент MCP | Инструменты подключения сервера MCP | Требуется конфигурация сервера MCP |
+| @@КОД0@@ | Инструмент «Думайте» | AI отражение/мышление | Никаких особых требований |
+| @@КОД0@@ | Инструмент вопросов и ответов для векторного магазина | ТРЯПКА из векторного магазина | Требуется цепочка ai_vectorStore + ai_embedding |
+| @@КОД0@@ | Калькулятор | Арифметические операции | Никаких особых требований |
+| @@КОД0@@ | ИскатьXNG | Поиск SearXNG | Требуются учетные данные |
+| @@КОД0@@ | SerpApi (поиск Google) | Поиск в Google через SerpAPI | Требуются учетные данные |
+| @@КОД0@@ | Википедия | Поиск в Википедии | Никаких особых требований |
+| @@КОД0@@ | Вольфрам\|Альфа | Вычислительные запросы | Требуются учетные данные |
 
-### Regular n8n Nodes Usable as Tools
+### Обычные узлы n8n, используемые в качестве инструментов
 
-**248 regular nodes** from `n8n-nodes-base` can be used as AI tools when `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`:
+**248 обычных узлов** из `n8n-nodes-base` можно использовать в качестве инструментов ИИ, если `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`:
 
-**Examples include**:
-- Action Network, ActiveCampaign, Adalo, Affinity, Agile CRM
-- Airtable, Airtop, AMQP Sender, Asana, Autopilot
-- AWS services (Lambda, SES, SNS, Textract, Transcribe)
-- Communication (Slack, Discord, Telegram, WhatsApp, Email)
-- Databases (MySQL, PostgreSQL, MongoDB, Redis)
-- Cloud storage (Google Drive, Dropbox, S3)
-- Project management (Jira, Trello, ClickUp, Asana)
+**Примеры включают**:
+- Action Network, ActiveCampaign, Adalo, Affinity, Agile CRM.
+- Airtable, Airtop, отправитель AMQP, Асана, автопилот
+- Сервисы AWS (Lambda, SES, SNS, Textract, Transcribe)
+- Общение (Slack, Discord, Telegram, WhatsApp, электронная почта)
+- Базы данных (MySQL, PostgreSQL, MongoDB, Redis)
+- Облачное хранилище (Google Диск, Dropbox, S3)
+- Управление проектами (Jira, Trello, ClickUp, Asana)
 - CRM (Salesforce, HubSpot, Pipedrive)
-- And 200+ more...
+- И еще 200+...
 
-**Generic Tool Validation** (applies to all 248 nodes):
+**Общая проверка инструмента** (применяется ко всем 248 узлам):
 ```typescript
 interface RegularNodeAsToolValidation {
   connection: 'ai_tool';  // MUST connect via ai_tool output
@@ -658,28 +658,28 @@ interface RegularNodeAsToolValidation {
 }
 ```
 
-**When to warn**: Regular node used as tool should have:
-1. Connection to AI Agent via `ai_tool` output
-2. Valid credentials configured (if required)
-3. Proper operation/resource selected
-4. Optional but recommended: Custom tool description
+**Когда предупреждать**: Обычный узел, используемый в качестве инструмента, должен иметь:
+1. Подключение к AI Agent через выход `ai_tool`.
+2. Настроены действительные учетные данные (при необходимости).
+3. Выбрана правильная операция/ресурс.
+4. Необязательно, но рекомендуется: описание специального инструмента.
 
-## Connection Type Validation Matrix
+## Матрица проверки типа соединения
 
-### AI Agent (@n8n/n8n-nodes-langchain.agent)
+### AI-агент (@n8n/n8n-nodes-langchain.agent)
 
-| Connection Type | Cardinality | Direction | Validation |
+| Тип подключения | Мощность | Направление | Проверка |
 |----------------|-------------|-----------|------------|
-| `ai_languageModel` | **REQUIRED** (1 or 2) | LLM → Agent | Exactly 1 (or 2 if needsFallback=true) |
-| `ai_memory` | Optional (0-1) | Memory → Agent | 0 or 1 allowed |
-| `ai_tool` | Optional (0-N) | Tool → Agent | Any number allowed |
-| `ai_outputParser` | Optional (0-1) | Parser → Agent | 0 or 1 allowed (required if hasOutputParser=true) |
-| `main` (input) | Typical (1) | Trigger → Agent | Usually from Chat Trigger |
-| `main` (output) | Conditional | Agent → Node | FORBIDDEN if streaming mode |
+| @@КОД0@@ | **ОБЯЗАТЕЛЬНО** (1 или 2) | LLM → Агент | Ровно 1 (или 2, если нужноFallback=true) |
+| @@КОД0@@ | Необязательно (0-1) | Память → Агент | разрешено 0 или 1 |
+| @@КОД0@@ | Необязательно (0-N) | Инструмент → Агент | Допускается любое количество |
+| @@КОД0@@ | Необязательно (0-1) | Парсер → Агент | разрешено 0 или 1 (обязательно, если hasOutputParser=true) |
+| `main` (ввод) | Типичный (1) | Триггер → Агент | Обычно из Chat Trigger |
+| `main` (выход) | Условное | Агент → Узел | ЗАПРЕЩЕНО в потоковом режиме |
 
-**Validation Rules**:
+**Правила проверки**:
 
-1. **Language Model Requirement**:
+1. **Требования к языковой модели**:
 ```typescript
 if (node.parameters.needsFallback === true) {
   // MUST have exactly 2 ai_languageModel connections
@@ -694,7 +694,7 @@ if (node.parameters.needsFallback === true) {
 }
 ```
 
-2. **Output Parser Requirement**:
+2. **Требования к выходному анализатору**:
 ```typescript
 if (node.parameters.hasOutputParser === true) {
   // MUST have exactly 1 ai_outputParser connection
@@ -704,13 +704,13 @@ if (node.parameters.hasOutputParser === true) {
 }
 ```
 
-3. **Streaming Mode Rule**:
+3. **Правило потокового режима**:
 ```typescript
 IF (Chat Trigger → AI Agent with responseMode="streaming")
 THEN (AI Agent MUST NOT have main output connections)
 ```
 
-4. **Prompt Type Rule**:
+4. **Правило типа запроса**:
 ```typescript
 if (node.parameters.promptType === "auto") {
   // Should have Chat Trigger as input
@@ -727,23 +727,23 @@ if (node.parameters.promptType === "define") {
 }
 ```
 
-### Basic LLM Chain (@n8n/n8n-nodes-langchain.chainLlm)
+### Базовая цепочка LLM (@n8n/n8n-nodes-langchain.chainLlm)
 
-| Connection Type | Cardinality | Direction | Validation |
+| Тип подключения | Мощность | Направление | Проверка |
 |----------------|-------------|-----------|------------|
-| `ai_languageModel` | **REQUIRED** (1) | LLM → Chain | MUST have exactly 1 |
-| `ai_outputParser` | Optional (0-1) | Parser → Chain | 0 or 1 allowed |
-| `ai_memory` | **FORBIDDEN** | - | MUST NOT have |
-| `ai_tool` | **FORBIDDEN** | - | MUST NOT have |
+| @@КОД0@@ | **ОБЯЗАТЕЛЬНО** (1) | LLM → Сеть | ДОЛЖЕН иметь ровно 1 |
+| @@КОД0@@ | Необязательно (0-1) | Парсер → Цепочка | разрешено 0 или 1 |
+| @@КОД0@@ | **ЗАПРЕЩЕНО** | - | НЕ ДОЛЖНО иметь |
+| @@КОД0@@ | **ЗАПРЕЩЕНО** | - | НЕ ДОЛЖНО иметь |
 
-### Vector Store Tool (@n8n/n8n-nodes-langchain.toolVectorStore)
+### Инструмент векторного хранилища (@n8n/n8n-nodes-langchain.toolVectorStore)
 
-| Connection Type | Cardinality | Direction | Validation |
+| Тип подключения | Мощность | Направление | Проверка |
 |----------------|-------------|-----------|------------|
-| `ai_vectorStore` | **REQUIRED** (1) | VectorStore → Tool | MUST have exactly 1 |
-| `ai_tool` (output) | Typical (1) | Tool → Agent | Should connect to AI Agent |
+| @@КОД0@@ | **ОБЯЗАТЕЛЬНО** (1) | VectorStore → Инструмент | ДОЛЖЕН иметь ровно 1 |
+| `ai_tool` (выход) | Типичный (1) | Инструмент → Агент | Следует подключиться к AI Agent |
 
-**Chain Validation**:
+**Проверка цепочки**:
 ```
 Vector Store Tool
   ← ai_vectorStore ← Vector Store
@@ -752,33 +752,33 @@ Vector Store Tool
       ← ai_textSplitter ← Text Splitter (optional)
 ```
 
-### Chat Trigger (@n8n/n8n-nodes-langchain.chatTrigger)
+### Триггер чата (@n8n/n8n-nodes-langchain.chatTrigger)
 
-**Purpose**: Trigger node specifically designed for AI chatbot workflows. Provides a web interface for chat interactions.
+**Цель**: триггерный узел, специально разработанный для рабочих процессов чат-ботов с искусственным интеллектом. Предоставляет веб-интерфейс для взаимодействия в чате.
 
-**Key Characteristics**:
-- **Is Trigger**: Yes (starts workflow)
-- **Is Webhook**: Yes (provides HTTP endpoint)
-- **Output Type**: `main` (connects to AI Agent or workflow logic)
+**Основные характеристики**:
+- **Триггер**: Да (запускает рабочий процесс)
+- **Является ли Webhook**: Да (обеспечивает конечную точку HTTP)
+- **Тип вывода**: `main` (подключение к AI-агенту или логике рабочего процесса)
 
-**Unique Features**:
-- Hosted chat UI (`mode: "hostedChat"`)
-- Embedded chat widget (`mode: "webhook"`)
-- File upload support
-- Session management
-- Streaming response capability
-- Custom CSS styling
+**Уникальные особенности**:
+- Интерфейс размещенного чата (`mode: "hostedChat"`)
+- Встроенный виджет чата (`mode: "webhook"`)
+- Поддержка загрузки файлов
+- Управление сеансами
+- Возможность потокового ответа
+- Пользовательский стиль CSS.
 
-| Property | Values | Impact on Validation |
+| Недвижимость | Ценности | Влияние на валидацию |
 |----------|--------|---------------------|
-| `responseMode` | "streaming" | AI Agent must NOT have main output (response streams back through trigger) |
-| | "lastNode" | Normal workflow allowed (data from last executed node returned) |
-| | "responseNode" | Must have Respond to Webhook node in workflow |
-| | "responseNodes" | Must have Response nodes configured |
-| `mode` | "hostedChat" | Provides n8n-hosted chat interface |
-| | "webhook" | Embeddable chat widget |
+| @@КОД0@@ | "потоковая передача" | AI-агент НЕ должен иметь основной вывод (потоки ответов возвращаются через триггер) |
+| | "последний узел" | Разрешен обычный рабочий процесс (возвращаются данные из последнего выполненного узла) |
+| | "Узел ответа" | В рабочем процессе должен быть узел «Ответить на Webhook» |
+| | "узлы ответа" | Должны быть настроены узлы ответа |
+| @@КОД0@@ | "hostedChat" | Предоставляет интерфейс чата, размещенный на n8n |
+| | "вебхук" | Встраиваемый виджет чата |
 
-**Validation Requirements**:
+**Требования для проверки**:
 ```typescript
 function validateChatTrigger(
   node: WorkflowNode,
@@ -880,33 +880,33 @@ function validateChatTrigger(
 }
 ```
 
-## Tool-Specific Validation Rules
+## Правила проверки для конкретного инструмента
 
-### 1. HTTP Request Tool (`toolHttpRequest`)
+### 1. Инструмент HTTP-запросов (`toolHttpRequest`)
 
-**Purpose**: Makes HTTP API requests with LLM-filled parameters, allowing AI agents to interact with external REST APIs dynamically.
+**Цель**: выполняет запросы HTTP API с параметрами, заполненными LLM, позволяя агентам ИИ динамически взаимодействовать с внешними API REST.
 
-**Configuration Options**:
-- `toolDescription`: Description for LLM (REQUIRED)
-- `method`: HTTP method - GET, POST, PUT, DELETE, PATCH (default: GET)
-- `url`: API endpoint URL (REQUIRED, can contain {placeholders})
-- `authentication`: None, Predefined Credential, Generic Credential
-- `placeholderDefinitions`: Definitions for {placeholders} in URL/body/headers/query
-- `sendQuery`: Whether to send query parameters
-- `queryParameters`: Query string parameters (can contain {placeholders})
-- `sendHeaders`: Whether to send custom headers
-- `headerParameters`: HTTP headers (can contain {placeholders})
-- `sendBody`: Whether to send request body
-- `jsonBody`: Request body JSON (can contain {placeholders})
-- `options`: Advanced options (response optimization, etc.)
+**Параметры конфигурации**:
+- `toolDescription`: Описание для LLM (ОБЯЗАТЕЛЬНО)
+- `method`: метод HTTP — GET, POST, PUT, DELETE, PATCH (по умолчанию: GET)
+- `url`: URL-адрес конечной точки API (ОБЯЗАТЕЛЬНО, может содержать {заполнители}).
+- `authentication`: нет, предопределенные учетные данные, общие учетные данные.
+- `placeholderDefinitions`: определения для {placeholders} в URL/body/headers/query.
+- `sendQuery`: отправлять ли параметры запроса.
+- `queryParameters`: параметры строки запроса (могут содержать {заполнители}).
+- `sendHeaders`: отправлять ли пользовательские заголовки.
+- `headerParameters`: заголовки HTTP (могут содержать {заполнители}).
+- `sendBody`: отправлять ли тело запроса.
+- `jsonBody`: тело запроса в формате JSON (может содержать {заполнители}).
+- `options`: Расширенные параметры (оптимизация ответа и т. д.)
 
-**Placeholder System**:
-LLM dynamically fills `{placeholder}` values in URL, query, headers, and body based on user input.
+**Система заполнителей**:
+LLM динамически заполняет значения `{placeholder}` в URL-адресе, запросе, заголовках и теле на основе пользовательского ввода.
 
-**Critical Requirements**:
-1. Every `{placeholder}` must be defined in `placeholderDefinitions`
-2. Placeholder names must match exactly (case-sensitive)
-3. Tool description should explain what API it accesses
+**Критические требования**:
+1. Каждый `{placeholder}` должен быть определен в `placeholderDefinitions`.
+2. Имена заполнителей должны точно совпадать (с учетом регистра).
+3. В описании инструмента должно быть указано, к какому API он обращается.
 
 ```typescript
 function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
@@ -1015,9 +1015,9 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **CORRECT - Simple GET Request**:
+✅ **ПРАВИЛЬНО — Простой запрос GET**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
@@ -1039,7 +1039,7 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-✅ **CORRECT - POST with Body and Headers**:
+✅ **ПРАВИЛЬНО — ПОСТ с телом и заголовками**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
@@ -1082,7 +1082,7 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Missing URL**:
+❌ **НЕПРАВИЛЬНО – отсутствует URL**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
@@ -1094,7 +1094,7 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Placeholder Not Defined**:
+❌ **НЕПРАВИЛЬНО – заполнитель не определен**:
 ```json
 {
   "parameters": {
@@ -1113,7 +1113,7 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Missing Tool Description**:
+❌ **НЕПРАВИЛЬНО: отсутствует описание инструмента**:
 ```json
 {
   "parameters": {
@@ -1124,30 +1124,30 @@ function validateHTTPRequestTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-### 2. Code Tool (`toolCode`)
+### 2. Инструмент кода (`toolCode`)
 
-**Purpose**: Executes custom JavaScript or Python code as an AI tool, allowing the LLM to perform calculations, transformations, or business logic that isn't available through standard tools.
+**Цель**: выполняет собственный код JavaScript или Python в качестве инструмента искусственного интеллекта, позволяя LLM выполнять вычисления, преобразования или бизнес-логику, недоступные с помощью стандартных инструментов.
 
-**Configuration Options**:
-- `name` (string, REQUIRED): Function name that the LLM calls (must contain only letters, numbers, underscores)
-- `description` (string, REQUIRED): Explains to the LLM what the tool does and when to use it
-- `code` (string, REQUIRED): The actual JavaScript or Python code to execute
-- `language` (string): Programming language - "javaScript" or "python" (default: "javaScript")
-- `specifyInputSchema` (boolean): Whether to define input parameter schema (RECOMMENDED for validation)
-- `schemaType` (string): How to define schema - "fromJson" (auto-generate from example) or "manual"
-- `jsonSchemaExample` (string): Example JSON input for auto-generating schema (when schemaType="fromJson")
-- `inputSchema` (string): Manual JSON schema definition (when schemaType="manual")
+**Параметры конфигурации**:
+- `name` (строка, ОБЯЗАТЕЛЬНО): имя функции, которую вызывает LLM (должно содержать только буквы, цифры и символы подчеркивания).
+- `description` (строка, ОБЯЗАТЕЛЬНО): объясняет LLM, что делает инструмент и когда его использовать.
+- `code` (строка, ОБЯЗАТЕЛЬНО): фактический код JavaScript или Python для выполнения.
+- `language` (строка): язык программирования — «javaScript» или «python» (по умолчанию: «javaScript»)
+- `specifyInputSchema` (логическое значение): определять ли схему входных параметров (РЕКОМЕНДУЕТСЯ для проверки)
+- `schemaType` (строка): как определить схему - «fromJson» (автоматически генерировать из примера) или «вручную».
+- `jsonSchemaExample` (строка): пример ввода JSON для автоматического создания схемы (когда SchemaType="fromJson")
+- `inputSchema` (строка): определение схемы JSON вручную (когда SchemaType="manual")
 
-**How Code Tool Works**:
-The LLM calls the function by name with parameters. The code executes in a sandboxed environment and returns results to the LLM. For JavaScript, the code must return a value. For Python, use `return` statements.
+**Как работает инструмент кода**:
+LLM вызывает функцию по имени с параметрами. Код выполняется в изолированной среде и возвращает результаты в LLM. Для JavaScript код должен возвращать значение. Для Python используйте операторы `return`.
 
-**Critical Requirements**:
-1. Function `name` must be valid identifier (letters, numbers, underscores only)
-2. `description` required to help LLM understand when to use the tool
-3. `code` must be syntactically valid and return a value
-4. Input schema HIGHLY RECOMMENDED to validate LLM-provided parameters
+**Критические требования**:
+1. Функция `name` должна быть действительным идентификатором (только буквы, цифры и символы подчеркивания).
+2. `description` необходим, чтобы помочь LLM понять, когда использовать этот инструмент.
+3. `code` должен быть синтаксически допустимым и возвращать значение.
+4. Схема ввода НАСТОЯТЕЛЬНО РЕКОМЕНДУЕТСЯ для проверки параметров, предоставленных LLM.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateCodeTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -1275,9 +1275,9 @@ function validateCodeTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Simple calculation tool:
+✅ **Правильный пример 1** — Простой инструмент расчета:
 ```typescript
 {
   type: 'toolCode',
@@ -1295,7 +1295,7 @@ function validateCodeTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Has function name, description, code with return statement, and input schema
 ```
 
-✅ **Correct Example 2** - Python data transformation:
+✅ **Правильный пример 2** — преобразование данных Python:
 ```typescript
 {
   type: 'toolCode',
@@ -1315,7 +1315,7 @@ return date_obj.strftime('%B %d, %Y')`,
 // Valid: Python code with proper return, manual schema with type and properties
 ```
 
-✅ **Correct Example 3** - Business logic without schema:
+✅ **Правильный пример 3** — Бизнес-логика без схемы:
 ```typescript
 {
   type: 'toolCode',
@@ -1333,7 +1333,7 @@ return total;`
 // WARNING will be issued recommending schema
 ```
 
-❌ **Incorrect Example 1** - Invalid function name:
+❌ **Неправильный пример 1** — Неверное имя функции:
 ```typescript
 {
   type: 'toolCode',
@@ -1347,7 +1347,7 @@ return total;`
 // ERROR: Function name cannot start with a number
 ```
 
-❌ **Incorrect Example 2** - Missing required fields:
+❌ **Неверный пример 2** – отсутствуют обязательные поля:
 ```typescript
 {
   type: 'toolCode',
@@ -1362,7 +1362,7 @@ return total;`
 // ERROR: No code provided
 ```
 
-❌ **Incorrect Example 3** - Invalid schema configuration:
+❌ **Неправильный пример 3** — Неверная конфигурация схемы:
 ```typescript
 {
   type: 'toolCode',
@@ -1379,7 +1379,7 @@ return total;`
 // ERROR: schemaType="fromJson" requires jsonSchemaExample
 ```
 
-❌ **Incorrect Example 4** - Invalid characters in name:
+❌ **Неверный пример 4** — Недопустимые символы в имени:
 ```typescript
 {
   type: 'toolCode',
@@ -1394,32 +1394,32 @@ return total;`
 // Only letters, numbers, and underscores permitted
 ```
 
-### 3. Vector Store Tool (`toolVectorStore`)
+### 3. Инструмент векторного хранилища (`toolVectorStore`)
 
-**Purpose**: Enables the AI agent to perform semantic search over a knowledge base by querying a vector store. The LLM can retrieve relevant documents or data based on natural language queries.
+**Цель**: позволяет агенту ИИ выполнять семантический поиск в базе знаний путем запроса к хранилищу векторов. LLM может извлекать соответствующие документы или данные на основе запросов на естественном языке.
 
-**Configuration Options**:
-- `name` (string, REQUIRED): Tool name that the LLM uses to invoke the search
-- `description` (string, REQUIRED): Explains what knowledge base is being searched and when to use it
-- `topK` (number): Number of most relevant results to return (default: 4)
+**Параметры конфигурации**:
+- `name` (строка, ОБЯЗАТЕЛЬНО): имя инструмента, который LLM использует для запуска поиска.
+- `description` (строка, ОБЯЗАТЕЛЬНО): объясняет, в какой базе знаний выполняется поиск и когда ее использовать.
+- `topK` (число): количество возвращаемых наиболее релевантных результатов (по умолчанию: 4).
 
-**How Vector Store Tool Works**:
-The LLM calls this tool with a search query. The tool converts the query to embeddings, searches the vector store for similar embeddings, and returns the most relevant documents/chunks. This enables RAG (Retrieval Augmented Generation) patterns.
+**Как работает инструмент векторного хранилища**:
+LLM вызывает этот инструмент с помощью поискового запроса. Инструмент преобразует запрос во встраивания, ищет в векторном хранилище похожие вложения и возвращает наиболее релевантные документы/фрагменты. Это позволяет использовать шаблоны RAG (дополненная генерация извлечения).
 
-**Critical Requirements**:
-1. MUST have `ai_vectorStore` connection to a Vector Store node (e.g., Pinecone, In-Memory Vector Store)
-2. Vector Store MUST have `ai_embedding` connection to an Embeddings node (e.g., Embeddings OpenAI)
-3. Vector Store SHOULD have `ai_document` connection to populate it with data
-4. `description` REQUIRED to help LLM understand what knowledge is searchable
+**Критические требования**:
+1. ДОЛЖНО иметь соединение `ai_vectorStore` с узлом хранилища векторов (например, Pinecone, хранилище векторов в памяти).
+2. Хранилище векторов ДОЛЖНО иметь соединение `ai_embedding` с узлом Embeddings (например, Embeddings OpenAI).
+3. Хранилище векторов ДОЛЖНО иметь соединение `ai_document` для заполнения его данными.
+4. `description` ТРЕБУЕТСЯ, чтобы помочь LLM понять, какие знания доступны для поиска.
 
-**Connection Architecture**:
+**Архитектура подключения**:
 ```
 [Document Loader] --ai_document--> [Vector Store] <--ai_vectorStore-- [Vector Store Tool]
 [Embeddings]      --ai_embedding--> [Vector Store]
                                      [Vector Store] --ai_vectorStore--> [AI Agent]
 ```
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateVectorStoreTool(
   node: WorkflowNode,
@@ -1510,9 +1510,9 @@ function validateVectorStoreTool(
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Complete RAG setup:
+✅ **Правильный пример 1** — Полная настройка RAG:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1530,7 +1530,7 @@ function validateVectorStoreTool(
 // Valid: Has name, description, proper connection chain
 ```
 
-✅ **Correct Example 2** - Pinecone integration:
+✅ **Правильный пример 2** — интеграция сосновой шишки:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1548,7 +1548,7 @@ function validateVectorStoreTool(
 // Valid: All required connections present
 ```
 
-✅ **Correct Example 3** - Minimal setup:
+✅ **Правильный пример 3** — Минимальная настройка:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1563,7 +1563,7 @@ function validateVectorStoreTool(
 // WARNING will be issued if no document loader connected
 ```
 
-❌ **Incorrect Example 1** - Missing vector store connection:
+❌ **Неверный пример 1** — Отсутствует подключение к векторному хранилищу:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1577,7 +1577,7 @@ function validateVectorStoreTool(
 // ERROR: Vector Store Tool requires an ai_vectorStore connection
 ```
 
-❌ **Incorrect Example 2** - Vector store missing embeddings:
+❌ **Неверный пример 2** — в векторном хранилище отсутствуют вложения:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1592,7 +1592,7 @@ function validateVectorStoreTool(
 // Without embeddings, semantic search cannot function
 ```
 
-❌ **Incorrect Example 3** - Missing required fields:
+❌ **Неверный пример 3** – Отсутствуют обязательные поля:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1606,7 +1606,7 @@ function validateVectorStoreTool(
 // WARNING: Description too short (provide more detail)
 ```
 
-❌ **Incorrect Example 4** - Invalid topK:
+❌ **Неверный пример 4** — Неверный topK:
 ```typescript
 {
   type: 'toolVectorStore',
@@ -1621,19 +1621,19 @@ function validateVectorStoreTool(
 // Large result sets reduce response quality
 ```
 
-### 4. Workflow Tool (`toolWorkflow`)
+### 4. Инструмент рабочего процесса (`toolWorkflow`)
 
-**Purpose**: Executes another n8n workflow as a tool, allowing complex reusable logic to be packaged as agent capabilities.
+**Цель**: выполняет другой рабочий процесс n8n в качестве инструмента, позволяющего упаковать сложную повторно используемую логику в качестве возможностей агента.
 
-**Configuration Options**:
-- `source`: "database" (existing workflow) or "parameter" (inline workflow JSON)
-- `workflowId`: ID of workflow to execute (when source="database")
-- `workflowJson`: Inline workflow definition (when source="parameter")
-- `description`: Tool description for LLM (REQUIRED)
-- `specifyInputSchema`: Whether to define input schema (recommended)
-- `workflowInputs`: Field mapping from LLM to workflow inputs
+**Параметры конфигурации**:
+- `source`: «база данных» (существующий рабочий процесс) или «параметр» (встроенный рабочий процесс JSON)
+- `workflowId`: идентификатор рабочего процесса для выполнения (когда source="database")
+- `workflowJson`: определение встроенного рабочего процесса (когда source="parameter").
+- `description`: описание инструмента для LLM (ОБЯЗАТЕЛЬНО)
+- `specifyInputSchema`: определять ли схему ввода (рекомендуется)
+- `workflowInputs`: сопоставление полей из LLM с входными данными рабочего процесса.
 
-**Critical Requirement**: Sub-workflow MUST start with "Execute Workflow Trigger" node.
+**Критическое требование**: подпроцесс ДОЛЖЕН начинаться с узла «Выполнение триггера рабочего процесса».
 
 ```typescript
 function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
@@ -1767,9 +1767,9 @@ function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **CORRECT - Database Source**:
+✅ **ПРАВИЛЬНО – Источник базы данных**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1784,7 +1784,7 @@ function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-✅ **CORRECT - Parameter Source**:
+✅ **ПРАВИЛЬНО – Источник параметра**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1804,7 +1804,7 @@ function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Missing workflowId**:
+❌ **НЕПРАВИЛЬНО – отсутствует идентификатор рабочего процесса**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1816,7 +1816,7 @@ function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Sub-workflow missing Execute Workflow Trigger**:
+❌ **НЕПРАВИЛЬНО: отсутствует триггер выполнения рабочего процесса**:
 ```json
 {
   "parameters": {
@@ -1832,31 +1832,31 @@ function validateWorkflowTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-### 5. Search Tools (SerpApi, Wikipedia, SearXNG, WolframAlpha)
+### 5. Инструменты поиска (SerpApi, Wikipedia, SearXNG, WolframAlpha)
 
-#### 5a. SerpApi Tool (`toolSerpApi`)
+#### 5а. Инструмент SerpApi (`toolSerpApi`)
 
-**Purpose**: Performs Google searches via the SerpApi service, returning web search results to the AI agent. Provides access to current web information and search results.
+**Цель**: выполняет поиск в Google через службу SerpApi, возвращая результаты веб-поиска агенту ИИ. Обеспечивает доступ к текущей веб-информации и результатам поиска.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when to use Google search
-- Credentials: SerpApi API key (REQUIRED)
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда использовать поиск Google.
+- Учетные данные: ключ API SerpApi (ОБЯЗАТЕЛЬНО)
 
-**How SerpApi Tool Works**:
-The LLM provides a search query. The tool uses SerpApi to perform a Google search and returns relevant search results including titles, snippets, and URLs.
+**Как работает инструмент SerpApi**:
+LLM предоставляет поисковый запрос. Инструмент использует SerpApi для выполнения поиска в Google и возвращает релевантные результаты поиска, включая заголовки, фрагменты и URL-адреса.
 
-**Use Cases**:
-- Finding current information not in LLM training data
-- Web research and fact-checking
-- Finding specific websites or resources
-- News and trending topics
+**Примеры использования**:
+- Поиск текущей информации, отсутствующей в данных обучения LLM.
+- Веб-исследования и проверка фактов.
+- Поиск конкретных веб-сайтов или ресурсов.
+- Новости и актуальные темы
 
-**Critical Requirements**:
-1. MUST have valid SerpApi credentials configured
-2. Requires active SerpApi subscription with available credits
-3. Custom description recommended to differentiate from other search tools
+**Критические требования**:
+1. ДОЛЖНЫ быть настроены действительные учетные данные SerpApi.
+2. Требуется активная подписка SerpApi с доступными кредитами.
+3. Рекомендуется использовать собственное описание, чтобы отличать его от других инструментов поиска.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateSerpApiTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -1881,9 +1881,9 @@ function validateSerpApiTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example**:
+✅ **Правильный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolSerpApi',
@@ -1898,7 +1898,7 @@ function validateSerpApiTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Has credentials and helpful description
 ```
 
-❌ **Incorrect Example**:
+❌ **Неверный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolSerpApi',
@@ -1908,31 +1908,31 @@ function validateSerpApiTool(node: WorkflowNode): ValidationIssue[] {
 // ERROR: SerpApi Tool requires credentials
 ```
 
-#### 5b. Wikipedia Tool (`toolWikipedia`)
+#### 5б. Инструмент Википедии (`toolWikipedia`)
 
-**Purpose**: Searches and retrieves information from Wikipedia, providing the AI agent access to encyclopedia knowledge on a wide range of topics.
+**Цель**: ищет и извлекает информацию из Википедии, предоставляя агенту ИИ доступ к энциклопедическим знаниям по широкому кругу тем.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when to use Wikipedia
-- `language` (string): Wikipedia language code (default: "en")
-- `returnType` (string): "summary" or "full" article content
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда использовать Википедию.
+- `language` (строка): код языка Википедии (по умолчанию: «en»)
+- `returnType` (строка): «краткое» или «полное» содержание статьи.
 
-**How Wikipedia Tool Works**:
-The LLM provides a topic or search query. The tool searches Wikipedia and returns article content, either as a summary or full text.
+**Как работает инструмент Википедии**:
+LLM предоставляет тему или поисковый запрос. Инструмент выполняет поиск в Википедии и возвращает содержимое статьи в виде краткого или полного текста.
 
-**Use Cases**:
-- General knowledge queries
-- Historical information
-- Biographies and notable figures
-- Scientific and technical concepts
-- Geographic information
+**Примеры использования**:
+- Общие вопросы знаний
+- Историческая информация
+- Биографии и известные личности
+- Научно-технические концепции
+- Географическая информация
 
-**Critical Requirements**:
-1. No credentials required (public API)
-2. Best for factual, encyclopedic information
-3. Not ideal for current events (Wikipedia has lag time)
+**Критические требования**:
+1. Учетные данные не требуются (публичный API)
+2. Лучше всего подходит для фактической, энциклопедической информации.
+3. Не идеально подходит для текущих событий (Википедия работает с задержкой)
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateWikipediaTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -1960,9 +1960,9 @@ function validateWikipediaTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Default English:
+✅ **Правильный пример 1** — английский по умолчанию:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolWikipedia',
@@ -1974,7 +1974,7 @@ function validateWikipediaTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Simple configuration with helpful description
 ```
 
-✅ **Correct Example 2** - Multilingual:
+✅ **Правильный пример 2** — Многоязычный:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolWikipedia',
@@ -1987,31 +1987,31 @@ function validateWikipediaTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Configured for Spanish Wikipedia
 ```
 
-#### 5c. SearXNG Tool (`toolSearXng`)
+#### 5в. Инструмент SearXNG (`toolSearXng`)
 
-**Purpose**: Searches using a self-hosted SearXNG metasearch engine, providing privacy-focused web search aggregated from multiple search engines.
+**Цель**: поиск с использованием автономной метапоисковой системы SearXNG, обеспечивающей веб-поиск, ориентированный на конфиденциальность, агрегированный из нескольких поисковых систем.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when to use SearXNG
-- Credentials: SearXNG instance URL and optional API key (REQUIRED)
-- `categories` (array): Search categories (general, images, news, etc.)
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда использовать SearXNG.
+– Учетные данные: URL-адрес экземпляра SearXNG и дополнительный ключ API (ОБЯЗАТЕЛЬНО).
+- `categories` (массив): Категории поиска (общие, изображения, новости и т. д.)
 
-**How SearXNG Tool Works**:
-The LLM provides a search query. The tool queries your SearXNG instance which aggregates results from multiple search engines (Google, Bing, DuckDuckGo, etc.) and returns combined results.
+**Как работает инструмент SearXNG**:
+LLM предоставляет поисковый запрос. Инструмент запрашивает ваш экземпляр SearXNG, который объединяет результаты из нескольких поисковых систем (Google, Bing, DuckDuckGo и т. д.) и возвращает объединенные результаты.
 
-**Use Cases**:
-- Privacy-focused web search
-- Aggregated results from multiple sources
-- Self-hosted search infrastructure
-- Custom search engine configuration
+**Примеры использования**:
+- Веб-поиск, ориентированный на конфиденциальность
+- Совокупные результаты из нескольких источников
+- Самостоятельная поисковая инфраструктура
+- Конфигурация пользовательской поисковой системы.
 
-**Critical Requirements**:
-1. MUST have SearXNG instance URL configured
-2. Instance must be accessible from n8n
-3. Optional API key if instance requires authentication
-4. Requires self-hosted or third-party SearXNG instance
+**Критические требования**:
+1. ДОЛЖЕН быть настроен URL-адрес экземпляра SearXNG.
+2. Экземпляр должен быть доступен с n8n
+3. Дополнительный ключ API, если экземпляр требует аутентификации.
+4. Требуется собственный или сторонний экземпляр SearXNG.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateSearXngTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -2036,9 +2036,9 @@ function validateSearXngTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example**:
+✅ **Правильный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolSearXng',
@@ -2054,7 +2054,7 @@ function validateSearXngTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Has credentials and configuration
 ```
 
-❌ **Incorrect Example**:
+❌ **Неверный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolSearXng',
@@ -2064,31 +2064,31 @@ function validateSearXngTool(node: WorkflowNode): ValidationIssue[] {
 // ERROR: SearXNG Tool requires instance credentials
 ```
 
-#### 5d. WolframAlpha Tool (`toolWolframAlpha`)
+#### 5д. Инструмент WolframAlpha (`toolWolframAlpha`)
 
-**Purpose**: Queries Wolfram|Alpha computational knowledge engine for mathematical computations, scientific data, statistics, and factual queries.
+**Цель**: Запросы к системе вычислительных знаний Wolfram|Alpha для математических вычислений, научных данных, статистики и фактических запросов.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when to use Wolfram|Alpha
-- Credentials: Wolfram|Alpha API key (REQUIRED)
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда использовать Wolfram|Alpha.
+- Учетные данные: ключ API Wolfram|Alpha (ОБЯЗАТЕЛЬНО)
 
-**How WolframAlpha Tool Works**:
-The LLM provides a computational or factual query. The tool sends it to Wolfram|Alpha's API and returns computed results, data, or answers.
+**Как работает инструмент WolframAlpha**:
+LLM предоставляет вычислительный или фактический запрос. Инструмент отправляет его в API Wolfram|Alpha и возвращает вычисленные результаты, данные или ответы.
 
-**Use Cases**:
-- Complex mathematical computations
-- Scientific calculations and conversions
-- Statistical data queries
-- Physics, chemistry, astronomy calculations
-- Unit conversions
-- Factual data (population, dates, distances, etc.)
+**Примеры использования**:
+- Сложные математические вычисления
+- Научные расчеты и преобразования
+- Запросы статистических данных
+- Расчеты по физике, химии, астрономии
+- Преобразование единиц измерения
+- Фактические данные (население, даты, расстояния и т.д.)
 
-**Critical Requirements**:
-1. MUST have valid Wolfram|Alpha App ID (API key)
-2. Best for computational and scientific queries
-3. Not ideal for general web search or current news
+**Критические требования**:
+1. ДОЛЖЕН иметь действительный идентификатор приложения Wolfram|Alpha (ключ API).
+2. Лучше всего подходит для вычислительных и научных запросов.
+3. Не идеален для общего поиска в Интернете или текущих новостей.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateWolframAlphaTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -2113,9 +2113,9 @@ function validateWolframAlphaTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example**:
+✅ **Правильный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolWolframAlpha',
@@ -2130,7 +2130,7 @@ function validateWolframAlphaTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Has credentials and clear usage guidance
 ```
 
-❌ **Incorrect Example**:
+❌ **Неверный пример**:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolWolframAlpha',
@@ -2140,30 +2140,30 @@ function validateWolframAlphaTool(node: WorkflowNode): ValidationIssue[] {
 // ERROR: WolframAlpha Tool requires API credentials
 ```
 
-### 6. Simple Tools (Calculator, Think)
+### 6. Простые инструменты (калькулятор, мышление)
 
-#### 6a. Calculator Tool (`toolCalculator`)
+#### 6а. Калькулятор (`toolCalculator`)
 
-**Purpose**: Performs mathematical calculations and arithmetic operations. The LLM can use this tool when it needs to compute exact numerical results.
+**Цель**: выполняет математические вычисления и арифметические операции. LLM может использовать этот инструмент, когда ему необходимо вычислить точные числовые результаты.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when the LLM should use this calculator
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда LLM должен использовать этот калькулятор.
 
-**How Calculator Tool Works**:
-The LLM calls this tool with mathematical expressions as strings. The tool evaluates the expression and returns the numerical result. Handles basic arithmetic, exponents, and mathematical functions.
+**Как работает калькулятор**:
+LLM называет этот инструмент математическими выражениями в виде строк. Инструмент оценивает выражение и возвращает числовой результат. Обрабатывает базовую арифметику, показатели степени и математические функции.
 
-**Use Cases**:
-- Precise arithmetic calculations
-- Financial computations
-- Unit conversions requiring math
-- Any task requiring exact numerical results
+**Примеры использования**:
+- Точные арифметические расчеты
+- Финансовые расчеты
+- Преобразования единиц измерения, требующие математики
+- Любая задача, требующая точных числовых результатов
 
-**Critical Requirements**:
-1. No special configuration required - works out of the box
-2. No AI connections needed (self-contained)
-3. Custom description optional but can help guide LLM usage
+**Критические требования**:
+1. Никакой специальной настройки не требуется — работает «из коробки».
+2. Не требуется подключение к искусственному интеллекту (автономное)
+3. Пользовательское описание необязательно, но может помочь в использовании LLM.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateCalculatorTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -2183,9 +2183,9 @@ function validateCalculatorTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Default calculator:
+✅ **Правильный пример 1** — Калькулятор по умолчанию:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolCalculator',
@@ -2194,7 +2194,7 @@ function validateCalculatorTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: No configuration needed, works with defaults
 ```
 
-✅ **Correct Example 2** - Custom description:
+✅ **Правильный пример 2** — Пользовательское описание:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolCalculator',
@@ -2206,29 +2206,29 @@ function validateCalculatorTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Custom description guides LLM on specific use case
 ```
 
-#### 6b. Think Tool (`toolThink`)
+#### 6б. Инструмент мышления (`toolThink`)
 
-**Purpose**: Gives the AI agent time to think, reason, and plan before taking action. The agent can "think out loud" to work through complex problems step by step.
+**Цель**: дает ИИ-агенту время подумать, обдумать и спланировать действия, прежде чем предпринимать действия. Агент может «думать вслух», чтобы шаг за шагом решать сложные проблемы.
 
-**Configuration Options**:
-- `description` (string, OPTIONAL): Custom description for when the LLM should pause to think
+**Параметры конфигурации**:
+- `description` (строка, НЕОБЯЗАТЕЛЬНО): пользовательское описание того, когда LLM должен сделать паузу, чтобы подумать.
 
-**How Think Tool Works**:
-When the LLM calls this tool, it returns the thinking content back to the agent. This creates a feedback loop where the agent can reason through problems, consider alternatives, and plan multi-step approaches before executing actions.
+**Как работает инструмент Think Tool**:
+Когда LLM вызывает этот инструмент, он возвращает содержимое мышления обратно агенту. Это создает цикл обратной связи, в котором агент может анализировать проблемы, рассматривать альтернативы и планировать многоэтапные подходы перед выполнением действий.
 
-**Use Cases**:
-- Complex problem-solving requiring multi-step reasoning
-- Planning sequences of actions
-- Considering trade-offs and alternatives
-- Breaking down complex tasks
-- Self-correction and validation
+**Примеры использования**:
+- Решение сложных задач, требующее многоэтапного рассуждения.
+- Планирование последовательности действий.
+- Рассмотрение компромиссов и альтернатив.
+- Разбираем сложные задачи.
+- Самокоррекция и проверка.
 
-**Critical Requirements**:
-1. No special configuration required
-2. No AI connections needed (self-contained)
-3. Most useful when agent faces complex, multi-step problems
+**Критические требования**:
+1. Никакой специальной настройки не требуется.
+2. Не требуется подключение к искусственному интеллекту (автономное)
+3. Наиболее полезен, когда агент сталкивается со сложными, многоэтапными проблемами.
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateThinkTool(node: WorkflowNode): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -2248,9 +2248,9 @@ function validateThinkTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Default think tool:
+✅ **Правильный пример 1** — Инструмент анализа по умолчанию:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolThink',
@@ -2259,7 +2259,7 @@ function validateThinkTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: No configuration needed, works with defaults
 ```
 
-✅ **Correct Example 2** - Custom description for complex reasoning:
+✅ **Правильный пример 2** — Специальное описание для сложных рассуждений:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolThink',
@@ -2271,7 +2271,7 @@ function validateThinkTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Detailed description guides agent on when to think vs. act
 ```
 
-✅ **Correct Example 3** - Problem-solving focus:
+✅ **Правильный пример 3** — Фокус на решении проблем:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.toolThink',
@@ -2283,42 +2283,42 @@ function validateThinkTool(node: WorkflowNode): ValidationIssue[] {
 // Valid: Focuses agent on structured problem-solving
 ```
 
-### 7. AI Agent Tool (`agentTool`)
+### 7. Инструмент AI Agent (`agentTool`)
 
-**Purpose**: Creates a nested AI agent that functions as a tool for a parent AI agent. Enables complex agent hierarchies where specialized sub-agents handle specific tasks, each with their own model, tools, and capabilities.
+**Цель**: Создает вложенный ИИ-агент, который действует как инструмент для родительского ИИ-агента. Обеспечивает создание сложных иерархий агентов, в которых специализированные субагенты выполняют определенные задачи, каждый из которых имеет свою собственную модель, инструменты и возможности.
 
-**Configuration Options**:
-- `name` (string, REQUIRED): Tool name that the parent agent uses to invoke this sub-agent
-- `description` (string, REQUIRED): Explains the sub-agent's capabilities and when the parent should use it
-- `promptType` (string): "auto" or "define" - how to construct prompts for this sub-agent
-- `text` (string): Custom system prompt (when promptType="define")
-- `systemMessage` (string): System message defining sub-agent's role
-- `maxIterations` (number): Maximum tool-calling iterations (default: 10)
-- `returnIntermediateSteps` (boolean): Return sub-agent's reasoning steps to parent
+**Параметры конфигурации**:
+- `name` (строка, ОБЯЗАТЕЛЬНО): имя инструмента, который родительский агент использует для вызова этого субагента.
+- `description` (строка, ОБЯЗАТЕЛЬНО): поясняет возможности субагента и указывает, когда родительский агент должен его использовать.
+- `promptType` (строка): "auto" или "define" - как формировать подсказки для этого субагента
+- `text` (строка): пользовательское системное приглашение (когда PromptType="define")
+- `systemMessage` (строка): системное сообщение, определяющее роль субагента.
+- `maxIterations` (число): максимальное количество итераций вызова инструмента (по умолчанию: 10).
+- `returnIntermediateSteps` (логическое значение): вернуть родительскому элементу действия субагента.
 
-**How AI Agent Tool Works**:
-The parent AI agent can invoke this sub-agent as a tool. The sub-agent has its own language model, tools, and configuration. It processes the request independently and returns results to the parent. This creates hierarchical agent architectures.
+**Как работает инструмент AI Agent**:
+Родительский ИИ-агент может вызывать этот субагент в качестве инструмента. Субагент имеет собственную языковую модель, инструменты и конфигурацию. Он обрабатывает запрос независимо и возвращает результаты родителю. Это создает иерархическую архитектуру агентов.
 
-**Use Cases**:
-- Specialized experts (e.g., "SQL Query Expert" sub-agent with database tools)
-- Complex multi-step workflows (e.g., "Research Assistant" that uses search + summarization)
-- Domain-specific processing (e.g., "Financial Analysis Agent" with calculation tools)
+**Примеры использования**:
+- Специализированные эксперты (например, субагент «Эксперт по SQL-запросам» с инструментами базы данных)
+- Сложные многоэтапные рабочие процессы (например, «Помощник по исследованиям», использующий поиск + обобщение)
+- Обработка, специфичная для предметной области (например, «Агент финансового анализа» с инструментами расчета)
 
-**Critical Requirements**:
-1. MUST have exactly 1 `ai_languageModel` connection (the sub-agent's model)
-2. `name` and `description` REQUIRED for parent agent to invoke properly
-3. Can have its own `ai_tool` connections (sub-agent's toolset)
-4. Can have `ai_memory` connection (sub-agent's memory)
-5. Should have clear systemMessage defining sub-agent's specialized role
+**Критические требования**:
+1. ДОЛЖНО иметь ровно 1 соединение `ai_languageModel` (модель субагента)
+2. `name` и `description` ТРЕБУЮТСЯ для правильного вызова родительского агента.
+3. Может иметь собственные соединения `ai_tool` (набор инструментов субагента)
+4. Может иметь соединение `ai_memory` (память субагента)
+5. Должен иметь четкое системное сообщение, определяющее специализированную роль субагента.
 
-**Connection Architecture**:
+**Архитектура подключения**:
 ```
 [Language Model] --ai_languageModel--> [AI Agent Tool] --ai_tool--> [Parent AI Agent]
 [Tool 1]         --ai_tool-----------> [AI Agent Tool]
 [Tool 2]         --ai_tool-----------> [AI Agent Tool]
 ```
 
-**Validation Logic**:
+**Логика проверки**:
 ```typescript
 function validateAIAgentTool(
   node: WorkflowNode,
@@ -2407,9 +2407,9 @@ function validateAIAgentTool(
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **Correct Example 1** - Specialized SQL expert sub-agent:
+✅ **Правильный пример 1** — Специализированный субагент SQL-эксперта:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2428,7 +2428,7 @@ function validateAIAgentTool(
 // Valid: Has model, name, description, tools, specialized system message
 ```
 
-✅ **Correct Example 2** - Research assistant sub-agent:
+✅ **Правильный пример 2** — Субагент-ассистент по исследованиям:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2448,7 +2448,7 @@ function validateAIAgentTool(
 // Valid: Multi-tool sub-agent with clear specialization
 ```
 
-✅ **Correct Example 3** - Minimal sub-agent:
+✅ **Правильный пример 3** — Минимальный субагент:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2466,7 +2466,7 @@ function validateAIAgentTool(
 // INFO will suggest adding more tools
 ```
 
-❌ **Incorrect Example 1** - Missing language model:
+❌ **Неверный пример 1** – Отсутствует языковая модель:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2480,7 +2480,7 @@ function validateAIAgentTool(
 // ERROR: AI Agent Tool requires an ai_languageModel connection
 ```
 
-❌ **Incorrect Example 2** - Missing required fields:
+❌ **Неверный пример 2** – отсутствуют обязательные поля:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2494,7 +2494,7 @@ function validateAIAgentTool(
 // WARNING: Description too short (explain sub-agent's expertise)
 ```
 
-❌ **Incorrect Example 3** - Multiple language models:
+❌ **Неверный пример 3** – Несколько языковых моделей:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2510,7 +2510,7 @@ function validateAIAgentTool(
 // ERROR: AI Agent Tool has 2 ai_languageModel connections. Only 1 allowed (no fallback support)
 ```
 
-❌ **Incorrect Example 4** - Invalid promptType configuration:
+❌ **Неправильный пример 4** — Неверная конфигурация PromptType:
 ```typescript
 {
   type: '@n8n/n8n-nodes-langchain.agentTool',
@@ -2525,29 +2525,29 @@ function validateAIAgentTool(
 // ERROR: promptType="define" requires text field with custom prompt
 ```
 
-### 8. MCP Client Tool (`mcpClientTool`)
+### 8. Клиентский инструмент MCP (`mcpClientTool`)
 
-**Purpose**: Connects to Model Context Protocol (MCP) servers to access external tools and resources, allowing AI agents to use MCP-compliant tools.
+**Цель**: подключается к серверам протокола контекста модели (MCP) для доступа к внешним инструментам и ресурсам, позволяя агентам ИИ использовать инструменты, совместимые с MCP.
 
-**Configuration Options**:
-- `mcpServer`: MCP server connection configuration (REQUIRED)
-  - Can reference existing server or define new one
-- `tool`: Specific MCP tool to use from the server (REQUIRED)
-- `description`: Tool description for LLM (REQUIRED)
-- `toolParameters`: Tool-specific parameters
-- `useCustomInputSchema`: Whether to override tool's input schema
+**Параметры конфигурации**:
+- `mcpServer`: конфигурация подключения к серверу MCP (ОБЯЗАТЕЛЬНО)
+- Можно ссылаться на существующий сервер или определять новый
+- `tool`: специальный инструмент MCP для использования с сервера (ОБЯЗАТЕЛЬНО)
+- `description`: описание инструмента для LLM (ОБЯЗАТЕЛЬНО)
+- `toolParameters`: параметры, специфичные для инструмента.
+- `useCustomInputSchema`: переопределить схему ввода инструмента.
 
-**MCP Server Configuration**:
-- `transport`: "stdio" or "sse" (Server-Sent Events)
-- `command`: Executable command (for stdio)
-- `args`: Command arguments (for stdio)
-- `url`: Server URL (for SSE)
-- `env`: Environment variables
+**Конфигурация сервера MCP**:
+- `transport`: "stdio" или "sse" (события, отправленные сервером)
+- `command`: исполняемая команда (для stdio)
+- `args`: аргументы команды (для stdio)
+- `url`: URL-адрес сервера (для SSE).
+- `env`: переменные среды.
 
-**Critical Requirements**:
-1. MCP server must be properly configured and accessible
-2. Selected tool must exist on the MCP server
-3. Tool parameters must match the tool's input schema
+**Критические требования**:
+1. Сервер MCP должен быть правильно настроен и доступен.
+2. Выбранный инструмент должен существовать на сервере MCP.
+3. Параметры инструмента должны соответствовать входной схеме инструмента.
 
 ```typescript
 function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
@@ -2677,9 +2677,9 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Validation Examples**:
+**Примеры проверки**:
 
-✅ **CORRECT - Stdio Transport**:
+✅ **ПРАВИЛЬНО — Stdio Transport**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
@@ -2698,7 +2698,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-✅ **CORRECT - SSE Transport**:
+✅ **ПРАВИЛЬНО – SSE Transport**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
@@ -2716,7 +2716,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-✅ **CORRECT - With Custom Input Schema**:
+✅ **ПРАВИЛЬНО — с пользовательской схемой ввода**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
@@ -2737,7 +2737,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Missing MCP Server**:
+❌ **НЕПРАВИЛЬНО – отсутствует сервер MCP**:
 ```json
 {
   "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
@@ -2749,7 +2749,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Stdio Without Command**:
+❌ **НЕПРАВИЛЬНО — Stdio без команды**:
 ```json
 {
   "parameters": {
@@ -2762,7 +2762,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - SSE Without URL**:
+❌ **НЕПРАВИЛЬНО – SSE без URL**:
 ```json
 {
   "parameters": {
@@ -2775,7 +2775,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-❌ **INCORRECT - Missing Tool Selection**:
+❌ **НЕПРАВИЛЬНО: не выбран инструмент**:
 ```json
 {
   "parameters": {
@@ -2789,9 +2789,9 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Common MCP Server Configurations**:
+**Общие конфигурации сервера MCP**:
 
-**Filesystem Server**:
+**Сервер файловой системы**:
 ```json
 {
   "transport": "stdio",
@@ -2800,7 +2800,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**GitHub Server**:
+**Сервер GitHub**:
 ```json
 {
   "transport": "stdio",
@@ -2812,7 +2812,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**PostgreSQL Server**:
+**Сервер PostgreSQL**:
 ```json
 {
   "transport": "stdio",
@@ -2821,7 +2821,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Puppeteer Server**:
+**Сервер Кукловода**:
 ```json
 {
   "transport": "stdio",
@@ -2830,7 +2830,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-**Remote SSE Server**:
+**Удаленный сервер SSE**:
 ```json
 {
   "transport": "sse",
@@ -2838,7 +2838,7 @@ function validateMCPClientTool(node: WorkflowNode): ValidationIssue[] {
 }
 ```
 
-## Complete Tool Validation Function
+## Полная функция проверки инструмента
 
 ```typescript
 function validateAllToolNodes(
@@ -2925,233 +2925,233 @@ function validateAllToolNodes(
 }
 ```
 
-## Summary: Validation Coverage
+## Резюме: покрытие проверки
 
-✅ **Complete Coverage**:
-- AI Agent (required connections, streaming mode, prompt type)
-- Basic LLM Chain (required connections, forbidden connections)
-- Chat Trigger (response mode, downstream compatibility)
-- All 13 AI tool sub-nodes with specific validation rules
+✅ **Полное покрытие**:
+- AI Agent (необходимые соединения, режим потоковой передачи, тип запроса)
+- Базовая цепочка LLM (обязательные соединения, запрещенные соединения)
+- Триггер чата (режим ответа, нисходящая совместимость)
+- Все 13 подузлов инструментов ИИ с особыми правилами проверки.
 
-✅ **Connection Direction Enforcement**:
-- Reverse connection mapping to validate incoming connections
-- Proper validation of ai_languageModel, ai_memory, ai_tool, etc.
+✅ **Контроль направления соединения**:
+- Обратное сопоставление соединений для проверки входящих соединений.
+— Правильная проверка ai_languageModel, ai_memory, ai_tool и т. д.
 
-✅ **Tool-Specific Rules**:
-- HTTP Request Tool: Placeholder validation
-- Code Tool: Function name and schema validation
-- Vector Store Tool: Complete chain validation (Tool → VectorStore → Embedding)
-- Workflow Tool: Sub-workflow existence
-- Search Tools: Credential validation
-- AI Agent Tool: Nested agent validation
-- MCP Client Tool: Server configuration validation
+✅ **Правила для конкретных инструментов**:
+- Инструмент HTTP-запросов: проверка заполнителя.
+- Инструмент кода: проверка имени функции и схемы.
+- Инструмент Vector Store: полная проверка цепочки (Инструмент → VectorStore → Встраивание)
+- Инструмент рабочего процесса: наличие подпроцесса
+- Инструменты поиска: проверка учетных данных.
+- Инструмент AI Agent: проверка вложенного агента.
+- Клиентский инструмент MCP: проверка конфигурации сервера.
 
-## Database Coverage Summary
+## Сводка покрытия базы данных
 
-### What We Have in Our Database ✅
+### Что у нас в базе ✅
 
-1. **All Purpose-Built AI Tool Sub-Nodes** (13 nodes)
-   - Tool HTTP Request, Tool Code, Tool Workflow, Tool Vector Store
-   - Tool Calculator, Tool Wikipedia, Tool SerpAPI, Tool SearXNG
-   - Tool WolframAlpha, Tool Think
-   - AI Agent Tool, MCP Client Tool, Tool Executor
+1. **Подузлы универсальных инструментов искусственного интеллекта** (13 узлов)
+- HTTP-запрос инструмента, код инструмента, рабочий процесс инструмента, хранилище векторов инструментов.
+- Калькулятор инструментов, Википедия инструментов, SerpAPI инструментов, Инструмент SearXNG
+- Инструмент WolframAlpha, Инструмент Think
+- Инструмент AI Agent, клиентский инструмент MCP, исполнитель инструмента
 
-2. **All AI Components** (21 nodes from @n8n/n8n-nodes-langchain)
-   - AI Agent, Basic LLM Chain
-   - All LLM nodes (OpenAI, Anthropic, Google Gemini, Cohere, etc.)
-   - All Embedding nodes (OpenAI, Azure, Cohere, HuggingFace)
-   - All Chain nodes (QA Chain, Summarization Chain)
-   - Memory nodes, Vector Store nodes, Document Loaders, etc.
+2. **Все компоненты AI** (21 узел из @n8n/n8n-nodes-langchain)
+- AI-агент, базовая сеть LLM
+- Все узлы LLM (OpenAI, Anthropic, Google Gemini, Cohere и т. д.)
+- Все узлы внедрения (OpenAI, Azure, Cohere, HuggingFace)
+- Все узлы цепочки (цепочка контроля качества, цепочка обобщения)
+- Узлы памяти, узлы векторного хранилища, загрузчики документов и т. д.
 
-3. **All Regular Nodes Usable as Tools** (248 nodes from n8n-nodes-base)
-   - Complete access to node metadata (type, properties, operations, credentials)
-   - Can validate: Airtable, Slack, HTTP Request, Google Sheets, MySQL, PostgreSQL, etc.
-   - Can check: Required parameters, credentials, operation modes
+3. **Все обычные узлы можно использовать в качестве инструментов** (248 узлов из базы n8n-nodes-base)
+- Полный доступ к метаданным узла (тип, свойства, операции, учетные данные)
+- Может проверять: Airtable, Slack, HTTP-запрос, Google Sheets, MySQL, PostgreSQL и т. д.
+- Можно проверить: необходимые параметры, учетные данные, режимы работы.
 
-### Validation Capabilities by Node Type
+### Возможности проверки по типу узла
 
-| Node Category | Count | Validation Level |
+| Категория узла | Граф | Уровень проверки |
 |---------------|-------|------------------|
-| **Purpose-Built Tool Nodes** | 13 | ⭐⭐⭐ **Specific** (custom validation per tool) |
-| **AI Agent & Chains** | 5 | ⭐⭐⭐ **Specific** (connection type enforcement) |
-| **LLM & Embedding Nodes** | 16 | ⭐⭐ **Medium** (generic AI component validation) |
-| **Regular Nodes as Tools** | 248 | ⭐⭐ **Medium** (generic tool validation + node config) |
+| **Специальные инструментальные узлы** | 13 | ⭐⭐⭐ **Специально** (индивидуальная проверка для каждого инструмента) |
+| **Агент ИИ и сети** | 5 | ⭐⭐⭐ **Специальный** (принудительный тип подключения) |
+| **LLM и узлы внедрения** | 16 | ⭐⭐ **Средний** (общая проверка компонентов ИИ) |
+| **Обычные узлы как инструменты** | 248 | ⭐⭐ **Средний** (универсальная проверка инструмента + конфигурация узла) |
 
-### What We Can Validate
+### Что мы можем проверить
 
-✅ **Connection Architecture**:
-- All 8 AI connection types (ai_languageModel, ai_memory, ai_tool, etc.)
-- Connection direction enforcement (connections flow TO AI Agent)
-- Reverse connection mapping
-- Streaming mode constraints
+✅ **Архитектура подключения**:
+- Все 8 типов подключения AI (ai_languageModel, ai_memory, ai_tool и т. д.)
+- Применение направления соединения (поток соединений к агенту AI)
+- Обратное сопоставление соединений
+- Ограничения режима потоковой передачи
 
-✅ **Purpose-Built Tool Nodes** (13 nodes with specific rules):
-- HTTP Request Tool: Placeholder validation
-- Code Tool: Function name, input schema validation
-- Vector Store Tool: Complete chain validation (vectorStore → embedding)
-- Workflow Tool: Sub-workflow reference validation
-- Search Tools: Credential validation
-- All others with appropriate rules
+✅ **Узлы специализированных инструментов** (13 узлов с особыми правилами):
+- Инструмент HTTP-запросов: проверка заполнителя.
+- Инструмент кода: имя функции, проверка входной схемы.
+- Инструмент векторного хранилища: полная проверка цепочки (vectorStore → встраивание)
+- Инструмент рабочего процесса: проверка ссылок на подпроцессы.
+- Инструменты поиска: проверка учетных данных.
+- Все остальные с соответствующими правилами
 
-✅ **Regular Nodes as Tools** (248 nodes):
-- Node type lookup from database
-- Property validation using node schema
-- Credential requirement checking
-- Operation/resource mode validation
-- Tool description recommendations
+✅ **Обычные узлы как инструменты** (248 узлов):
+- Поиск типа узла из базы данных
+- Проверка свойств с использованием схемы узла.
+- Проверка требований к учетным данным
+- Проверка режима работы/ресурса
+- Рекомендации по описанию инструмента
 
-✅ **AI Agent Workflows**:
-- Required ai_languageModel connection
-- Optional ai_memory, ai_tool, ai_outputParser connections
-- Chat Trigger integration (streaming mode, prompt type)
-- Tool connectivity and descriptions
+✅ **Рабочие процессы AI-агента**:
+- Требуется подключение ai_languageModel.
+- Дополнительные соединения ai_memory, ai_tool, ai_outputParser
+- Интеграция триггера чата (режим потоковой передачи, тип приглашения)
+- Подключение инструмента и описания
 
-✅ **Basic LLM Chain Workflows**:
-- Required ai_languageModel connection
-- Forbidden ai_memory and ai_tool connections
-- Optional ai_outputParser connection
+✅ **Основные рабочие процессы цепочки LLM**:
+- Требуется подключение ai_languageModel.
+- Запрещены соединения ai_memory и ai_tool.
+- Дополнительное соединение ai_outputParser
 
-### Implementation Priority
+### Приоритет реализации
 
-**Phase 1: Core Infrastructure** ✅
-- [x] Document complete AI tool ecosystem (269 nodes)
-- [ ] Update `WorkflowConnection` interface with all AI connection types
-- [ ] Implement `buildReverseConnectionMap()` utility
-- [ ] Add helper functions for node type checking
+**Этап 1: Основная инфраструктура** ✅
+- [x] Документирование полной экосистемы инструментов искусственного интеллекта (269 узлов).
+- [ ] Обновление интерфейса `WorkflowConnection` для всех типов подключения AI.
+- [ ] Реализовать утилиту `buildReverseConnectionMap()`
+- [] Добавлены вспомогательные функции для проверки типа узла.
 
-**Phase 2: AI Agent & Chain Validation** (CRITICAL)
-- [ ] Implement `validateAIAgent()` with:
-  - Required ai_languageModel check
-  - Streaming mode validation
-  - Prompt type compatibility
-  - Tool connection validation
-- [ ] Implement `validateBasicLLMChain()` with:
-  - Required ai_languageModel check
-  - Forbidden connection checks
-- [ ] Implement `validateChatTrigger()` with:
-  - Response mode compatibility
-  - Downstream node validation
+**Этап 2: AI-агент и проверка цепочки** (КРИТИЧЕСКИ)
+- [ ] Реализуйте `validateAIAgent()` с помощью:
+- Требуется проверка ai_languageModel
+- Проверка режима потоковой передачи
+- Подсказка совместимости типов
+- Проверка подключения инструмента
+- [ ] Реализуйте `validateBasicLLMChain()` с помощью:
+- Требуется проверка ai_languageModel
+- Запрещенные проверки соединения
+- [ ] Реализуйте `validateChatTrigger()` с помощью:
+- Совместимость режима ответа
+- Проверка нисходящего узла
 
-**Phase 3: Purpose-Built Tool Validation** (HIGH PRIORITY)
-- [ ] Implement `validateHTTPRequestTool()` with placeholder checking
-- [ ] Implement `validateCodeTool()` with schema validation
-- [ ] Implement `validateVectorStoreTool()` with chain validation
-- [ ] Implement `validateWorkflowTool()` with reference checking
-- [ ] Implement `validateSearchTool()` with credential checking
-- [ ] Implement remaining tool-specific validators
+**Этап 3: Проверка специального инструмента** (ВЫСОКИЙ ПРИОРИТЕТ)
+- [ ] Реализовать `validateHTTPRequestTool()` с проверкой заполнителей
+- [ ] Реализовать `validateCodeTool()` с проверкой схемы.
+- [ ] Реализовать `validateVectorStoreTool()` с проверкой цепочки.
+- [ ] Реализовать `validateWorkflowTool()` с проверкой ссылок
+- [ ] Внедрить `validateSearchTool()` с проверкой учетных данных.
+- [ ] Внедрить оставшиеся валидаторы для конкретных инструментов.
 
-**Phase 4: Generic Tool Validation** (MEDIUM PRIORITY)
-- [ ] Implement generic tool connection validator
-- [ ] Validate tool descriptions (toolDescription or description field)
-- [ ] Check credentials configured for regular nodes used as tools
-- [ ] Validate node parameters using database schema
+**Этап 4: Общая проверка инструмента** (СРЕДНИЙ ПРИОРИТЕТ)
+- [] Реализовать универсальный валидатор подключения инструмента.
+- [ ] Проверка описаний инструментов (toolDescription или поле описания)
+- [] Проверьте учетные данные, настроенные для обычных узлов, используемых в качестве инструментов.
+- [] Проверка параметров узла с использованием схемы базы данных.
 
-**Phase 5: Testing & Documentation**
-- [ ] Write unit tests for each validation function
-- [ ] Write integration tests with real workflow templates (2985, 3680, 5296)
-- [ ] Test with all 13 purpose-built tool nodes
-- [ ] Test with sample regular nodes as tools (Slack, HTTP Request, Airtable)
-- [ ] Update validation documentation
-- [ ] Add MCP tool examples for validation checking
+**Этап 5: Тестирование и документирование**
+- [] Написание модульных тестов для каждой функции проверки.
+- [ ] Написание интеграционных тестов с использованием реальных шаблонов рабочих процессов (2985, 3680, 5296).
+- [ ] Протестируйте все 13 специализированных узлов инструментов.
+- [] Тестирование с использованием образцов обычных узлов в качестве инструментов (Slack, HTTP Request, Airtable).
+- [ ] Обновление документации по проверке
+- [] Добавлены примеры инструментов MCP для проверки достоверности.
 
-## Implementation Checklist
+## Контрольный список реализации
 
-### Core Infrastructure ✅
-- [ ] Update `WorkflowConnection` interface with all AI connection types
-- [ ] Implement `buildReverseConnectionMap()` utility
-- [ ] Add helper functions for node type checking
+### Основная инфраструктура ✅
+- [ ] Обновление интерфейса `WorkflowConnection` для всех типов подключения AI.
+- [ ] Реализовать утилиту `buildReverseConnectionMap()`
+- [] Добавлены вспомогательные функции для проверки типа узла.
 
-### AI Agent Validation (Enhanced with Deep Understanding) 🎯
-- [ ] Implement `validateAIAgent()` with:
-  - [x] **Prompt type validation** (auto vs define)
-  - [x] **Text field requirement** check (when promptType='define')
-  - [x] **Language model connection validation** (1 or 2 based on needsFallback)
-  - [x] **Fallback model validation** (needsFallback flag + 2 LLM connections)
-  - [x] **Output parser validation** (hasOutputParser flag + ai_outputParser connection)
-  - [x] **System message recommendations** (warn if missing)
-  - [x] **maxIterations validation** (warn if > 20)
-  - [x] **Version compatibility checks** (needsFallback requires v2.1+)
-  - [x] **Streaming mode validation** (Chat Trigger responseMode='streaming' → no main output)
-  - [ ] Memory connection validation (0-1 ai_memory)
-  - [ ] Tool connection validation (0-N ai_tool)
+### Проверка агента искусственного интеллекта (улучшенная за счет глубокого понимания) 🎯
+- [ ] Реализуйте `validateAIAgent()` с помощью:
+- [x] **Проверка типа запроса** (автоматическое или определение)
+- [x] Проверка **Требования к текстовому полю** (когда PromptType='define')
+- [x] **Проверка соединения языковой модели** (1 или 2 в зависимости от потребностейFallback)
+- [x] **Проверка резервной модели** (требуется флаг Fallback + 2 соединения LLM)
+- [x] **Проверка парсера вывода** (флаг hasOutputParser + соединение ai_outputParser)
+- [x] **Рекомендации по системным сообщениям** (предупреждать при отсутствии)
+- [x] **Проверка maxIterations** (предупреждать, если > 20)
+- [x] **Проверка совместимости версий** (требуетсяFallback, требуется версия 2.1+)
+- [x] **Проверка режима потоковой передачи** (Chat Trigger responseMode='streaming' → нет основного вывода)
+- [ ] Проверка подключения к памяти (0-1 ai_memory)
+- [ ] Проверка подключения инструмента (0-N ai_tool)
 
-### Other AI Node Validation
-- [ ] Implement `validateBasicLLMChain()`
-- [ ] Implement `validateChatTrigger()`
-- [ ] Implement `validateAllToolNodes()` with all 13 sub-validations
-- [ ] Implement generic regular node as tool validation (248 nodes)
+### Другая проверка узла AI
+- [ ] Реализовать `validateBasicLLMChain()`
+- [ ] Реализовать `validateChatTrigger()`
+- [ ] Реализовать `validateAllToolNodes()` со всеми 13 дополнительными проверками.
+- [] Внедрить общий регулярный узел в качестве проверки инструмента (248 узлов).
 
-### Integration
-- [ ] Add validation calls in main `validateWorkflow()` method
-- [ ] Leverage database for node schema validation (269 nodes total)
+### Интеграция
+- [ ] Добавлены вызовы проверки в основной метод `validateWorkflow()`.
+- [] Использование базы данных для проверки схемы узла (всего 269 узлов)
 
-### Testing
-- [ ] Write unit tests for each validation function
-- [ ] Write integration tests with real workflow templates (2985, 3680, 5296)
+### Тестирование
+- [] Написание модульных тестов для каждой функции проверки.
+- [ ] Написание интеграционных тестов с использованием реальных шаблонов рабочих процессов (2985, 3680, 5296).
 
-### Documentation
-- [x] **Complete AI Agent deep architecture analysis**
-- [x] **Document prompt construction (auto vs define)**
-- [x] **Document system message patterns and best practices**
-- [x] **Document fallback models feature**
-- [x] **Document output parser integration**
-- [x] **Document additional options (maxIterations, returnIntermediateSteps, etc.)**
-- [x] **Document version differences (1.x vs 2.1+)**
-- [x] **Provide real-world configuration examples**
-- [x] **Specify MCP tool response improvements**
-- [ ] Update MCP tool implementations to return enhanced information
+### Документация
+- [x] **Полный глубокий анализ архитектуры AI Agent**
+- [x] **Построение подсказки документа (автоматическое или определение)**
+- [x] **Шаблоны сообщений системы документирования и лучшие практики**
+- [x] **Функция резервных моделей документов**
+- [x] **Интеграция парсера вывода документов**
+- [x] **Документируйте дополнительные параметры (maxIterations, returnIntermediateSteps и т. д.)**
+- [x] **Различия версий документа (1.x и 2.1+)**
+- [x] **Предоставьте примеры реальных конфигураций**
+- [x] **Укажите улучшения ответа инструмента MCP**
+- [] Обновление реализаций инструмента MCP для возврата расширенной информации.
 
-## Key Insights for Implementation
+## Ключевые идеи для реализации
 
-### 1. AI Agent is NOT a Simple Node
-The AI Agent node is the most complex node in n8n with:
-- **2 prompt modes** (auto from Chat Trigger vs custom defined)
-- **Dynamic connection requirements** (1-2 LLMs based on fallback setting)
-- **Critical system message** that defines entire behavior
-- **Multiple optional enhancements** (memory, tools, output parsers)
-- **Version-specific features** (fallback, output parser in v2.1+)
-- **Streaming mode constraints** (no main output when Chat Trigger streams)
+### 1. AI-агент — это НЕ простой узел
+Узел AI Agent — самый сложный узел в n8n:
+- **2 режима подсказок** (автоматический из триггера чата или определяемый пользователем)
+- **Требования к динамическому соединению** (1–2 LLM на основе резервной настройки)
+- **Критическое системное сообщение**, определяющее все поведение
+- **Множество дополнительных улучшений** (память, инструменты, анализаторы вывода)
+- **Функции, специфичные для версии** (резервный вариант, анализатор вывода в версии 2.1+)
+- **Ограничения режима потоковой передачи** (нет основного вывода при потоковой передаче Chat Trigger)
 
-### 2. Validation Must Be Context-Aware
-Validation rules change based on:
-- `promptType` setting → affects text field requirement
-- `needsFallback` flag → affects LLM connection count requirement
-- `hasOutputParser` flag → affects output parser connection requirement
-- `typeVersion` → affects available features
-- Upstream Chat Trigger's `responseMode` → affects downstream connection rules
+### 2. Проверка должна быть контекстно-зависимой
+Правила проверки меняются в зависимости от:
+- Настройка `promptType` → влияет на требования к текстовому полю.
+- Флаг `needsFallback` → влияет на требование количества подключений LLM.
+- флаг `hasOutputParser` → влияет на требование подключения выходного парсера
+- `typeVersion` → влияет на доступные функции
+- `responseMode` восходящего чат-триггера → влияет на правила нисходящего соединения.
 
-### 3. System Message is the Most Important Field
-- Defines agent's role, capabilities, constraints
-- Controls tool usage behavior
-- Specifies output format requirements
-- Should be validated for completeness (warn if missing)
-- Real-world templates show detailed, structured system messages
+### 3. Системное сообщение — самое важное поле
+- Определяет роль, возможности и ограничения агента.
+- Контролирует поведение использования инструмента.
+- Определяет требования к выходному формату
+- Должна быть проверена на полноту (предупреждать в случае отсутствия)
+- Реальные шаблоны отображают подробные структурированные системные сообщения.
 
-### 4. Fallback Models Are Production-Critical
-- Automatic failover for reliability
-- Rate limit mitigation
-- Cost optimization strategies
-- Must validate 2 LLM connections when enabled
+### 4. Резервные модели критически важны для производства
+- Автоматическое переключение при отказе для надежности
+- Снижение лимита ставок
+- Стратегии оптимизации затрат
+- Необходимо проверить 2 соединения LLM, если они включены.
 
-### 5. Output Parsers Enforce Structure
-- JSON/XML schema validation
-- Required for structured data extraction
-- System message should define format, parser enforces it
-- Must validate connection when flag is set
+### 5. Синтаксические анализаторы вывода обеспечивают соблюдение структуры
+- Проверка схемы JSON/XML
+- Требуется для извлечения структурированных данных.
+- Системное сообщение должно определять формат, его обеспечивает синтаксический анализатор.
+- Необходимо проверять соединение, когда установлен флаг.
 
-### 6. MCP Tools Need Enhancement
-Current MCP tools should return:
-- **Prompt configuration details** (auto vs define modes)
-- **System message importance and best practices**
-- **Fallback model feature documentation**
-- **Output parser integration patterns**
-- **Connection requirement matrix**
-- **Common configuration mistakes**
-- **Real-world usage examples from templates**
+### 6. Инструменты MCP нуждаются в улучшении
+Текущие инструменты MCP должны вернуть:
+- **Подробные сведения о конфигурации** (автоматический или определяющий режимы)
+- **Важность системных сообщений и рекомендации**
+- **Документация по функциям резервной модели**
+- **Шаблоны интеграции выходного парсера**
+- **Матрица требований к подключению**
+- **Распространенные ошибки конфигурации**
+- **Примеры реального использования из шаблонов**
 
-## Implementation Pseudo-Code
+## Реализация псевдокода
 
-### Core Utility: Build Reverse Connection Map
+### Основная утилита: построение карты обратного соединения
 
 ```typescript
 /**
@@ -3201,7 +3201,7 @@ interface ReverseConnection {
 }
 ```
 
-### Main Validation Flow
+### Основной поток проверки
 
 ```typescript
 /**
@@ -3252,7 +3252,7 @@ function isToolNode(nodeType: string): boolean {
 }
 ```
 
-### Complete AI Agent Validator
+### Полный валидатор агента ИИ
 
 ```typescript
 function validateAIAgent(
@@ -3421,7 +3421,7 @@ function validateAIAgent(
 }
 ```
 
-### Basic LLM Chain Validator
+### Базовый валидатор цепочки LLM
 
 ```typescript
 function validateBasicLLMChain(
@@ -3484,10 +3484,10 @@ function validateBasicLLMChain(
 }
 ```
 
-## Next Steps
+## Следующие шаги
 
-1. **Implement Enhanced AI Agent Validator** using the complete specification from this document
-2. **Update MCP Tool Responses** to include AI Agent deep understanding
-3. **Test with Real Templates** (2985, 3680, 5296) to validate correctness
-4. **Extend to Other AI Nodes** (Basic LLM Chain, Chat Trigger, Tools)
-5. **Complete 269-Node Validation Coverage** for all tool nodes
+1. **Внедрите расширенный валидатор агента AI**, используя полную спецификацию из этого документа.
+2. **Обновите ответы инструмента MCP**, чтобы включить глубокое понимание агента AI.
+3. **Протестируйте с использованием реальных шаблонов** (2985, 3680, 5296), чтобы проверить правильность.
+4. **Распространение на другие узлы AI** (базовая цепочка LLM, триггер чата, инструменты)
+5. **Полная проверка на 269 узлах** для всех узлов инструмента.

@@ -709,6 +709,16 @@ class N8NDocumentationMCPServer {
                 case 'n8n_workflow_autofix':
                     validationResult = validation_schemas_1.ToolValidation.validateWorkflowId(args);
                     break;
+                case 'n8n_code_node_test':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
+                case 'n8n_workflow_execution_get':
+                    validationResult = args.workflowId && args.executionId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId/executionId', message: 'workflowId and executionId are required' }] };
+                    break;
                 case 'n8n_executions_get':
                 case 'n8n_executions_delete':
                     validationResult = args.id
@@ -983,6 +993,21 @@ class N8NDocumentationMCPServer {
                 return n8nHandlers.handleDeleteWorkflow(args, this.instanceContext);
             case 'n8n_workflows_list':
                 return n8nHandlers.handleListWorkflows(args, this.instanceContext);
+            case 'n8n_folders_list':
+                this.validateToolParams(name, args, ['projectId']);
+                return n8nHandlers.handleListFolders(args, this.instanceContext);
+            case 'n8n_folder_create':
+                this.validateToolParams(name, args, ['projectId', 'name']);
+                return n8nHandlers.handleCreateFolder(args, this.instanceContext);
+            case 'n8n_folder_move':
+                this.validateToolParams(name, args, ['projectId', 'folderId']);
+                return n8nHandlers.handleMoveFolder(args, this.instanceContext);
+            case 'n8n_folder_delete':
+                this.validateToolParams(name, args, ['projectId', 'folderId']);
+                return n8nHandlers.handleDeleteFolder(args, this.instanceContext);
+            case 'n8n_workflow_move_to_folder':
+                this.validateToolParams(name, args, ['workflowId', 'parentFolderId']);
+                return n8nHandlers.handleMoveWorkflowToFolder(args, this.instanceContext);
             case 'n8n_workflow_validate':
                 this.validateToolParams(name, args, ['id']);
                 await this.ensureInitialized();
@@ -998,6 +1023,12 @@ class N8NDocumentationMCPServer {
             case 'n8n_workflow_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
+            case 'n8n_code_node_test':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleTestCodeNode(args, this.instanceContext);
+            case 'n8n_workflow_execution_get':
+                this.validateToolParams(name, args, ['workflowId', 'executionId']);
+                return n8nHandlers.handleGetWorkflowExecution(args, this.instanceContext);
             case 'n8n_executions_get':
                 this.validateToolParams(name, args, ['id']);
                 return n8nHandlers.handleGetExecution(args, this.instanceContext);

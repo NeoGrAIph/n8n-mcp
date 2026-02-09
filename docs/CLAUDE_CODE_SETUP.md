@@ -1,12 +1,12 @@
-# Claude Code Setup
+# Настройка кода Клода
 
-Connect n8n-MCP to Claude Code CLI for enhanced n8n workflow development from the command line.
+Подключите n8n-MCP к интерфейсу командной строки Claude Code для расширенной разработки рабочих процессов n8n из командной строки.
 
-## Quick Setup via CLI
+## Быстрая настройка через CLI
 
-### Basic configuration (documentation tools only)
+### Базовая конфигурация (только инструменты документирования)
 
-**For Linux, macOS, or Windows (WSL/Git Bash):**
+**Для Linux, macOS или Windows (WSL/Git Bash):**
 ```bash
 claude mcp add n8n-mcp \
   -e MCP_MODE=stdio \
@@ -15,7 +15,7 @@ claude mcp add n8n-mcp \
   -- npx n8n-mcp
 ```
 
-**For native Windows PowerShell:**
+**Для встроенной оболочки Windows PowerShell:**
 ```powershell
 # Note: The backtick ` is PowerShell's line continuation character.
 claude mcp add n8n-mcp `
@@ -25,11 +25,11 @@ claude mcp add n8n-mcp `
   -- npx n8n-mcp
 ```
 
-![Adding n8n-MCP server in Claude Code](./img/cc_command.png)
+![Добавление сервера n8n-MCP в Claude Code](./img/cc_command.png)
 
-### Full configuration (with n8n management tools)
+### Полная конфигурация (с инструментами управления n8n)
 
-**For Linux, macOS, or Windows (WSL/Git Bash):**
+**Для Linux, macOS или Windows (WSL/Git Bash):**
 ```bash
 claude mcp add n8n-mcp \
   -e MCP_MODE=stdio \
@@ -40,7 +40,7 @@ claude mcp add n8n-mcp \
   -- npx n8n-mcp
 ```
 
-**For native Windows PowerShell:**
+**Для встроенной оболочки Windows PowerShell:**
 ```powershell
 # Note: The backtick ` is PowerShell's line continuation character.
 claude mcp add n8n-mcp `
@@ -52,20 +52,20 @@ claude mcp add n8n-mcp `
   -- npx n8n-mcp
 ```
 
-Make sure to replace `https://your-n8n-instance.com` with your actual n8n URL and `your-api-key` with your n8n API key.
+Обязательно замените `https://your-n8n-instance.com` своим фактическим URL-адресом n8n и `your-api-key` своим ключом API n8n.
 
-## Alternative Setup Methods
+## Альтернативные методы установки
 
-### Option 1: Import from Claude Desktop
+### Вариант 1: Импорт из Claude Desktop
 
-If you already have n8n-MCP configured in Claude Desktop:
+Если у вас уже настроен n8n-MCP в Claude Desktop:
 ```bash
 claude mcp add-from-claude-desktop
 ```
 
-### Option 2: Project Configuration
+### Вариант 2: Конфигурация проекта
 
-For team sharing, add to `.mcp.json` in your project root:
+Для совместного использования командой добавьте `.mcp.json` в корень вашего проекта:
 ```json
 {
   "mcpServers": {
@@ -84,50 +84,50 @@ For team sharing, add to `.mcp.json` in your project root:
 }
 ```
 
-Then use with scope flag:
+Затем используйте с флагом области:
 ```bash
 claude mcp add n8n-mcp --scope project
 ```
 
-## Managing Your MCP Server
+## Управление вашим сервером MCP
 
-Check server status:
+Проверьте статус сервера:
 ```bash
 claude mcp list
 claude mcp get n8n-mcp
 ```
 
-During a conversation, use the `/mcp` command to see server status and available tools.
+Во время разговора используйте команду `/mcp`, чтобы просмотреть состояние сервера и доступные инструменты.
 
-![n8n-MCP connected and showing 39 tools available](./img/cc_connected.png)
+![n8n-MCP подключен и показывает 39 доступных инструментов](./img/cc_connected.png)
 
-Remove the server:
+Удалить сервер:
 ```bash
 claude mcp remove n8n-mcp
 ```
 
-## 🎓 Add Claude Skills (Optional)
+## 🎓 Добавьте навыки Клода (необязательно)
 
-Supercharge your n8n workflow building with specialized Claude Code skills! The [n8n-skills](https://github.com/czlonkowski/n8n-skills) repository provides 7 complementary skills that teach AI assistants how to build production-ready n8n workflows.
+Усовершенствуйте свой рабочий процесс n8n с помощью специальных навыков Claude Code! Репозиторий [n8n-skills](https://github.com/czlonkowski/n8n-skills) предоставляет 7 дополнительных навыков, которые учат помощников ИИ создавать готовые к работе рабочие процессы n8n.
 
-### What You Get
+### Что вы получаете
 
-- ✅ **n8n Expression Syntax** - Correct {{}} patterns and common mistakes
-- ✅ **n8n MCP Tools Expert** - How to use n8n-mcp tools effectively
-- ✅ **n8n Workflow Patterns** - 5 proven architectural patterns
-- ✅ **n8n Validation Expert** - Interpret and fix validation errors
-- ✅ **n8n Node Configuration** - Operation-aware setup guidance
-- ✅ **n8n Code JavaScript** - Write effective JavaScript in Code nodes
-- ✅ **n8n Code Python** - Python patterns with limitation awareness
+- ✅ **Синтаксис выражений n8n** - Исправьте шаблоны {{}} и распространённые ошибки.
+- ✅ **Эксперт по инструментам n8n MCP** - Как эффективно использовать инструменты n8n-mcp
+- ✅ **Шаблоны рабочих процессов n8n** — 5 проверенных архитектурных шаблонов
+- ✅ **n8n Эксперт по валидации** - Интерпретация и исправление ошибок валидации
+- ✅ **Конфигурация узла n8n** - Руководство по настройке с учетом операций
+- ✅ **n8n Code JavaScript** — Напишите эффективный JavaScript в узлах кода.
+- ✅ **n8n Code Python** — Шаблоны Python с учетом ограничений
 
-### Installation
+### Установка
 
-**Method 1: Plugin Installation** (Recommended)
+**Метод 1: Установка плагина** (рекомендуется)
 ```bash
 /plugin install czlonkowski/n8n-skills
 ```
 
-**Method 2: Via Marketplace**
+**Метод 2: через торговую площадку**
 ```bash
 # Add as marketplace, then browse and install
 /plugin marketplace add czlonkowski/n8n-skills
@@ -137,7 +137,7 @@ Supercharge your n8n workflow building with specialized Claude Code skills! The 
 # Select "n8n-mcp-skills" from the list
 ```
 
-**Method 3: Manual Installation**
+**Метод 3: Установка вручную**
 ```bash
 # 1. Clone the repository
 git clone https://github.com/czlonkowski/n8n-skills.git
@@ -149,21 +149,21 @@ cp -r n8n-skills/skills/* ~/.claude/skills/
 # Skills will activate automatically
 ```
 
-For complete installation instructions, configuration options, and usage examples, see the [n8n-skills README](https://github.com/czlonkowski/n8n-skills#-installation).
+Полные инструкции по установке, параметры конфигурации и примеры использования см. в [README n8n-skills](https://github.com/czlonkowski/n8n-skills#-installation).
 
-Skills work seamlessly with n8n-mcp to provide expert guidance throughout the workflow building process!
+Skills безупречно работает с n8n-mcp, обеспечивая экспертное руководство на протяжении всего процесса построения рабочего процесса!
 
-## Project Instructions
+## Инструкции по проекту
 
-For optimal results, create a `CLAUDE.md` file in your project root with the instructions from the [main README's Claude Project Setup section](../README.md#-claude-project-setup).
+Для достижения оптимальных результатов создайте файл `CLAUDE.md` в корне вашего проекта, следуя инструкциям из [основного раздела настройки проекта Claude в README](../README.md#-claude-project-setup).
 
-## Tips
+## Советы
 
-- If you're running n8n locally, use `http://localhost:5678` as the `N8N_API_URL`.
-- The n8n API credentials are optional. Without them, you'll only have access to documentation and validation tools. With credentials, you get full workflow management capabilities.
-- **Scope Management:**
-    - By default, `claude mcp add` uses `--scope local` (also called "user scope"), which saves the configuration to your global user settings and keeps API keys private.
-    - To share the configuration with your team, use `--scope project`. This saves the configuration to a `.mcp.json` file in your project's root directory.
-- **Switching Scope:** The cleanest method is to `remove` the server and then `add` it back with the desired scope flag (e.g., `claude mcp remove n8n-mcp` followed by `claude mcp add n8n-mcp --scope project`).
-- **Manual Switching (Advanced):** You can manually edit your `.claude.json` file (e.g., `C:\Users\YourName\.claude.json`). To switch, cut the `"n8n-mcp": { ... }` block from the top-level `"mcpServers"` object (user scope) and paste it into the nested `"mcpServers"` object under your project's path key (project scope), or vice versa. **Important:** You may need to restart Claude Code for manual changes to take effect.
-- Claude Code will automatically start the MCP server when you begin a conversation.
+- Если вы используете n8n локально, используйте `http://localhost:5678` в качестве `N8N_API_URL`.
+- Учетные данные API n8n не являются обязательными. Без них у вас будет доступ только к документации и инструментам проверки. Имея учетные данные, вы получаете полные возможности управления рабочим процессом.
+- **Управление объемом:**
+- По умолчанию `claude mcp add` использует `--scope local` (также называемый «областью пользователя»), что сохраняет конфигурацию в глобальных настройках пользователя и сохраняет конфиденциальность ключей API.
+- Чтобы поделиться конфигурацией со своей командой, используйте `--scope project`. При этом конфигурация сохраняется в файле `.mcp.json` в корневом каталоге вашего проекта.
+- **Переключение области действия:** Самый простой способ — это `remove` сервер, а затем `add` его обратно с нужным флагом области (например, `claude mcp remove n8n-mcp`, за которым следует `claude mcp add n8n-mcp --scope project`).
+- **Ручное переключение (дополнительно):** Вы можете вручную редактировать файл `.claude.json` (например, `C:\Users\YourName\.claude.json`). Чтобы переключиться, вырежьте блок `"n8n-mcp": { ... }` из объекта `"mcpServers"` верхнего уровня (область пользователя) и вставьте его во вложенный объект `"mcpServers"` под ключом пути вашего проекта (область проекта) или наоборот. **Важно!** Возможно, вам придется перезапустить Claude Code, чтобы изменения, внесенные вручную, вступили в силу.
+- Claude Code автоматически запустит сервер MCP, когда вы начнете разговор.

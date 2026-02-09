@@ -1,51 +1,51 @@
-# Flexible Instance Configuration
+# Гибкая конфигурация экземпляра
 
-## Overview
+## Обзор
 
-The Flexible Instance Configuration feature enables n8n-mcp to serve multiple users with different n8n instances dynamically, without requiring separate deployments for each user. This feature is designed for scenarios where n8n-mcp is hosted centrally and needs to connect to different n8n instances based on runtime context.
+Функция гибкой конфигурации экземпляров позволяет n8n-mcp динамически обслуживать нескольких пользователей с разными экземплярами n8n, не требуя отдельных развертываний для каждого пользователя. Эта функция предназначена для сценариев, в которых n8n-mcp размещается централизованно и требует подключения к различным экземплярам n8n в зависимости от контекста времени выполнения.
 
-## Architecture
+## Архитектура
 
-### Core Components
+### Основные компоненты
 
-1. **InstanceContext Interface** (`src/types/instance-context.ts`)
-   - Runtime configuration container for instance-specific settings
-   - Optional fields for backward compatibility
-   - Comprehensive validation with security checks
+1. **Интерфейс InstanceContext** (`src/types/instance-context.ts`)
+- Контейнер конфигурации времени выполнения для настроек, специфичных для экземпляра.
+- Необязательные поля для обратной совместимости.
+- Комплексная проверка с проверками безопасности
 
-2. **Dual-Mode API Client**
-   - **Singleton Mode**: Uses environment variables (backward compatible)
-   - **Instance Mode**: Uses runtime context for multi-instance support
-   - Automatic fallback between modes
+2. **Двухрежимный API-клиент**
+- **Одноэлементный режим**: используются переменные среды (обратная совместимость).
+- **Режим экземпляра**: использует контекст времени выполнения для поддержки нескольких экземпляров.
+- Автоматический переход между режимами
 
-3. **LRU Cache with Security**
-   - SHA-256 hashed cache keys for security
-   - 30-minute TTL with automatic cleanup
-   - Maximum 100 concurrent instances
-   - Secure dispose callbacks without logging sensitive data
+3. **Кэш LRU с безопасностью**
+- Хешированные ключи кэша SHA-256 для обеспечения безопасности.
+- 30-минутный TTL с автоматической очисткой
+- Максимум 100 одновременных экземпляров
+- Безопасные обратные вызовы удаления без регистрации конфиденциальных данных.
 
-4. **Session Management**
-   - HTTP server tracks session context
-   - Each session can have different instance configuration
-   - Automatic cleanup on session end
+4. **Управление сеансом**
+- HTTP-сервер отслеживает контекст сеанса
+- Каждый сеанс может иметь различную конфигурацию экземпляра.
+- Автоматическая очистка по окончании сеанса
 
-## Configuration
+## Конфигурация
 
-### Environment Variables
+### Переменные среды
 
-New environment variables for cache configuration:
+Новые переменные среды для конфигурации кэша:
 
-- `INSTANCE_CACHE_MAX` - Maximum number of cached instances (default: 100, min: 1, max: 10000)
-- `INSTANCE_CACHE_TTL_MINUTES` - Cache TTL in minutes (default: 30, min: 1, max: 1440/24 hours)
+- `INSTANCE_CACHE_MAX` - ​​Максимальное количество кэшированных экземпляров (по умолчанию: 100, мин: 1, макс: 10000)
+- `INSTANCE_CACHE_TTL_MINUTES` - ​​Срок жизни кэша в минутах (по умолчанию: 30, мин: 1, макс: 1440/24 часа)
 
-Example:
+Пример:
 ```bash
 # Increase cache size for high-volume deployments
 export INSTANCE_CACHE_MAX=500
 export INSTANCE_CACHE_TTL_MINUTES=60
 ```
 
-### InstanceContext Structure
+### Структура InstanceContext
 
 ```typescript
 interface InstanceContext {
@@ -59,26 +59,26 @@ interface InstanceContext {
 }
 ```
 
-### Validation Rules
+### Правила проверки
 
-1. **URL Validation**:
-   - Must be valid HTTP/HTTPS URL
-   - No file://, javascript:, or other dangerous protocols
-   - Proper URL format with protocol and host
+1. **Проверка URL**:
+– Должен быть действительный URL-адрес HTTP/HTTPS.
+- Нет файлов://, javascript: или других опасных протоколов.
+- Правильный формат URL с протоколом и хостом.
 
-2. **API Key Validation**:
-   - Non-empty string required when provided
-   - No placeholder values (e.g., "YOUR_API_KEY")
-   - Case-insensitive placeholder detection
+2. **Проверка ключа API**:
+- Если указана, требуется непустая строка.
+– Нет значений-заполнителей (например, «ВАШ_API_KEY»).
+- Обнаружение заполнителей без учета регистра
 
-3. **Numeric Validation**:
-   - Timeout must be positive number (>0)
-   - Max retries must be non-negative (≥0)
-   - No Infinity or NaN values
+3. **Числовая проверка**:
+- Тайм-аут должен быть положительным числом (>0).
+- Максимальное количество повторов должно быть неотрицательным (≥0).
+- Нет значений бесконечности или NaN.
 
-## Usage Examples
+## Примеры использования
 
-### Basic Usage
+### Базовое использование
 
 ```typescript
 import { getN8nApiClient } from './mcp/handlers-n8n-manager';
@@ -99,9 +99,9 @@ if (client) {
 }
 ```
 
-### HTTP Headers for Multi-Tenant Support
+### HTTP-заголовки для поддержки нескольких клиентов
 
-When using the HTTP server mode, clients can pass instance-specific configuration via HTTP headers:
+При использовании режима HTTP-сервера клиенты могут передавать конфигурацию, специфичную для экземпляра, через HTTP-заголовки:
 
 ```bash
 # Example curl request with instance headers
@@ -115,21 +115,21 @@ curl -X POST http://localhost:3000/mcp \
   -d '{"method": "n8n_workflows_list", "params": {}, "id": 1}'
 ```
 
-#### Supported Headers
+#### Поддерживаемые заголовки
 
-- **X-N8n-Url**: The n8n instance URL (e.g., `https://instance.n8n.cloud`)
-- **X-N8n-Key**: The API key for authentication with the n8n instance
-- **X-Instance-Id**: A unique identifier for the instance (optional, for tracking)
-- **X-Session-Id**: A session identifier (optional, for session tracking)
+- **X-N8n-Url**: URL-адрес экземпляра n8n (например, `https://instance.n8n.cloud`).
+- **X-N8n-Key**: ключ API для аутентификации с помощью экземпляра n8n.
+- **X-Instance-Id**: уникальный идентификатор экземпляра (необязательно, для отслеживания).
+- **X-Session-Id**: идентификатор сеанса (необязательно, для отслеживания сеанса).
 
-#### Header Extraction Logic
+#### Логика извлечения заголовка
 
-1. If either `X-N8n-Url` or `X-N8n-Key` header is present, an instance context is created
-2. All headers are extracted and passed to the MCP server
-3. The server uses the instance-specific configuration instead of environment variables
-4. If no headers are present, the server falls back to environment variables (backward compatible)
+1. Если присутствует заголовок `X-N8n-Url` или `X-N8n-Key`, создается контекст экземпляра.
+2. Все заголовки извлекаются и передаются на сервер MCP.
+3. Сервер использует конфигурацию, специфичную для экземпляра, вместо переменных среды.
+4. Если заголовки отсутствуют, сервер возвращается к переменным среды (обратная совместимость).
 
-#### Example: JavaScript Client
+#### Пример: клиент JavaScript
 
 ```javascript
 const headers = {
@@ -154,7 +154,7 @@ const response = await fetch('http://localhost:3000/mcp', {
 const result = await response.json();
 ```
 
-### HTTP Server Integration
+### Интеграция HTTP-сервера
 
 ```typescript
 // In HTTP request handler
@@ -171,7 +171,7 @@ app.post('/mcp', (req, res) => {
 });
 ```
 
-### Validation Example
+### Пример проверки
 
 ```typescript
 import { validateInstanceContext } from './types/instance-context';
@@ -190,88 +190,88 @@ if (!validation.valid) {
 }
 ```
 
-## Security Features
+## Функции безопасности
 
-### 1. Cache Key Hashing
-- All cache keys use SHA-256 hashing with memoization
-- Prevents sensitive data exposure in logs
-- Example: `sha256(url:key:instance)` → 64-char hex string
-- Memoization cache limited to 1000 entries
+### 1. Хеширование ключей кэша
+- Все ключи кэша используют хеширование SHA-256 с запоминанием.
+- Предотвращает раскрытие конфиденциальных данных в журналах.
+- Пример: `sha256(url:key:instance)` → шестнадцатеричная строка длиной 64 символа.
+- Кэш мемоизации ограничен 1000 записями.
 
-### 2. Enhanced Input Validation
-- Field-specific error messages with detailed reasons
-- URL protocol restrictions (HTTP/HTTPS only)
-- API key placeholder detection (case-insensitive)
-- Numeric range validation with specific error messages
-- Example: "Invalid n8nApiUrl: ftp://example.com - URL must use HTTP or HTTPS protocol"
+### 2. Расширенная проверка ввода
+- Сообщения об ошибках для конкретных полей с подробными причинами.
+- Ограничения протокола URL (только HTTP/HTTPS)
+- Обнаружение заполнителя ключа API (без учета регистра)
+- Проверка числового диапазона с конкретными сообщениями об ошибках
+– Пример: «Неверный n8nApiUrl: ftp://example.com – URL-адрес должен использовать протокол HTTP или HTTPS».
 
-### 3. Secure Logging
-- Only first 8 characters of cache keys logged
-- No sensitive data in debug logs
-- URL sanitization (domain only, no paths)
-- Configuration fallback logging for debugging
+### 3. Безопасное ведение журнала
+- Записываются только первые 8 символов ключей кэша.
+- Нет конфиденциальных данных в журналах отладки.
+- Очистка URL-адресов (только домен, без путей)
+- Резервное ведение журнала конфигурации для отладки.
 
-### 4. Memory Management
-- Configurable LRU cache with automatic eviction
-- TTL-based expiration (configurable, default 30 minutes)
-- Dispose callbacks for cleanup
-- Maximum cache size limits with bounds checking
+### 4. Управление памятью
+- Настраиваемый кэш LRU с автоматическим вытеснением.
+- Срок действия на основе TTL (настраиваемый, по умолчанию 30 минут)
+- Удалить обратные вызовы для очистки.
+- Ограничения максимального размера кэша с проверкой границ.
 
-### 5. Concurrency Protection
-- Mutex-based locking for cache operations
-- Prevents duplicate client creation
-- Simple lock checking with timeout
-- Thread-safe cache operations
+### 5. Защита параллелизма
+- Блокировка на основе мьютекса для операций кэша.
+- Предотвращает создание дубликатов клиентов
+- Простая проверка блокировки с тайм-аутом
+- Потокобезопасные операции кэширования
 
-## Performance Optimization
+## Оптимизация производительности
 
-### Cache Strategy
-- **Max Size**: Configurable via `INSTANCE_CACHE_MAX` (default: 100)
-- **TTL**: Configurable via `INSTANCE_CACHE_TTL_MINUTES` (default: 30)
-- **Update on Access**: Age refreshed on each use
-- **Eviction**: Least Recently Used (LRU) policy
-- **Memoization**: Hash creation uses memoization for frequently used keys
+### Стратегия кэширования
+- **Максимальный размер**: настраивается через `INSTANCE_CACHE_MAX` (по умолчанию: 100).
+- **TTL**: настраивается через `INSTANCE_CACHE_TTL_MINUTES` (по умолчанию: 30).
+- **Обновление при доступе**: возраст обновляется при каждом использовании.
+- **Выселение**: политика «наименее недавно использованного» (LRU).
+- **Мемоизация**: при создании хеша используется мемоизация для часто используемых ключей.
 
-### Cache Metrics
-The system tracks comprehensive metrics:
-- Cache hits and misses
-- Hit rate percentage
-- Eviction count
-- Current size vs maximum size
-- Operation timing
+### Метрики кэша
+Система отслеживает комплексные показатели:
+- Кэш попадает и промахивается
+- Процент попаданий
+- Количество выселений
+- Текущий размер по сравнению с максимальным размером
+- Сроки операции
 
-Retrieve metrics using:
+Получите метрики, используя:
 ```typescript
 import { getInstanceCacheStatistics } from './mcp/handlers-n8n-manager';
 console.log(getInstanceCacheStatistics());
 ```
 
-### Benefits
-- **Performance**: ~12ms average response time
-- **Memory Efficient**: Minimal footprint per instance
-- **Thread Safe**: Mutex protection for concurrent operations
-- **Auto Cleanup**: Unused instances automatically evicted
-- **No Memory Leaks**: Proper disposal callbacks
+### Преимущества
+- **Производительность**: среднее время отклика ~ 12 мс.
+- **Эффективность использования памяти**: минимальный объем занимаемого экземпляра.
+- **Thread Safe**: защита мьютексом для параллельных операций.
+- **Автоматическая очистка**: неиспользуемые экземпляры автоматически удаляются.
+- **Без утечек памяти**: обратные вызовы правильной утилизации.
 
-## Backward Compatibility
+## Обратная совместимость
 
-The feature maintains 100% backward compatibility:
+Эта функция поддерживает 100% обратную совместимость:
 
-1. **Environment Variables Still Work**:
-   - If no context provided, falls back to env vars
-   - Existing deployments continue working unchanged
+1. **Переменные среды все еще работают**:
+- Если контекст не указан, возвращается к переменным окружения.
+- Существующие развертывания продолжают работать без изменений.
 
-2. **Optional Parameters**:
-   - All context fields are optional
-   - Missing fields use defaults or env vars
+2. **Дополнительные параметры**:
+- Все поля контекста являются необязательными.
+- В отсутствующих полях используются значения по умолчанию или переменные окружения.
 
-3. **API Unchanged**:
-   - Same handler signatures with optional context
-   - No breaking changes to existing code
+3. **API без изменений**:
+- Те же подписи обработчиков с дополнительным контекстом.
+- Никаких критических изменений в существующем коде.
 
-## Testing
+## Тестирование
 
-Comprehensive test coverage ensures reliability:
+Комплексное тестирование обеспечивает надежность:
 
 ```bash
 # Run all flexible instance tests
@@ -281,28 +281,28 @@ npm test -- tests/unit/types/instance-context-coverage.test.ts
 npm test -- tests/unit/mcp/handlers-n8n-manager-simple.test.ts
 ```
 
-### Test Coverage Areas
-- Input validation edge cases
-- Cache behavior and eviction
-- Security (hashing, sanitization)
-- Session management
-- Memory leak prevention
-- Concurrent access patterns
+### Зоны тестового покрытия
+- Краевые случаи проверки ввода
+- Поведение кэша и выселение
+- Безопасность (хеширование, санация)
+- Управление сеансами
+- Предотвращение утечки памяти
+- Шаблоны одновременного доступа
 
-## Migration Guide
+## Руководство по миграции
 
-### For Existing Deployments
-No changes required - environment variables continue to work.
+### Для существующих развертываний
+Никаких изменений не требуется — переменные среды продолжают работать.
 
-### For Multi-Instance Support
+### Для поддержки нескольких экземпляров
 
-1. **Update HTTP Server** (if using HTTP mode):
+1. **Обновить HTTP-сервер** (при использовании режима HTTP):
 ```typescript
 // Add context extraction from headers
 const context = extractInstanceContext(req);
 ```
 
-2. **Pass Context to Handlers**:
+2. **Передача контекста обработчикам**:
 ```typescript
 // Old way (still works)
 await handleListWorkflows(params);
@@ -311,7 +311,7 @@ await handleListWorkflows(params);
 await handleListWorkflows(params, context);
 ```
 
-3. **Configure Clients** to send instance information:
+3. **Настройте клиенты** для отправки информации об экземпляре:
 ```typescript
 // Client sends instance info in headers
 headers: {
@@ -321,51 +321,51 @@ headers: {
 }
 ```
 
-## Monitoring
+## Мониторинг
 
-### Metrics to Track
-- Cache hit/miss ratio
-- Instance count in cache
-- Average TTL utilization
-- Memory usage per instance
-- API client creation rate
+### Метрики для отслеживания
+- Коэффициент попадания/промаха в кэше
+- Количество экземпляров в кеше
+- Среднее использование TTL
+- Использование памяти на экземпляр
+- Скорость создания API-клиентов
 
-### Debug Logging
-Enable debug logs to monitor cache behavior:
+### Ведение журнала отладки
+Включите журналы отладки для мониторинга поведения кэша:
 ```bash
 LOG_LEVEL=debug npm start
 ```
 
-## Limitations
+## Ограничения
 
-1. **Maximum Instances**: 100 concurrent instances (configurable)
-2. **TTL**: 30-minute cache lifetime (configurable)
-3. **Memory**: ~1MB per cached instance (estimated)
-4. **Validation**: Strict validation may reject edge cases
+1. **Максимальное количество экземпляров**: 100 одновременных экземпляров (настраивается).
+2. **TTL**: срок жизни кэша 30 минут (настраивается).
+3. **Память**: ~1 МБ на каждый кэшированный экземпляр (оценка).
+4. **Проверка**. Строгая проверка может отклонять крайние случаи.
 
-## Security Considerations
+## Вопросы безопасности
 
-1. **Never Log Sensitive Data**: API keys are never logged
-2. **Hash All Identifiers**: Use SHA-256 for cache keys
-3. **Validate All Input**: Comprehensive validation before use
-4. **Limit Resources**: Cache size and TTL limits
-5. **Clean Up Properly**: Dispose callbacks for resource cleanup
+1. **Никогда не регистрировать конфиденциальные данные**: ключи API никогда не регистрируются.
+2. **Хешировать все идентификаторы**: используйте SHA-256 для ключей кэша.
+3. **Проверка всех входных данных**: комплексная проверка перед использованием.
+4. **Ограничение ресурсов**: размер кэша и ограничения TTL.
+5. **Правильная очистка**: удалите обратные вызовы для очистки ресурсов.
 
-## Future Enhancements
+## Будущие улучшения
 
-Potential improvements for future versions:
+Потенциальные улучшения для будущих версий:
 
-1. **Configurable Cache Settings**: Runtime cache size/TTL configuration
-2. **Instance Metrics**: Per-instance usage tracking
-3. **Rate Limiting**: Per-instance rate limits
-4. **Instance Groups**: Logical grouping of instances
-5. **Persistent Cache**: Optional Redis/database backing
-6. **Instance Discovery**: Automatic instance detection
+1. **Настраиваемые параметры кэша**: размер кэша времени выполнения/конфигурация TTL.
+2. **Метрики экземпляра**: отслеживание использования каждого экземпляра.
+3. **Ограничение скорости**: ограничения скорости для каждого экземпляра.
+4. **Группы экземпляров**: логическая группировка экземпляров.
+5. **Постоянный кеш**: дополнительная поддержка Redis/базы данных.
+6. **Обнаружение экземпляра**: автоматическое обнаружение экземпляра.
 
-## Support
+## Поддерживать
 
-For issues or questions about flexible instance configuration:
-1. Check validation errors for specific problems
-2. Enable debug logging for detailed diagnostics
-3. Review test files for usage examples
-4. Open an issue on GitHub with details
+По вопросам или проблемам, связанным с гибкой конфигурацией экземпляра:
+1. Проверьте ошибки проверки на предмет конкретных проблем.
+2. Включите ведение журнала отладки для подробной диагностики.
+3. Просмотрите тестовые файлы с примерами использования.
+4. Откройте проблему на GitHub с подробностями.

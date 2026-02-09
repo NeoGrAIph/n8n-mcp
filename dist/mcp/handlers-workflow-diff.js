@@ -258,7 +258,10 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
         }
         try {
-            const updatedWorkflow = await client.updateWorkflow(input.id, diffResult.workflow);
+            const hasNonActivationOps = input.operations.some(op => op.type !== 'activateWorkflow' && op.type !== 'deactivateWorkflow');
+            const updatedWorkflow = hasNonActivationOps
+                ? await client.updateWorkflow(input.id, diffResult.workflow)
+                : diffResult.workflow;
             let finalWorkflow = updatedWorkflow;
             let activationMessage = '';
             try {
@@ -279,7 +282,13 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
             if (diffResult.shouldActivate) {
                 try {
-                    finalWorkflow = await client.activateWorkflow(input.id);
+                    const activationResponse = await client.activateWorkflow(input.id);
+                    finalWorkflow = {
+                        ...updatedWorkflow,
+                        ...activationResponse,
+                        nodes: updatedWorkflow.nodes ?? activationResponse.nodes,
+                        connections: updatedWorkflow.connections ?? activationResponse.connections,
+                    };
                     activationMessage = ' Workflow activated.';
                 }
                 catch (activationError) {
@@ -296,7 +305,13 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
             else if (diffResult.shouldDeactivate) {
                 try {
-                    finalWorkflow = await client.deactivateWorkflow(input.id);
+                    const deactivationResponse = await client.deactivateWorkflow(input.id);
+                    finalWorkflow = {
+                        ...updatedWorkflow,
+                        ...deactivationResponse,
+                        nodes: updatedWorkflow.nodes ?? deactivationResponse.nodes,
+                        connections: updatedWorkflow.connections ?? deactivationResponse.connections,
+                    };
                     activationMessage = ' Workflow deactivated.';
                 }
                 catch (deactivationError) {

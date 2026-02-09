@@ -1,37 +1,37 @@
-# Automated Release Process
+# Автоматизированный процесс выпуска
 
-This document describes the automated release system for n8n-mcp, which handles version detection, changelog parsing, and multi-artifact publishing.
+В этом документе описывается автоматизированная система выпуска n8n-mcp, которая обеспечивает определение версий, анализ журнала изменений и публикацию нескольких артефактов.
 
-## Overview
+## Обзор
 
-The automated release system is triggered when the version in `package.json` is updated and pushed to the main branch. It handles:
+Автоматизированная система выпуска запускается, когда версия в `package.json` обновляется и отправляется в основную ветку. Он обрабатывает:
 
-- 🏷️ **GitHub Releases**: Creates releases with changelog content
-- 📦 **NPM Publishing**: Publishes optimized runtime package
-- 🐳 **Docker Images**: Builds and pushes multi-platform images
-- 📚 **Documentation**: Updates version badges automatically
+- 🏷️ **Релизы GitHub**: создает релизы с содержимым журнала изменений.
+- 📦 **Публикация NPM**: публикует оптимизированный пакет среды выполнения.
+- 🐳 **Образы Docker**: создает и отправляет многоплатформенные образы.
+- 📚 **Документация**: автоматически обновляет значки версий.
 
-## Quick Start
+## Быстрый старт
 
-### For Maintainers
+### Для сопровождающих
 
-Use the prepared release script for a guided experience:
+Используйте подготовленный сценарий выпуска для ознакомления:
 
 ```bash
 npm run prepare:release
 ```
 
-This script will:
-1. Prompt for the new version
-2. Update `package.json` and `package.runtime.json`
-3. Update the changelog
-4. Run tests and build
-5. Create a git commit
-6. Optionally push to trigger the release
+Этот скрипт будет:
+1. Запросить новую версию
+2. Обновите `package.json` и `package.runtime.json`.
+3. Обновите журнал изменений.
+4. Запускаем тесты и собираем
+5. Создайте git-коммит
+6. При необходимости нажмите, чтобы вызвать разблокировку.
 
-### Manual Process
+### Ручной процесс
 
-1. **Update the version**:
+1. **Обновите версию**:
    ```bash
    # Edit package.json version field
    vim package.json
@@ -40,13 +40,13 @@ This script will:
    npm run sync:runtime-version
    ```
 
-2. **Update the changelog**:
+2. **Обновите журнал изменений**:
    ```bash
    # Edit docs/CHANGELOG.md
    vim docs/CHANGELOG.md
    ```
 
-3. **Test and commit**:
+3. **Протестируйте и зафиксируйте**:
    ```bash
    # Ensure everything works
    npm test
@@ -59,11 +59,11 @@ This script will:
    git push
    ```
 
-## Workflow Details
+## Подробности рабочего процесса
 
-### Version Detection
+### Определение версии
 
-The workflow monitors pushes to the main branch and detects when `package.json` version changes:
+Мониторы рабочего процесса отправляют данные в основную ветку и обнаруживают изменение версии `package.json`:
 
 ```yaml
 paths:
@@ -71,9 +71,9 @@ paths:
   - 'package.runtime.json'
 ```
 
-### Changelog Parsing
+### Анализ журнала изменений
 
-Automatically extracts release notes from `docs/CHANGELOG.md` using the version header format:
+Автоматически извлекает примечания к выпуску из `docs/CHANGELOG.md`, используя формат заголовка версии:
 
 ```markdown
 ## [2.10.0] - 2025-08-02
@@ -88,67 +88,67 @@ Automatically extracts release notes from `docs/CHANGELOG.md` using the version 
 - Bug fix descriptions
 ```
 
-### Release Artifacts
+### Выпуск артефактов
 
-#### GitHub Release
-- Created with extracted changelog content
-- Tagged with `vX.Y.Z` format
-- Includes installation instructions
-- Links to documentation
+#### Релиз на GitHub
+- Создано с использованием извлеченного содержимого журнала изменений.
+- С тегами в формате `vX.Y.Z`.
+- Включает инструкции по установке
+- Ссылки на документацию
 
-#### NPM Package
-- Published as `n8n-mcp` on npmjs.com
-- Uses runtime-only dependencies (8 packages vs 50+ dev deps)
-- Optimized for `npx` usage
-- ~50MB vs 1GB+ with dev dependencies
+#### Пакет NPM
+- Опубликовано как `n8n-mcp` на npmjs.com.
+- Использует зависимости только во время выполнения (8 пакетов против 50+ разработчиков)
+- Оптимизирован для использования `npx`.
+- ~50 МБ против 1 ГБ+ с учетом зависимостей для разработчиков
 
-#### Docker Images
-- **Standard**: `ghcr.io/czlonkowski/n8n-mcp:vX.Y.Z`
-- **Railway**: `ghcr.io/czlonkowski/n8n-mcp-railway:vX.Y.Z`
-- Multi-platform: linux/amd64, linux/arm64
-- Semantic version tags: `vX.Y.Z`, `vX.Y`, `vX`, `latest`
+#### Изображения Docker
+- **Стандарт**: `ghcr.io/czlonkowski/n8n-mcp:vX.Y.Z`
+- **Железная дорога**: `ghcr.io/czlonkowski/n8n-mcp-railway:vX.Y.Z`
+- Мультиплатформенность: Linux/amd64, Linux/arm64.
+- Теги семантической версии: `vX.Y.Z`, `vX.Y`, `vX`, `latest`
 
-## Configuration
+## Конфигурация
 
-### Required Secrets
+### Обязательные секреты
 
-Set these in GitHub repository settings → Secrets:
+Установите их в настройках репозитория GitHub → Секреты:
 
-| Secret | Description | Required |
+| Секрет | Описание | Требуется |
 |--------|-------------|----------|
-| `NPM_TOKEN` | NPM authentication token for publishing | ✅ Yes |
-| `GITHUB_TOKEN` | Automatically provided by GitHub Actions | ✅ Auto |
+| @@КОД0@@ | Токен аутентификации NPM для публикации | ✅ Да |
+| @@КОД0@@ | Автоматически предоставляется GitHub Действия | ✅ Авто |
 
-### NPM Token Setup
+### Настройка токена NPM
 
-1. Login to [npmjs.com](https://www.npmjs.com)
-2. Go to Account Settings → Access Tokens
-3. Create a new **Automation** token
-4. Add as `NPM_TOKEN` secret in GitHub
+1. Войдите на [npmjs.com](https://www.npmjs.com)
+2. Перейдите в «Настройки учетной записи» → «Токены доступа».
+3. Создайте новый токен **Автоматизации**.
+4. Добавьте секрет `NPM_TOKEN` в GitHub.
 
-## Testing
+## Тестирование
 
-### Test Release Automation
+### Автоматизация тестовых выпусков
 
-Validate the release system without triggering a release:
+Проверьте систему выпуска без запуска выпуска:
 
 ```bash
 npm run test:release-automation
 ```
 
-This checks:
-- ✅ File existence and structure
-- ✅ Version detection logic
-- ✅ Changelog parsing
-- ✅ Build process
-- ✅ NPM package preparation
-- ✅ Docker configuration
-- ✅ Workflow syntax
-- ✅ Environment setup
+Это проверяет:
+- ✅ Наличие и структура файла
+- ✅ Логика определения версии
+- ✅ Анализ журнала изменений
+- ✅ Процесс сборки
+- ✅ Подготовка пакета NPM
+- ✅ Конфигурация Docker
+- ✅ Синтаксис рабочего процесса
+- ✅ Настройка среды
 
-### Local Testing
+### Локальное тестирование
 
-Test individual components:
+Проверьте отдельные компоненты:
 
 ```bash
 # Test version detection
@@ -164,142 +164,142 @@ npm run prepare:publish
 docker build -t test-image .
 ```
 
-## Workflow Jobs
+## Задания рабочего процесса
 
-### 1. Version Detection
-- Compares current vs previous version in git history
-- Determines if it's a prerelease (alpha, beta, rc, dev)
-- Outputs version information for other jobs
+### 1. Определение версии
+- Сравнивает текущую и предыдущую версию в истории git.
+- Определяет, является ли это предварительной версией (альфа, бета, rc, dev)
+- Выводит информацию о версии для других заданий.
 
-### 2. Changelog Extraction
-- Parses `docs/CHANGELOG.md` for the current version
-- Extracts content between version headers
-- Provides formatted release notes
+### 2. Извлечение журнала изменений
+- Анализирует `docs/CHANGELOG.md` на предмет текущей версии
+- Извлекает содержимое между заголовками версий
+- Предоставляет отформатированные примечания к выпуску.
 
-### 3. GitHub Release Creation
-- Creates annotated git tag
-- Creates GitHub release with changelog content
-- Handles prerelease flag for alpha/beta versions
+### 3. Создание релиза GitHub
+- Создает аннотированный тег git.
+- Создает выпуск GitHub с содержимым журнала изменений.
+- Обрабатывает флаг предварительной версии для альфа/бета-версий.
 
-### 4. Build and Test
-- Installs dependencies
-- Runs full test suite
-- Builds TypeScript
-- Rebuilds node database
-- Type checking
+### 4. Сборка и тестирование
+- Устанавливает зависимости
+- Запускает полный набор тестов
+- Создает TypeScript
+- Восстанавливает базу данных узлов.
+- Проверка типа
 
-### 5. NPM Publishing
-- Prepares optimized package structure
-- Uses `package.runtime.json` for dependencies
-- Publishes to npmjs.com registry
-- Automatic cleanup
+### 5. Публикация НПМ
+- Подготавливает оптимизированную структуру пакета.
+- Использует `package.runtime.json` для зависимостей.
+- Публикация в реестре npmjs.com.
+- Автоматическая очистка
 
-### 6. Docker Building
-- Multi-platform builds (amd64, arm64)
-- Two image variants (standard, railway)
-- Semantic versioning tags
-- GitHub Container Registry
+### 6. Создание докера
+- Мультиплатформенные сборки (amd64, Arm64)
+- Два варианта изображения (стандартное, железная дорога)
+- Теги семантического управления версиями
+- Реестр контейнеров GitHub
 
-### 7. Documentation Updates
-- Updates version badges in README
-- Commits documentation changes
-- Automatic push back to repository
+### 7. Обновления документации
+- Обновлены значки версий в README.
+- Вносит изменения в документацию.
+- Автоматический возврат в репозиторий
 
-## Monitoring
+## Мониторинг
 
-### GitHub Actions
-Monitor releases at: https://github.com/czlonkowski/n8n-mcp/actions
+### Действия GitHub
+Следите за выпусками по адресу: https://github.com/czlonkowski/n8n-mcp/actions.
 
-### Release Status
-- **GitHub Releases**: https://github.com/czlonkowski/n8n-mcp/releases
-- **NPM Package**: https://www.npmjs.com/package/n8n-mcp
-- **Docker Images**: https://github.com/czlonkowski/n8n-mcp/pkgs/container/n8n-mcp
+### Статус выпуска
+- **Релизы GitHub**: https://github.com/czlonkowski/n8n-mcp/releases.
+- **Пакет NPM**: https://www.npmjs.com/package/n8n-mcp
+- **Образы Docker**: https://github.com/czlonkowski/n8n-mcp/pkgs/container/n8n-mcp
 
-### Notifications
+### Уведомления
 
-The workflow provides comprehensive summaries:
-- ✅ Success notifications with links
-- ❌ Failure notifications with error details
-- 📊 Artifact information and installation commands
+Рабочий процесс предоставляет подробные сводки:
+- ✅ Уведомления об успехах со ссылками
+- ❌ Уведомления об ошибках с подробностями об ошибках
+- 📊 Информация об артефактах и ​​команды установки.
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Common Issues
+### Распространенные проблемы
 
-#### NPM Publishing Fails
+#### Публикация NPM не удалась
 ```
 Error: 401 Unauthorized
 ```
-**Solution**: Check NPM_TOKEN secret is valid and has publishing permissions.
+**Решение**. Убедитесь, что секрет NPM_TOKEN действителен и имеет разрешения на публикацию.
 
-#### Docker Build Fails
+#### Сборка Docker не удалась
 ```
 Error: failed to solve: could not read from registry
 ```
-**Solution**: Check GitHub Container Registry permissions and GITHUB_TOKEN.
+**Решение**: проверьте разрешения реестра контейнеров GitHub и GITHUB_TOKEN.
 
-#### Changelog Parsing Fails
+#### Ошибка анализа журнала изменений
 ```
 No changelog entries found for version X.Y.Z
 ```
-**Solution**: Ensure changelog follows the correct format:
+**Решение**. Убедитесь, что журнал изменений имеет правильный формат:
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 ```
 
-#### Version Detection Fails
+#### Не удалось определить версию
 ```
 Version not incremented
 ```
-**Solution**: Ensure new version is greater than the previous version.
+**Решение**: убедитесь, что новая версия больше предыдущей.
 
-### Recovery Steps
+### Этапы восстановления
 
-#### Failed NPM Publish
-1. Check if version was already published
-2. If not, manually publish:
+#### Не удалось опубликовать NPM
+1. Проверьте, была ли версия уже опубликована
+2. Если нет, опубликуйте вручную:
    ```bash
    npm run prepare:publish
    cd npm-publish-temp
    npm publish
    ```
 
-#### Failed Docker Build
-1. Build locally to test:
+#### Не удалось собрать Docker
+1. Соберите локально, чтобы протестировать:
    ```bash
    docker build -t test-build .
    ```
-2. Re-trigger workflow or push a fix
+2. Перезапустите рабочий процесс или внесите исправление.
 
-#### Incomplete Release
-1. Delete the created tag if needed:
+#### Неполный выпуск
+1. При необходимости удалите созданный тег:
    ```bash
    git tag -d vX.Y.Z
    git push --delete origin vX.Y.Z
    ```
-2. Fix issues and push again
+2. Исправьте проблемы и повторите попытку.
 
-## Security
+## Безопасность
 
-### Secrets Management
-- NPM_TOKEN has limited scope (publish only)
-- GITHUB_TOKEN has automatic scoping
-- No secrets are logged or exposed
+### Управление секретами
+- NPM_TOKEN имеет ограниченную область действия (только публикация).
+- GITHUB_TOKEN имеет автоматическую область видимости.
+- Никакие секреты не регистрируются и не раскрываются
 
-### Package Security
-- Runtime package excludes development dependencies
-- No build tools or test frameworks in published package
-- Minimal attack surface (~50MB vs 1GB+)
+### Безопасность пакета
+- Пакет времени выполнения исключает зависимости разработки.
+- В опубликованном пакете отсутствуют инструменты сборки или среды тестирования.
+- Минимальная поверхность атаки (~50 МБ против 1 ГБ+)
 
-### Docker Security
-- Multi-stage builds
-- Non-root user execution
-- Minimal base images
-- Security scanning enabled
+### Безопасность докера
+- Многоэтапные сборки
+- Выполнение пользователем без полномочий root
+- Минимальное количество базовых изображений
+- Сканирование безопасности включено
 
-## Changelog Format
+## Формат журнала изменений
 
-The automated system expects changelog entries in [Keep a Changelog](https://keepachangelog.com/) format:
+Автоматизированная система ожидает записи журнала изменений в формате [Сохранить список изменений](https://keepachangelog.com/):
 
 ```markdown
 # Changelog
@@ -330,55 +330,55 @@ All notable changes to this project will be documented in this file.
 ...
 ```
 
-## Version Strategy
+## Стратегия версий
 
-### Semantic Versioning
-- **MAJOR** (X.0.0): Breaking changes
-- **MINOR** (X.Y.0): New features, backward compatible
-- **PATCH** (X.Y.Z): Bug fixes, backward compatible
+### Семантическое управление версиями
+- **MAJOR** (X.0.0): критические изменения.
+- **MINOR** (X.Y.0): новые функции, обратная совместимость.
+- **PATCH** (X.Y.Z): исправлены ошибки, обратная совместимость.
 
-### Prerelease Versions
-- **Alpha**: `X.Y.Z-alpha.N` - Early development
-- **Beta**: `X.Y.Z-beta.N` - Feature complete, testing
-- **RC**: `X.Y.Z-rc.N` - Release candidate
+### Предварительные версии
+- **Альфа**: `X.Y.Z-alpha.N` - ​​Ранняя разработка
+- **Бета**: `X.Y.Z-beta.N` - ​​Функция завершена, тестирование
+- **RC**: `X.Y.Z-rc.N` — кандидат на выпуск
 
-Prerelease versions are automatically detected and marked appropriately.
+Предварительные версии автоматически обнаруживаются и помечаются соответствующим образом.
 
-## Best Practices
+## Лучшие практики
 
-### Before Releasing
-1. ✅ Run `npm run test:release-automation`
-2. ✅ Update changelog with meaningful descriptions
-3. ✅ Test locally with `npm test && npm run build`
-4. ✅ Review breaking changes
-5. ✅ Consider impact on users
+### Перед выпуском
+1. ✅ Запустите `npm run test:release-automation`
+2. ✅ Обновите журнал изменений, добавив содержательные описания.
+3. ✅ Протестируйте локально с помощью `npm test && npm run build`.
+4. ✅ Просмотрите критические изменения.
+5. ✅ Учитывайте влияние на пользователей.
 
-### Version Bumping
-- Use `npm run prepare:release` for guided process
-- Follow semantic versioning strictly
-- Document breaking changes clearly
-- Consider backward compatibility
+### Обновление версий
+- Используйте `npm run prepare:release` для управляемого процесса.
+- Строго следуйте семантическому версионированию.
+- Изменения в документе четко выражены.
+- Учитывайте обратную совместимость.
 
-### Changelog Writing
-- Be specific about changes
-- Include migration notes for breaking changes
-- Credit contributors
-- Use consistent formatting
+### Написание журнала изменений
+- Будьте конкретны в отношении изменений.
+- Включите примечания к миграции для критических изменений.
+- Кредитные вкладчики
+- Используйте единообразное форматирование.
 
-## Contributing
+## Вклад
 
-### For Maintainers
-1. Use automated tools: `npm run prepare:release`
-2. Follow semantic versioning
-3. Update changelog thoroughly
-4. Test before releasing
+### Для сопровождающих
+1. Используйте автоматизированные инструменты: `npm run prepare:release`.
+2. Следуйте семантическому версионированию
+3. Тщательно обновите журнал изменений.
+4. Тестируйте перед выпуском
 
-### For Contributors
-- Breaking changes require MAJOR version bump
-- New features require MINOR version bump
-- Bug fixes require PATCH version bump
-- Update changelog in PR descriptions
+### Для участников
+- Критические изменения требуют БОЛЬШОГО обновления версии.
+- Новые функции требуют МИНОРАЛЬНОГО обновления версии.
+- Для исправления ошибок требуется исправление версии PATCH.
+- Обновлен журнал изменений в описаниях PR.
 
 ---
 
-🤖 *This automated release system was designed with [Claude Code](https://claude.ai/code)*
+🤖 *Эта автоматизированная система выпуска была разработана с использованием [Claude Code](https://claude.ai/code)*

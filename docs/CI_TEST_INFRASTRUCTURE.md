@@ -1,111 +1,111 @@
-# CI Test Infrastructure - Known Issues
+# Инфраструктура тестирования CI — известные проблемы
 
-## Integration Test Failures for External Contributor PRs
+## Неудачные интеграционные тесты для запросов внешних участников
 
-### Issue Summary
+### Краткое описание проблемы
 
-Integration tests fail for external contributor PRs with "No response from n8n server" errors, despite the code changes being correct. This is a **test infrastructure issue**, not a code quality issue.
+Интеграционные тесты не удались для запросов внешних участников с ошибками «Нет ответа от сервера n8n», несмотря на то, что изменения кода были правильными. Это **проблема тестовой инфраструктуры**, а не проблема качества кода.
 
-### Root Cause
+### Первопричина
 
-1. **GitHub Actions Security**: External contributor PRs don't get access to repository secrets (`N8N_API_URL`, `N8N_API_KEY`, etc.)
-2. **MSW Mock Server**: Mock Service Worker (MSW) is not properly intercepting HTTP requests in the CI environment
-3. **Test Configuration**: Integration tests expect `http://localhost:3001/mock-api` but the mock server isn't responding
+1. **Безопасность действий GitHub**: PR внешних участников не получают доступа к секретам репозитория (`N8N_API_URL`, `N8N_API_KEY` и т. д.)
+2. **MSW Mock Server**: Mock Service Worker (MSW) неправильно перехватывает HTTP-запросы в среде CI.
+3. **Конфигурация теста**: интеграционные тесты ожидают `http://localhost:3001/mock-api`, но макетный сервер не отвечает.
 
-### Evidence
+### Доказательство
 
-From CI logs (PR #343):
+Из журналов CI (PR №343):
 ```
 [CI-DEBUG] Global setup complete, N8N_API_URL: http://localhost:3001/mock-api
 ❌ No response from n8n server (repeated 60+ times across 20 tests)
 ```
 
-The tests ARE using the correct mock URL, but MSW isn't intercepting the requests.
+Тесты используют правильный фиктивный URL-адрес, но MSW не перехватывает запросы.
 
-### Why This Happens
+### Почему это происходит
 
-**For External PRs:**
-- GitHub Actions doesn't expose repository secrets for security reasons
-- Prevents malicious PRs from exfiltrating secrets
-- MSW setup runs but requests don't get intercepted in CI
+**Для внешних PR:**
+- GitHub Actions не раскрывает секреты репозитория по соображениям безопасности.
+- Предотвращает раскрытие секретов злонамеренными пиарщиками.
+- Установка MSW выполняется, но запросы не перехватываются в CI.
 
-**Test Configuration:**
-- `.env.test` line 19: `N8N_API_URL=http://localhost:3001/mock-api`
-- `.env.test` line 67: `MSW_ENABLED=true`
-- CI workflow line 75-80: Secrets set but empty for external PRs
+**Тестовая конфигурация:**
+- `.env.test` строка 19: `N8N_API_URL=http://localhost:3001/mock-api`
+- `.env.test` строка 67: `MSW_ENABLED=true`
+- Строка рабочего процесса CI 75–80: секреты заданы, но пусты для внешних запросов на отправку заявок.
 
-### Impact
+### Влияние
 
-- ✅ **Code Quality**: NOT affected - the actual code changes are correct
-- ✅ **Local Testing**: Works fine - MSW intercepts requests locally
-- ❌ **CI for External PRs**: Integration tests fail (infrastructure issue)
-- ✅ **CI for Internal PRs**: Works fine (has access to secrets)
+- ✅ **Качество кода**: НЕ затронуто — фактические изменения кода верны.
+- ✅ **Локальное тестирование**: работает нормально — MSW перехватывает запросы локально.
+- ❌ **CI для внешних PR**: интеграционные тесты не пройдены (проблема инфраструктуры).
+- ✅ **CI для внутренних PR**: работает нормально (имеет доступ к секретам)
 
-### Current Workarounds
+### Текущие обходные пути
 
-1. **For Maintainers**: Use `--admin` flag to merge despite failing tests when code is verified correct
-2. **For Contributors**: Run tests locally where MSW works properly
-3. **For CI**: Unit tests pass (don't require n8n API), integration tests fail
+1. **Для сопровождающих**: используйте флаг `--admin` для слияния, несмотря на неудачные тесты, когда код проверен правильно.
+2. **Для участников**: запускайте тесты локально, где MSW работает правильно.
+3. **Для CI**: модульные тесты пройдены (не требуют API n8n), интеграционные тесты не пройдены.
 
-### Files Affected
+### Затронутые файлы
 
-- `tests/integration/setup/integration-setup.ts` - MSW server setup
-- `tests/setup/msw-setup.ts` - MSW configuration
-- `tests/mocks/n8n-api/handlers.ts` - Mock request handlers
-- `.github/workflows/test.yml` - CI configuration
-- `.env.test` - Test environment configuration
+- `tests/integration/setup/integration-setup.ts` - ​​настройка сервера MSW
+- `tests/setup/msw-setup.ts` - ​​конфигурация MSW
+- `tests/mocks/n8n-api/handlers.ts` - ​​Обработчики ложных запросов
+- `.github/workflows/test.yml` - ​​конфигурация CI
+- `.env.test` - ​​Конфигурация тестовой среды
 
-### Potential Solutions (Not Implemented)
+### Возможные решения (не реализованы)
 
-1. **Separate Unit/Integration Runs**
-   - Run integration tests only for internal PRs
-   - Skip integration tests for external PRs
-   - Rely on unit tests for external PR validation
+1. **Отдельные прогоны модулей/интеграции**
+- Запускайте интеграционные тесты только для внутренних PR.
+- Пропустить интеграционные тесты для внешних PR.
+- Полагайтесь на модульные тесты для внешней проверки PR.
 
-2. **MSW CI Debugging**
-   - Add extensive logging to MSW setup
-   - Check if MSW server actually starts in CI
-   - Verify request interception is working
+2. **Отладка MSW CI**
+- Добавлено расширенное ведение журнала в настройку MSW.
+- Проверьте, действительно ли сервер MSW запускается в CI.
+- Убедитесь, что перехват запросов работает.
 
-3. **Mock Server Process**
-   - Start actual HTTP server in CI instead of MSW
-   - More reliable but adds complexity
-   - Would require test infrastructure refactoring
+3. **Процесс макетного сервера**
+- Запустите настоящий HTTP-сервер в CI вместо MSW.
+- Более надежен, но добавляет сложности
+- Потребуется рефакторинг тестовой инфраструктуры.
 
-4. **Public Test Instance**
-   - Use publicly accessible test n8n instance
-   - Exposes test data, security concerns
-   - Would work for external PRs
+4. **Экземпляр публичного тестирования**
+- Используйте общедоступный тестовый экземпляр n8n.
+- Раскрывает данные испытаний, проблемы безопасности
+- Будет работать для внешних PR-специалистов.
 
-### Decision
+### Решение
 
-**Status**: Documented but not fixed
+**Статус**: Задокументировано, но не исправлено.
 
-**Rationale**:
-- Integration test infrastructure refactoring is separate concern from code quality
-- External PRs are relatively rare compared to internal development
-- Unit tests provide sufficient coverage for most changes
-- Maintainers can verify integration tests locally before merging
+**Обоснование**:
+- Рефакторинг инфраструктуры интеграционного тестирования — это отдельная задача, связанная с качеством кода.
+- Внешние PR относительно редки по сравнению с внутренним развитием.
+- Модульные тесты обеспечивают достаточный охват большинства изменений.
+- Специалисты по сопровождению могут проверять интеграционные тесты локально перед слиянием.
 
-### Testing Strategy
+### Стратегия тестирования
 
-**For External Contributor PRs:**
-1. ✅ Unit tests must pass
-2. ✅ TypeScript compilation must pass
-3. ✅ Build must succeed
-4. ⚠️ Integration test failures are expected (infrastructure issue)
-5. ✅ Maintainer verifies locally before merge
+**Для PR внешних участников:**
+1. ✅ Юнит-тесты должны пройти
+2. ✅ Должна пройти компиляция TypeScript
+3. ✅ Сборка должна быть успешной
+4. ⚠️ Ожидаются сбои интеграционных тестов (проблемы инфраструктуры)
+5. ✅ Сопровождающий проверяет локально перед слиянием
 
-**For Internal PRs:**
-1. ✅ All tests must pass (unit + integration)
-2. ✅ Full CI validation
+**Для внутренних PR:**
+1. ✅Все тесты должны быть пройдены (единичные + интеграционные)
+2. ✅ Полная проверка CI
 
-### References
+### Ссылки
 
-- PR #343: First occurrence of this issue
-- PR #345: Documented the infrastructure issue
-- Issue: External PRs don't get secrets (GitHub Actions security)
+- PR № 343: Первое возникновение этой проблемы.
+- PR №345: Задокументирована проблема с инфраструктурой.
+- Проблема: внешние PR-специалисты не получают секретов (безопасность GitHub Actions).
 
-### Last Updated
+### Последнее обновление
 
-2025-10-21 - Documented as part of PR #345 investigation
+21 октября 2025 г. - Задокументировано в рамках расследования ПР №345.

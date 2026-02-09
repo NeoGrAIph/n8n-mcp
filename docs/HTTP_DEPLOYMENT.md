@@ -1,67 +1,67 @@
-# HTTP Deployment Guide for n8n-MCP
+# Руководство по развертыванию HTTP для n8n-MCP
 
-Deploy n8n-MCP as a remote HTTP server to provide n8n knowledge to compatible MCP Client from anywhere.
+Разверните n8n-MCP в качестве удаленного HTTP-сервера, чтобы предоставлять знания n8n совместимому клиенту MCP из любой точки мира.
 
-## 🎯 Overview
+## 🎯 Обзор
 
-n8n-MCP HTTP mode enables:
-- ☁️ Cloud deployment (VPS, Docker, Kubernetes)
-- 🌐 Remote access from any Claude Desktop /Windsurf / other MCP Client 
-- 🔒 Token-based authentication
-- ⚡ Production-ready performance (~12ms response time)
-- 🚀 Optional n8n management tools (16 additional tools when configured)
-- ❌ Does not work with n8n MCP Tool
+Режим HTTP n8n-MCP позволяет:
+- ☁️ Развертывание в облаке (VPS, Docker, Kubernetes)
+- 🌐 Удаленный доступ с любого Claude Desktop/Windsurf/другого клиента MCP.
+- 🔒 Аутентификация на основе токенов
+- ⚡ Готовая к работе производительность (время отклика ~ 12 мс)
+- 🚀 Дополнительные инструменты управления n8n (16 дополнительных инструментов при настройке)
+- ❌ Не работает с n8n MCP Tool.
 
-## 📐 Deployment Scenarios
+## 📐 Сценарии развертывания
 
-### 1. Local Development (Simplest)
-Use **stdio mode** - Claude Desktop connects directly to the Node.js process:
+### 1. Локальное развитие (самое простое)
+Используйте **режим stdio** — Claude Desktop подключается напрямую к процессу Node.js:
 ```
 Claude Desktop → n8n-mcp (stdio mode)
 ```
-- ✅ No HTTP server needed
-- ✅ No authentication required
-- ✅ Fastest performance
-- ❌ Only works locally
+- ✅ HTTP-сервер не требуется
+- ✅ Не требуется аутентификация
+- ✅ Самая быстрая производительность
+- ❌ Работает только локально
 
-### 2. Local HTTP Server
-Run HTTP server locally for testing remote features:
+### 2. Локальный HTTP-сервер
+Запустите HTTP-сервер локально для тестирования удаленных функций:
 ```
 Claude Desktop → http-bridge.js → localhost:3000
 ```
-- ✅ Test HTTP features locally
-- ✅ Multiple Claude instances can connect
-- ✅ Good for development
-- ❌ Still only local access
+- ✅ Тестируйте функции HTTP локально.
+- ✅ Можно подключить несколько экземпляров Claude
+- ✅ Полезно для развития
+- ❌ По-прежнему только локальный доступ
 
-### 3. Remote Server
-Deploy to cloud for access from anywhere:
+### 3. Удаленный сервер
+Развертывание в облаке для доступа из любого места:
 ```
 Claude Desktop → mcp-remote → https://your-server.com
 ```
-- ✅ Access from anywhere
-- ✅ Team collaboration
-- ✅ Production-ready
-- ❌ Requires server setup
-- Deploy to your VPS - if you just want remote acces, consider deploying to Railway -> [Railway Deployment Guide](./RAILWAY_DEPLOYMENT.md)
+- ✅ Доступ из любого места
+- ✅ Взаимодействие в команде
+- ✅ Готовность к производству
+- ❌ Требуется настройка сервера
+- Развертывание на своем VPS. Если вам просто нужен удаленный доступ, рассмотрите возможность развертывания на железной дороге -> [Руководство по развертыванию на железной дороге](./RAILWAY_DEPLOYMENT.md)
 
 
-## 📋 Prerequisites
+## 📋 Предварительные условия
 
-**Server Requirements:**
-- Node.js 16+ or Docker
-- 512MB RAM minimum
-- Public IP or domain name
-- (Recommended) SSL certificate for HTTPS
+**Требования к серверу:**
+- Node.js 16+ или Docker
+- Минимум 512 МБ ОЗУ
+- Публичный IP-адрес или доменное имя.
+- (Рекомендуется) SSL-сертификат для HTTPS.
 
-**Client Requirements:**
-- Claude Desktop
-- Node.js 18+ (for mcp-remote)
-- Or Claude Pro/Team (for native remote MCP)
+**Требования клиента:**
+- Клод Рабочий стол
+- Node.js 18+ (для mcp-remote)
+- Или Claude Pro/Team (для встроенного удаленного MCP)
 
-## 🚀 Quick Start
+## 🚀 Быстрый старт
 
-### Option 1: Docker Deployment (Recommended for Production)
+### Вариант 1. Развертывание Docker (рекомендуется для рабочей среды)
 
 ```bash
 # 1. Create environment file
@@ -94,7 +94,7 @@ docker run -d \
 curl http://localhost:3000/health
 ```
 
-### Option 2: Local Development (Without Docker)
+### Вариант 2: Локальная разработка (без Docker)
 
 ```bash
 # 1. Clone and setup
@@ -114,9 +114,9 @@ export PORT=3000
 npm run start:http
 ```
 
-### Option 3: Direct stdio Mode (Simplest for Local)
+### Вариант 3: режим Direct stdio (самый простой для локального)
 
-Skip HTTP entirely and use stdio mode directly:
+Полностью пропустите HTTP и используйте режим stdio напрямую:
 
 ```json
 {
@@ -135,87 +135,87 @@ Skip HTTP entirely and use stdio mode directly:
 }
 ```
 
-💡 **Save your AUTH_TOKEN** - clients will need it to connect!
+💡 **Сохраните свой AUTH_TOKEN** — он понадобится клиентам для подключения!
 
-## ⚙️ Configuration
+## ⚙️ Конфигурация
 
-### Required Environment Variables
+### Обязательные переменные среды
 
-| Variable | Description | Example |
+| Переменная | Описание | Пример |
 |----------|-------------|------|
-| `MCP_MODE` | Must be set to `http` | `http` |
-| `USE_FIXED_HTTP` | **Important**: Set to `true` for stable implementation | `true` |
-| `AUTH_TOKEN` or `AUTH_TOKEN_FILE` | Authentication method | See security section |
+| @@КОД0@@ | Должно быть установлено значение `http` | `http` |
+| @@КОД0@@ | **Важно**: для стабильной реализации установите значение `true` | `true` |
+| `AUTH_TOKEN` или `AUTH_TOKEN_FILE` | Метод аутентификации | См. раздел безопасности |
 
-### Optional Settings
+### Дополнительные настройки
 
-| Variable | Description | Default | Since |
+| Переменная | Описание | По умолчанию | Поскольку |
 |----------|-------------|---------|-------|
-| `PORT` | Server port | `3000` | v1.0 |
-| `HOST` | Bind address | `0.0.0.0` | v1.0 |
-| `LOG_LEVEL` | Log verbosity (error/warn/info/debug) | `info` | v1.0 |
-| `NODE_ENV` | Environment | `production` | v1.0 |
-| `TRUST_PROXY` | Trust proxy headers (0=off, 1+=hops) | `0` | v2.7.6 |
-| `BASE_URL` | Explicit public URL | Auto-detected | v2.7.14 |
-| `PUBLIC_URL` | Alternative to BASE_URL | Auto-detected | v2.7.14 |
-| `CORS_ORIGIN` | CORS allowed origins | `*` | v2.7.8 |
-| `AUTH_TOKEN_FILE` | Path to token file | - | v2.7.10 |
+| @@КОД0@@ | Порт сервера | `3000` | v1.0 |
+| @@КОД0@@ | Привязать адрес | `0.0.0.0` | v1.0 |
+| @@КОД0@@ | Подробность журнала (ошибка/предупреждение/информация/отладка) | `info` | v1.0 |
+| @@КОД0@@ | Окружающая среда | `production` | v1.0 |
+| @@КОД0@@ | Доверительные заголовки прокси-сервера (0 = выключено, 1+ = прыжки) | `0` | v2.7.6 |
+| @@КОД0@@ | Явный общедоступный URL-адрес | Автоматически обнаружено | v2.7.14 |
+| @@КОД0@@ | Альтернатива BASE_URL | Автоматически обнаружено | v2.7.14 |
+| @@КОД0@@ | CORS разрешено происхождение | `*` | v2.7.8 |
+| @@КОД0@@ | Путь к файлу токена | - | v2.7.10 |
 
-### n8n Management Tools (Optional)
+### Инструменты управления n8n (дополнительно)
 
-Enable additional tools for managing n8n workflows by configuring API access:
+Включите дополнительные инструменты для управления рабочими процессами n8n, настроив доступ к API:
 
-⚠️ **Requires v2.7.1+** - Earlier versions had an issue with tool registration in Docker environments.
+⚠️ **Требуется версия 2.7.1+** — в более ранних версиях были проблемы с регистрацией инструмента в средах Docker.
 
-| Variable | Description | Example |
+| Переменная | Описание | Пример |
 |----------|-------------|---------|
-| `N8N_API_URL` | Your n8n instance URL | `https://your-n8n.com` |
-| `N8N_API_KEY` | n8n API key (from Settings > API) | `n8n_api_key_xxx` |
-| `N8N_API_TIMEOUT` | Request timeout (ms) | `30000` |
-| `N8N_API_MAX_RETRIES` | Max retry attempts | `3` |
+| @@КОД0@@ | URL-адрес вашего экземпляра n8n | `https://your-n8n.com` |
+| @@КОД0@@ | Ключ API n8n (из «Настройки» > «API») | `n8n_api_key_xxx` |
+| @@КОД0@@ | Тайм-аут запроса (мс) | `30000` |
+| @@КОД0@@ | Максимальное количество повторных попыток | `3` |
 
-#### What This Enables
+#### Что это дает
 
-When configured, you get additional n8n management tools:
+При настройке вы получаете дополнительные инструменты управления n8n:
 
-**Workflow Management:**
-- `n8n_workflow_create` - Create new workflows
-- `n8n_workflow_get` - Get workflow by ID (full/details/structure/minimal modes)
-- `n8n_workflow_update_full` - Update entire workflow
-- `n8n_workflow_update_partial` - Update using diff operations
-- `n8n_workflow_delete` - Delete workflows
-- `n8n_workflows_list` - List workflows with filters
-- `n8n_workflow_validate` - Validate workflows in n8n by ID
-- `n8n_workflow_autofix` - Auto-fix common workflow errors
-- `n8n_template_deploy` - Deploy templates from n8n.io
-- `n8n_workflow_versions_list` - List workflow version history
-- `n8n_workflow_versions_get` - Get a specific workflow version
-- `n8n_workflow_versions_rollback` - Roll back to a previous version
-- `n8n_workflow_versions_delete` - Delete versions for a workflow
-- `n8n_workflow_versions_prune` - Prune versions to keep N most recent
-- `n8n_workflow_versions_truncate` - Truncate ALL versions (dangerous)
+**Управление рабочим процессом:**
+- `n8n_workflow_create` - ​​Создание новых рабочих процессов
+- `n8n_workflow_get` - ​​Получить рабочий процесс по идентификатору (полный/детальный/структурный/минимальный режимы)
+- `n8n_workflow_update_full` - ​​Обновление всего рабочего процесса.
+- `n8n_workflow_update_partial` - ​​Обновление с использованием операций сравнения.
+- `n8n_workflow_delete` - ​​Удаление рабочих процессов
+- `n8n_workflows_list` — список рабочих процессов с фильтрами.
+- `n8n_workflow_validate` - ​​Проверка рабочих процессов в n8n по идентификатору.
+- `n8n_workflow_autofix` - ​​Автоматическое исправление распространенных ошибок рабочего процесса.
+- `n8n_template_deploy` - ​​Развертывание шаблонов из n8n.io
+- `n8n_workflow_versions_list` — просмотреть историю версий рабочего процесса.
+- `n8n_workflow_versions_get` - ​​Получить конкретную версию рабочего процесса.
+- `n8n_workflow_versions_rollback` - ​​Откат к предыдущей версии
+- `n8n_workflow_versions_delete` - ​​Удаление версий рабочего процесса.
+- `n8n_workflow_versions_prune` — сократить версии, чтобы сохранить N самых последних версий.
+- `n8n_workflow_versions_truncate` - ​​Усекать ВСЕ версии (опасно)
 
-**Execution Management:**
-- `n8n_workflow_test` - Trigger workflow execution
-- `n8n_executions_get` - Get execution details
-- `n8n_executions_list` - List executions
-- `n8n_executions_delete` - Delete execution records
+**Управление выполнением:**
+- `n8n_workflow_test` - ​​Запустить выполнение рабочего процесса.
+- `n8n_executions_get` - ​​Получить подробности выполнения
+- `n8n_executions_list` - ​​Список выполнений
+- `n8n_executions_delete` - ​​Удалить записи выполнения
 
-**System Tools:**
-- `n8n_health_check` - Check n8n connectivity
+**Системные инструменты:**
+- `n8n_health_check` - ​​Проверьте подключение n8n
 
-#### Getting Your n8n API Key
+#### Получение ключа API n8n
 
-1. Log into your n8n instance
-2. Go to **Settings** > **API**
-3. Click **Create API Key**
-4. Copy the generated key
+1. Войдите в свой экземпляр n8n.
+2. Откройте **Настройки** > **API**.
+3. Нажмите **Создать ключ API**.
+4. Скопируйте сгенерированный ключ
 
-⚠️ **Security Note**: Store API keys securely and never commit them to version control.
+⚠️ **Примечание по безопасности**: надежно храните ключи API и никогда не передайте их контролю версий.
 
-## 🏗️ Architecture
+## 🏗️ Архитектура
 
-### How HTTP Mode Works
+### Как работает режим HTTP
 
 ```
 ┌─────────────────┐        ┌─────────────┐        ┌──────────────┐
@@ -230,39 +230,39 @@ When configured, you get additional n8n management tools:
                                                    └──────────────┘
 ```
 
-**Key Points:**
-- Claude Desktop **only supports stdio** communication
-- `mcp-remote` acts as a bridge, converting stdio ↔ HTTP
-- n8n-MCP server connects to **one n8n instance** (configured server-side)
-- All clients share the same n8n instance (single-tenant design)
+**Ключевые моменты:**
+- Claude Desktop **поддерживает только связь stdio**.
+- `mcp-remote` действует как мост, преобразуя stdio ↔ HTTP.
+- Сервер n8n-MCP подключается к **одному экземпляру n8n** (настроенному на стороне сервера)
+- Все клиенты используют один и тот же экземпляр n8n (одноарендная конструкция).
 
-## 🌐 Reverse Proxy Configuration
+## 🌐 Конфигурация обратного прокси
 
-### URL Configuration (v2.7.14+)
+### Конфигурация URL-адреса (v2.7.14+)
 
-n8n-MCP intelligently detects your public URL:
+n8n-MCP интеллектуально определяет ваш общедоступный URL-адрес:
 
-#### Priority Order:
-1. **Explicit Configuration** (highest priority):
+#### Приоритетный порядок:
+1. **Явная конфигурация** (высший приоритет):
    ```bash
    BASE_URL=https://n8n-mcp.example.com  # Full public URL
    # or
    PUBLIC_URL=https://api.company.com:8443/mcp
    ```
 
-2. **Auto-Detection** (when TRUST_PROXY is enabled):
+2. **Автоопределение** (когда TRUST_PROXY включен):
    ```bash
    TRUST_PROXY=1  # Required for proxy header detection
    # Server reads X-Forwarded-Proto and X-Forwarded-Host
    ```
 
-3. **Fallback** (local binding):
+3. **Резервный вариант** (локальная привязка):
    ```bash
    # No configuration needed
    # Shows: http://localhost:3000 (or configured HOST:PORT)
    ```
 
-#### What You'll See in Logs:
+#### Что вы увидите в журналах:
 ```
 [INFO] Starting n8n-MCP HTTP Server v2.7.17...
 [INFO] Server running at https://n8n-mcp.example.com
@@ -271,9 +271,9 @@ n8n-MCP intelligently detects your public URL:
 [INFO]   MCP:    https://n8n-mcp.example.com/mcp
 ```
 
-### Trust Proxy for Correct IP Logging
+### Доверительный прокси для правильной регистрации IP-адресов
 
-When running n8n-MCP behind a reverse proxy (Nginx, Traefik, etc.), enable trust proxy to log real client IPs instead of proxy IPs:
+При запуске n8n-MCP за обратным прокси-сервером (Nginx, Traefik и т. д.) включите доверенный прокси-сервер для регистрации реальных IP-адресов клиентов вместо IP-адресов прокси:
 
 ```bash
 # Enable trust proxy in your environment
@@ -282,27 +282,27 @@ TRUST_PROXY=1  # Trust 1 proxy hop (standard setup)
 TRUST_PROXY=2  # Trust 2 proxy hops (CDN → Load Balancer → n8n-mcp)
 ```
 
-**Without TRUST_PROXY:**
+**Без TRUST_PROXY:**
 ```
 [INFO] GET /health { ip: '172.19.0.2' }  # Docker internal IP
 ```
 
-**With TRUST_PROXY=1:**
+**При TRUST_PROXY=1:**
 ```
 [INFO] GET /health { ip: '203.0.113.1' }  # Real client IP
 ```
 
-This is especially important when:
-- Running in Docker/Kubernetes
-- Using load balancers
-- Debugging client issues
-- Implementing rate limiting
+Это особенно важно, когда:
+- Запуск в Docker/Kubernetes
+- Использование балансировщиков нагрузки.
+- Отладка проблем с клиентом.
+- Реализация ограничения скорости
 
-## 🔐 Security Setup
+## 🔐 Настройка безопасности
 
-### Authentication
+### Аутентификация
 
-All requests require Bearer token authentication:
+Все запросы требуют аутентификации токена на предъявителя:
 
 ```bash
 # Test authentication
@@ -310,11 +310,11 @@ curl -H "Authorization: Bearer $AUTH_TOKEN" \
      https://your-server.com/health
 ```
 
-### SSL/HTTPS (Strongly Recommended)
+### SSL/HTTPS (настоятельно рекомендуется)
 
-Use a reverse proxy for SSL termination:
+Используйте обратный прокси-сервер для завершения SSL:
 
-**Nginx example:**
+**Пример Nginx:**
 ```nginx
 server {
     listen 443 ssl;
@@ -334,18 +334,18 @@ server {
 }
 ```
 
-**Caddy example (automatic HTTPS):**
+**Пример Caddy (автоматический HTTPS):**
 ```caddy
 your-domain.com {
     reverse_proxy /mcp localhost:3000
 }
 ```
 
-## 💻 Client Configuration
+## 💻 Конфигурация клиента
 
-⚠️ **Requirements**: Node.js 18+ must be installed on the client machine for `mcp-remote`
+⚠️ **Требования**: на клиентском компьютере для `mcp-remote` должен быть установлен Node.js 18+.
 
-### Method 1: Using mcp-remote (Recommended)
+### Способ 1: использование mcp-remote (рекомендуется)
 
 ```json
 {
@@ -364,11 +364,11 @@ your-domain.com {
 }
 ```
 
-**Note**: Replace `YOUR_AUTH_TOKEN_HERE` with your actual token. Do NOT use `${AUTH_TOKEN}` syntax - Claude Desktop doesn't support environment variable substitution in args.
+**Примечание**. Замените `YOUR_AUTH_TOKEN_HERE` своим действительным токеном. НЕ используйте синтаксис `${AUTH_TOKEN}` — Claude Desktop не поддерживает замену переменных среды в args.
 
-### Method 2: Using Custom Bridge Script
+### Способ 2: использование пользовательского сценария моста
 
-For local testing or when mcp-remote isn't available:
+Для локального тестирования или когда mcp-remote недоступен:
 
 ```json
 {
@@ -387,9 +387,9 @@ For local testing or when mcp-remote isn't available:
 }
 ```
 
-### Local Development with Docker
+### Локальная разработка с помощью Docker
 
-When testing locally with Docker:
+При локальном тестировании с помощью Docker:
 
 ```json
 {
@@ -408,9 +408,9 @@ When testing locally with Docker:
 }
 ```
 
-## 🌐 Production Deployment
+## 🌐 Развертывание производства
 
-### Docker Compose (Complete Example)
+### Docker Compose (полный пример)
 
 ```yaml
 version: '3.8'
@@ -487,7 +487,7 @@ volumes:
   n8n-mcp-data:
 ```
 
-### Systemd Service (Production Linux)
+### Служба Systemd (производственная Linux)
 
 ```ini
 # /etc/systemd/system/n8n-mcp.service
@@ -543,7 +543,7 @@ CPUQuota=50%
 WantedBy=multi-user.target
 ```
 
-**Setup:**
+**Настраивать:**
 ```bash
 # Create user and directories
 sudo useradd -r -s /bin/false n8n-mcp
@@ -568,15 +568,15 @@ sudo systemctl enable n8n-mcp
 sudo systemctl start n8n-mcp
 ```
 
-Enable:
+Давать возможность:
 ```bash
 sudo systemctl enable n8n-mcp
 sudo systemctl start n8n-mcp
 ```
 
-## 📡 Monitoring & Maintenance
+## 📡 Мониторинг и обслуживание
 
-### Health Endpoint Details
+### Сведения о конечной точке работоспособности
 
 ```bash
 # Basic health check
@@ -605,83 +605,83 @@ curl -H "Authorization: Bearer $AUTH_TOKEN" \
 }
 ```
 
-## 🔒 Security Features (v2.16.3+)
+## 🔒 Функции безопасности (v2.16.3+)
 
-### Rate Limiting
+### Ограничение скорости
 
-Built-in rate limiting protects authentication endpoints from brute force attacks:
+Встроенное ограничение скорости защищает конечные точки аутентификации от атак методом перебора:
 
-**Configuration:**
+**Конфигурация:**
 ```bash
 # Defaults (15 minutes window, 20 attempts per IP)
 AUTH_RATE_LIMIT_WINDOW=900000  # milliseconds
 AUTH_RATE_LIMIT_MAX=20
 ```
 
-**Features:**
-- Per-IP rate limiting with configurable window and max attempts
-- Standard rate limit headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset)
-- JSON-RPC formatted error responses
-- Automatic IP tracking behind reverse proxies (requires TRUST_PROXY=1)
+**Функции:**
+- Ограничение скорости по IP с настраиваемым окном и максимальным количеством попыток.
+- Стандартные заголовки ограничения скорости (RateLimit-Limit, RateLimit-Remaining, RaceLimit-Reset)
+- Ответы об ошибках в формате JSON-RPC.
+- Автоматическое отслеживание IP-адресов за обратными прокси (требуется TRUST_PROXY=1)
 
-**Behavior:**
-- First 20 attempts: Return 401 Unauthorized for invalid credentials
-- Attempts 21+: Return 429 Too Many Requests with Retry-After header
-- Counter resets after 15 minutes (configurable)
+**Поведение:**
+- Первые 20 попыток: возврат 401 Unauthorized для неверных учетных данных.
+- Попытки 21+: возврат слишком большого количества запросов 429 с заголовком Retry-After.
+- Счетчик сбрасывается через 15 минут (настраивается)
 
-### SSRF Protection
+### SSRF-защита
 
-Prevents Server-Side Request Forgery attacks when using webhook triggers:
+Предотвращает атаки подделки запросов на стороне сервера при использовании триггеров веб-перехватчика:
 
-**Three Security Modes:**
+**Три режима безопасности:**
 
-1. **Strict Mode (default)** - Production deployments
+1. **Строгий режим (по умолчанию)** — рабочие развертывания.
    ```bash
    WEBHOOK_SECURITY_MODE=strict
    ```
-   - ✅ Block localhost (127.0.0.1, ::1)
-   - ✅ Block private IPs (10.x, 192.168.x, 172.16-31.x)
-   - ✅ Block cloud metadata (169.254.169.254, metadata.google.internal)
-   - ✅ DNS rebinding prevention
-   - 🎯 **Use for**: Cloud deployments, production environments
+- ✅ Заблокировать локальный хост (127.0.0.1, ::1)
+- ✅ Блокировать частные IP-адреса (10.x, 192.168.x, 172.16-31.x)
+- ✅ Блокировать облачные метаданные (169.254.169.254, Metadata.google.internal)
+- ✅ Предотвращение перепривязки DNS
+- 🎯 **Использование**: облачные развертывания, производственные среды.
 
-2. **Moderate Mode** - Local development with local n8n
+2. **Умеренный режим** – локальная разработка с использованием локального n8n.
    ```bash
    WEBHOOK_SECURITY_MODE=moderate
    ```
-   - ✅ Allow localhost (for local n8n instances)
-   - ✅ Block private IPs
-   - ✅ Block cloud metadata
-   - ✅ DNS rebinding prevention
-   - 🎯 **Use for**: Development with n8n on localhost:5678
+- ✅ Разрешить localhost (для локальных экземпляров n8n)
+- ✅ Блокировать частные IP-адреса
+- ✅ Блокировать облачные метаданные
+- ✅ Предотвращение перепривязки DNS
+- 🎯 **Использовать для**: Разработка с помощью n8n на локальном хосте: 5678.
 
-3. **Permissive Mode** - Internal networks only
+3. **Разрешительный режим** – только внутренние сети.
    ```bash
    WEBHOOK_SECURITY_MODE=permissive
    ```
-   - ✅ Allow localhost and private IPs
-   - ✅ Block cloud metadata (always blocked)
-   - ✅ DNS rebinding prevention
-   - 🎯 **Use for**: Internal testing (NOT for production)
+- ✅ Разрешить локальный хост и частные IP-адреса
+- ✅ Блокировать метаданные облака (всегда заблокировано)
+- ✅ Предотвращение перепривязки DNS
+- 🎯 **Использовать для**: внутреннее тестирование (НЕ для производства)
 
-**Important:** Cloud metadata endpoints are ALWAYS blocked in all modes for security.
+**Важно!** Конечные точки облачных метаданных ВСЕГДА блокируются во всех режимах в целях безопасности.
 
-## 🔒 Security Best Practices
+## 🔒 Лучшие практики безопасности
 
-### 1. Token Management
+### 1. Управление токенами
 
-**DO:**
-- ✅ Use tokens with 32+ characters
-- ✅ Store tokens in secure files or secrets management
-- ✅ Rotate tokens regularly (monthly minimum)
-- ✅ Use different tokens for each environment
-- ✅ Monitor logs for authentication failures
+**ДЕЛАТЬ:**
+- ✅ Используйте жетоны с 32+ символами
+- ✅ Храните токены в защищенных файлах или в секретных файлах.
+- ✅ Регулярная ротация токенов (минимум ежемесячно)
+- ✅ Используйте разные токены для каждой среды.
+- ✅ Мониторинг журналов на предмет ошибок аутентификации.
 
-**DON'T:**
-- ❌ Use default or example tokens
-- ❌ Commit tokens to version control
-- ❌ Share tokens between environments
-- ❌ Log tokens in plain text
+**НЕ:**
+- ❌ Используйте токены по умолчанию или примеры.
+- ❌ Зафиксировать токены для контроля версий
+- ❌ Делитесь токенами между средами
+- ❌ Токены журналов в виде обычного текста
 
 ```bash
 # Generate strong token
@@ -699,14 +699,14 @@ kubectl create secret generic n8n-mcp-auth \
 vault kv put secret/n8n-mcp token=$(openssl rand -base64 32)
 ```
 
-### 2. Network Security
+### 2. Сетевая безопасность
 
-- ✅ **Always use HTTPS** in production
-- ✅ **Firewall rules** to limit access
-- ✅ **VPN** for internal deployments
-- ✅ **Rate limiting** at proxy level
+- ✅ **Всегда используйте HTTPS** в производстве
+- ✅ **Правила брандмауэра** для ограничения доступа.
+- ✅ **VPN** для внутреннего развертывания
+- ✅ **Ограничение скорости** на уровне прокси
 
-### 3. Container Security
+### 3. Безопасность контейнера
 
 ```bash
 # Run as non-root user (already configured)
@@ -720,13 +720,13 @@ docker run --read-only \
 docker scan ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-## 🔍 Troubleshooting
+## 🔍 Устранение неполадок
 
-### Common Issues & Solutions
+### Распространенные проблемы и решения
 
-#### Authentication Issues
+#### Проблемы с аутентификацией
 
-**"Unauthorized" error:**
+**Ошибка «Несанкционировано»:**
 ```bash
 # Check token is set correctly
 docker exec n8n-mcp env | grep AUTH
@@ -742,16 +742,16 @@ curl -v -H "Authorization: Bearer YOUR_TOKEN" \
 # - Wrong quotes in JSON config
 ```
 
-**Default token warning:**
+**Предупреждение токена по умолчанию:**
 ```
 ⚠️ SECURITY WARNING: Using default AUTH_TOKEN
 ```
-- Change token immediately via environment variable
-- Server shows this warning every 5 minutes
+- Немедленно изменить токен через переменную среды.
+- Сервер показывает это предупреждение каждые 5 минут.
 
-#### Connection Issues
+#### Проблемы с подключением
 
-**"TransformStream is not defined":**
+**"TransformStream не определен":**
 ```bash
 # Check Node.js version on CLIENT machine
 node --version  # Must be 18+
@@ -762,7 +762,7 @@ node --version  # Must be 18+
 # Windows: Download from nodejs.org
 ```
 
-**"Cannot connect to server":**
+**"Невозможно подключиться к серверу":**
 ```bash
 # 1. Check server is running
 docker ps | grep n8n-mcp
@@ -777,11 +777,11 @@ curl http://localhost:3000/health
 sudo ufw status  # Linux
 ```
 
-**"Stream is not readable":**
-- Ensure `USE_FIXED_HTTP=true` is set
-- Fixed in v2.3.2+
+**"Поток не читается":**
+- Убедитесь, что `USE_FIXED_HTTP=true` установлен.
+- Исправлено в версии 2.3.2+
 
-**Bridge script not working:**
+**Скрипт моста не работает:**
 ```bash
 # Test the bridge manually
 export MCP_URL=http://localhost:3000/mcp
@@ -789,7 +789,7 @@ export AUTH_TOKEN=your-token
 echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | node /path/to/http-bridge.js
 ```
 
-**Connection refused:**
+**В соединении отказано:**
 ```bash
 # Check server is running
 curl http://localhost:3000/health
@@ -802,23 +802,23 @@ docker logs n8n-mcp
 sudo ufw status
 ```
 
-**Authentication failed:**
-- Verify AUTH_TOKEN matches exactly
-- Check for extra spaces or quotes
-- Test with curl first
+**Аутентификация не удалась:**
+- Убедитесь, что AUTH_TOKEN точно соответствует
+- Проверьте наличие лишних пробелов или кавычек.
+- Сначала протестируйте с помощью Curl
 
-#### Bridge Configuration Issues
+#### Проблемы с настройкой моста
 
-**"Why use 'node' instead of 'docker' in Claude config?"**
+**"Зачем использовать "узел" вместо "докер" в конфигурации Клода?"**
 
-Claude Desktop only supports stdio. The architecture is:
+Claude Desktop поддерживает только stdio. Архитектура:
 ```
 Claude → stdio → mcp-remote → HTTP → Docker container
 ```
 
-The `node` command runs mcp-remote (the bridge), not the server directly.
+Команда `node` запускает mcp-remote (мост), а не сервер напрямую.
 
-**"Command not found: npx":**
+**"Команда не найдена: npx":**
 ```bash
 # Install Node.js 18+ which includes npx
 # Or use full path:
@@ -826,7 +826,7 @@ which npx  # Find npx location
 # Use that path in Claude config
 ```
 
-### Debug Mode
+### Режим отладки
 
 ```bash
 # 1. Enable debug logging
@@ -849,15 +849,15 @@ echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | \
   npx mcp-remote $MCP_URL --header "Authorization: Bearer $AUTH_TOKEN"
 ```
 
-### Cloud Platform Deployments
+### Развертывание облачной платформы
 
-**Railway:** See our [Railway Deployment Guide](./RAILWAY_DEPLOYMENT.md)
+**Железная дорога:** см. наше [Руководство по развертыванию железной дороги](./RAILWAY_DEPLOYMENT.md)
 
-## 🔧 Using n8n Management Tools
+## 🔧 Использование инструментов управления n8n
 
-When n8n API is configured, Claude can manage workflows directly:
+Когда API n8n настроен, Клод может напрямую управлять рабочими процессами:
 
-### Example: Create a Workflow via Claude
+### Пример: создание рабочего процесса с помощью Claude
 
 ```bash
 # Test n8n connectivity first
@@ -872,25 +872,25 @@ curl -X POST https://your-server.com/mcp \
   }'
 ```
 
-### Common Use Cases
+### Распространенные случаи использования
 
-1. **Workflow Automation**: Claude can create, update, and manage workflows
-2. **CI/CD Integration**: Deploy workflows from version control
-3. **Workflow Templates**: Claude can apply templates to new workflows
-4. **Monitoring**: Track execution status and debug failures
-5. **Incremental Updates**: Use diff-based updates for efficient changes
+1. **Автоматизация рабочих процессов**: Клод может создавать, обновлять рабочие процессы и управлять ими.
+2. **Интеграция CI/CD**: развертывание рабочих процессов из системы контроля версий.
+3. **Шаблоны рабочих процессов**: Клод может применять шаблоны к новым рабочим процессам.
+4. **Мониторинг**: отслеживание статуса выполнения и ошибок отладки.
+5. **Дополнительные обновления**: используйте обновления на основе различий для эффективных изменений.
 
-### Security Best Practices for n8n API
+### Рекомендации по обеспечению безопасности для API n8n
 
-- 🔐 Use separate API keys for different environments
-- 🔄 Rotate API keys regularly
-- 📝 Audit workflow changes via n8n's audit log
-- 🚫 Never expose n8n API directly to the internet
-- ✅ Use MCP server as a security layer
+- 🔐 Используйте отдельные ключи API для разных сред.
+- 🔄 Регулярно меняйте ключи API
+- 📝 Аудит изменений рабочего процесса через журнал аудита n8n.
+- 🚫 Никогда не открывайте n8n API напрямую в Интернет.
+- ✅ Используйте сервер MCP в качестве уровня безопасности.
 
-## 📦 Updates & Maintenance
+## 📦 Обновления и обслуживание
 
-### Version Updates
+### Обновления версий
 
 ```bash
 # Check current version
@@ -906,7 +906,7 @@ docker rm n8n-mcp
 docker pull ghcr.io/czlonkowski/n8n-mcp:v2.7.17
 ```
 
-### Database Management
+### Управление базой данных
 
 ```bash
 # The database is read-only and pre-built
@@ -924,9 +924,9 @@ curl -X POST https://your-server.com/mcp \
   }'
 ```
 
-## 🆘 Getting Help
+## 🆘 Получение помощи
 
-- 📚 [Full Documentation](https://github.com/czlonkowski/n8n-mcp)
-- 🚂 [Railway Deployment Guide](./RAILWAY_DEPLOYMENT.md) - Easiest deployment option
-- 🐛 [Report Issues](https://github.com/czlonkowski/n8n-mcp/issues)
-- 💬 [Community Discussions](https://github.com/czlonkowski/n8n-mcp/discussions)
+- 📚 [Полная документация](https://github.com/czlonkowski/n8n-mcp)
+- 🚂 [Руководство по развертыванию на железной дороге](./RAILWAY_DEPLOYMENT.md) – Самый простой вариант развертывания
+- 🐛 [Сообщить о проблемах](https://github.com/czlonkowski/n8n-mcp/issues)
+- 💬 [Обсуждения сообщества](https://github.com/czlonkowski/n8n-mcp/discussions)

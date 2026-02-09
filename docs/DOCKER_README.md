@@ -1,17 +1,17 @@
-# Docker Deployment Guide for n8n-MCP
+# Руководство по развертыванию Docker для n8n-MCP
 
-This guide provides comprehensive instructions for deploying n8n-MCP using Docker.
+В этом руководстве представлены подробные инструкции по развертыванию n8n-MCP с помощью Docker.
 
-## 🚀 Quick Start
+## 🚀 Быстрый старт
 
-### Prerequisites
-- Docker Engine 20.10+ (Docker Desktop on Windows/macOS, or Docker Engine on Linux)
+### Предварительные условия
+- Docker Engine 20.10+ (Docker Desktop в Windows/macOS или Docker Engine в Linux)
 - Docker Compose V2
-- (Optional) openssl for generating auth tokens
+- (Необязательно) openssl для генерации токенов аутентификации
 
-### 1. HTTP Server Mode (Recommended)
+### 1. Режим HTTP-сервера (рекомендуется)
 
-The simplest way to deploy n8n-MCP is using Docker Compose with HTTP mode:
+Самый простой способ развернуть n8n-MCP — использовать Docker Compose в режиме HTTP:
 
 ```bash
 # Clone the repository
@@ -34,9 +34,9 @@ docker compose logs -f
 curl http://localhost:3000/health
 ```
 
-### 2. Using Pre-built Images
+### 2. Использование готовых изображений
 
-Pre-built images are available on GitHub Container Registry:
+Готовые образы доступны в реестре контейнеров GitHub:
 
 ```bash
 # Pull the latest image (~280MB optimized)
@@ -52,28 +52,28 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-## 📋 Configuration Options
+## 📋 Параметры конфигурации
 
-### Environment Variables
+### Переменные среды
 
-| Variable | Description | Default | Required |
+| Переменная | Описание | По умолчанию | Требуется |
 |----------|-------------|---------|----------|
-| `MCP_MODE` | Server mode: `stdio` or `http` | `stdio` | No |
-| `AUTH_TOKEN` | Bearer token for HTTP authentication | - | Yes (HTTP mode)* |
-| `AUTH_TOKEN_FILE` | Path to file containing auth token (v2.7.5+) | - | Yes (HTTP mode)* |
-| `PORT` | HTTP server port | `3000` | No |
-| `NODE_ENV` | Environment: `development` or `production` | `production` | No |
-| `LOG_LEVEL` | Logging level: `debug`, `info`, `warn`, `error` | `info` | No |
-| `NODE_DB_PATH` | Custom database path (v2.7.16+) | `/app/data/nodes.db` | No |
-| `AUTH_RATE_LIMIT_WINDOW` | Rate limit window in ms (v2.16.3+) | `900000` (15 min) | No |
-| `AUTH_RATE_LIMIT_MAX` | Max auth attempts per window (v2.16.3+) | `20` | No |
-| `WEBHOOK_SECURITY_MODE` | SSRF protection: `strict`/`moderate`/`permissive` (v2.16.3+) | `strict` | No |
+| @@КОД0@@ | Режим сервера: `stdio` или `http` | `stdio` | Нет |
+| @@КОД0@@ | Токен носителя для HTTP-аутентификации | - | Да (режим HTTP)* |
+| @@КОД0@@ | Путь к файлу, содержащему токен аутентификации (v2.7.5+) | - | Да (режим HTTP)* |
+| @@КОД0@@ | Порт HTTP-сервера | `3000` | Нет |
+| @@КОД0@@ | Среда: `development` или `production` | `production` | Нет |
+| @@КОД0@@ | Уровень ведения журнала: `debug`, `info`, `warn`, `error` | `info` | Нет |
+| @@КОД0@@ | Пользовательский путь к базе данных (v2.7.16+) | `/app/data/nodes.db` | Нет |
+| @@КОД0@@ | Окно ограничения скорости в мс (v2.16.3+) | `900000` (15 мин) | Нет |
+| @@КОД0@@ | Максимальное количество попыток аутентификации на окно (v2.16.3+) | `20` | Нет |
+| @@КОД0@@ | Защита SSRF: `strict`/`moderate`/`permissive` (v2.16.3+) | `strict` | Нет |
 
-*Either `AUTH_TOKEN` or `AUTH_TOKEN_FILE` must be set for HTTP mode. If both are set, `AUTH_TOKEN` takes precedence.
+*Для режима HTTP должен быть установлен `AUTH_TOKEN` или `AUTH_TOKEN_FILE`. Если установлены оба параметра, `AUTH_TOKEN` имеет приоритет.
 
-### Configuration File Support (v2.8.2+)
+### Поддержка файлов конфигурации (v2.8.2+)
 
-You can mount a JSON configuration file to set environment variables:
+Вы можете смонтировать файл конфигурации JSON для установки переменных среды:
 
 ```bash
 # Create config file
@@ -95,25 +95,25 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-The config file supports:
-- All standard environment variables
-- Nested objects (flattened with underscore separators)
-- Arrays, booleans, numbers, and strings
-- Secure handling with command injection prevention
-- Dangerous variable blocking for security
+Конфигурационный файл поддерживает:
+- Все стандартные переменные среды
+- Вложенные объекты (сглаживаются с помощью разделителей подчеркивания)
+- Массивы, логические значения, числа и строки.
+- Безопасное обращение с предотвращением внедрения команд.
+- Опасная блокировка переменных в целях безопасности.
 
-### Docker Compose Configuration
+### Конфигурация Docker Compose
 
-The default `docker-compose.yml` provides:
-- Automatic restart on failure
-- Named volume for data persistence
-- Memory limits (512MB max, 256MB reserved)
-- Health checks every 30 seconds
-- Container labels for organization
+По умолчанию `docker-compose.yml` обеспечивает:
+- Автоматический перезапуск при сбое
+- Именованный том для сохранения данных.
+- Ограничения памяти (максимум 512 МБ, зарезервировано 256 МБ)
+- Проверка здоровья каждые 30 секунд.
+- Контейнерные этикетки для организации.
 
-### Custom Configuration
+### Пользовательская конфигурация
 
-Create a `docker-compose.override.yml` for local customizations:
+Создайте `docker-compose.override.yml` для локальных настроек:
 
 ```yaml
 # docker-compose.override.yml
@@ -128,11 +128,11 @@ services:
       - ./custom-data:/app/data  # Use local directory
 ```
 
-## 🔧 Usage Modes
+## 🔧 Режимы использования
 
-### HTTP Mode (Remote Access)
+### Режим HTTP (удаленный доступ)
 
-Perfect for cloud deployments and remote access:
+Идеально подходит для облачных развертываний и удаленного доступа:
 
 ```bash
 # Start in HTTP mode
@@ -144,7 +144,7 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-Configure Claude Desktop with mcp-remote:
+Настройте Claude Desktop с помощью mcp-remote:
 ```json
 {
   "mcpServers": {
@@ -164,9 +164,9 @@ Configure Claude Desktop with mcp-remote:
 }
 ```
 
-### Stdio Mode (Local Direct Access)
+### Режим Stdio (локальный прямой доступ)
 
-For local Claude Desktop integration without HTTP:
+Для локальной интеграции Claude Desktop без HTTP:
 
 ```bash
 # Run in stdio mode (interactive)
@@ -176,9 +176,9 @@ docker run --rm -i --init \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-### Server Mode (Command Line)
+### Режим сервера (командная строка)
 
-You can also use the `serve` command to start in HTTP mode:
+Вы также можете использовать команду `serve` для запуска в режиме HTTP:
 
 ```bash
 # Using the serve command (v2.8.2+)
@@ -189,7 +189,7 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest serve
 ```
 
-Configure Claude Desktop:
+Настройте рабочий стол Claude:
 ```json
 {
   "mcpServers": {
@@ -209,9 +209,9 @@ Configure Claude Desktop:
 }
 ```
 
-## 🏗️ Building from Source
+## 🏗️ Сборка из исходного кода
 
-### Build Locally
+### Сборка локально
 
 ```bash
 # Clone repository
@@ -230,9 +230,9 @@ docker run -d \
   n8n-mcp:local
 ```
 
-### Multi-architecture Build
+### Мультиархитектурная сборка
 
-Build for multiple platforms:
+Сборка для нескольких платформ:
 
 ```bash
 # Enable buildx
@@ -246,18 +246,18 @@ docker buildx build \
   .
 ```
 
-## 🔍 Health Monitoring
+## 🔍 Мониторинг здоровья
 
-### Health Check Endpoint
+### Конечная точка проверки работоспособности
 
-The container includes a health check that runs every 30 seconds:
+Контейнер включает проверку работоспособности, которая выполняется каждые 30 секунд:
 
 ```bash
 # Check health status
 curl http://localhost:3000/health
 ```
 
-Response example:
+Пример ответа:
 ```json
 {
   "status": "healthy",
@@ -276,7 +276,7 @@ Response example:
 }
 ```
 
-### Docker Health Status
+### Статус работоспособности Docker
 
 ```bash
 # Check container health
@@ -286,11 +286,11 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 docker inspect n8n-mcp | jq '.[0].State.Health'
 ```
 
-## 🔒 Security Features (v2.16.3+)
+## 🔒 Функции безопасности (v2.16.3+)
 
-### Rate Limiting
+### Ограничение скорости
 
-Protects against brute force authentication attacks:
+Защищает от атак грубой силы аутентификации:
 
 ```bash
 # Configure in .env or docker-compose.yml
@@ -298,9 +298,9 @@ AUTH_RATE_LIMIT_WINDOW=900000  # 15 minutes in milliseconds
 AUTH_RATE_LIMIT_MAX=20         # 20 attempts per IP per window
 ```
 
-### SSRF Protection
+### SSRF-защита
 
-Prevents Server-Side Request Forgery when using webhook triggers:
+Предотвращает подделку запросов на стороне сервера при использовании триггеров веб-перехватчика:
 
 ```bash
 # For production (blocks localhost + private IPs + cloud metadata)
@@ -313,18 +313,18 @@ WEBHOOK_SECURITY_MODE=moderate
 WEBHOOK_SECURITY_MODE=permissive
 ```
 
-**Note:** Cloud metadata endpoints (169.254.169.254, metadata.google.internal, etc.) are ALWAYS blocked in all modes.
+**Примечание.** Конечные точки облачных метаданных (169.254.169.254, Metadata.google.internal и т. д.) ВСЕГДА блокируются во всех режимах.
 
-## 🔒 Authentication
+## 🔒 Аутентификация
 
-### Authentication
+### Аутентификация
 
-n8n-MCP supports two authentication methods for HTTP mode:
+n8n-MCP поддерживает два метода аутентификации для режима HTTP:
 
-#### Method 1: AUTH_TOKEN (Environment Variable)
-- Set the token directly as an environment variable
-- Simple and straightforward for basic deployments
-- Always use a strong token (minimum 32 characters)
+#### Способ 1: AUTH_TOKEN (переменная среды)
+- Установите токен непосредственно как переменную среды.
+- Просто и понятно для базового развертывания.
+- Всегда используйте надежный токен (минимум 32 символа).
 
 ```bash
 # Generate secure token
@@ -334,10 +334,10 @@ openssl rand -base64 32
 docker run -e AUTH_TOKEN=your-secure-token ...
 ```
 
-#### Method 2: AUTH_TOKEN_FILE (File Path) - NEW in v2.7.5
-- Read token from a file (Docker secrets compatible)
-- More secure for production deployments
-- Prevents token exposure in process lists
+#### Способ 2: AUTH_TOKEN_FILE (путь к файлу) — НОВОЕ в версии 2.7.5
+- Чтение токена из файла (совместимо с секретами Docker)
+- Более безопасный для производственных развертываний.
+- Предотвращает раскрытие токенов в списках процессов.
 
 ```bash
 # Create token file
@@ -347,21 +347,21 @@ echo "your-secure-token" > /path/to/token.txt
 docker run -e AUTH_TOKEN_FILE=/run/secrets/auth_token ...
 ```
 
-#### Best Practices
-- Never commit tokens to version control
-- Rotate tokens regularly
-- Use AUTH_TOKEN_FILE with Docker secrets for production
-- Ensure token files have restricted permissions (600)
+#### Лучшие практики
+- Никогда не фиксируйте токены под контролем версий.
+- Регулярно меняйте жетоны
+- Используйте AUTH_TOKEN_FILE с секретами Docker для производства.
+- Убедитесь, что файлы токенов имеют ограниченные разрешения (600).
 
-### Network Security
+### Сетевая безопасность
 
-For production deployments:
+Для производственных развертываний:
 
-1. **Use HTTPS** - Put a reverse proxy (nginx, Caddy) in front
-2. **Firewall** - Restrict access to trusted IPs only
-3. **VPN** - Consider VPN access for internal use
+1. **Используйте HTTPS**. Установите обратный прокси-сервер (nginx, Caddy) впереди.
+2. **Брандмауэр** – ограничить доступ только доверенным IP-адресам.
+3. **VPN** – рассмотрите возможность доступа к VPN для внутреннего использования.
 
-Example with Caddy:
+Пример с Кэдди:
 ```
 your-domain.com {
   reverse_proxy n8n-mcp:3000
@@ -371,22 +371,22 @@ your-domain.com {
 }
 ```
 
-### Container Security
+### Безопасность контейнера
 
-- Runs as non-root user (uid 1001)
-- Read-only root filesystem compatible
-- No unnecessary packages installed
-- Regular security updates via GitHub Actions
+- Запускается от имени пользователя без полномочий root (uid 1001)
+- Совместимость с корневой файловой системой только для чтения
+- Никаких ненужных пакетов не установлено.
+- Регулярные обновления безопасности через GitHub Actions.
 
-## 📊 Resource Management
+## 📊 Управление ресурсами
 
-### Memory Limits
+### Ограничения памяти
 
-Default limits in docker-compose.yml:
-- Maximum: 512MB
-- Reserved: 256MB
+Ограничения по умолчанию в docker-compose.yml:
+- Максимум: 512 МБ
+- Зарезервировано: 256 МБ.
 
-Adjust based on your needs:
+Настройте в соответствии с вашими потребностями:
 ```yaml
 services:
   n8n-mcp:
@@ -398,7 +398,7 @@ services:
           memory: 512M
 ```
 
-### Volume Management
+### Управление томами
 
 ```bash
 # List volumes
@@ -420,9 +420,9 @@ docker run --rm \
   alpine tar xzf /backup/n8n-mcp-backup.tar.gz -C /target
 ```
 
-### Custom Database Path (v2.7.16+)
+### Пользовательский путь к базе данных (v2.7.16+)
 
-You can specify a custom database location using `NODE_DB_PATH`:
+Вы можете указать местоположение пользовательской базы данных, используя `NODE_DB_PATH`:
 
 ```bash
 # Use custom path within mounted volume
@@ -436,17 +436,17 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-**Important Notes:**
-- The path must end with `.db`
-- For data persistence, ensure the path is within a mounted volume
-- Paths outside mounted volumes will be lost on container restart
-- The directory will be created automatically if it doesn't exist
+**Важные примечания:**
+- Путь должен заканчиваться на `.db`.
+- Для сохранения данных убедитесь, что путь находится внутри смонтированного тома.
+— Пути за пределами смонтированных томов будут потеряны при перезапуске контейнера.
+- Каталог будет создан автоматически, если он не существует.
 
-## 🐛 Troubleshooting
+## 🐛 Устранение неполадок
 
-### Common Issues
+### Распространенные проблемы
 
-#### Container Exits Immediately
+#### Контейнер немедленно завершает работу
 ```bash
 # Check logs
 docker logs n8n-mcp
@@ -457,7 +457,7 @@ docker logs n8n-mcp
 # - Port already in use
 ```
 
-#### Database Not Initialized
+#### База данных не инициализирована
 ```bash
 # Manually initialize database
 docker exec n8n-mcp node dist/scripts/rebuild.js
@@ -467,15 +467,15 @@ docker compose down -v
 docker compose up -d
 ```
 
-#### Permission Errors
+#### Ошибки разрешений
 ```bash
 # Fix volume permissions
 docker exec n8n-mcp chown -R nodejs:nodejs /app/data
 ```
 
-### Debug Mode
+### Режим отладки
 
-Enable debug logging:
+Включите ведение журнала отладки:
 ```bash
 docker run -d \
   --name n8n-mcp-debug \
@@ -486,7 +486,7 @@ docker run -d \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-### Container Shell Access
+### Доступ к оболочке контейнера
 
 ```bash
 # Access running container
@@ -496,17 +496,17 @@ docker exec -it n8n-mcp sh
 docker exec -it -u root n8n-mcp sh
 ```
 
-## 🚀 Production Deployment
+## 🚀 Развертывание производства
 
-### Recommended Setup
+### Рекомендуемая настройка
 
-1. **Use Docker Compose** for easier management
-2. **Enable HTTPS** with reverse proxy
-3. **Set up monitoring** (Prometheus, Grafana)
-4. **Configure backups** for the data volume
-5. **Use secrets management** for AUTH_TOKEN
+1. **Используйте Docker Compose** для упрощения управления.
+2. **Включить HTTPS** с обратным прокси-сервером.
+3. **Настроить мониторинг** (Прометей, Графана)
+4. **Настройте резервное копирование** для тома данных.
+5. **Используйте управление секретами** для AUTH_TOKEN.
 
-### Example Production Stack
+### Пример производственного стека
 
 ```yaml
 # docker-compose.prod.yml
@@ -550,24 +550,24 @@ secrets:
     file: ./secrets/auth_token.txt
 ```
 
-## 📦 Available Images
+## 📦 Доступные изображения
 
-- `ghcr.io/czlonkowski/n8n-mcp:latest` - Latest stable release
-- `ghcr.io/czlonkowski/n8n-mcp:2.3.0` - Specific version
-- `ghcr.io/czlonkowski/n8n-mcp:main-abc123` - Development builds
+- `ghcr.io/czlonkowski/n8n-mcp:latest` - ​​Последняя стабильная версия
+- `ghcr.io/czlonkowski/n8n-mcp:2.3.0` - ​​Конкретная версия
+- `ghcr.io/czlonkowski/n8n-mcp:main-abc123` - ​​Девелоперские сборки
 
-### Image Details
+### Подробности изображения
 
-- Base: `node:22-alpine`
-- Size: ~280MB compressed
-- Features: Pre-built database with all node information
-- Database: Complete SQLite with 525+ nodes
-- Architectures: `linux/amd64`, `linux/arm64`
-- Updated: Automatically via GitHub Actions
+- База: `node:22-alpine`
+- Размер: ~280 МБ в сжатом виде.
+- Особенности: предварительно созданная база данных со всей информацией об узлах.
+- База данных: полный SQLite с более чем 525 узлами.
+- Архитектуры: `linux/amd64`, `linux/arm64`
+- Обновлено: автоматически через действия GitHub.
 
-## 🔄 Updates and Maintenance
+## 🔄 Обновления и обслуживание
 
-### Updating
+### Обновление
 
 ```bash
 # Pull latest image
@@ -580,7 +580,7 @@ docker compose up -d
 docker compose logs -f
 ```
 
-### Automatic Updates (Watchtower)
+### Автоматические обновления (Сторожевая башня)
 
 ```yaml
 # Add to docker-compose.yml
@@ -592,18 +592,18 @@ services:
     command: --interval 86400 n8n-mcp
 ```
 
-## 📚 Additional Resources
+## 📚 Дополнительные ресурсы
 
-- [Main Documentation](./docs/README.md)
-- [HTTP Deployment Guide](./docs/HTTP_DEPLOYMENT.md)
-- [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)
-- [Installation Guide](./docs/INSTALLATION.md)
+- [Основная документация](./docs/README.md)
+- [Руководство по развертыванию HTTP](./docs/HTTP_DEPLOYMENT.md)
+- [Руководство по устранению неполадок](./docs/TROUBLESHOOTING.md)
+- [Руководство по установке](./docs/INSTALLATION.md)
 
-## 🤝 Support
+## 🤝 Поддержка
 
-- Issues: [GitHub Issues](https://github.com/czlonkowski/n8n-mcp/issues)
-- Discussions: [GitHub Discussions](https://github.com/czlonkowski/n8n-mcp/discussions)
+- Проблемы: [Проблемы GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+- Обсуждения: [Обсуждения GitHub](https://github.com/czlonkowski/n8n-mcp/discussions)
 
 ---
 
-*Last updated: July 2025 - Docker implementation v1.1*
+*Последнее обновление: июль 2025 г. — реализация Docker v1.1*

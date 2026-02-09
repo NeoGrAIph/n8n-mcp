@@ -1,21 +1,21 @@
-# Claude Desktop Configuration for n8n-MCP
+# Конфигурация рабочего стола Claude для n8n-MCP
 
-This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
+Это руководство поможет вам подключить n8n-MCP к Claude Desktop, предоставляя Клоду исчерпывающие знания о 525 узлах автоматизации рабочих процессов n8n, включая 263 инструмента с поддержкой искусственного интеллекта.
 
-> ✅ **Using current tool names**  
-> This guide uses the consolidated tool set: `n8n_node_get` (detail/mode) + `n8n_nodes_search`.
+> ✅ **Использование текущих названий инструментов**
+> В этом руководстве используется объединенный набор инструментов: `n8n_node_get` (детализация/режим) + `n8n_nodes_search`.
 
-## 🎯 Prerequisites
+## 🎯 Предварительные условия
 
-- Claude Desktop installed
-- For local installation: Node.js (any version)
-- For Docker: Docker installed (see installation instructions in main README)
+- Установлен Клод Десктоп
+- Для локальной установки: Node.js (любая версия)
+- Для Docker: Docker установлен (см. инструкции по установке в основном README).
 
-## 🛠️ Configuration Methods
+## 🛠️ Методы настройки
 
-### Method 1: Local Installation (Recommended) 💻
+### Способ 1: локальная установка (рекомендуется) 💻
 
-1. **Install and build:**
+1. **Установка и сборка:**
    ```bash
    git clone https://github.com/czlonkowski/n8n-mcp.git
    cd n8n-mcp
@@ -24,7 +24,7 @@ This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehens
    npm run rebuild
    ```
 
-2. **Configure Claude Desktop:**
+2. **Настройте Claude Desktop:**
    ```json
    {
      "mcpServers": {
@@ -42,13 +42,13 @@ This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehens
    }
    ```
 
-⚠️ **Important**: 
-- Use absolute paths, not relative paths
-- The environment variables shown above are critical for proper stdio communication
+⚠️ **Важно**:
+- Используйте абсолютные, а не относительные пути.
+- Показанные выше переменные среды имеют решающее значение для правильной связи через stdio.
 
-### Method 2: Docker 🐳
+### Способ 2: Докер 🐳
 
-No installation needed - runs directly from Docker:
+Установка не требуется — запускается прямо из Docker:
 
 ```json
 {
@@ -67,17 +67,17 @@ No installation needed - runs directly from Docker:
 }
 ```
 
-✨ **Benefits**: No setup required, always up-to-date, isolated environment.
+✨ **Преимущества**: не требуется установка, всегда актуальная, изолированная среда.
 
-### Method 3: Remote Server Connection (Advanced)
+### Способ 3: подключение к удаленному серверу (расширенный)
 
-⚠️ **Note**: Remote connections are complex and may have compatibility issues. Consider using local installation instead.
+⚠️ **Примечание**. Удаленные подключения сложны и могут иметь проблемы с совместимостью. Вместо этого рассмотрите возможность использования локальной установки.
 
-For production deployments with multiple users:
+Для производственных развертываний с несколькими пользователями:
 
-1. **Deploy server with HTTP mode** (see [HTTP Deployment Guide](./HTTP_DEPLOYMENT.md))
+1. **Разверните сервер в режиме HTTP** (см. [Руководство по развертыванию HTTP](./HTTP_DEPLOYMENT.md))
 
-2. **Connect using custom HTTP client:**
+2. **Подключитесь с помощью специального HTTP-клиента:**
    ```json
    {
      "mcpServers": {
@@ -95,133 +95,133 @@ For production deployments with multiple users:
    }
    ```
 
-📝 **Note**: Native remote MCP support is available in Claude Pro/Team/Enterprise via Settings > Integrations.
+📝 **Примечание**. Встроенная удаленная поддержка MCP доступна в Claude Pro/Team/Enterprise через «Настройки» > «Интеграции».
 
-## 📁 Configuration File Locations
+## 📁 Расположение файлов конфигурации
 
-Find your `claude_desktop_config.json` file:
+Найдите свой файл `claude_desktop_config.json`:
 
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-🔄 **Important**: After editing, restart Claude Desktop (Cmd/Ctrl+R or quit and reopen).
+🔄 **Важно**: после редактирования перезапустите Claude Desktop (Cmd/Ctrl+R или выйдите и откройте снова).
 
-## ✅ Verify Installation
+## ✅ Проверка установки
 
-After restarting Claude Desktop:
+После перезапуска Claude Desktop:
 
-1. Look for "n8n-docker" or "n8n-documentation" in the MCP servers list
-2. Try asking Claude: "What n8n nodes are available for working with Slack?"
-3. Or use a tool directly: "Use the n8n_nodes_search tool to show me trigger nodes"
+1. Найдите «n8n-docker» или «n8n-documentation» в списке серверов MCP.
+2. Попробуйте спросить Клода: «Какие узлы n8n доступны для работы со Slack?»
+3. Или используйте инструмент напрямую: «Используйте инструмент n8n_nodes_search, чтобы показать мне триггерные узлы»
 
-## 🔧 Available Tools
+## 🔧 Доступные инструменты
 
-### Core Tools
-- **`n8n_tools_documentation`** - Get documentation for any MCP tool (start here)
-- **`n8n_nodes_search`** - Full-text search across all nodes
-- **`n8n_node_get`** - Unified node info (info/docs/search_properties/versions)
-- **`n8n_node_validate`** - Validate node configuration (minimal/full)
-- **`n8n_workflow_json_validate`** - Full workflow validation
-- **`n8n_templates_search`** - Search workflow templates
-- **`n8n_template_get`** - Get template details by ID
+### Основные инструменты
+- **`n8n_tools_documentation`** - Получите документацию для любого инструмента MCP (начните здесь)
+- **`n8n_nodes_search`** - Полнотекстовый поиск по всем узлам
+- **`n8n_node_get`** - унифицированная информация об узле (info/docs/search_properties/versions)
+- **`n8n_node_validate`** - Проверка конфигурации узла (минимальная/полная)
+- **`n8n_workflow_json_validate`** - Полная проверка рабочего процесса
+- **`n8n_templates_search`** — Поиск шаблонов рабочих процессов.
+- **`n8n_template_get`** - Получить информацию о шаблоне по идентификатору
 
-### n8n Management Tools (Requires API Configuration)
-- **`n8n_workflow_create`** - Create new workflows
-- **`n8n_workflow_get`** - Get workflow by ID (full/details/structure/minimal)
-- **`n8n_workflow_update_full`** - Replace entire workflow
-- **`n8n_workflow_update_partial`** - Diff-based updates
-- **`n8n_workflow_delete`** - Delete workflows
-- **`n8n_workflows_list`** - List workflows
-- **`n8n_workflow_validate`** - Validate workflows in n8n by ID
-- **`n8n_workflow_autofix`** - Auto-fix common workflow errors
-- **`n8n_template_deploy`** - Deploy templates from n8n.io
-- **`n8n_workflow_test`** - Trigger workflow execution
-- **`n8n_executions_get`** - Get execution details
-- **`n8n_executions_list`** - List executions
-- **`n8n_executions_delete`** - Delete execution records
-- **`n8n_health_check`** - Check n8n connectivity
-- **`n8n_workflow_versions_list`** - List workflow versions
-- **`n8n_workflow_versions_get`** - Get workflow version
-- **`n8n_workflow_versions_rollback`** - Roll back to a version
-- **`n8n_workflow_versions_delete`** - Delete workflow versions
-- **`n8n_workflow_versions_prune`** - Prune old versions
-- **`n8n_workflow_versions_truncate`** - Truncate ALL versions
+### Инструменты управления n8n (требуется настройка API)
+- **`n8n_workflow_create`** - Создание новых рабочих процессов.
+- **`n8n_workflow_get`** - Получить рабочий процесс по идентификатору (полный/подробный/структурный/минимальный)
+- **`n8n_workflow_update_full`** - Заменить весь рабочий процесс
+- **`n8n_workflow_update_partial`** - Обновления на основе различий
+- **`n8n_workflow_delete`** - Удаление рабочих процессов
+- **`n8n_workflows_list`** — Список рабочих процессов
+- **`n8n_workflow_validate`** — Проверка рабочих процессов в n8n по идентификатору.
+- **`n8n_workflow_autofix`** — автоматическое исправление распространенных ошибок рабочего процесса.
+- **`n8n_template_deploy`** - Развертывание шаблонов из n8n.io
+- **`n8n_workflow_test`** — запуск рабочего процесса.
+- **`n8n_executions_get`** - Получить подробности выполнения
+- **`n8n_executions_list`** - Список выполнений
+- **`n8n_executions_delete`** - Удалить записи выполнения
+- **`n8n_health_check`** - Проверьте подключение n8n
+- **`n8n_workflow_versions_list`** — список версий рабочего процесса.
+- **`n8n_workflow_versions_get`** - Получить версию рабочего процесса
+- **`n8n_workflow_versions_rollback`** - Откат к версии
+- **`n8n_workflow_versions_delete`** — Удаление версий рабочего процесса.
+- **`n8n_workflow_versions_prune`** - Удалить старые версии
+- **`n8n_workflow_versions_truncate`** - Усечь ВСЕ версии
 
-### Example Questions to Ask Claude:
-- "Show me all n8n nodes for working with databases"
-- "How do I use the HTTP Request node?"
-- "Get the Slack node essentials" (uses n8n_node_get with detail: standard)
-- "How can I use Google Sheets as an AI tool?"
-- "Validate my workflow before deployment"
-- "Find templates for webhook automation"
+### Примеры вопросов, которые следует задать Клоду:
+- «Покажите мне все узлы n8n для работы с базами данных»
+- «Как использовать узел HTTP-запроса?»
+- «Получить основы узла Slack» (использует n8n_node_get с подробностями: стандарт)
+- «Как я могу использовать Google Таблицы в качестве инструмента искусственного интеллекта?»
+- «Проверьте мой рабочий процесс перед развертыванием»
+- «Найти шаблоны для автоматизации вебхуков»
 
-## 🔍 Troubleshooting
+## 🔍 Устранение неполадок
 
-### Server Not Appearing in Claude
+### Сервер не отображается в Клоде
 
-1. **Check JSON syntax**: 
+1. **Проверьте синтаксис JSON**:
    ```bash
    # Validate your config file
    cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
    ```
 
-2. **Verify paths are absolute** (not relative)
+2. **Проверьте, что пути являются абсолютными** (не относительными).
 
-3. **Restart Claude Desktop completely** (quit and reopen)
+3. **Полностью перезапустите Claude Desktop** (закройте и снова откройте).
 
-### Remote Connection Issues
+### Проблемы с удаленным подключением
 
-**"TransformStream is not defined" error:**
-- Cause: Node.js version < 18
-- Fix: Update Node.js to v18 or newer
+**Ошибка «TransformStream не определен»:**
+- Причина: версия Node.js < 18.
+- Исправлено: обновите Node.js до версии 18 или новее.
   ```bash
   node --version  # Should be v18.0.0 or higher
   ```
 
-**"Server disconnected" error:**
-- Check AUTH_TOKEN matches between server and client
-- Verify server is running: `curl https://your-server.com/health`
-- Check for VPN interference
+**Ошибка «Сервер отключен»:**
+- Проверьте совпадения AUTH_TOKEN между сервером и клиентом.
+- Убедитесь, что сервер работает: `curl https://your-server.com/health`.
+- Проверьте наличие помех VPN
 
-### Docker Issues
+### Проблемы с докером
 
-**"Cannot find image" error:**
+**Ошибка «Невозможно найти изображение»:**
 ```bash
 # Pull the latest image
 docker pull ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-**Permission denied:**
+**Доступ запрещен:**
 ```bash
 # Ensure Docker is running
 docker ps
 ```
 
-### Common Issues
+### Распространенные проблемы
 
-**"Expected ',' or ']' after array element" errors in logs:**
-- Cause: Console output interfering with stdio communication
-- Fix: Ensure all required environment variables are set:
-  - `MCP_MODE=stdio`
-  - `LOG_LEVEL=error`
-  - `DISABLE_CONSOLE_OUTPUT=true`
+**Ошибки «Ожидаемые ',' или ']' после элемента массива в журналах:**
+- Причина: вывод консоли мешает связи stdio.
+- Исправлено: убедитесь, что установлены все необходимые переменные среды:
+- `MCP_MODE=stdio`
+- `LOG_LEVEL=error`
+- `DISABLE_CONSOLE_OUTPUT=true`
 
-**"NODE_MODULE_VERSION mismatch" warnings:**
-- Not a problem! The server automatically falls back to a pure JavaScript implementation
-- The warnings are suppressed with proper environment variables
+**Предупреждения о «несоответствии NODE_MODULE_VERSION»:**
+- Не проблема! Сервер автоматически возвращается к чистой реализации JavaScript.
+- Предупреждения подавляются с помощью соответствующих переменных среды.
 
-**Server appears but tools don't work:**
-- Check that you've built the project: `npm run build`
-- Verify the database exists: `npm run rebuild`
-- Restart Claude Desktop completely (quit and reopen)
+**Сервер появляется, но инструменты не работают:**
+- Убедитесь, что вы собрали проект: `npm run build`.
+- Убедитесь, что база данных существует: `npm run rebuild`.
+- Полностью перезапустите Claude Desktop (выйдите и снова откройте)
 
-### Quick Fixes
+### Быстрые исправления
 
-- 🔄 **Always restart Claude** after config changes
-- 📋 **Copy example configs exactly** (watch for typos)
-- 📂 **Use absolute paths** (/Users/... not ~/...)
-- 🔍 **Check logs**: View > Developer > Logs in Claude Desktop
-- 🛑 **Set all environment variables** shown in the examples
+- 🔄 **Всегда перезапускать Клода** после изменения конфигурации
+- 📋 **Точно скопируйте примеры конфигураций** (следите за опечатками)
+- 📂 **Используйте абсолютные пути** (/Users/... а не ~/...)
+- 🔍 **Проверить журналы**: «Просмотр» > «Разработчик» > «Журналы» в Claude Desktop.
+- 🛑 **Установите все переменные среды**, показанные в примерах.
 
-For more help, see [Troubleshooting Guide](./TROUBLESHOOTING.md)
+Дополнительную информацию см. в [Руководстве по устранению неполадок](./TROUBLESHOOTING.md)

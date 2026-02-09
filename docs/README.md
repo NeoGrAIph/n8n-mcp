@@ -1,58 +1,58 @@
-# n8n-MCP Documentation
+# Документация n8n-MCP
 
-Welcome to the n8n-MCP documentation. This directory contains comprehensive guides for installation, configuration, and troubleshooting.
+Добро пожаловать в документацию n8n-MCP. Этот каталог содержит подробные руководства по установке, настройке и устранению неполадок.
 
-## 📚 Documentation Index
+## 📚 Указатель документации
 
-### Getting Started
-- **[Installation Guide](./INSTALLATION.md)** - Comprehensive installation guide covering all methods
-- **[Claude Desktop Setup](./README_CLAUDE_SETUP.md)** - Step-by-step guide for Claude Desktop configuration
-- **[Quick Start Tutorial](../README.md)** - Basic overview and quick start instructions
+### Начиная
+- **[Руководство по установке](./INSTALLATION.md)** - Подробное руководство по установке, охватывающее все методы.
+- **[Настройка Claude Desktop](./README_CLAUDE_SETUP.md)** – Пошаговое руководство по настройке Claude Desktop.
+- **[Краткое руководство](../README.md)** – Базовый обзор и инструкции по быстрому запуску.
 
-### Deployment
-- **[HTTP Deployment Guide](./HTTP_DEPLOYMENT.md)** - Deploy n8n-MCP as an HTTP server for remote access
-- **[Docker Deployment](./DOCKER_README.md)** - Complete Docker deployment and configuration guide
-- **[Release Guide](./RELEASE_GUIDE.md)** - How to create releases and manage Docker tags
+### Развертывание
+- **[Руководство по развертыванию HTTP](./HTTP_DEPLOYMENT.md)** - Развертывание n8n-MCP в качестве HTTP-сервера для удаленного доступа.
+- **[Развертывание Docker](./DOCKER_README.md)** — Полное руководство по развертыванию и настройке Docker.
+- **[Руководство по выпуску](./RELEASE_GUIDE.md)** - Как создавать выпуски и управлять тегами Docker.
 
-### Reference
-- **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions for common issues and errors
-- **[HTTP Server Fix Documentation](./HTTP_SERVER_FINAL_FIX.md)** - Technical details of v2.3.2 HTTP server fixes
-- **[Docker Optimization Guide](./DOCKER_OPTIMIZATION_GUIDE.md)** - Reference for optimized Docker builds (~150MB)
-- **[Changelog](./CHANGELOG.md)** - Version history and release notes
+### Ссылка
+- **[Руководство по устранению неполадок](./TROUBLESHOOTING.md)** – Решения распространенных проблем и ошибок.
+- **[Документация по исправлениям HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md)** - Технические подробности исправлений HTTP-сервера версии 2.3.2.
+- **[Руководство по оптимизации Docker](./DOCKER_OPTIMIZATION_GUIDE.md)** – Справочник по оптимизированным сборкам Docker (~150 МБ)
+- **[Changelog](./CHANGELOG.md)** – История версий и примечания к выпуску
 
-## 🚀 Quick Links
+## 🚀 Быстрые ссылки
 
-### For Users
-- [Install n8n-MCP](./INSTALLATION.md)
-- [Configure Claude Desktop](./README_CLAUDE_SETUP.md)
-- [Deploy with Docker](./DOCKER_README.md)
-- [Troubleshoot Issues](./TROUBLESHOOTING.md)
+### Для пользователей
+- [Установить n8n-MCP](./INSTALLATION.md)
+- [Настроить рабочий стол Клода](./README_CLAUDE_SETUP.md)
+- [Развертывание с помощью Docker](./DOCKER_README.md)
+- [Устранение неполадок](./TROUBLESHOOTING.md)
 
-### For Developers
-- [HTTP Server Architecture](./HTTP_SERVER_FINAL_FIX.md)
-- [Docker Build Optimization](./DOCKER_OPTIMIZATION_GUIDE.md)
-- [Release Process](./RELEASE_GUIDE.md)
+### Для разработчиков
+- [Архитектура HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md)
+- [Оптимизация сборки Docker](./DOCKER_OPTIMIZATION_GUIDE.md)
+- [Процесс выпуска](./RELEASE_GUIDE.md)
 
-## 📋 Environment Variables
+## 📋 Переменные среды
 
-Key configuration options:
+Ключевые параметры конфигурации:
 
-| Variable | Description | Default |
+| Переменная | Описание | По умолчанию |
 |----------|-------------|---------|
-| `MCP_MODE` | Server mode: `stdio` or `http` | `stdio` |
-| `USE_FIXED_HTTP` | Use fixed HTTP implementation (v2.3.2+) | `true` |
-| `AUTH_TOKEN` | Authentication token for HTTP mode | Required |
-| `PORT` | HTTP server port | `3000` |
-| `LOG_LEVEL` | Logging verbosity | `info` |
+| @@КОД0@@ | Режим сервера: `stdio` или `http` | `stdio` |
+| @@КОД0@@ | Использовать фиксированную реализацию HTTP (v2.3.2+) | `true` |
+| @@КОД0@@ | Токен аутентификации для режима HTTP | Требуется |
+| @@КОД0@@ | Порт HTTP-сервера | `3000` |
+| @@КОД0@@ | Подробность регистрации | `info` |
 
-See [Installation Guide](./INSTALLATION.md#environment-configuration) for complete list.
+Полный список см. в [Руководстве по установке](./INSTALLATION.md#environment-configuration).
 
-## 🆘 Getting Help
+## 🆘 Получение помощи
 
-1. Check the [Troubleshooting Guide](./TROUBLESHOOTING.md)
-2. Review [HTTP Server Fix Documentation](./HTTP_SERVER_FINAL_FIX.md) for v2.3.2 issues
-3. Open an issue on [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+1. Ознакомьтесь с [Руководством по устранению неполадок](./TROUBLESHOOTING.md)
+2. Просмотрите [Документацию по исправлению HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md) на наличие проблем с версией 2.3.2.
+3. Откройте проблему на [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
 
-## 📝 License
+## 📝 Лицензия
 
-This project uses the Sustainable Use License. See [LICENSE](../LICENSE) for details.
+В этом проекте используется лицензия на устойчивое использование. Подробности см. в разделе [ЛИЦЕНЗИЯ](../LICENSE).

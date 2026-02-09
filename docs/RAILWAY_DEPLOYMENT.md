@@ -1,68 +1,68 @@
-# Railway Deployment Guide for n8n-MCP
+# Руководство по развертыванию n8n-MCP на железной дороге
 
-Deploy n8n-MCP to Railway's cloud platform with zero configuration and connect it to Claude Desktop from anywhere.
+Разверните n8n-MCP на облачной платформе Railway без конфигурации и подключите его к Claude Desktop из любой точки мира.
 
-## 🚀 Quick Deploy
+## 🚀 Быстрое развертывание
 
-Deploy n8n-MCP with one click:
+Разверните n8n-MCP одним щелчком мыши:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/VY6UOG?referralCode=n8n-mcp)
+[![Развертывание на железной дороге](https://railway.com/button.svg)](https://railway.com/deploy/VY6UOG?referralCode=n8n-mcp)
 
-## 📋 Overview
+## 📋 Обзор
 
-Railway deployment provides:
-- ☁️ **Instant cloud hosting** - No server setup required
-- 🔒 **Secure by default** - HTTPS included, auth token warnings
-- 🌐 **Global access** - Connect from any Claude Desktop
-- ⚡ **Auto-scaling** - Railway handles the infrastructure
-- 📊 **Built-in monitoring** - Logs and metrics included
+Железнодорожное размещение обеспечивает:
+- ☁️ **Мгновенный облачный хостинг** - Настройка сервера не требуется.
+- 🔒 **Безопасность по умолчанию** - HTTPS включен, предупреждения о токенах аутентификации
+- 🌐 **Глобальный доступ** - Подключайтесь с любого рабочего стола Claude.
+- ⚡ **Автомасштабирование** - Железная дорога управляет инфраструктурой.
+- 📊 **Встроенный мониторинг** - Включены журналы и метрики.
 
-## 🎯 Step-by-Step Deployment
+## 🎯 Пошаговое развертывание
 
-### 1. Deploy to Railway
+### 1. Развертывание на железной дороге
 
-1. **Click the Deploy button** above
-2. **Sign in to Railway** (or create account)
-3. **Configure your deployment**:
-   - Project name (optional)
-   - Environment (leave as "production")
-   - Region (choose closest to you)
-4. **Click "Deploy"** and wait ~2-3 minutes
+1. **Нажмите кнопку «Развернуть»** выше.
+2. **Войдите в систему Railway** (или создайте учетную запись).
+3. **Настройте развертывание**:
+- Название проекта (необязательно)
+- Окружающая среда (оставьте «производство»)
+- Регион (выбирайте ближайший к вам)
+4. **Нажмите «Развернуть»** и подождите ~2–3 минуты.
 
-### 2. Configure Security
+### 2. Настройка безопасности
 
-**IMPORTANT**: The deployment includes a default AUTH_TOKEN for instant functionality, but you MUST change it:
+**ВАЖНО**. Развертывание включает AUTH_TOKEN по умолчанию для мгновенной функциональности, но вы ДОЛЖНЫ его изменить:
 
-![Railway Dashboard - Variables Tab](./img/railway-variables.png)
+![Панель управления железной дорогой - вкладка «Переменные»](./img/railway-variables.png)
 
-1. **Go to your Railway dashboard**
-2. **Click on your n8n-mcp service**
-3. **Navigate to "Variables" tab**
-4. **Find `AUTH_TOKEN`** 
-5. **Replace with secure token**:
+1. **Перейдите в личный кабинет железной дороги**.
+2. **Нажмите на свою службу n8n-mcp**.
+3. **Перейдите на вкладку «Переменные»**
+4. **Найдите `AUTH_TOKEN`**
+5. **Заменить безопасным токеном**:
    ```bash
    # Generate secure token locally:
    openssl rand -base64 32
    ```
-6. **Railway will automatically redeploy** with the new token
+6. **Железная дорога будет автоматически перераспределена** с новым токеном.
 
-> ⚠️ **Security Warning**: The server displays warnings every 5 minutes until you change the default token!
+> ⚠️ **Предупреждение системы безопасности**: сервер отображает предупреждения каждые 5 минут, пока вы не измените токен по умолчанию!
 
-### 3. Get Your Service URL
+### 3. Получите URL-адрес вашей службы
 
-![Railway Dashboard - Domain Settings](./img/railway-domain.png)
+![Панель управления железной дорогой - Настройки домена](./img/railway-domain.png)
 
-1. In Railway dashboard, click on your service
-2. Go to **"Settings"** tab
-3. Under **"Domains"**, you'll see your URL:
+1. В личном кабинете железной дороги нажмите на свою услугу.
+2. Перейдите на вкладку **"Настройки"**.
+3. В разделе **Домены** вы увидите свой URL:
    ```
    https://your-app-name.up.railway.app
    ```
-4. Copy this URL for Claude Desktop configuration and add /mcp at the end
+4. Скопируйте этот URL-адрес для конфигурации Claude Desktop и добавьте /mcp в конце.
 
-### 4. Connect Claude Desktop
+### 4. Подключите Claude Desktop
 
-Add to your Claude Desktop configuration:
+Добавьте в конфигурацию Claude Desktop:
 
 ```json
 {
@@ -81,113 +81,113 @@ Add to your Claude Desktop configuration:
 }
 ```
 
-**Configuration file locations:**
+**Расположение файла конфигурации:**
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-**Restart Claude Desktop** after saving the configuration.
+**Перезапустите Claude Desktop** после сохранения конфигурации.
 
-## 🔧 Environment Variables
+## 🔧 Переменные среды
 
-### Default Variables (Pre-configured)
+### Переменные по умолчанию (предварительно настроенные)
 
-These are automatically set by the Railway template:
+Они автоматически устанавливаются шаблоном «Железная дорога»:
 
-| Variable | Default Value | Description |
+| Переменная | Значение по умолчанию | Описание |
 |----------|--------------|-------------|
-| `AUTH_TOKEN` | `REPLACE_THIS...` | **⚠️ CHANGE IMMEDIATELY** |
-| `MCP_MODE` | `http` | Required for cloud deployment |
-| `USE_FIXED_HTTP` | `true` | Stable HTTP implementation |
-| `NODE_ENV` | `production` | Production optimizations |
-| `LOG_LEVEL` | `info` | Balanced logging |
-| `TRUST_PROXY` | `1` | Railway runs behind proxy |
-| `CORS_ORIGIN` | `*` | Allow any origin |
-| `HOST` | `0.0.0.0` | Listen on all interfaces |
-| `PORT` | (Railway provides) | Don't set manually |
-| `AUTH_RATE_LIMIT_WINDOW` | `900000` (15 min) | Rate limit window (v2.16.3+) |
-| `AUTH_RATE_LIMIT_MAX` | `20` | Max auth attempts (v2.16.3+) |
-| `WEBHOOK_SECURITY_MODE` | `strict` | SSRF protection mode (v2.16.3+) |
+| @@КОД0@@ | `REPLACE_THIS...` | **⚠️ ИЗМЕНИТЬ НЕМЕДЛЕННО** |
+| @@КОД0@@ | `http` | Требуется для развертывания в облаке |
+| @@КОД0@@ | `true` | Стабильная реализация HTTP |
+| @@КОД0@@ | `production` | Оптимизация производства |
+| @@КОД0@@ | `info` | Сбалансированное журналирование |
+| @@КОД0@@ | `1` | Железная дорога работает за прокси |
+| @@КОД0@@ | `*` | Разрешить любое происхождение |
+| @@КОД0@@ | `0.0.0.0` | Слушайте на всех интерфейсах |
+| @@КОД0@@ | (Железная дорога обеспечивает) | Не устанавливать вручную |
+| @@КОД0@@ | `900000` (15 мин) | Окно ограничения скорости (v2.16.3+) |
+| @@КОД0@@ | `20` | Максимальное количество попыток аутентификации (v2.16.3+) |
+| @@КОД0@@ | `strict` | Режим защиты SSRF (v2.16.3+) |
 
-### Optional Variables
+### Необязательные переменные
 
-| Variable | Default Value | Description |
+| Переменная | Значение по умолчанию | Описание |
 |----------|--------------|-------------|
-| `N8N_MODE` | `false` | Enable n8n integration mode for MCP Client Tool |
-| `N8N_API_URL` | - | URL of your n8n instance (for workflow management) |
-| `N8N_API_KEY` | - | API key from n8n Settings → API |
+| @@КОД0@@ | `false` | Включить режим интеграции n8n для клиентского инструмента MCP |
+| @@КОД0@@ | - | URL-адрес вашего экземпляра n8n (для управления рабочим процессом) |
+| @@КОД0@@ | - | Ключ API из настроек n8n → API |
 
-### Optional: n8n Integration
+### Необязательно: интеграция n8n
 
-#### For n8n MCP Client Tool Integration
+#### Для интеграции клиентского инструмента n8n MCP
 
-To use n8n-MCP with n8n's MCP Client Tool node:
+Чтобы использовать n8n-MCP с узлом клиентского инструмента MCP n8n:
 
-1. **Go to Railway dashboard** → Your service → **Variables**
-2. **Add this variable**:
-   - `N8N_MODE`: Set to `true` to enable n8n integration mode
-3. **Save changes** - Railway will redeploy automatically
+1. **Перейти в личный кабинет железной дороги** → Ваш сервис → **Переменные**
+2. **Добавьте эту переменную**:
+- `N8N_MODE`: установите `true`, чтобы включить режим интеграции n8n.
+3. **Сохранить изменения** – железная дорога будет перераспределена автоматически.
 
-#### For n8n API Integration (Workflow Management)
+#### Для интеграции API n8n (управление рабочими процессами)
 
-To enable workflow management features:
+Чтобы включить функции управления рабочим процессом:
 
-1. **Go to Railway dashboard** → Your service → **Variables**
-2. **Add these variables**:
-   - `N8N_API_URL`: Your n8n instance URL (e.g., `https://n8n.example.com`)
-   - `N8N_API_KEY`: API key from n8n Settings → API
-3. **Save changes** - Railway will redeploy automatically
+1. **Перейти в личный кабинет железной дороги** → Ваш сервис → **Переменные**
+2. **Добавьте эти переменные**:
+- `N8N_API_URL`: URL-адрес вашего экземпляра n8n (например, `https://n8n.example.com`)
+- `N8N_API_KEY`: ключ API из настроек n8n → API.
+3. **Сохранить изменения** – железная дорога будет перераспределена автоматически.
 
-## 🏗️ Architecture Details
+## 🏗️ Детали архитектуры
 
-### How It Works
+### Как это работает
 
 ```
 Claude Desktop → mcp-remote → Railway (HTTPS) → n8n-MCP Server
 ```
 
-1. **Claude Desktop** uses `mcp-remote` as a bridge
-2. **mcp-remote** converts stdio to HTTP requests
-3. **Railway** provides HTTPS endpoint and infrastructure
-4. **n8n-MCP** runs in HTTP mode on Railway
+1. **Claude Desktop** использует `mcp-remote` в качестве моста.
+2. **mcp-remote** преобразует stdio в HTTP-запросы.
+3. **Железная дорога** предоставляет конечную точку и инфраструктуру HTTPS.
+4. **n8n-MCP** работает в режиме HTTP на железной дороге.
 
-### Single-Instance Design
+### Одноэкземплярное проектирование
 
-**Important**: The n8n-MCP HTTP server is designed for single n8n instance deployment:
-- n8n API credentials are configured server-side via environment variables
-- All clients connecting to the server share the same n8n instance
-- For multi-tenant usage, deploy separate Railway instances
+**Важно**. HTTP-сервер n8n-MCP предназначен для развертывания одного экземпляра n8n:
+- Учетные данные API n8n настраиваются на стороне сервера через переменные среды.
+- Все клиенты, подключающиеся к серверу, используют один и тот же экземпляр n8n.
+- Для мультитенантного использования разверните отдельные экземпляры Railway.
 
-### Security Model
+### Модель безопасности
 
-- **Bearer Token Authentication**: All requests require the AUTH_TOKEN
-- **HTTPS by Default**: Railway provides SSL certificates
-- **Environment Isolation**: Each deployment is isolated
-- **No State Storage**: Server is stateless (database is read-only)
+- **Аутентификация токена на предъявителя**: для всех запросов требуется AUTH_TOKEN.
+- **HTTPS по умолчанию**: железная дорога предоставляет сертификаты SSL.
+- **Изоляция среды**: каждое развертывание изолировано.
+- **Нет хранилища состояний**: сервер не имеет состояния (база данных доступна только для чтения).
 
-## 🚨 Troubleshooting
+## 🚨 Устранение неполадок
 
-### Connection Issues
+### Проблемы с подключением
 
-**"Invalid URL" error in Claude Desktop:**
-- Ensure you're using the exact configuration format shown above
-- Don't add "connect" or other arguments before the URL
-- The URL should end with `/mcp`
+**Ошибка «Неверный URL-адрес» в Claude Desktop:**
+– Убедитесь, что вы используете именно тот формат конфигурации, который показан выше.
+– Не добавляйте «connect» или другие аргументы перед URL-адресом.
+– URL-адрес должен заканчиваться на `/mcp`.
 
-**"Unauthorized" error:**
-- Check that your AUTH_TOKEN matches exactly (no extra spaces)
-- Ensure the Authorization header format is correct: `Authorization: Bearer TOKEN`
+**Ошибка «Несанкционировано»:**
+- Убедитесь, что ваш AUTH_TOKEN точно соответствует (без лишних пробелов)
+- Убедитесь, что формат заголовка авторизации правильный: `Authorization: Bearer TOKEN`.
 
-**"Cannot connect to server":**
-- Verify your Railway deployment is running (check Railway dashboard)
-- Ensure the URL is correct and includes `https://`
-- Check Railway logs for any errors
+**"Невозможно подключиться к серверу":**
+- Убедитесь, что ваше развертывание железной дороги запущено (проверьте панель управления железной дорогой).
+– Убедитесь, что URL-адрес правильный и включает `https://`.
+- Проверьте железнодорожные журналы на наличие ошибок.
 
-**Windows: "The filename, directory name, or volume label syntax is incorrect" or npx command not found:**
+**Windows: «Неправильный синтаксис имени файла, имени каталога или метки тома» или команда npx не найдена:**
 
-This is a common Windows issue with spaces in Node.js installation paths. The error occurs because Claude Desktop can't properly execute npx.
+Это распространенная проблема Windows с пробелами в путях установки Node.js. Ошибка возникает из-за того, что Claude Desktop не может правильно выполнить npx.
 
-**Solution 1: Use node directly (Recommended)**
+**Решение 1. Используйте узел напрямую (рекомендуется)**
 ```json
 {
   "mcpServers": {
@@ -206,7 +206,7 @@ This is a common Windows issue with spaces in Node.js installation paths. The er
 }
 ```
 
-**Solution 2: Use cmd wrapper**
+**Решение 2. Используйте оболочку cmd**
 ```json
 {
   "mcpServers": {
@@ -221,87 +221,87 @@ This is a common Windows issue with spaces in Node.js installation paths. The er
 }
 ```
 
-To find your exact npx path, open Command Prompt and run: `where npx`
+Чтобы найти точный путь к npx, откройте командную строку и выполните: `where npx`
 
-### Railway-Specific Issues
+### Проблемы, связанные с железной дорогой
 
-**Build failures:**
-- Railway uses AMD64 architecture - the template is configured for this
-- Check build logs in Railway dashboard for specific errors
+**Ошибки сборки:**
+- Железная дорога использует архитектуру AMD64 - для этого настроен шаблон
+- Проверьте журналы сборки на панели управления железной дороги на наличие конкретных ошибок.
 
-**Environment variable issues:**
-- Variables are case-sensitive
-- Don't include quotes in the Railway dashboard (only in JSON config)
-- Railway automatically restarts when you change variables
+**Проблемы с переменными среды:**
+- Переменные чувствительны к регистру.
+- Не включать кавычки в панель управления железной дорогой (только в конфигурации JSON).
+- Железная дорога автоматически перезапускается при изменении переменных
 
-**Domain not working:**
-- It may take 1-2 minutes for the domain to become active
-- Check the "Deployments" tab to ensure the latest deployment succeeded
+**Домен не работает:**
+- Активация домена может занять 1-2 минуты.
+– Проверьте вкладку «Развертывания», чтобы убедиться, что последнее развертывание прошло успешно.
 
-## 📊 Monitoring & Logs
+## 📊 Мониторинг и журналы
 
-### View Logs
+### Просмотр журналов
 
-1. Go to Railway dashboard
-2. Click on your n8n-mcp service
-3. Click on **"Logs"** tab
-4. You'll see real-time logs including:
-   - Server startup messages
-   - Authentication attempts
-   - API requests (without sensitive data)
-   - Any errors or warnings
+1. Зайдите в личный кабинет ЖД.
+2. Нажмите на свой сервис n8n-mcp.
+3. Откройте вкладку **Журналы**.
+4. Вы увидите журналы в реальном времени, в том числе:
+- Сообщения о запуске сервера
+- Попытки аутентификации
+- Запросы API (без конфиденциальных данных)
+- Любые ошибки или предупреждения
 
-### Monitor Usage
+### Мониторинг использования
 
-Railway provides metrics for:
-- **Memory usage** (typically ~100-200MB)
-- **CPU usage** (minimal when idle)
-- **Network traffic**
-- **Response times**
+Железная дорога предоставляет показатели для:
+- **Использование памяти** (обычно ~100–200 МБ)
+- **Загрузка процессора** (минимальная в режиме ожидания)
+- **Сетевой трафик**
+- **Время ответа**
 
-## 💰 Pricing & Limits
+## 💰 Цены и ограничения
 
-### Railway Free Tier
-- **$5 free credit** monthly
-- **500 hours** of runtime
-- **Sufficient for personal use** of n8n-MCP
+### Уровень бесплатного пользования «Железная дорога»
+- **Бесплатный кредит в размере 5 долларов США** ежемесячно.
+- **500 часов** автономной работы
+- **Достаточно для личного использования** n8n-MCP
 
-### Estimated Costs
-- **n8n-MCP typically uses**: ~0.1 GB RAM
-- **Monthly cost**: ~$2-3 for 24/7 operation
-- **Well within free tier** for most users
+### Ориентировочная стоимость
+- **n8n-MCP обычно использует**: ~0,1 ГБ ОЗУ.
+- **Ежемесячная стоимость**: ~2–3 доллара США за круглосуточную работу.
+- **В пределах бесплатного уровня** для большинства пользователей.
 
-## 🔄 Updates & Maintenance
+## 🔄 Обновления и обслуживание
 
-### Manual Updates
+### Обновления вручную
 
-Since the Railway template uses a specific Docker image tag, updates are manual:
+Поскольку шаблон «Железная дорога» использует определенный тег изображения Docker, обновления выполняются вручную:
 
-1. **Check for updates** on [GitHub](https://github.com/czlonkowski/n8n-mcp)
-2. **Update image tag** in Railway:
-   - Go to Settings → Deploy → Docker Image
-   - Change tag from current to new version
-   - Click "Redeploy"
+1. **Проверьте наличие обновлений** на [GitHub](https://github.com/czlonkowski/n8n-mcp)
+2. **Обновить тег изображения** в Железной дороге:
+- Перейдите в «Настройки» → «Развертывание» → «Образ Docker».
+- Изменить тег с текущей на новую версию
+- Нажмите «Переразвернуть».
 
-### Automatic Updates (Not Recommended)
+### Автоматические обновления (не рекомендуется)
 
-You could use the `latest` tag, but this may cause unexpected breaking changes.
+Вы можете использовать тег `latest`, но это может привести к неожиданным критическим изменениям.
 
-## 🔒 Security Features (v2.16.3+)
+## 🔒 Функции безопасности (v2.16.3+)
 
-Railway deployments include enhanced security features:
+Развертывания на железных дорогах включают расширенные функции безопасности:
 
-### Rate Limiting
-- **Automatic brute force protection** - 20 attempts per 15 minutes per IP
-- **Configurable limits** via `AUTH_RATE_LIMIT_WINDOW` and `AUTH_RATE_LIMIT_MAX`
-- **Standard rate limit headers** for client awareness
+### Ограничение скорости
+- **Автоматическая защита от перебора** - 20 попыток за 15 минут на каждый IP
+- **Настраиваемые ограничения** через `AUTH_RATE_LIMIT_WINDOW` и `AUTH_RATE_LIMIT_MAX`
+- **Заголовки стандартных лимитов ставок** для информирования клиентов.
 
-### SSRF Protection
-- **Default strict mode** blocks localhost, private IPs, and cloud metadata
-- **Cloud metadata always blocked** (169.254.169.254, metadata.google.internal, etc.)
-- **Use `moderate` mode only if** connecting to local n8n instance
+### SSRF-защита
+- **Строгий режим по умолчанию** блокирует локальный хост, частные IP-адреса и облачные метаданные.
+- **Облачные метаданные всегда блокируются** (169.254.169.254, Metadata.google.internal и т. д.)
+- **Использовать режим `moderate` только при** подключении к локальному экземпляру n8n.
 
-**Security Configuration:**
+**Конфигурация безопасности:**
 ```bash
 # In Railway Variables tab:
 WEBHOOK_SECURITY_MODE=strict          # Production (recommended)
@@ -313,27 +313,27 @@ AUTH_RATE_LIMIT_WINDOW=900000         # 15 minutes
 AUTH_RATE_LIMIT_MAX=20                # 20 attempts per IP
 ```
 
-## 📝 Best Practices
+## 📝 Лучшие практики
 
-1. **Always change the default AUTH_TOKEN immediately**
-2. **Use strong, unique tokens** (32+ characters)
-3. **Monitor logs** for unauthorized access attempts
-4. **Keep credentials secure** - never commit them to git
-5. **Use environment variables** for all sensitive data
-6. **Regular updates** - check for new versions monthly
+1. **Всегда немедленно меняйте AUTH_TOKEN по умолчанию**
+2. **Используйте сильные, уникальные жетоны** (более 32 символов).
+3. **Отслеживание журналов** на предмет попыток несанкционированного доступа.
+4. **Храните учетные данные в безопасности** — никогда не передавайте их в git.
+5. **Используйте переменные среды** для всех конфиденциальных данных.
+6. **Регулярные обновления** – ежемесячно проверяйте наличие новых версий.
 
-## 🆘 Getting Help
+## 🆘 Получение помощи
 
-- **Railway Documentation**: [docs.railway.app](https://docs.railway.app)
-- **n8n-MCP Issues**: [GitHub Issues](https://github.com/czlonkowski/n8n-mcp/issues)
-- **Railway Community**: [Discord](https://discord.gg/railway)
+- **Железнодорожная документация**: [docs.railway.app](https://docs.railway.app)
+- **Проблемы с n8n-MCP**: [Проблемы с GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+- **Железнодорожное сообщество**: [Discord](https://discord.gg/railway)
 
-## 🎉 Success!
+## 🎉 Успеха!
 
-Once connected, you can use all n8n-MCP features from Claude Desktop:
-- Search and explore 500+ n8n nodes
-- Get node configurations and examples
-- Validate workflows before deployment
-- Manage n8n workflows (if API configured)
+После подключения вы сможете использовать все функции n8n-MCP из Claude Desktop:
+- Найдите и исследуйте более 500 узлов n8n
+- Получить конфигурации узлов и примеры
+- Проверка рабочих процессов перед развертыванием.
+- Управление рабочими процессами n8n (если настроен API)
 
-The cloud deployment means you can access your n8n knowledge base from any computer with Claude Desktop installed!
+Развертывание в облаке означает, что вы можете получить доступ к своей базе знаний n8n с любого компьютера, на котором установлен Claude Desktop!

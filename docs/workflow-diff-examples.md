@@ -1,16 +1,16 @@
-# Workflow Diff Examples
+# Примеры различий рабочего процесса
 
-This guide demonstrates how to use the `n8n_workflow_update_partial` tool for efficient workflow editing.
+В этом руководстве показано, как использовать инструмент `n8n_workflow_update_partial` для эффективного редактирования рабочего процесса.
 
-## Overview
+## Обзор
 
-The `n8n_workflow_update_partial` tool allows you to make targeted changes to workflows without sending the entire workflow JSON. This results in:
-- 80-90% reduction in token usage
-- More precise edits
-- Clearer intent
-- Reduced risk of accidentally modifying unrelated parts
+Инструмент `n8n_workflow_update_partial` позволяет вносить целевые изменения в рабочие процессы без отправки всего JSON рабочего процесса. Это приводит к:
+- Сокращение использования токенов на 80-90%.
+- Более точные правки
+- Более четкое намерение
+- Снижен риск случайной модификации несвязанных деталей.
 
-## Basic Usage
+## Базовое использование
 
 ```json
 {
@@ -24,11 +24,11 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-## Operation Types
+## Типы операций
 
-### 1. Node Operations
+### 1. Операции с узлами
 
-#### Add Node
+#### Добавить узел
 ```json
 {
   "type": "addNode",
@@ -46,7 +46,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Remove Node
+#### Удалить узел
 ```json
 {
   "type": "removeNode",
@@ -55,7 +55,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Update Node
+#### Обновление узла
 ```json
 {
   "type": "updateNode",
@@ -73,7 +73,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Move Node
+#### Переместить узел
 ```json
 {
   "type": "moveNode",
@@ -83,7 +83,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Enable/Disable Node
+#### Включить/отключить узел
 ```json
 {
   "type": "disableNode",
@@ -92,9 +92,9 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### 2. Connection Operations
+### 2. Операции подключения
 
-#### Add Connection
+#### Добавить соединение
 ```json
 {
   "type": "addConnection",
@@ -106,7 +106,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Remove Connection
+#### Удалить соединение
 ```json
 {
   "type": "removeConnection",
@@ -116,7 +116,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Rewire Connection
+#### Переподключение соединения
 ```json
 {
   "type": "rewireConnection",
@@ -127,7 +127,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Smart Parameters for IF Nodes
+#### Интеллектуальные параметры для узлов IF
 ```json
 {
   "type": "addConnection",
@@ -148,7 +148,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Smart Parameters for Switch Nodes
+#### Интеллектуальные параметры для узлов коммутатора
 ```json
 {
   "type": "addConnection",
@@ -159,9 +159,9 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### 3. Workflow Metadata Operations
+### 3. Операции с метаданными рабочего процесса
 
-#### Update Workflow Name
+#### Обновление имени рабочего процесса
 ```json
 {
   "type": "updateName",
@@ -170,7 +170,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Update Settings
+#### Обновить настройки
 ```json
 {
   "type": "updateSettings",
@@ -183,7 +183,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-#### Manage Tags
+#### Управление тегами
 ```json
 {
   "type": "addTag",
@@ -192,9 +192,9 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-## Complete Examples
+## Полные примеры
 
-### Example 1: Add Slack Notification to Workflow
+### Пример 1. Добавление уведомлений Slack в рабочий процесс
 ```json
 {
   "id": "workflow-123",
@@ -222,7 +222,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### Example 2: Update Multiple Webhook Paths
+### Пример 2. Обновление нескольких путей веб-перехватчиков
 ```json
 {
   "id": "workflow-456",
@@ -249,7 +249,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### Example 3: Refactor Workflow Structure
+### Пример 3: Структура рабочего процесса рефакторинга
 ```json
 {
   "id": "workflow-789",
@@ -284,7 +284,7 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### Example 4: Add Error Handling
+### Пример 4. Добавление обработки ошибок
 ```json
 {
   "id": "workflow-999",
@@ -325,8 +325,8 @@ The `n8n_workflow_update_partial` tool allows you to make targeted changes to wo
 }
 ```
 
-### Example 5: Large Batch Workflow Refactoring
-Demonstrates handling many operations in a single request - no longer limited to 5 operations!
+### Пример 5: Рефакторинг крупнопакетного рабочего процесса
+Демонстрирует обработку множества операций в одном запросе — больше не ограничивается 5 операциями!
 
 ```json
 {
@@ -510,19 +510,19 @@ Demonstrates handling many operations in a single request - no longer limited to
 }
 ```
 
-This example shows 26 operations in a single request, creating a complete data processing pipeline with proper error handling, validation, and batch processing.
+В этом примере показано 26 операций в одном запросе, создающих полный конвейер обработки данных с правильной обработкой ошибок, проверкой и пакетной обработкой.
 
-## Best Practices
+## Лучшие практики
 
-1. **Use Descriptive Names**: Always provide clear node names and descriptions for operations
-2. **Batch Related Changes**: Group related operations in a single request
-3. **Validate First**: Use `validateOnly: true` to test your operations before applying
-4. **Reference by Name**: Prefer node names over IDs for better readability
-5. **Small, Focused Changes**: Make targeted edits rather than large structural changes
+1. **Используйте описательные имена**: всегда предоставляйте понятные имена узлов и описания операций.
+2. **Пакетные изменения**: Группируйте связанные операции в одном запросе.
+3. **Сначала проверьте**: используйте `validateOnly: true`, чтобы проверить свои операции перед применением.
+4. **Ссылка по имени**: для лучшей читаемости отдавайте предпочтение именам узлов вместо идентификаторов.
+5. **Небольшие целенаправленные изменения**: вносите целенаправленные изменения, а не крупные структурные изменения.
 
-## Common Patterns
+## Общие шаблоны
 
-### Add Processing Step
+### Добавить этап обработки
 ```json
 {
   "operations": [
@@ -554,7 +554,7 @@ This example shows 26 operations in a single request, creating a complete data p
 }
 ```
 
-### Replace Node
+### Заменить узел
 ```json
 {
   "operations": [
@@ -595,29 +595,29 @@ This example shows 26 operations in a single request, creating a complete data p
 }
 ```
 
-## Error Handling
+## Обработка ошибок
 
-The tool validates all operations before applying any changes. Common errors include:
+Инструмент проверяет все операции перед применением каких-либо изменений. К частым ошибкам относятся:
 
-- **Duplicate node names**: Each node must have a unique name
-- **Invalid node types**: Use full package prefixes (e.g., `n8n-nodes-base.webhook`)
-- **Missing connections**: Referenced nodes must exist
-- **Circular dependencies**: Connections cannot create loops
+- **Повторяющиеся имена узлов**: каждый узел должен иметь уникальное имя.
+- **Недопустимые типы узлов**: используйте полные префиксы пакета (например, `n8n-nodes-base.webhook`).
+- **Отсутствуют соединения**: указанные узлы должны существовать.
+- **Циркулярные зависимости**: соединения не могут создавать циклы.
 
-Always check the response for validation errors and adjust your operations accordingly.
+Всегда проверяйте ответ на наличие ошибок проверки и соответствующим образом корректируйте свои операции.
 
-## Transactional Updates
+## Обновления транзакций
 
-The diff engine now supports transactional updates using a **two-pass processing** approach:
+Механизм сравнения теперь поддерживает транзакционные обновления, используя подход **двухпроходной обработки**:
 
-### How It Works
+### Как это работает
 
-1. **No Operation Limit**: Process unlimited operations in a single request
-2. **Two-Pass Processing**:
-   - **Pass 1**: All node operations (add, remove, update, move, enable, disable)
-   - **Pass 2**: All other operations (connections, settings, metadata)
+1. **Без ограничений по операциям**: обработка неограниченного количества операций в одном запросе.
+2. **Двухпроходная обработка**:
+- **Шаг 1**: все операции с узлами (добавление, удаление, обновление, перемещение, включение, отключение).
+- **Шаг 2**: все остальные операции (подключения, настройки, метаданные).
 
-This allows you to add nodes and connect them in the same request:
+Это позволяет добавлять узлы и соединять их в одном запросе:
 
 ```json
 {
@@ -659,14 +659,14 @@ This allows you to add nodes and connect them in the same request:
 }
 ```
 
-### Benefits
+### Преимущества
 
-- **Order Independence**: You don't need to worry about operation order
-- **Atomic Updates**: All operations succeed or all fail (unless continueOnError is enabled)
-- **Intuitive Usage**: Add complex workflow structures in one call
-- **No Hard Limits**: Process unlimited operations efficiently
+- **Независимость порядка**: вам не нужно беспокоиться о порядке операций.
+- **Атомарные обновления**: все операции выполняются успешно или все завершаются неудачей (если не включен параметр continueOnError).
+- **Интуитивное использование**: добавляйте сложные структуры рабочих процессов за один вызов.
+- **Нет жестких ограничений**: эффективно обрабатывайте неограниченное количество операций.
 
-### Example: Complete Workflow Addition
+### Пример: полное добавление рабочего процесса
 
 ```json
 {
@@ -723,4 +723,4 @@ This allows you to add nodes and connect them in the same request:
 }
 ```
 
-All operations will be processed correctly regardless of order!
+Все операции будут обработаны корректно вне зависимости от заказа!

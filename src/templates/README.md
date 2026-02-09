@@ -1,86 +1,86 @@
-# n8n Templates Integration
+# Интеграция шаблонов n8n
 
-This module provides integration with n8n.io's workflow templates, allowing AI agents to discover and use proven workflow patterns.
+Этот модуль обеспечивает интеграцию с шаблонами рабочих процессов n8n.io, позволяя агентам ИИ находить и использовать проверенные шаблоны рабочих процессов.
 
-## Features
+## Функции
 
-- **API Integration**: Connects to n8n.io's official template API
-- **Fresh Templates**: Only includes templates updated within the last 6 months
-- **Manual Fetch**: Templates are fetched separately from the main node database
-- **Full Workflow JSON**: Complete workflow definitions ready for import
-- **Smart Search**: Find templates by nodes, keywords, or task categories
+- **Интеграция API**: подключение к официальному API шаблонов n8n.io.
+- **Свежие шаблоны**: включают только шаблоны, обновленные за последние 6 месяцев.
+- **Ручная выборка**: шаблоны извлекаются отдельно из базы данных основного узла.
+- **Полный рабочий процесс в формате JSON**: полные определения рабочего процесса, готовые к импорту.
+- **Умный поиск**: находите шаблоны по узлам, ключевым словам или категориям задач.
 
-## Usage
+## Использование
 
-### Fetching Templates
+### Получение шаблонов
 
 ```bash
 npm run fetch:templates
 ```
 
-This command will:
-1. Connect to n8n.io API
-2. Fetch all templates from the last 6 months
-3. Download complete workflow JSON for each template
-4. Store in local SQLite database
-5. Display progress and statistics
+Эта команда будет:
+1. Подключитесь к API n8n.io.
+2. Получите все шаблоны за последние 6 месяцев.
+3. Загрузите полный рабочий процесс JSON для каждого шаблона.
+4. Хранить в локальной базе данных SQLite.
+5. Отображение прогресса и статистики
 
-### Testing
+### Тестирование
 
 ```bash
 npm run test:templates
 ```
 
-### MCP Tools
+### Инструменты MCP
 
-The following tools are available via MCP:
+Через MCP доступны следующие инструменты:
 
-- `list_node_templates(nodeTypes, limit)` - Find templates using specific nodes
-- `n8n_template_get(templateId)` - Get complete workflow JSON
-- `n8n_templates_search(query, limit)` - Search by keywords
-- `get_templates_for_task(task)` - Get templates for common tasks
+- `list_node_templates(nodeTypes, limit)` - ​​Поиск шаблонов с использованием определенных узлов.
+- `n8n_template_get(templateId)` - ​​Получите полный рабочий процесс в формате JSON.
+- `n8n_templates_search(query, limit)` - ​​Поиск по ключевым словам
+- `get_templates_for_task(task)` - ​​Получите шаблоны для общих задач.
 
-### Task Categories
+### Категории задач
 
-- `ai_automation` - AI-powered workflows
-- `data_sync` - Database and spreadsheet synchronization
-- `webhook_processing` - Webhook handling workflows
-- `email_automation` - Email processing workflows
-- `slack_integration` - Slack bots and notifications
-- `data_transformation` - Data manipulation workflows
-- `file_processing` - File handling workflows
-- `scheduling` - Scheduled and recurring tasks
-- `api_integration` - External API connections
-- `database_operations` - Database CRUD operations
+- `ai_automation` - ​​Рабочие процессы на базе искусственного интеллекта
+- `data_sync` - ​​Синхронизация базы данных и электронных таблиц
+- `webhook_processing` - ​​Рабочие процессы обработки веб-перехватчиков
+- `email_automation` - ​​Рабочие процессы обработки электронной почты
+- `slack_integration` - ​​Боты и уведомления Slack
+- `data_transformation` - ​​Рабочие процессы манипулирования данными
+- `file_processing` - ​​Рабочие процессы обработки файлов
+- `scheduling` - ​​Запланированные и повторяющиеся задачи.
+- `api_integration` - ​​Внешние соединения API
+- `database_operations` - ​​CRUD-операции базы данных
 
-## Implementation Details
+## Детали реализации
 
-### Architecture
+### Архитектура
 
-- `template-fetcher.ts` - Handles API communication and rate limiting
-- `template-repository.ts` - Database operations and queries
-- `template-service.ts` - Business logic and MCP integration
+- `template-fetcher.ts` — управляет связью через API и ограничением скорости.
+- `template-repository.ts` - ​​Операции и запросы к базе данных
+- `template-service.ts` - ​​Интеграция бизнес-логики и MCP
 
-### Database Schema
+### Схема базы данных
 
-Templates are stored in a dedicated table with:
-- Workflow metadata (name, description, author)
-- Node usage tracking
-- View counts for popularity
-- Complete workflow JSON
-- Creation/update timestamps
-- 6-month freshness constraint
+Шаблоны хранятся в специальной таблице с:
+- Метаданные рабочего процесса (имя, описание, автор)
+- Отслеживание использования узла
+- Просмотр показателей популярности
+- Полный рабочий процесс JSON
+- Временные метки создания/обновления
+- Ограничение свежести 6 месяцев
 
-### API Endpoints Used
+### Используемые конечные точки API
 
-- `/api/templates/workflows` - List all workflows
-- `/api/templates/search` - Search with pagination
-- `/api/templates/workflows/{id}` - Get specific workflow
-- `/api/templates/search/filters` - Available filters
+- `/api/templates/workflows` — список всех рабочих процессов.
+- `/api/templates/search` - ​​Поиск с нумерацией страниц
+- `/api/templates/workflows/{id}` - ​​Получите конкретный рабочий процесс
+- `/api/templates/search/filters` - ​​Доступные фильтры
 
-## Notes
+## Примечания
 
-- Templates are NOT fetched during regular database rebuilds
-- Run `fetch:templates` manually when you need fresh templates
-- API rate limiting is implemented (200-500ms between requests)
-- Progress is shown during fetching for large datasets
+- Шаблоны НЕ извлекаются во время регулярных перестроений базы данных.
+- Запускайте `fetch:templates` вручную, когда вам нужны свежие шаблоны.
+- Реализовано ограничение скорости API (200-500мс между запросами)
+- Прогресс отображается во время выборки больших наборов данных.
