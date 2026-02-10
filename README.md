@@ -51,3 +51,12 @@ curl http://localhost:3000/health
 
 ## Contributing
 - `CONTRIBUTING.md`
+
+
+## Synestra Platform (n8n-workflows as code)
+
+В платформе Synestra workflow n8n ведутся в Git как артефакты (репозиторий `n8n-workflows`).
+- Dev: двунаправленная синхронизация UI/API <-> files (для быстрого DevOps-цикла).
+- Prod: однонаправленная синхронизация UI/API -> files (для фиксации боевого состояния).
+
+Подробности: `docs/explanation/SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md`.

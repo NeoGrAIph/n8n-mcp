@@ -30,6 +30,7 @@
 - [LIBRARY_USAGE.md](./explanation/LIBRARY_USAGE.md)
 - [FLEXIBLE_INSTANCE_CONFIGURATION.md](./explanation/FLEXIBLE_INSTANCE_CONFIGURATION.md)
 - [TYPE_STRUCTURE_VALIDATION.md](./explanation/TYPE_STRUCTURE_VALIDATION.md)
+- [SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md](./explanation/SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md)
 - [FINAL_AI_VALIDATION_SPEC.md](./explanation/FINAL_AI_VALIDATION_SPEC.md)
 - Research/analysis notes: `docs/local/` (не канон; используйте как исследовательские материалы)
 
