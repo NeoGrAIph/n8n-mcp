@@ -1207,13 +1207,13 @@ function extractConnectionTypesFromExpression(expression: string): string[] {
   const types = new Set<string>();
 
   // Pattern 1: type: "ai_tool"
-  const pattern1 = /type\s*:\s*["']([^"']+)["']/g;
+  const pattern1 = /type\s*:\s*(?:\"|')([^\"']+)(?:\"|')/g;
 
   // Pattern 2: type: NodeConnectionTypes.AiTool
   const pattern2 = /type\s*:\s*NodeConnectionTypes\.(\w+)/g;
 
   // Pattern 3: ["main", "ai_tool"]
-  const pattern3 = /\[\s*["'](\w+)["']/g;
+  const pattern3 = /\[\s*(?:\"|')(\w+)(?:\"|')/g;
 
   // Apply all patterns
   for (const pattern of [pattern1, pattern2, pattern3]) {

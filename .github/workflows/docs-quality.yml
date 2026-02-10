@@ -1,0 +1,73 @@
+name: Docs quality
+
+on:
+  pull_request:
+    paths:
+      - "**/*.md"
+      - ".markdownlint*"
+      - ".lychee.toml"
+      - "scripts/check-docs-structure.sh"
+      - "scripts/check-docs-index-links.sh"
+      - "scripts/check-runbooks-audience.sh"
+      - "scripts/check-docs-compliance-report.sh"
+      - "docs/metadata/repo.yaml"
+  push:
+    branches: [ main ]
+    paths:
+      - "**/*.md"
+      - ".markdownlint*"
+      - ".lychee.toml"
+      - "scripts/check-docs-structure.sh"
+      - "scripts/check-docs-index-links.sh"
+      - "scripts/check-runbooks-audience.sh"
+      - "scripts/check-docs-compliance-report.sh"
+      - "docs/metadata/repo.yaml"
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: markdownlint-cli2
+        uses: docker://ghcr.io/davidanson/markdownlint-cli2:v0.13.0
+        with:
+          args: "**/*.md"
+
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: lychee
+        uses: docker://lycheeverse/lychee:0.15.1
+        with:
+          args: "--config .lychee.toml ."
+
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docs structure
+        run: bash scripts/check-docs-structure.sh
+
+  index_links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docs index links
+        run: bash scripts/check-docs-index-links.sh
+
+  runbooks_audience:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: runbooks audience
+        run: bash scripts/check-runbooks-audience.sh
+
+  compliance_report:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: docs compliance report
+        run: bash scripts/check-docs-compliance-report.sh
+

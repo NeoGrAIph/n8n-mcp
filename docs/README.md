@@ -1,58 +1,46 @@
-# Документация n8n-MCP
+# Documentation
 
-Добро пожаловать в документацию n8n-MCP. Этот каталог содержит подробные руководства по установке, настройке и устранению неполадок.
+## Start here
 
-## 📚 Указатель документации
+- User: [Install](./tutorials/INSTALLATION.md), [Claude Desktop setup](./how-to/clients/README_CLAUDE_SETUP.md), [Remote HTTP access](./how-to/http-remote-access.md)
+- Dev: [Tools reference](./reference/tools/README.md), [How-to index](./how-to/README.md)
+- Oncall: [Runbooks](./runbooks/README.md), [Troubleshooting](./TROUBLESHOOTING.md)
 
-### Начиная
-- **[Руководство по установке](./INSTALLATION.md)** - Подробное руководство по установке, охватывающее все методы.
-- **[Настройка Claude Desktop](./README_CLAUDE_SETUP.md)** – Пошаговое руководство по настройке Claude Desktop.
-- **[Краткое руководство](../README.md)** – Базовый обзор и инструкции по быстрому запуску.
+## Tutorials
 
-### Развертывание
-- **[Руководство по развертыванию HTTP](./HTTP_DEPLOYMENT.md)** - Развертывание n8n-MCP в качестве HTTP-сервера для удаленного доступа.
-- **[Развертывание Docker](./DOCKER_README.md)** — Полное руководство по развертыванию и настройке Docker.
-- **[Руководство по выпуску](./RELEASE_GUIDE.md)** - Как создавать выпуски и управлять тегами Docker.
+- [Installation](./tutorials/INSTALLATION.md)
+- [MCP essentials usage](./tutorials/MCP_ESSENTIALS_README.md)
 
-### Ссылка
-- **[Руководство по устранению неполадок](./TROUBLESHOOTING.md)** – Решения распространенных проблем и ошибок.
-- **[Документация по исправлениям HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md)** - Технические подробности исправлений HTTP-сервера версии 2.3.2.
-- **[Руководство по оптимизации Docker](./DOCKER_OPTIMIZATION_GUIDE.md)** – Справочник по оптимизированным сборкам Docker (~150 МБ)
-- **[Changelog](./CHANGELOG.md)** – История версий и примечания к выпуску
+## How-to
 
-## 🚀 Быстрые ссылки
+- [How-to index](./how-to/README.md)
 
-### Для пользователей
-- [Установить n8n-MCP](./INSTALLATION.md)
-- [Настроить рабочий стол Клода](./README_CLAUDE_SETUP.md)
-- [Развертывание с помощью Docker](./DOCKER_README.md)
-- [Устранение неполадок](./TROUBLESHOOTING.md)
+## Reference
 
-### Для разработчиков
-- [Архитектура HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md)
-- [Оптимизация сборки Docker](./DOCKER_OPTIMIZATION_GUIDE.md)
-- [Процесс выпуска](./RELEASE_GUIDE.md)
+- Capabilities: [reference/capabilities.md](./reference/capabilities.md)
+- Tools: [reference/tools/README.md](./reference/tools/README.md)
+- [reference/http-endpoints.md](./reference/http-endpoints.md)
+- [reference/cli.md](./reference/cli.md)
+- [CHANGELOG.md](./reference/CHANGELOG.md)
+- [SESSION_PERSISTENCE.md](./reference/SESSION_PERSISTENCE.md)
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
-## 📋 Переменные среды
+## Explanation
 
-Ключевые параметры конфигурации:
+- [LIBRARY_USAGE.md](./explanation/LIBRARY_USAGE.md)
+- [FLEXIBLE_INSTANCE_CONFIGURATION.md](./explanation/FLEXIBLE_INSTANCE_CONFIGURATION.md)
+- [TYPE_STRUCTURE_VALIDATION.md](./explanation/TYPE_STRUCTURE_VALIDATION.md)
+- [FINAL_AI_VALIDATION_SPEC.md](./explanation/FINAL_AI_VALIDATION_SPEC.md)
+- Research/analysis notes: `docs/local/` (не канон; используйте как исследовательские материалы)
 
-| Переменная | Описание | По умолчанию |
-|----------|-------------|---------|
-| @@КОД0@@ | Режим сервера: `stdio` или `http` | `stdio` |
-| @@КОД0@@ | Использовать фиксированную реализацию HTTP (v2.3.2+) | `true` |
-| @@КОД0@@ | Токен аутентификации для режима HTTP | Требуется |
-| @@КОД0@@ | Порт HTTP-сервера | `3000` |
-| @@КОД0@@ | Подробность регистрации | `info` |
+## ADR
 
-Полный список см. в [Руководстве по установке](./INSTALLATION.md#environment-configuration).
+- [adr/README.md](./adr/README.md)
 
-## 🆘 Получение помощи
+## Runbooks
 
-1. Ознакомьтесь с [Руководством по устранению неполадок](./TROUBLESHOOTING.md)
-2. Просмотрите [Документацию по исправлению HTTP-сервера](./HTTP_SERVER_FINAL_FIX.md) на наличие проблем с версией 2.3.2.
-3. Откройте проблему на [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+- [runbooks/README.md](./runbooks/README.md)
 
-## 📝 Лицензия
+## Configuration
 
-В этом проекте используется лицензия на устойчивое использование. Подробности см. в разделе [ЛИЦЕНЗИЯ](../LICENSE).
+Полный список переменных окружения и комментарии: [../.env.example](../.env.example).
