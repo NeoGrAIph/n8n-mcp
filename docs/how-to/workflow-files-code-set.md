@@ -18,6 +18,10 @@
      }
    }
    ```
+   Примечание: ответы включают:
+   - `uri` (стабильный виртуальный идентификатор вида `n8n-workflows:///code/...`)
+   - `relativePath` (путь к файлу относительно `N8N_WORKFLOWS_ROOT`, включая подпапки workflow)
+   - `path` (display-путь; по умолчанию строится из `N8N_WORKFLOWS_DISPLAY_ROOT` или `HOME`)
 
 2. Прочитайте файл конкретной Code ноды:
    ```json
@@ -63,4 +67,3 @@
 ## References
 
 - Tools: `docs/reference/tools/n8n_code_files_list.md`, `docs/reference/tools/n8n_code_file_read.md`, `docs/reference/tools/n8n_code_file_write.md`, `docs/reference/tools/n8n_workflow_file_patch.md`
-

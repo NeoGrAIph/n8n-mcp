@@ -6,6 +6,7 @@ List Code node source files for a workflow. Use this when you need the available
 
 - Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
 - Транспорт: stdio и http.
+ - Примечание: ответы также включают `relativePath` (относительно `N8N_WORKFLOWS_ROOT`, с учётом подпапок workflow) и `path` (display-путь; настраивается через `N8N_WORKFLOWS_DISPLAY_ROOT`).
 
 ## Audience
 

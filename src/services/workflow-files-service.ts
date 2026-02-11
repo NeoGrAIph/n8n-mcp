@@ -12,6 +12,16 @@ export interface WorkflowFileInfo {
   kind: WorkflowFileKind;
   language?: CodeFileLanguage;
   uri: string;
+  /**
+   * Path relative to workflow files root (WORKFLOWS_ROOT), including any folder nesting.
+   * Example: "development/code_nodes_<workflowId>/<nodeId>.py"
+   */
+  relativePath?: string;
+  /**
+   * Human-friendly display path. Typically starts with "~/" when configured.
+   * Example: "~/repo/n8n-workflows/dev/workflows/development/code_nodes_<workflowId>/<nodeId>.py"
+   */
+  path?: string;
   etag: string;
   size: number;
   lastModified: string;
@@ -26,9 +36,54 @@ const NODE_ID_RE = /^[0-9a-fA-F-]{36}$/;
 
 export const WORKFLOWS_ROOT = process.env.N8N_WORKFLOWS_ROOT || process.env.WORKFLOWS_ROOT || '/workflows';
 const CODE_NODES_PREFIX = process.env.N8N_CODE_NODES_PREFIX || 'code_nodes_';
+const WORKFLOWS_DISPLAY_ROOT = process.env.N8N_WORKFLOWS_DISPLAY_ROOT || process.env.WORKFLOWS_DISPLAY_ROOT;
 
 export function isWorkflowFilesConfigured(): boolean {
   return Boolean(WORKFLOWS_ROOT && existsSync(WORKFLOWS_ROOT));
+}
+
+function toPosixPath(p: string): string {
+  // Keep responses stable across platforms; our deployments are Linux, but tests may run elsewhere.
+  return p.split(path.sep).join(path.posix.sep);
+}
+
+function trimTrailingSlashes(p: string): string {
+  return p.replace(/[\\/]+$/, '');
+}
+
+function resolveDisplayRoot(rootResolved: string): string {
+  if (WORKFLOWS_DISPLAY_ROOT) {
+    return trimTrailingSlashes(WORKFLOWS_DISPLAY_ROOT);
+  }
+
+  const home = process.env.HOME;
+  if (home) {
+    const homeResolved = path.resolve(home);
+    if (rootResolved === homeResolved) return '~';
+    if (rootResolved.startsWith(homeResolved + path.sep)) {
+      return '~' + toPosixPath(rootResolved.slice(homeResolved.length));
+    }
+  }
+
+  return toPosixPath(rootResolved);
+}
+
+function joinDisplayPath(displayRoot: string, relativePath: string): string {
+  const root = trimTrailingSlashes(displayRoot);
+  const rel = relativePath.replace(/^[\\/]+/, '');
+  if (!rel) return root;
+  if (root === '~') return `~/${rel}`;
+  return `${root}/${rel}`;
+}
+
+function computeReturnedPaths(filePath: string): { relativePath: string; path: string }{
+  const rootResolved = path.resolve(WORKFLOWS_ROOT);
+  const displayRoot = resolveDisplayRoot(rootResolved);
+  const rel = toPosixPath(path.relative(rootResolved, filePath)).replace(/^\.\//, '');
+  return {
+    relativePath: rel,
+    path: joinDisplayPath(displayRoot, rel),
+  };
 }
 
 function assertWorkflowId(workflowId: string): void {
@@ -164,12 +219,15 @@ export async function listCodeFiles(workflowId: string): Promise<WorkflowFileInf
 
     const filePath = path.join(workflowDir, entry.name);
     const { etag, size, lastModified } = await statFile(filePath);
+    const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
     results.push({
       workflowId,
       nodeId: parsed.nodeId,
       kind: 'code',
       language: resolveCodeLanguage(parsed.ext),
       uri: buildUri('code', workflowId, parsed.nodeId, parsed.ext),
+      relativePath,
+      path: displayPath,
       etag,
       size,
       lastModified,
@@ -192,11 +250,14 @@ export async function listSetFiles(workflowId: string): Promise<WorkflowFileInfo
 
     const filePath = path.join(workflowDir, entry.name);
     const { etag, size, lastModified } = await statFile(filePath);
+    const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
     results.push({
       workflowId,
       nodeId: parsed.nodeId,
       kind: 'set',
       uri: buildUri('set', workflowId, parsed.nodeId, 'set.json'),
+      relativePath,
+      path: displayPath,
       etag,
       size,
       lastModified,
@@ -241,12 +302,15 @@ export async function readCodeFile(workflowId: string, nodeId: string): Promise<
   const { filePath, ext } = await resolveCodeFilePath(workflowId, nodeId);
   const data = await fs.readFile(filePath, 'utf-8');
   const { etag, size, lastModified } = await statFile(filePath);
+  const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
   return {
     workflowId,
     nodeId,
     kind: 'code',
     language: resolveCodeLanguage(ext),
     uri: buildUri('code', workflowId, nodeId, ext),
+    relativePath,
+    path: displayPath,
     content: data,
     etag,
     size,
@@ -258,11 +322,14 @@ export async function readSetFile(workflowId: string, nodeId: string): Promise<W
   const filePath = await resolveSetFilePath(workflowId, nodeId);
   const data = await fs.readFile(filePath, 'utf-8');
   const { etag, size, lastModified } = await statFile(filePath);
+  const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
   return {
     workflowId,
     nodeId,
     kind: 'set',
     uri: buildUri('set', workflowId, nodeId, 'set.json'),
+    relativePath,
+    path: displayPath,
     content: data,
     etag,
     size,
@@ -328,6 +395,7 @@ export async function writeCodeFile(workflowId: string, nodeId: string, content:
   await fs.chmod(filePath, 0o666).catch(() => undefined);
 
   const { etag, size, lastModified } = await statFile(filePath);
+  const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
 
   return {
     workflowId,
@@ -335,6 +403,8 @@ export async function writeCodeFile(workflowId: string, nodeId: string, content:
     kind: 'code',
     language: resolveCodeLanguage(ext),
     uri: buildUri('code', workflowId, nodeId, ext),
+    relativePath,
+    path: displayPath,
     etag,
     size,
     lastModified,
@@ -359,12 +429,15 @@ export async function writeSetFile(workflowId: string, nodeId: string, content: 
   await fs.chmod(filePath, 0o666).catch(() => undefined);
 
   const { etag, size, lastModified } = await statFile(filePath);
+  const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
 
   return {
     workflowId,
     nodeId,
     kind: 'set',
     uri: buildUri('set', workflowId, nodeId, 'set.json'),
+    relativePath,
+    path: displayPath,
     etag,
     size,
     lastModified,
@@ -431,6 +504,7 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
 
       const filePath = path.join(current, entry.name);
       const { etag, size, lastModified } = await statFile(filePath);
+      const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
 
       if (setParsed) {
         const uri = buildUri('set', workflowId, nodeId, 'set.json');
@@ -440,7 +514,7 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
           uri,
           description: 'Set(raw) node parameters saved as JSON. URI encodes workflowId and nodeId: n8n-workflows:///set/{workflowId}/{nodeId}.set.json',
           mimeType: 'application/json',
-          _meta: { workflowId, nodeId, kind: 'set', etag, size, lastModified }
+          _meta: { workflowId, nodeId, kind: 'set', etag, size, lastModified, relativePath, path: displayPath }
         });
         continue;
       }
@@ -454,7 +528,7 @@ export async function listWorkflowResources(): Promise<WorkflowResourceDescripto
           uri,
           description: 'Code node source file (JavaScript or Python). URI encodes workflowId and nodeId: n8n-workflows:///code/{workflowId}/{nodeId}.{ext}',
           mimeType: resolveCodeMime(ext),
-          _meta: { workflowId, nodeId, kind: 'code', language: resolveCodeLanguage(ext), etag, size, lastModified }
+          _meta: { workflowId, nodeId, kind: 'code', language: resolveCodeLanguage(ext), etag, size, lastModified, relativePath, path: displayPath }
         });
       }
     }
@@ -474,6 +548,7 @@ export async function readWorkflowResource(uri: string): Promise<{ uri: string; 
     }
     const content = await fs.readFile(filePath, 'utf-8');
     const { etag, size, lastModified } = await statFile(filePath);
+    const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
     return {
       uri,
       mimeType: resolveCodeMime(parsed.ext),
@@ -485,7 +560,9 @@ export async function readWorkflowResource(uri: string): Promise<{ uri: string; 
         language: resolveCodeLanguage(parsed.ext),
         etag,
         size,
-        lastModified
+        lastModified,
+        relativePath,
+        path: displayPath
       }
     };
   }
@@ -497,11 +574,12 @@ export async function readWorkflowResource(uri: string): Promise<{ uri: string; 
   }
   const content = await fs.readFile(filePath, 'utf-8');
   const { etag, size, lastModified } = await statFile(filePath);
+  const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
   return {
     uri,
     mimeType: 'application/json',
     text: content,
-    _meta: { workflowId: parsed.workflowId, nodeId: parsed.nodeId, kind: 'set', etag, size, lastModified }
+    _meta: { workflowId: parsed.workflowId, nodeId: parsed.nodeId, kind: 'set', etag, size, lastModified, relativePath, path: displayPath }
   };
 }
 

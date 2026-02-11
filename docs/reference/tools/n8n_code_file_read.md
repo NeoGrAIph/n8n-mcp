@@ -6,6 +6,7 @@ Read a Code node source file by workflowId and nodeId. Use this when you need th
 
 - Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
 - Транспорт: stdio и http.
+ - Примечание: ответы также включают `relativePath` (относительно `N8N_WORKFLOWS_ROOT`) и `path` (display-путь; настраивается через `N8N_WORKFLOWS_DISPLAY_ROOT`).
 
 ## Audience
 
