@@ -1282,7 +1282,7 @@ describe('N8nApiClient', () => {
       const result = requestInterceptor(config);
       
       expect(logger.debug).toHaveBeenCalledWith(
-        'n8n API Request: GET /workflows',
+        'n8n API Request (rest): GET /workflows',
         { params: { limit: 10 }, data: undefined }
       );
       expect(result).toBe(config);
@@ -1298,7 +1298,7 @@ describe('N8nApiClient', () => {
       const result = responseInterceptor(response);
       
       expect(logger.debug).toHaveBeenCalledWith(
-        'n8n API Response: 200 /workflows'
+        'n8n API Response (rest): 200 /workflows'
       );
       expect(result).toBe(response);
     });

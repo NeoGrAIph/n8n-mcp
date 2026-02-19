@@ -4,6 +4,21 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
+const CLOUD_ENV_VARS = [
+  'RAILWAY_ENVIRONMENT',
+  'RENDER',
+  'FLY_APP_NAME',
+  'HEROKU_APP_NAME',
+  'AWS_EXECUTION_ENV',
+  'KUBERNETES_SERVICE_HOST',
+  'GOOGLE_CLOUD_PROJECT',
+  'AZURE_FUNCTIONS_ENVIRONMENT'
+];
+
+function clearCloudEnvVars() {
+  CLOUD_ENV_VARS.forEach(envVar => delete process.env[envVar]);
+}
+
 // Mock fs module
 vi.mock('fs', async () => {
   const actual = await vi.importActual<typeof import('fs')>('fs');
@@ -232,13 +247,11 @@ describe('TelemetryConfigManager', () => {
     });
 
     it('should handle missing home directory', () => {
-      // Mock homedir to return empty string
-      const originalHomedir = require('os').homedir;
-      vi.doMock('os', () => ({
-        homedir: () => ''
-      }));
-
+      // Simulate inability to create config dir/path
       vi.mocked(existsSync).mockReturnValue(false);
+      vi.mocked(mkdirSync).mockImplementation(() => {
+        throw new Error('No home directory available');
+      });
 
       expect(() => TelemetryConfigManager.getInstance()).not.toThrow();
     });
@@ -722,6 +735,11 @@ describe('TelemetryConfigManager', () => {
     });
 
     describe('environment detection', () => {
+      beforeEach(() => {
+        delete process.env.IS_DOCKER;
+        clearCloudEnvVars();
+      });
+
       it('should use Docker method when IS_DOCKER=true', () => {
         process.env.IS_DOCKER = 'true';
 
@@ -738,7 +756,6 @@ describe('TelemetryConfigManager', () => {
 
       it('should use Docker method for Railway environment', () => {
         process.env.RAILWAY_ENVIRONMENT = 'production';
-        delete process.env.IS_DOCKER;
 
         vi.mocked(existsSync).mockReturnValue(false);
 
@@ -753,7 +770,7 @@ describe('TelemetryConfigManager', () => {
 
       it('should use file-based method for local installation', () => {
         delete process.env.IS_DOCKER;
-        delete process.env.RAILWAY_ENVIRONMENT;
+        clearCloudEnvVars();
 
         vi.mocked(existsSync).mockReturnValue(false);
 
@@ -769,20 +786,9 @@ describe('TelemetryConfigManager', () => {
       });
 
       it('should detect cloud platforms', () => {
-        const cloudEnvVars = [
-          'RAILWAY_ENVIRONMENT',
-          'RENDER',
-          'FLY_APP_NAME',
-          'HEROKU_APP_NAME',
-          'AWS_EXECUTION_ENV',
-          'KUBERNETES_SERVICE_HOST',
-          'GOOGLE_CLOUD_PROJECT',
-          'AZURE_FUNCTIONS_ENVIRONMENT'
-        ];
-
-        cloudEnvVars.forEach(envVar => {
+        CLOUD_ENV_VARS.forEach(envVar => {
           // Clear all env vars
-          cloudEnvVars.forEach(v => delete process.env[v]);
+          clearCloudEnvVars();
           delete process.env.IS_DOCKER;
 
           // Set one cloud env var

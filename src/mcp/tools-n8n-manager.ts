@@ -507,6 +507,9 @@ export const n8nManagementTools: ToolDefinition[] = [
         },
         items: {
           type: 'array',
+          items: {
+            type: 'object'
+          },
           description: 'Optional array of input items. Each item can be a full n8n item ({json, binary}) or a plain object (will be wrapped as {json}).'
         },
         item: {
