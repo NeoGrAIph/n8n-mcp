@@ -41,7 +41,8 @@ curl http://localhost:3000/health
 Примечания по доступности:
 - “documentation tools” доступны всегда (если не отключены через `DISABLED_TOOLS`).
 - “management tools” доступны при конфигурации n8n API (`N8N_API_URL` + `N8N_API_KEY`) или в multi-tenant режиме.
-- “workflow files tools” доступны при настройке `N8N_WORKFLOWS_ROOT`/`WORKFLOWS_ROOT`.
+- “workflow files tools” доступны при наличии workflow root (`N8N_WORKFLOWS_ROOT`/`WORKFLOWS_ROOT`, дефолт `/workflows`) и существующей директории.
+- Подробная настройка и troubleshooting: `docs/how-to/workflow-files-code-set.md`.
 
 ## 🤖 Claude project setup
 

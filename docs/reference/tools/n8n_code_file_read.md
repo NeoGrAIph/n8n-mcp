@@ -4,7 +4,7 @@
 
 Read a Code node source file by workflowId and nodeId. Use this when you need the current file contents before making edits. Provide workflowId and nodeId; the server resolves .py or .json automatically. Returns file content plus metadata (etag, size, language, lastModified) for concurrency control.
 
-- Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
+- Доступность: появляется в `tools/list`, когда workflow-files root существует и доступен процессу (`N8N_WORKFLOWS_ROOT` -> `WORKFLOWS_ROOT` -> `/workflows`).
 - Транспорт: stdio и http.
  - Примечание: ответы также включают `relativePath` (относительно `N8N_WORKFLOWS_ROOT`) и `path` (display-путь; настраивается через `N8N_WORKFLOWS_DISPLAY_ROOT`).
 

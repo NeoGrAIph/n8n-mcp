@@ -4,7 +4,7 @@
 
 List Set(raw) node JSON files for a workflow. Use this when you need the available Set(raw) files and their metadata for a specific workflow. Provide workflowId to target the workflow folder. Returns file descriptors with nodeId, uri, etag, size, and lastModified.
 
-- Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
+- Доступность: появляется в `tools/list`, когда workflow-files root существует и доступен процессу (`N8N_WORKFLOWS_ROOT` -> `WORKFLOWS_ROOT` -> `/workflows`).
 - Транспорт: stdio и http.
  - Примечание: ответы также включают `relativePath` (относительно `N8N_WORKFLOWS_ROOT`, с учётом подпапок workflow) и `path` (display-путь; настраивается через `N8N_WORKFLOWS_DISPLAY_ROOT`).
 

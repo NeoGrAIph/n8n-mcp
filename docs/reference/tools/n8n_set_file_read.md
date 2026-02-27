@@ -4,7 +4,7 @@
 
 Read a Set(raw) node JSON file by workflowId and nodeId. Use this when you need the current raw JSON payload for a Set node. Provide workflowId and nodeId. Returns file content plus metadata (etag, size, lastModified) for concurrency control.
 
-- Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
+- Доступность: появляется в `tools/list`, когда workflow-files root существует и доступен процессу (`N8N_WORKFLOWS_ROOT` -> `WORKFLOWS_ROOT` -> `/workflows`).
 - Транспорт: stdio и http.
  - Примечание: ответы также включают `relativePath` (относительно `N8N_WORKFLOWS_ROOT`) и `path` (display-путь; настраивается через `N8N_WORKFLOWS_DISPLAY_ROOT`).
 

@@ -54,7 +54,9 @@
 
 ## Workflow Files Tools
 
-Доступны при настройке workflow-files root (`N8N_WORKFLOWS_ROOT`/`WORKFLOWS_ROOT`) и наличии директории.
+Доступны, когда итоговый workflow-files root существует и доступен процессу (используется `N8N_WORKFLOWS_ROOT`, fallback `WORKFLOWS_ROOT`, затем дефолт `/workflows`).
+
+`N8N_WORKFLOWS_DISPLAY_ROOT` влияет только на display-поле `path` в ответах и не меняет фактический root для чтения/записи.
 
 | Tool | Summary |
 |---|---|

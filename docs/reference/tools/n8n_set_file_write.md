@@ -4,7 +4,7 @@
 
 Write a Set(raw) node JSON file by workflowId and nodeId. Use this when you need to update the raw JSON payload for a Set node. Provide content and expectedEtag to protect against concurrent edits. Returns updated metadata (etag, size, uri) after the write.
 
-- Доступность: появляется в `tools/list` только если настроен workflow-files root (`N8N_WORKFLOWS_ROOT` или `WORKFLOWS_ROOT`) и директория существует.
+- Доступность: появляется в `tools/list`, когда workflow-files root существует и доступен процессу (`N8N_WORKFLOWS_ROOT` -> `WORKFLOWS_ROOT` -> `/workflows`).
 - Транспорт: stdio и http.
 
 ## Audience

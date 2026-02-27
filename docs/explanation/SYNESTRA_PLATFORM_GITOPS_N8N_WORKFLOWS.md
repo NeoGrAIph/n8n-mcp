@@ -52,10 +52,31 @@ Prod-контур сделан консервативно:
 
 В платформенном деплое часто делается так:
 - `N8N_WORKFLOWS_ROOT` монтируется на каталог `n8n-workflows/dev/workflows`.
+- (Опционально) `N8N_WORKFLOWS_DISPLAY_ROOT` задаёт только display-путь в ответах (`path`). На фактический read/write root он не влияет.
 
 Это означает:
 - по умолчанию операции чтения/патча файлов через MCP направлены на **dev-артефакты**;
 - чтобы обслуживать `prod` файловый слой через MCP, обычно нужен отдельный деплой/конфигурация с другим mount/root.
+
+## Troubleshooting в Synestra dev (workflow files tools)
+
+### Симптом: `Workflow directory not found for workflowId ...`
+
+Обычно это не проблема workflow как сущности, а проблема видимости/актуальности файлового слоя для pod `mcp-n8n`.
+
+Проверьте по шагам:
+1. В дереве `n8n-workflows/.../workflows` действительно существует `code_nodes_<workflowId>` для нужного id.
+2. В pod `mcp-n8n` каталог `/workflows` содержит те же файлы, что и в `n8n-sync-controller`/Debezium-интеграции.
+3. Если в соседних pod файлы есть, а в `mcp-n8n` их нет, это рассинхрон mount/volume view.
+
+Практическое восстановление:
+1. Перезапустите pod `mcp-n8n`.
+2. Повторите `n8n_code_files_list` или `n8n_set_files_list` для того же `workflowId`.
+3. Если после рестарта проблема повторяется, проверяйте PVC/PV и node placement, чтобы все pod смотрели на один и тот же том.
+
+### Симптом: `path` в ответе "не соответствует" mount path
+
+Это ожидаемо, если задан `N8N_WORKFLOWS_DISPLAY_ROOT`. Поле `path` человеко-ориентированное; source of truth для резолвинга — `N8N_WORKFLOWS_ROOT`.
 
 ## Где смотреть источник истины по реализации
 
