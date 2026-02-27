@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771489372539,
+  "lastUpdate": 1772166484597,
   "repoUrl": "https://github.com/NeoGrAIph/n8n-mcp",
   "entries": {
     "n8n-mcp Benchmarks": [
@@ -85,6 +85,37 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/c466d025ff52598b3b4adfa9d1dd1514773b8fb0"
         },
         "date": 1771489372254,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "sample - array sorting - small",
+            "value": 0.0136,
+            "range": "0.3096",
+            "unit": "ms",
+            "extra": "73341 ops/sec"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "committer": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "distinct": true,
+          "id": "fdbf82a443bec0a12c0fa29cbafb66795aef7ef2",
+          "message": "docs: align workflow-files setup and troubleshooting",
+          "timestamp": "2026-02-27T12:25:53+08:00",
+          "tree_id": "933e75ec2af710b3e0ef029a65165cc9a8c6636a",
+          "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/fdbf82a443bec0a12c0fa29cbafb66795aef7ef2"
+        },
+        "date": 1772166483826,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
