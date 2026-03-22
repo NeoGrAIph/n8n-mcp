@@ -722,6 +722,11 @@ class N8NDocumentationMCPServer {
                         ? { valid: true, errors: [] }
                         : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
                     break;
+                case 'n8n_workflow_full_test':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
                 case 'n8n_workflow_execution_get':
                     validationResult = args.workflowId && args.executionId
                         ? { valid: true, errors: [] }
@@ -1034,6 +1039,9 @@ class N8NDocumentationMCPServer {
             case 'n8n_workflow_runner_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestWorkflowRunner(args, this.instanceContext);
+            case 'n8n_workflow_full_test':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleTestWorkflowFull(args, this.instanceContext);
             case 'n8n_code_node_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestCodeNode(args, this.instanceContext);

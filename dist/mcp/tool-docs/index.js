@@ -35,6 +35,7 @@ exports.toolsDocumentation = {
     n8n_workflow_validate: workflow_management_1.n8nValidateWorkflowDoc,
     n8n_workflow_autofix: workflow_management_1.n8nAutofixWorkflowDoc,
     n8n_workflow_test: workflow_management_1.n8nTestWorkflowDoc,
+    n8n_workflow_full_test: workflow_management_1.n8nWorkflowFullTestDoc,
     n8n_workflow_runner_test: workflow_management_1.n8nWorkflowRunnerTestDoc,
     n8n_code_node_test: workflow_management_1.n8nCodeNodeTestDoc,
     n8n_executions_get: workflow_management_1.n8nExecutionsGetDoc,

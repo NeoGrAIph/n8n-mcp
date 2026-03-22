@@ -1,0 +1,1 @@
+{"version":3,"file":"tool-annotations.d.ts","sourceRoot":"","sources":["../../src/mcp/tool-annotations.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,cAAc,EAAE,MAAM,UAAU,CAAC;AAE3D,eAAO,MAAM,eAAe,EAAE,MAAM,CAAC,MAAM,EAAE,eAAe,CAgD3D,CAAC;AAEF,wBAAgB,mBAAmB,CAAC,KAAK,EAAE,cAAc,EAAE,GAAG,cAAc,EAAE,CAQ7E"}

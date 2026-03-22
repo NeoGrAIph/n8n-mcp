@@ -2,7 +2,7 @@
 
 ## Summary
 
-Execute a full workflow through the utility runner. Use this when you need a runner-based test execution path for manual-only or otherwise non-externally-triggerable workflows. Provide `workflowId` and optional input items, dry-run, diagnostics, or response controls.
+Execute a full workflow through the utility runner. Use this when you need a generated runner-based test execution path with synthetic input items, dry-run, or rewritten full-workflow execution. For native editor-style full testing prefer `n8n_workflow_full_test`.
 
 - Доступность: появляется в `tools/list` при конфигурации n8n API (`N8N_API_URL` + `N8N_API_KEY`) или при включённом multi-tenant (`ENABLE_MULTI_TENANT=true`) / наличии instance context.
 - Транспорт: stdio и http.

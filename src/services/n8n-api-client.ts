@@ -21,6 +21,8 @@ import {
   N8nVersionInfo,
   Variable,
   WebhookRequest,
+  WorkflowRunRequest,
+  WorkflowRunResponse,
   WorkflowExport,
   WorkflowImport,
   SourceControlStatus,
@@ -598,6 +600,22 @@ export class N8nApiClient {
         data: payload,
       });
       return { id, parentFolderId } as Workflow;
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  hasRestAuthConfigured(): boolean {
+    return this.hasRestAuth();
+  }
+
+  async runWorkflow(id: string, request: WorkflowRunRequest): Promise<WorkflowRunResponse> {
+    try {
+      return await this.requestRest<WorkflowRunResponse>({
+        method: 'post',
+        url: `/workflows/${id}/run`,
+        data: request,
+      });
     } catch (error) {
       throw handleN8nApiError(error);
     }

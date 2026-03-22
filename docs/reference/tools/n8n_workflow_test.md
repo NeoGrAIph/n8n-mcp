@@ -2,7 +2,7 @@
 
 ## Summary
 
-Trigger a workflow execution via webhook, form, or chat. Use this when you need to run an externally-triggerable workflow and observe outputs or side effects. Manual, schedule, and other non-HTTP triggers are not supported here; use `n8n_workflow_runner_test` for runner-based full-workflow execution.
+Trigger a workflow execution via webhook, form, or chat. Use this when you need to run an externally-triggerable workflow and observe outputs or side effects. Manual, schedule, and other non-HTTP triggers are not supported here; use `n8n_workflow_full_test` for native full-workflow execution or `n8n_workflow_runner_test` for the generated runner path.
 
 - Доступность: появляется в `tools/list` при конфигурации n8n API (`N8N_API_URL` + `N8N_API_KEY`) или при включённом multi-tenant (`ENABLE_MULTI_TENANT=true`) / наличии instance context.
 - Транспорт: stdio и http.
@@ -88,7 +88,8 @@ Unsupported workflow trigger classes:
 - `not_configured`: требуется конфигурация (например, n8n API или workflow-files root) и она отсутствует.
 - `Workflow cannot be triggered externally`: workflow не содержит `webhook`, `form` или `chat` trigger.
 - `Workflow must be active to trigger via this method`: externally-triggerable workflow найден, но workflow не активирован.
-- Для manual-only workflows используйте `n8n_workflow_runner_test`.
+- Для manual/editor workflows используйте `n8n_workflow_full_test`.
+- Для generated runner path используйте `n8n_workflow_runner_test`.
 - В HTTP режиме: `401/403` при отсутствии/неверном `Authorization: Bearer ...`.
 
 ## Security / Permissions

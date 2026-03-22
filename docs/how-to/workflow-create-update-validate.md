@@ -62,7 +62,17 @@
    }
    ```
 
-   Для manual-only workflow вместо этого используйте runner path:
+   Для manual/editor workflow вместо этого используйте native full test path:
+   ```json
+   {
+     "name": "n8n_workflow_full_test",
+     "arguments": {
+       "workflowId": "workflow-id-here"
+     }
+   }
+   ```
+
+   Если нужен именно generated runner path, используйте:
    ```json
    {
      "name": "n8n_workflow_runner_test",
@@ -79,5 +89,5 @@
 
 ## References
 
-- Tools: `docs/reference/tools/n8n_workflow_create.md`, `docs/reference/tools/n8n_workflow_update_partial.md`, `docs/reference/tools/n8n_workflow_validate.md`, `docs/reference/tools/n8n_workflow_test.md`, `docs/reference/tools/n8n_workflow_runner_test.md`
+- Tools: `docs/reference/tools/n8n_workflow_create.md`, `docs/reference/tools/n8n_workflow_update_partial.md`, `docs/reference/tools/n8n_workflow_validate.md`, `docs/reference/tools/n8n_workflow_test.md`, `docs/reference/tools/n8n_workflow_full_test.md`, `docs/reference/tools/n8n_workflow_runner_test.md`
 - Examples: `docs/workflow-diff-examples.md`

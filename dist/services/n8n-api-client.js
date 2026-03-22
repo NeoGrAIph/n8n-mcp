@@ -476,6 +476,21 @@ class N8nApiClient {
             throw (0, n8n_errors_1.handleN8nApiError)(error);
         }
     }
+    hasRestAuthConfigured() {
+        return this.hasRestAuth();
+    }
+    async runWorkflow(id, request) {
+        try {
+            return await this.requestRest({
+                method: 'post',
+                url: `/workflows/${id}/run`,
+                data: request,
+            });
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
     async triggerWebhook(request) {
         try {
             const { webhookUrl, httpMethod, data, headers, waitForResponse = true, timeoutMs } = request;

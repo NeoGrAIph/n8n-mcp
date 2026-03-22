@@ -53,6 +53,7 @@ exports.handleMoveWorkflowToFolder = handleMoveWorkflowToFolder;
 exports.handleValidateWorkflow = handleValidateWorkflow;
 exports.handleAutofixWorkflow = handleAutofixWorkflow;
 exports.handleTestWorkflow = handleTestWorkflow;
+exports.handleTestWorkflowFull = handleTestWorkflowFull;
 exports.handleTestCodeNode = handleTestCodeNode;
 exports.handleTestWorkflowRunner = handleTestWorkflowRunner;
 exports.handleGetExecution = handleGetExecution;
@@ -83,6 +84,7 @@ const cache_utils_1 = require("../utils/cache-utils");
 const execution_processor_1 = require("../services/execution-processor");
 const workflow_subgraph_1 = require("../services/workflow-subgraph");
 const npm_version_checker_1 = require("../utils/npm-version-checker");
+const node_type_utils_1 = require("../utils/node-type-utils");
 let defaultApiClient = null;
 let lastDefaultConfigUrl = null;
 const cacheMutex = new cache_utils_1.CacheMutex();
@@ -286,6 +288,31 @@ const workflowRunnerTestSchema = zod_1.z.object({
         ctx.addIssue({
             code: zod_1.z.ZodIssueCode.custom,
             message: 'diagnostics cannot be used when dryRun=true',
+            path: ['diagnostics'],
+        });
+    }
+});
+const workflowFullTestSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    triggerNode: zod_1.z.object({
+        name: zod_1.z.string(),
+        data: zod_1.z.unknown().optional(),
+    }).optional(),
+    startNodes: zod_1.z.array(zod_1.z.object({
+        name: zod_1.z.string(),
+        sourceData: zod_1.z.unknown().optional(),
+    })).optional(),
+    waitForCompletion: zod_1.z.boolean().optional(),
+    timeout: zod_1.z.number().int().positive().optional(),
+    pollIntervalMs: zod_1.z.number().int().positive().optional(),
+    diagnostics: zod_1.z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
+    diagnosticsItemsLimit: zod_1.z.number().int().min(0).optional(),
+    responseMode: zod_1.z.enum(['result', 'full']).optional(),
+}).superRefine((value, ctx) => {
+    if (value.waitForCompletion === false && value.diagnostics && value.diagnostics !== 'none') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'diagnostics cannot be used when waitForCompletion=false',
             path: ['diagnostics'],
         });
     }
@@ -1327,6 +1354,198 @@ async function handleTestWorkflow(args, context) {
         };
     }
 }
+async function handleTestWorkflowFull(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = workflowFullTestSchema.parse(args);
+        if (!client.hasRestAuthConfigured()) {
+            return {
+                success: false,
+                error: 'REST authentication required for native full test mode',
+                details: {
+                    workflowId: input.workflowId,
+                    hint: 'Configure N8N_REST_EMAIL and N8N_REST_PASSWORD to use n8n_workflow_full_test',
+                },
+            };
+        }
+        const workflow = await client.getWorkflow(input.workflowId);
+        const selection = resolveWorkflowFullTestSelection(workflow, input);
+        if (!isWorkflowFullTestSelectionSuccess(selection)) {
+            return selection;
+        }
+        const runResponse = await client.runWorkflow(input.workflowId, {
+            workflowData: workflow,
+            startNodes: selection.startNodes,
+            triggerToStartFrom: {
+                name: selection.triggerNode.name,
+                data: input.triggerNode?.data ?? null,
+            },
+        });
+        const executionId = extractExecutionIdFromWorkflowRunResponse(runResponse);
+        const runStatus = extractWorkflowRunStatus(runResponse);
+        const responseMode = input.responseMode ?? 'result';
+        const baseData = {
+            workflowId: input.workflowId,
+            executionId,
+            status: runStatus,
+            triggerNodeName: selection.triggerNode.name,
+            startNodeNames: selection.startNodes.map((node) => node.name),
+        };
+        if (input.waitForCompletion === false) {
+            return {
+                success: true,
+                data: responseMode === 'full'
+                    ? {
+                        ...baseData,
+                        runResponse,
+                    }
+                    : baseData,
+                executionId,
+                workflowId: input.workflowId,
+                message: 'Workflow started via native full test mode',
+            };
+        }
+        if (!executionId) {
+            return {
+                success: false,
+                error: 'Workflow run did not return executionId',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    hint: 'Retry with responseMode="full" and inspect the native run response',
+                },
+                workflowId: input.workflowId,
+            };
+        }
+        const timeoutMs = input.timeout ?? DEFAULT_WORKFLOW_FULL_TEST_TIMEOUT;
+        const pollIntervalMs = input.pollIntervalMs ?? DEFAULT_WORKFLOW_FULL_TEST_POLL_INTERVAL;
+        const completion = await waitForWorkflowExecutionCompletion({
+            client,
+            executionId,
+            pollIntervalMs,
+            timeoutMs,
+        });
+        if (completion.timedOut) {
+            return {
+                success: false,
+                error: 'Timed out waiting for workflow execution to finish',
+                code: 'EXECUTION_TIMEOUT',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    lastKnownStatus: completion.execution?.status ?? runStatus,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                    hint: 'Use n8n_workflow_execution_get or n8n_executions_get with the returned executionId to inspect the run',
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        if (!completion.execution) {
+            return {
+                success: false,
+                error: 'Execution details could not be loaded after workflow start',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        const diagnosticsMode = input.diagnostics ?? 'none';
+        const summaryResult = (0, execution_processor_1.processExecution)(completion.execution, { mode: 'summary' }, workflow);
+        const diagnostics = diagnosticsMode !== 'none'
+            ? (0, execution_processor_1.processExecution)(completion.execution, {
+                mode: diagnosticsMode,
+                itemsLimit: input.diagnosticsItemsLimit,
+            }, workflow)
+            : undefined;
+        if (completion.execution.status === n8n_api_2.ExecutionStatus.ERROR) {
+            return {
+                success: false,
+                error: getExecutionFailureMessage(completion.execution),
+                code: 'WORKFLOW_ERROR',
+                details: {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                    diagnostics,
+                    execution: responseMode === 'full' ? completion.execution : undefined,
+                    runResponse: responseMode === 'full' ? runResponse : undefined,
+                    polling: responseMode === 'full'
+                        ? {
+                            timeoutMs,
+                            pollIntervalMs,
+                            elapsedMs: completion.elapsedMs,
+                            polls: completion.polls,
+                        }
+                        : undefined,
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        return {
+            success: true,
+            data: responseMode === 'full' || diagnosticsMode !== 'none'
+                ? {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                    diagnostics,
+                    execution: completion.execution,
+                    runResponse,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                }
+                : {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                },
+            executionId,
+            workflowId: input.workflowId,
+            message: 'Workflow executed via native full test mode',
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+    }
+}
 const CODE_NODE_RUNNER_NAME = 'MCP Utility - Code Node Runner';
 const CODE_NODE_RUNNER_WEBHOOK_PATH = 'mcp-code-node-runner';
 const CODE_NODE_TYPE = 'n8n-nodes-base.code';
@@ -1485,6 +1704,8 @@ function stripMcpMetaFromResult(result) {
     }
     return result;
 }
+const DEFAULT_WORKFLOW_FULL_TEST_TIMEOUT = 120000;
+const DEFAULT_WORKFLOW_FULL_TEST_POLL_INTERVAL = 1000;
 function isRunnerExecutionContextSuccess(value) {
     return value.success === true && 'baseUrl' in value && 'runnerWorkflowId' in value;
 }
@@ -1512,6 +1733,185 @@ async function resolveRunnerExecutionContext(client, context, runnerWorkflowIdOv
         };
     }
     return { success: true, baseUrl, runnerWorkflowId };
+}
+function getTriggerNodes(workflow) {
+    return workflow.nodes.filter((node) => (0, node_type_utils_1.isTriggerNode)(node.type));
+}
+function getDownstreamNodeNames(workflow, nodeName) {
+    const outputs = workflow.connections?.[nodeName];
+    if (!outputs) {
+        return [];
+    }
+    const downstream = new Set();
+    for (const groups of Object.values(outputs)) {
+        if (!Array.isArray(groups)) {
+            continue;
+        }
+        for (const group of groups) {
+            if (!Array.isArray(group)) {
+                continue;
+            }
+            for (const connection of group) {
+                if (connection?.node) {
+                    downstream.add(connection.node);
+                }
+            }
+        }
+    }
+    return Array.from(downstream);
+}
+function extractExecutionIdFromWorkflowRunResponse(response) {
+    if (typeof response.executionId === 'string') {
+        return response.executionId;
+    }
+    if (typeof response.id === 'string') {
+        return response.id;
+    }
+    if (response.data && typeof response.data === 'object') {
+        const record = response.data;
+        if (typeof record.executionId === 'string') {
+            return record.executionId;
+        }
+        if (typeof record.id === 'string') {
+            return record.id;
+        }
+    }
+    return undefined;
+}
+function extractWorkflowRunStatus(response) {
+    if (typeof response.status === 'string') {
+        return response.status;
+    }
+    if (response.data && typeof response.data === 'object') {
+        const record = response.data;
+        if (typeof record.status === 'string') {
+            return record.status;
+        }
+    }
+    return undefined;
+}
+function resolveWorkflowFullTestSelection(workflow, input) {
+    const triggerNodes = getTriggerNodes(workflow);
+    let triggerNode;
+    if (input.triggerNode) {
+        triggerNode = workflow.nodes.find((node) => node.name === input.triggerNode?.name);
+        if (!triggerNode) {
+            return {
+                success: false,
+                error: `Trigger node "${input.triggerNode.name}" not found in workflow`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: input.triggerNode.name,
+                },
+            };
+        }
+        if (!(0, node_type_utils_1.isTriggerNode)(triggerNode.type)) {
+            return {
+                success: false,
+                error: `Node "${triggerNode.name}" is not a trigger node`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: triggerNode.name,
+                    nodeType: triggerNode.type,
+                },
+            };
+        }
+    }
+    else if (triggerNodes.length === 1) {
+        triggerNode = triggerNodes[0];
+    }
+    else {
+        return {
+            success: false,
+            error: 'Cannot auto-select trigger node',
+            details: {
+                workflowId: input.workflowId,
+                triggerNodes: triggerNodes.map((node) => ({ name: node.name, type: node.type })),
+                hint: 'Provide triggerNode.name when the workflow has zero or multiple trigger nodes',
+            },
+        };
+    }
+    let startNodes;
+    if (input.startNodes && input.startNodes.length > 0) {
+        const missing = input.startNodes.filter((entry) => !workflow.nodes.some((node) => node.name === entry.name));
+        if (missing.length > 0) {
+            return {
+                success: false,
+                error: 'One or more startNodes were not found in workflow',
+                details: {
+                    workflowId: input.workflowId,
+                    missingStartNodes: missing.map((entry) => entry.name),
+                },
+            };
+        }
+        startNodes = input.startNodes.map((entry) => ({
+            name: entry.name,
+            sourceData: entry.sourceData ?? null,
+        }));
+    }
+    else {
+        const downstreamNames = getDownstreamNodeNames(workflow, triggerNode.name);
+        if (downstreamNames.length === 0) {
+            return {
+                success: false,
+                error: `No downstream nodes found for trigger "${triggerNode.name}"`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: triggerNode.name,
+                    hint: 'Provide startNodes explicitly when the workflow graph cannot be derived from the trigger node',
+                },
+            };
+        }
+        startNodes = downstreamNames.map((name) => ({ name, sourceData: null }));
+    }
+    return { triggerNode, startNodes };
+}
+function isWorkflowFullTestSelectionSuccess(value) {
+    return !('success' in value);
+}
+async function waitForWorkflowExecutionCompletion(params) {
+    const startedAt = Date.now();
+    let polls = 0;
+    let lastExecution = null;
+    while (Date.now() - startedAt <= params.timeoutMs) {
+        try {
+            const execution = await params.client.getExecution(params.executionId, true);
+            lastExecution = execution;
+            if (execution.finished === true ||
+                execution.status === n8n_api_2.ExecutionStatus.SUCCESS ||
+                execution.status === n8n_api_2.ExecutionStatus.ERROR) {
+                return {
+                    execution,
+                    elapsedMs: Date.now() - startedAt,
+                    polls,
+                    timedOut: false,
+                };
+            }
+        }
+        catch (error) {
+            if (!(error instanceof n8n_errors_1.N8nNotFoundError)) {
+                throw error;
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, params.pollIntervalMs));
+        polls += 1;
+    }
+    return {
+        execution: lastExecution,
+        elapsedMs: Date.now() - startedAt,
+        polls,
+        timedOut: true,
+    };
+}
+function getExecutionFailureMessage(execution) {
+    const error = execution.data?.resultData?.error;
+    if (typeof error?.message === 'string' && error.message.trim().length > 0) {
+        return error.message;
+    }
+    if (typeof error?.description === 'string' && error.description.trim().length > 0) {
+        return error.description;
+    }
+    return 'Workflow execution failed';
 }
 async function executeGeneratedSubWorkflowThroughRunner(params) {
     const runnerPath = (params.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');

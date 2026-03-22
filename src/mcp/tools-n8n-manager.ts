@@ -525,6 +525,65 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
+    name: 'n8n_workflow_full_test',
+    description: `Execute a workflow through n8n's native editor-style test run endpoint (/rest/workflows/:id/run). Use this as the preferred full test mode for manual-only or otherwise non-externally-triggerable workflows when you want native workflow semantics instead of a generated runner sub-workflow.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID to execute through the native full test endpoint'
+        },
+        triggerNode: {
+          type: 'object',
+          description: 'Optional trigger node override. Required only when the workflow has zero or multiple trigger nodes and MCP cannot auto-select one.',
+          properties: {
+            name: { type: 'string' },
+            data: { type: 'object' }
+          }
+        },
+        startNodes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              sourceData: { type: 'object' }
+            }
+          },
+          description: 'Optional native startNodes override. When omitted, MCP derives direct downstream nodes from the selected trigger node.'
+        },
+        waitForCompletion: {
+          type: 'boolean',
+          description: 'Poll execution APIs until the run finishes (default: true)'
+        },
+        timeout: {
+          type: 'integer',
+          description: 'Maximum wait time in ms for completion polling (default: 120000)'
+        },
+        pollIntervalMs: {
+          type: 'integer',
+          description: 'Polling interval in ms while waiting for terminal execution (default: 1000)'
+        },
+        diagnostics: {
+          type: 'string',
+          enum: ['none', 'preview', 'summary', 'full', 'error'],
+          description: 'Optional execution diagnostics mode. Not allowed when waitForCompletion=false.'
+        },
+        diagnosticsItemsLimit: {
+          type: 'integer',
+          description: 'Items per node for diagnostics output'
+        },
+        responseMode: {
+          type: 'string',
+          enum: ['result', 'full'],
+          description: 'Response shape: minimal result or full native run payload (default: result)'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
     name: 'n8n_code_node_test',
     description: `Test a Code node or Code-node-centered subgraph from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes node|subgraph and optional upstream/downstream inclusion. Use n8n_workflow_runner_test for full-workflow runner execution.`,
     inputSchema: {
@@ -537,7 +596,7 @@ export const n8nManagementTools: ToolDefinition[] = [
         mode: {
           type: 'string',
           enum: ['full', 'node', 'subgraph'],
-          description: 'Execution mode: single Code node or Code-node-centered subgraph (default: node). mode=full has moved to n8n_workflow_runner_test.'
+          description: 'Execution mode: single Code node or Code-node-centered subgraph (default: node). mode=full has moved to n8n_workflow_full_test.'
         },
         nodeId: {
           type: 'string',

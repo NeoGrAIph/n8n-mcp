@@ -409,14 +409,15 @@ describe('Disabled Tools Additional Coverage (Issue #410)', () => {
 
     it('should support staging environment scenario', () => {
       // In staging, disable only production-specific tools
-      process.env.DISABLED_TOOLS = 'n8n_workflow_test,n8n_workflow_runner_test';
+      process.env.DISABLED_TOOLS = 'n8n_workflow_test,n8n_workflow_full_test,n8n_workflow_runner_test';
       server = new TestableN8NMCPServer();
 
       const disabledTools = server.testGetDisabledTools();
 
       expect(disabledTools.has('n8n_workflow_test')).toBe(true);
+      expect(disabledTools.has('n8n_workflow_full_test')).toBe(true);
       expect(disabledTools.has('n8n_workflow_runner_test')).toBe(true);
-      expect(disabledTools.size).toBe(2);
+      expect(disabledTools.size).toBe(3);
     });
 
     it('should support development environment scenario', () => {

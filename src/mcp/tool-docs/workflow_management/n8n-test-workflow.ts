@@ -26,7 +26,7 @@ export const n8nTestWorkflowDoc: ToolDocumentation = {
 
 **Important:** n8n's public API does not support direct workflow execution. Only workflows with webhook, form, or chat triggers can be executed externally. Workflows with schedule, manual, or other trigger types cannot be triggered via this tool.
 
-For runner-based execution of manual-only workflows, use n8n_workflow_runner_test instead.
+For native full execution of manual/editor workflows, use n8n_workflow_full_test. For generated runner execution, use n8n_workflow_runner_test.
 
 The tool auto-detects the appropriate trigger type by analyzing the workflow's trigger node. You can override this with the triggerType parameter.`,
     parameters: {
@@ -128,7 +128,8 @@ When execution fails, the response includes guidance for debugging:
       'Use mode="preview" with n8n_executions_get for efficient debugging',
       'Test with small data payloads first',
       'Activate workflows before testing (use n8n_workflow_update_partial with activateWorkflow)',
-      'Use n8n_workflow_runner_test for manual-only workflows'
+      'Use n8n_workflow_full_test for native full execution of manual/editor workflows',
+      'Use n8n_workflow_runner_test only when you specifically want the generated runner path'
     ],
     pitfalls: [
       'All trigger types require the workflow to be ACTIVE',
@@ -138,6 +139,6 @@ When execution fails, the response includes guidance for debugging:
       'Form data must match expected form fields',
       'Webhook method must match node configuration'
     ],
-    relatedTools: ['n8n_workflow_runner_test', 'n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_get', 'n8n_workflow_create', 'n8n_workflow_validate']
+    relatedTools: ['n8n_workflow_full_test', 'n8n_workflow_runner_test', 'n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_get', 'n8n_workflow_create', 'n8n_workflow_validate']
   }
 };

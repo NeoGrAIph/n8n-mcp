@@ -12,6 +12,7 @@ export { n8nWorkflowMoveToFolderDoc } from './n8n-workflow-move-to-folder';
 export { n8nValidateWorkflowDoc } from './n8n-validate-workflow';
 export { n8nAutofixWorkflowDoc } from './n8n-autofix-workflow';
 export { n8nTestWorkflowDoc } from './n8n-test-workflow';
+export { n8nWorkflowFullTestDoc } from './n8n-workflow-full-test';
 export { n8nWorkflowRunnerTestDoc } from './n8n-workflow-runner-test';
 export { n8nCodeNodeTestDoc } from './n8n-code-node-test';
 export { n8nExecutionsGetDoc } from './n8n-executions-get';

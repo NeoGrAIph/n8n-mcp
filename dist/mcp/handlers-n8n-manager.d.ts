@@ -23,6 +23,7 @@ export declare function handleMoveWorkflowToFolder(args: unknown, context?: Inst
 export declare function handleValidateWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleAutofixWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleTestWorkflowFull(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestCodeNode(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestWorkflowRunner(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleGetExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;

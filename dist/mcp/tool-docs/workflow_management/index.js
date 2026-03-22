@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.n8nDeployTemplateDoc = exports.n8nWorkflowVersionsTruncateDoc = exports.n8nWorkflowVersionsPruneDoc = exports.n8nWorkflowVersionsDeleteDoc = exports.n8nWorkflowVersionsRollbackDoc = exports.n8nWorkflowVersionsGetDoc = exports.n8nWorkflowVersionsListDoc = exports.n8nWorkflowExecutionGetDoc = exports.n8nExecutionsDeleteDoc = exports.n8nExecutionsListDoc = exports.n8nExecutionsGetDoc = exports.n8nCodeNodeTestDoc = exports.n8nWorkflowRunnerTestDoc = exports.n8nTestWorkflowDoc = exports.n8nAutofixWorkflowDoc = exports.n8nValidateWorkflowDoc = exports.n8nWorkflowMoveToFolderDoc = exports.n8nFolderDeleteDoc = exports.n8nFolderMoveDoc = exports.n8nFolderCreateDoc = exports.n8nFoldersListDoc = exports.n8nListWorkflowsDoc = exports.n8nDeleteWorkflowDoc = exports.n8nUpdatePartialWorkflowDoc = exports.n8nUpdateFullWorkflowDoc = exports.n8nGetWorkflowDoc = exports.n8nCreateWorkflowDoc = void 0;
+exports.n8nDeployTemplateDoc = exports.n8nWorkflowVersionsTruncateDoc = exports.n8nWorkflowVersionsPruneDoc = exports.n8nWorkflowVersionsDeleteDoc = exports.n8nWorkflowVersionsRollbackDoc = exports.n8nWorkflowVersionsGetDoc = exports.n8nWorkflowVersionsListDoc = exports.n8nWorkflowExecutionGetDoc = exports.n8nExecutionsDeleteDoc = exports.n8nExecutionsListDoc = exports.n8nExecutionsGetDoc = exports.n8nCodeNodeTestDoc = exports.n8nWorkflowRunnerTestDoc = exports.n8nWorkflowFullTestDoc = exports.n8nTestWorkflowDoc = exports.n8nAutofixWorkflowDoc = exports.n8nValidateWorkflowDoc = exports.n8nWorkflowMoveToFolderDoc = exports.n8nFolderDeleteDoc = exports.n8nFolderMoveDoc = exports.n8nFolderCreateDoc = exports.n8nFoldersListDoc = exports.n8nListWorkflowsDoc = exports.n8nDeleteWorkflowDoc = exports.n8nUpdatePartialWorkflowDoc = exports.n8nUpdateFullWorkflowDoc = exports.n8nGetWorkflowDoc = exports.n8nCreateWorkflowDoc = void 0;
 var n8n_create_workflow_1 = require("./n8n-create-workflow");
 Object.defineProperty(exports, "n8nCreateWorkflowDoc", { enumerable: true, get: function () { return n8n_create_workflow_1.n8nCreateWorkflowDoc; } });
 var n8n_get_workflow_1 = require("./n8n-get-workflow");
@@ -29,6 +29,8 @@ var n8n_autofix_workflow_1 = require("./n8n-autofix-workflow");
 Object.defineProperty(exports, "n8nAutofixWorkflowDoc", { enumerable: true, get: function () { return n8n_autofix_workflow_1.n8nAutofixWorkflowDoc; } });
 var n8n_test_workflow_1 = require("./n8n-test-workflow");
 Object.defineProperty(exports, "n8nTestWorkflowDoc", { enumerable: true, get: function () { return n8n_test_workflow_1.n8nTestWorkflowDoc; } });
+var n8n_workflow_full_test_1 = require("./n8n-workflow-full-test");
+Object.defineProperty(exports, "n8nWorkflowFullTestDoc", { enumerable: true, get: function () { return n8n_workflow_full_test_1.n8nWorkflowFullTestDoc; } });
 var n8n_workflow_runner_test_1 = require("./n8n-workflow-runner-test");
 Object.defineProperty(exports, "n8nWorkflowRunnerTestDoc", { enumerable: true, get: function () { return n8n_workflow_runner_test_1.n8nWorkflowRunnerTestDoc; } });
 var n8n_code_node_test_1 = require("./n8n-code-node-test");

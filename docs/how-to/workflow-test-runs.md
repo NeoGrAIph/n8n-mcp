@@ -4,7 +4,7 @@
 
 ## What `n8n-mcp` actually supports
 
-У `n8n-mcp` есть три разных класса test-run tools:
+У `n8n-mcp` есть четыре разных класса test-run tools:
 
 1. `n8n_workflow_test`
    Используется только для externally triggerable workflows.
@@ -13,11 +13,15 @@
    - `form`
    - `chat`
 
-2. `n8n_workflow_runner_test`
-   Используется через utility runner и generated full sub-workflow.
-   Подходит для manual-only workflows и других случаев, когда workflow нельзя триггерить извне.
+2. `n8n_workflow_full_test`
+   Используется через native `POST /rest/workflows/:id/run`.
+   Это preferred full test path для manual/editor workflows, когда нужны нативные semantics n8n.
 
-3. `n8n_code_node_test`
+3. `n8n_workflow_runner_test`
+   Используется через utility runner и generated full sub-workflow.
+   Подходит, когда нужен именно generated runner path: synthetic items, dry-run, diagnostics на generated workflow.
+
+4. `n8n_code_node_test`
    Используется через utility runner и generated sub-workflow вокруг Code node.
    Поддерживаемые режимы:
    - `mode=node`
@@ -25,7 +29,8 @@
 
 Это важно:
 - `n8n_workflow_test` не умеет запускать `manualTrigger`.
-- `n8n_workflow_runner_test` закрывает runner-based full workflow execution.
+- `n8n_workflow_full_test` закрывает native full workflow execution.
+- `n8n_workflow_runner_test` закрывает generated runner-based full workflow execution.
 - `n8n_code_node_test` в `mode=node` и `mode=subgraph` требует target Code node через `nodeId` или `nodeName`.
 
 ## Practical baseline for workflow `iCrjIm7btusUuVAS27s8H`
@@ -41,7 +46,8 @@
 Следствие:
 - `n8n_workflow_test` для этого workflow сейчас неприменим
 - `n8n_code_node_test(mode=node|subgraph)` сейчас неприменим
-- `n8n_workflow_runner_test` сейчас применим и реально работает
+- `n8n_workflow_full_test` сейчас применим и является preferred full test path
+- `n8n_workflow_runner_test` тоже применим, но это уже не native path
 
 ## Variant 1: `n8n_workflow_test`
 
@@ -144,11 +150,62 @@
 - `n8n_executions_get`
 - `n8n_executions_list`
 
-## Variant 2: `n8n_workflow_runner_test`
+## Variant 2: `n8n_workflow_full_test`
 
 ### When it works
 
-Этот режим не требует externally triggerable workflow.
+Этот режим требует:
+- `N8N_REST_EMAIL`
+- `N8N_REST_PASSWORD`
+- доступа к native REST path `/rest/workflows/:id/run`
+
+Он:
+- читает исходный workflow через API;
+- выбирает `triggerNode`;
+- выбирает `startNodes`;
+- запускает исходный workflow через native full-test endpoint.
+
+Это preferred full test path, если вам нужны semantics максимально близкие к кнопке `Execute workflow` в самом n8n.
+
+### What happens on the target workflow
+
+Для `iCrjIm7btusUuVAS27s8H` вызов:
+
+```json
+{
+  "name": "n8n_workflow_full_test",
+  "arguments": {
+    "workflowId": "iCrjIm7btusUuVAS27s8H",
+    "waitForCompletion": true,
+    "responseMode": "result",
+    "timeout": 180000
+  }
+}
+```
+
+должен использовать:
+- `triggerNodeName = "When clicking \"Execute workflow\""`
+- `startNodeNames = ["Edit Fields"]` или весь прямой downstream набор, если у trigger несколько children
+
+Этот путь теперь является preferred способом инициировать full test run данного workflow через `n8n-mcp`.
+
+### When to use it
+
+Используйте этот tool, когда:
+- workflow manual-only или editor-style;
+- нужен нативный full-run путь без генерации sub-workflow;
+- вы хотите semantics, близкие к встроенному запуску n8n.
+
+### Risks
+
+Этот tool запускает реальные nodes внутри workflow.
+Если в workflow есть внешние side effects, они тоже сработают.
+
+## Variant 3: `n8n_workflow_runner_test`
+
+### When it works
+
+Этот режим не требует externally triggerable workflow и не требует native `/rest/workflows/:id/run`.
 
 Он:
 - читает исходный workflow через API;
@@ -156,7 +213,7 @@
 - добавляет `Execute Workflow Trigger`;
 - запускает resulting workflow через utility runner.
 
-Target Code node здесь не нужен.
+Target Code node здесь не нужен, но semantics у этого режима уже не нативные: workflow переписывается в generated sub-workflow.
 
 ### What happens on the target workflow
 
@@ -176,21 +233,21 @@ Target Code node здесь не нужен.
 
 успешно отработал и вернул `executionId=2471` вместе с итоговым результатом workflow.
 
-Этот путь сейчас является единственным способом инициировать тестовый прогон данного workflow именно через `n8n-mcp`.
+Этот путь остаётся рабочим fallback/alternative, когда нужен dry-run, synthetic input items или именно generated runner path.
 
 ### When to use it
 
 Используйте этот tool, когда:
-- workflow manual-only;
-- вы хотите воспроизводимый прогон через `n8n-mcp`;
-- вам нужен result без ручного нажатия `Execute workflow` в UI.
+- нужен `dryRun`;
+- нужно прогнать synthetic `item/items`;
+- нужна именно generated runner semantics для сравнения или изоляции.
 
 ### Risks
 
 Этот tool запускает реальные nodes внутри workflow.
 Если в workflow есть внешние side effects, они тоже сработают.
 
-## Variant 3: `n8n_code_node_test(mode=node)`
+## Variant 4: `n8n_code_node_test(mode=node)`
 
 ### When it works
 
@@ -230,7 +287,7 @@ Target Code node здесь не нужен.
 - подать synthetic input через `item` или `items`;
 - не гонять весь workflow.
 
-## Variant 4: `n8n_code_node_test(mode=subgraph)`
+## Variant 5: `n8n_code_node_test(mode=subgraph)`
 
 ### When it works
 

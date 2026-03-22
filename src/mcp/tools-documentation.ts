@@ -116,7 +116,7 @@ If the change is only in Code node or Set(raw) file contents, prefer:
 - resources/read + resources/write (full file updates with expectedEtag)
 Avoid workflow_update_* for code-only changes to prevent accidental full replacements.
 
-## Tool Categories (40 Tools Total)
+## Tool Categories (41 Tools Total)
 
 **Discovery Tools** (1 tool)
 - n8n_nodes_search - Full-text search across all nodes (supports OR, AND, FUZZY modes)
@@ -140,7 +140,7 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
   - searchMode='by_task': Curated task-based templates
   - searchMode='by_metadata': Filter by complexity/services
 
-**n8n API Tools** (27 tools, requires N8N_API_URL configuration)
+**n8n API Tools** (28 tools, requires N8N_API_URL configuration)
 - n8n_workflow_create - Create new workflows
 - n8n_workflow_get - Get workflow with mode='full'/'details'/'structure'/'minimal'
 - n8n_workflow_update_full - Full workflow replacement
@@ -155,6 +155,7 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
 - n8n_workflow_validate - Validate workflow by ID
 - n8n_workflow_autofix - Auto-fix common issues
 - n8n_workflow_test - Test/trigger externally-triggerable workflows (webhook, form, chat)
+- n8n_workflow_full_test - Execute full workflows natively through /rest/workflows/:id/run
 - n8n_workflow_runner_test - Execute full workflows through the utility runner (manual-only friendly)
 - n8n_executions_get - Get execution details by ID
 - n8n_executions_list - List executions with filters

@@ -108,6 +108,20 @@ exports.n8nFriendlyDescriptions = {
             waitForResponse: 'Optional boolean (default true)'
         }
     },
+    n8n_workflow_full_test: {
+        description: 'Execute a workflow through n8n native editor-style full test mode using /rest/workflows/:id/run. Prefer this over the runner when you want native workflow semantics.',
+        params: {
+            workflowId: 'String workflow ID',
+            triggerNode: 'Optional object like {"name":"Manual Trigger","data":null}. Required only if MCP cannot auto-select a unique trigger node',
+            startNodes: 'Optional array like [{"name":"Edit Fields","sourceData":null}]. If omitted, MCP derives direct downstream nodes from the trigger',
+            waitForCompletion: 'Optional boolean (default true)',
+            timeout: 'Optional maximum wait time in ms while polling execution completion (default 120000)',
+            pollIntervalMs: 'Optional polling interval in ms (default 1000)',
+            diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error". Not allowed when waitForCompletion=false',
+            diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+            responseMode: 'Optional: "result" (default) or "full"'
+        }
+    },
     n8n_workflow_execution_get: {
         description: 'Get execution results for a specific workflow. Provide workflowId and executionId to fetch and process execution data.',
         params: {

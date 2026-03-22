@@ -95,6 +95,6 @@ export const n8nWorkflowExecutionGetDoc: ToolDocumentation = {
       'mode="full" can be large and slow for big executions',
       'fetchWorkflow=false returns raw execution without processed summaries'
     ],
-    relatedTools: ['n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_test', 'n8n_workflow_runner_test', 'n8n_workflow_get']
+    relatedTools: ['n8n_executions_get', 'n8n_executions_list', 'n8n_workflow_test', 'n8n_workflow_full_test', 'n8n_workflow_runner_test', 'n8n_workflow_get']
   }
 };

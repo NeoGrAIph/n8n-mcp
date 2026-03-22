@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { n8nManagementTools } from '@/mcp/tools-n8n-manager';
 
 describe('n8nManagementTools', () => {
+  it('should expose n8n_workflow_full_test with workflowId required', () => {
+    const tool = n8nManagementTools.find(entry => entry.name === 'n8n_workflow_full_test');
+
+    expect(tool).toBeDefined();
+    expect(tool?.inputSchema.required).toContain('workflowId');
+    expect(tool?.inputSchema.properties?.triggerNode).toBeDefined();
+    expect(tool?.inputSchema.properties?.startNodes).toBeDefined();
+    expect(tool?.inputSchema.properties?.diagnostics?.enum).toEqual(['none', 'preview', 'summary', 'full', 'error']);
+  });
+
   it('should expose n8n_workflow_runner_test with workflowId required', () => {
     const tool = n8nManagementTools.find(entry => entry.name === 'n8n_workflow_runner_test');
 
@@ -23,6 +33,6 @@ describe('n8nManagementTools', () => {
 
     expect(tool).toBeDefined();
     expect(tool?.inputSchema.properties?.mode?.enum).toEqual(['full', 'node', 'subgraph']);
-    expect(tool?.inputSchema.properties?.mode?.description).toContain('n8n_workflow_runner_test');
+    expect(tool?.inputSchema.properties?.mode?.description).toContain('n8n_workflow_full_test');
   });
 });

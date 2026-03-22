@@ -1,4 +1,4 @@
-import { Workflow, WorkflowListParams, WorkflowListResponse, Execution, ExecutionListParams, ExecutionListResponse, Credential, CredentialListParams, CredentialListResponse, Tag, TagListParams, TagListResponse, Folder, FolderListParams, FolderListResponse, HealthCheckResponse, N8nVersionInfo, Variable, WebhookRequest, SourceControlStatus, SourceControlPullResult, SourceControlPushResult } from '../types/n8n-api';
+import { Workflow, WorkflowListParams, WorkflowListResponse, Execution, ExecutionListParams, ExecutionListResponse, Credential, CredentialListParams, CredentialListResponse, Tag, TagListParams, TagListResponse, Folder, FolderListParams, FolderListResponse, HealthCheckResponse, N8nVersionInfo, Variable, WebhookRequest, WorkflowRunRequest, WorkflowRunResponse, SourceControlStatus, SourceControlPullResult, SourceControlPushResult } from '../types/n8n-api';
 export interface N8nApiClientConfig {
     baseUrl: string;
     apiKey: string;
@@ -54,6 +54,8 @@ export declare class N8nApiClient {
     }): Promise<Folder>;
     deleteFolder(projectId: string | undefined, folderId: string): Promise<void>;
     moveWorkflowToFolder(id: string, parentFolderId: string | null, projectId?: string): Promise<Workflow>;
+    hasRestAuthConfigured(): boolean;
+    runWorkflow(id: string, request: WorkflowRunRequest): Promise<WorkflowRunResponse>;
     triggerWebhook(request: WebhookRequest): Promise<any>;
     listCredentials(params?: CredentialListParams): Promise<CredentialListResponse>;
     getCredential(id: string): Promise<Credential>;

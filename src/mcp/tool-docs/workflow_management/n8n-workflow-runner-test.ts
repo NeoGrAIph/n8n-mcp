@@ -4,13 +4,13 @@ export const n8nWorkflowRunnerTestDoc: ToolDocumentation = {
   name: 'n8n_workflow_runner_test',
   category: 'workflow_management',
   essentials: {
-    description: 'Execute a full workflow through the utility runner. This is the runner-based path for manual-only or otherwise non-externally-triggerable workflows.',
+    description: 'Execute a full workflow through the utility runner. This is the generated runner path for synthetic items, dry runs, and rewritten full-workflow execution.',
     keyParameters: ['workflowId', 'item', 'items', 'dryRun', 'diagnostics'],
     example: 'n8n_workflow_runner_test({workflowId: "123", dryRun: true})',
     performance: 'Immediate runner trigger; response time depends on workflow complexity and waitForResponse',
     tips: [
       'Runner workflow must exist and be ACTIVE',
-      'Use this tool for manual-only workflows that cannot be started with n8n_workflow_test',
+      'Prefer n8n_workflow_full_test for native full execution semantics',
       'dryRun=true builds the generated workflow but does not execute it',
       'Use diagnostics only for real executions, not with dryRun',
       'Real node side effects still occur during runner execution'
@@ -19,7 +19,7 @@ export const n8nWorkflowRunnerTestDoc: ToolDocumentation = {
   full: {
     description: `Execute a full workflow through the MCP utility runner. The tool reads the source workflow, removes its trigger nodes, creates a generated sub-workflow in mode=full, injects an Execute Workflow Trigger, and sends the generated workflow JSON to the utility runner webhook.
 
-This is the dedicated runner-based execution path for workflows that cannot be triggered externally through webhook/form/chat, such as manual-only workflows.`,
+This is the dedicated generated runner path. Prefer n8n_workflow_full_test when you want native /rest/workflows/:id/run semantics close to n8n's own editor execution flow.`,
     parameters: {
       workflowId: {
         type: 'string',
@@ -111,10 +111,10 @@ Full response (responseMode=full or diagnostics enabled) additionally includes:
       'n8n_workflow_runner_test({workflowId: "123", diagnostics: "summary", diagnosticsItemsLimit: 2})'
     ],
     useCases: [
-      'Run a manual-only workflow through n8n-mcp',
-      'Generate a reproducible full-workflow test run without editing triggers',
+      'Generate a reproducible runner-based full-workflow test run without editing triggers',
       'Inspect generated runner metadata with dryRun before execution',
-      'Compare runner execution against baseline manual execution'
+      'Run synthetic input items through a generated full-workflow harness',
+      'Compare runner execution against native full execution'
     ],
     performance: 'Runs via runner webhook; overall latency depends on workflow complexity and downstream side effects.',
     errorHandling: `Common errors:
@@ -124,7 +124,8 @@ Full response (responseMode=full or diagnostics enabled) additionally includes:
 - Webhook call blocked by SSRF protection or invalid base URL
 - Errors inside the executed workflow are returned with runner execution context`,
     bestPractices: [
-      'Use n8n_workflow_test for webhook/form/chat workflows; use this tool for manual-only runner-based execution',
+      'Use n8n_workflow_test for webhook/form/chat workflows',
+      'Use n8n_workflow_full_test for native full execution of manual/editor workflows',
       'Start with dryRun=true when the workflow may have external side effects',
       'Pass sample items that match real upstream data shape',
       'Use n8n_workflow_execution_get or n8n_executions_get to compare baseline and runner runs'
@@ -136,6 +137,6 @@ Full response (responseMode=full or diagnostics enabled) additionally includes:
       'Diagnostics require an executionId from the runner response',
       'dryRun validates generation only; it does not prove runtime success'
     ],
-    relatedTools: ['n8n_workflow_test', 'n8n_code_node_test', 'n8n_workflow_execution_get', 'n8n_executions_get']
+    relatedTools: ['n8n_workflow_test', 'n8n_workflow_full_test', 'n8n_code_node_test', 'n8n_workflow_execution_get', 'n8n_executions_get']
   }
 };

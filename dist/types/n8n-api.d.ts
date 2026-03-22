@@ -288,6 +288,26 @@ export interface WebhookRequest {
     waitForResponse?: boolean;
     timeoutMs?: number;
 }
+export interface WorkflowRunStartNode {
+    name: string;
+    sourceData?: unknown;
+}
+export interface WorkflowRunTriggerNode {
+    name: string;
+    data?: unknown;
+}
+export interface WorkflowRunRequest {
+    workflowData: Workflow;
+    startNodes: WorkflowRunStartNode[];
+    triggerToStartFrom: WorkflowRunTriggerNode;
+}
+export interface WorkflowRunResponse {
+    executionId?: string;
+    status?: string;
+    data?: Record<string, unknown>;
+    id?: string;
+    [key: string]: unknown;
+}
 export interface McpToolResponse {
     success: boolean;
     data?: unknown;
