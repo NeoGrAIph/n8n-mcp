@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774147218024,
+  "lastUpdate": 1774148954759,
   "repoUrl": "https://github.com/NeoGrAIph/n8n-mcp",
   "entries": {
     "n8n-mcp Benchmarks": [
@@ -147,6 +147,37 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/064b6d9b6c46deb4fb1e9e6fd219139cc2bae71c"
         },
         "date": 1774147217767,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "sample - array sorting - small",
+            "value": 0.0136,
+            "range": "0.3096",
+            "unit": "ms",
+            "extra": "73341 ops/sec"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "committer": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "distinct": true,
+          "id": "df5bba49efcc48c2eea4212383f3943332948092",
+          "message": "add native workflow full test mode",
+          "timestamp": "2026-03-22T11:07:21+08:00",
+          "tree_id": "f01ea8379018e88a1a66f29148864e13452f23f5",
+          "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/df5bba49efcc48c2eea4212383f3943332948092"
+        },
+        "date": 1774148954386,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
