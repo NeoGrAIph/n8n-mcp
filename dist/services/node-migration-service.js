@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NodeMigrationService = void 0;
-const uuid_1 = require("uuid");
 class NodeMigrationService {
     constructor(versionService, breakingChangeDetector) {
         this.versionService = versionService;
@@ -143,6 +142,8 @@ class NodeMigrationService {
         const finalKey = parts[parts.length - 1];
         if (target[finalKey] === undefined) {
             const value = this.resolveDefaultValue(propertyPath, defaultValue, node);
+            if (value === undefined)
+                return null;
             target[finalKey] = value;
             return {
                 propertyName: propertyPath,
@@ -155,7 +156,7 @@ class NodeMigrationService {
     }
     resolveDefaultValue(propertyPath, defaultValue, node) {
         if (propertyPath === 'webhookId' || propertyPath.endsWith('.webhookId')) {
-            return (0, uuid_1.v4)();
+            return undefined;
         }
         if (propertyPath === 'path' || propertyPath.endsWith('.path')) {
             if (node.type === 'n8n-nodes-base.webhook') {
@@ -186,7 +187,7 @@ class NodeMigrationService {
                 errors.push('Webhook node missing required "path" parameter');
             }
             if (node.typeVersion >= 2.1 && !node.webhookId) {
-                warnings.push('Webhook v2.1+ typically requires webhookId');
+                warnings.push('Webhook v2.1+ uses webhookId assigned by n8n; omit it in API payloads');
             }
         }
         if (nodeType === 'n8n-nodes-base.executeWorkflow') {

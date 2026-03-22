@@ -109,6 +109,14 @@ export function cleanWorkflowForCreate(workflow: Partial<Workflow>): Partial<Wor
     cleanedWorkflow.settings = defaultWorkflowSettings;
   }
 
+  // Avoid sending webhookId via API (n8n assigns it internally)
+  if (Array.isArray(cleanedWorkflow.nodes)) {
+    cleanedWorkflow.nodes = cleanedWorkflow.nodes.map((node: any) => {
+      const { webhookId, ...rest } = node;
+      return rest;
+    });
+  }
+
   return cleanedWorkflow;
 }
 
@@ -192,6 +200,14 @@ export function cleanWorkflowForUpdate(workflow: Workflow): Partial<Workflow> {
   } else {
     // No settings provided - use minimal valid defaults
     cleanedWorkflow.settings = { executionOrder: 'v1' as const };
+  }
+
+  // Avoid sending webhookId via API (n8n assigns it internally)
+  if (Array.isArray((cleanedWorkflow as any).nodes)) {
+    (cleanedWorkflow as any).nodes = (cleanedWorkflow as any).nodes.map((node: any) => {
+      const { webhookId, ...rest } = node;
+      return rest;
+    });
   }
 
   return cleanedWorkflow;

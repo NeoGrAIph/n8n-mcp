@@ -249,7 +249,7 @@ class WorkflowAutoFixer {
                     continue;
                 if (!node.type?.includes('webhook'))
                     continue;
-                const webhookId = crypto_1.default.randomUUID();
+                const webhookPath = crypto_1.default.randomUUID();
                 const currentTypeVersion = node.typeVersion || 1;
                 const needsVersionUpdate = currentTypeVersion < 2.1;
                 fixes.push({
@@ -257,15 +257,14 @@ class WorkflowAutoFixer {
                     field: 'path',
                     type: 'webhook-missing-path',
                     before: undefined,
-                    after: webhookId,
+                    after: webhookPath,
                     confidence: 'high',
                     description: needsVersionUpdate
-                        ? `Generated webhook path and ID: ${webhookId} (also updating typeVersion to 2.1)`
-                        : `Generated webhook path and ID: ${webhookId}`
+                        ? `Generated webhook path: ${webhookPath} (also updating typeVersion to 2.1)`
+                        : `Generated webhook path: ${webhookPath}`
                 });
                 const updates = {
-                    'parameters.path': webhookId,
-                    'webhookId': webhookId
+                    'parameters.path': webhookPath
                 };
                 if (needsVersionUpdate) {
                     updates['typeVersion'] = 2.1;

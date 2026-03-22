@@ -112,7 +112,7 @@ If the change is only in Code node or Set(raw) file contents, prefer:
 - resources/read + resources/write (full file updates with expectedEtag)
 Avoid workflow_update_* for code-only changes to prevent accidental full replacements.
 
-## Tool Categories (33 Tools Total)
+## Tool Categories (41 Tools Total)
 
 **Discovery Tools** (1 tool)
 - n8n_nodes_search - Full-text search across all nodes (supports OR, AND, FUZZY modes)
@@ -136,16 +136,23 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
   - searchMode='by_task': Curated task-based templates
   - searchMode='by_metadata': Filter by complexity/services
 
-**n8n API Tools** (20 tools, requires N8N_API_URL configuration)
+**n8n API Tools** (28 tools, requires N8N_API_URL configuration)
 - n8n_workflow_create - Create new workflows
 - n8n_workflow_get - Get workflow with mode='full'/'details'/'structure'/'minimal'
 - n8n_workflow_update_full - Full workflow replacement
 - n8n_workflow_update_partial - Incremental diff-based updates
 - n8n_workflow_delete - Delete workflow
 - n8n_workflows_list - List workflows with filters
+- n8n_folders_list - List folders in a project (requires REST auth)
+- n8n_folder_create - Create a folder (requires REST auth)
+- n8n_folder_move - Move/rename a folder (requires REST auth)
+- n8n_folder_delete - Delete an empty folder (requires REST auth)
+- n8n_workflow_move_to_folder - Move workflow between folders
 - n8n_workflow_validate - Validate workflow by ID
 - n8n_workflow_autofix - Auto-fix common issues
-- n8n_workflow_test - Test/trigger workflows (webhook, form, chat, execute)
+- n8n_workflow_test - Test/trigger externally-triggerable workflows (webhook, form, chat)
+- n8n_workflow_full_test - Execute full workflows natively through /rest/workflows/:id/run
+- n8n_workflow_runner_test - Execute full workflows through the utility runner (manual-only friendly)
 - n8n_executions_get - Get execution details by ID
 - n8n_executions_list - List executions with filters
 - n8n_executions_delete - Delete execution record
@@ -158,13 +165,14 @@ Avoid workflow_update_* for code-only changes to prevent accidental full replace
 - n8n_workflow_versions_truncate - Truncate ALL versions (dangerous)
 - n8n_template_deploy - Deploy templates directly to n8n instance
 
-**Workflow File Tools** (6 tools, requires N8N_WORKFLOWS_ROOT)
+**Workflow File Tools** (7 tools, requires N8N_WORKFLOWS_ROOT)
 - n8n_code_files_list - List Code node files for a workflow
 - n8n_code_file_read - Read a Code node file
 - n8n_code_file_write - Write a Code node file with optional ETag protection
 - n8n_set_files_list - List Set(raw) node files for a workflow
 - n8n_set_file_read - Read a Set(raw) node JSON file
 - n8n_set_file_write - Write a Set(raw) node JSON file with optional ETag protection
+- n8n_workflow_file_patch - Patch a workflow file with unified diff
 
 ## Performance Characteristics
 - Instant (<10ms): n8n_nodes_search, n8n_node_get (minimal/standard)
@@ -205,6 +213,7 @@ ${tools.map(toolName => {
 - Use n8n_node_get() with detail='standard' first for most tasks (~95% smaller than detail='full')
 - Validation profiles: minimal (editing), runtime (default), strict (deployment)
 - n8n API tools only available when N8N_API_URL and N8N_API_KEY are configured
+- Folder tools additionally require REST auth (N8N_REST_EMAIL, N8N_REST_PASSWORD)
 - Workflow file tools only available when N8N_WORKFLOWS_ROOT points to a readable workflows directory
 
 For detailed documentation on any tool:

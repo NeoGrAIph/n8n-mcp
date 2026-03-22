@@ -249,7 +249,7 @@ describe('NodeMigrationService', () => {
       expect(result.updatedNode.parameters.authentication).toBe('none');
     });
 
-    it('should generate webhookId for webhook nodes', async () => {
+    it('should not auto-generate webhookId for webhook nodes', async () => {
       const node = createMockNode('node-1', 'n8n-nodes-base.webhook', 2, {});
 
       const mockAnalysis: VersionUpgradeAnalysis = {
@@ -273,7 +273,7 @@ describe('NodeMigrationService', () => {
 
       const result = await service.migrateNode(node, '2.0', '2.1');
 
-      expect(result.updatedNode.webhookId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      expect(result.updatedNode.webhookId).toBeUndefined();
     });
 
     it('should generate unique webhook paths', async () => {

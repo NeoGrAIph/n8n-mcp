@@ -81,6 +81,12 @@ function cleanWorkflowForCreate(workflow) {
     if (!cleanedWorkflow.settings || Object.keys(cleanedWorkflow.settings).length === 0) {
         cleanedWorkflow.settings = exports.defaultWorkflowSettings;
     }
+    if (Array.isArray(cleanedWorkflow.nodes)) {
+        cleanedWorkflow.nodes = cleanedWorkflow.nodes.map((node) => {
+            const { webhookId, ...rest } = node;
+            return rest;
+        });
+    }
     return cleanedWorkflow;
 }
 function cleanWorkflowForUpdate(workflow) {
@@ -115,6 +121,12 @@ function cleanWorkflowForUpdate(workflow) {
     }
     else {
         cleanedWorkflow.settings = { executionOrder: 'v1' };
+    }
+    if (Array.isArray(cleanedWorkflow.nodes)) {
+        cleanedWorkflow.nodes = cleanedWorkflow.nodes.map((node) => {
+            const { webhookId, ...rest } = node;
+            return rest;
+        });
     }
     return cleanedWorkflow;
 }

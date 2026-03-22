@@ -76,7 +76,7 @@ describe('N8nApiClient', () => {
 
     // Create mock axios instance
     mockAxiosInstance = {
-      defaults: { baseURL: 'https://n8n.example.com/api/v1' },
+      defaults: { baseURL: 'https://n8n.example.com/api/v1', headers: {} },
       interceptors: {
         request: { use: vi.fn() },
         response: { 
@@ -225,6 +225,65 @@ describe('N8nApiClient', () => {
       mockAxiosInstance.get.mockRejectedValue(new Error('API error'));
 
       await expect(client.healthCheck()).rejects.toThrow();
+    });
+  });
+
+  describe('REST workflow run', () => {
+    beforeEach(() => {
+      client = new N8nApiClient({
+        ...defaultConfig,
+        restEmail: 'tester@example.com',
+        restPassword: 'secret',
+      });
+    });
+
+    it('should report when REST auth is configured', () => {
+      expect(client.hasRestAuthConfigured()).toBe(true);
+    });
+
+    it('should execute native workflow run through REST endpoint', async () => {
+      vi.mocked(axios.post).mockResolvedValue({
+        status: 200,
+        headers: {
+          'set-cookie': ['n8n-auth=abc123; Path=/; HttpOnly'],
+        },
+      } as any);
+      mockAxiosInstance.request.mockResolvedValue({
+        data: {
+          executionId: 'exec-1',
+          status: 'running',
+        },
+      });
+
+      const payload = {
+        workflowData: { id: 'wf-1', name: 'Test Workflow', nodes: [], connections: {} },
+        startNodes: [{ name: 'Edit Fields', sourceData: null }],
+        triggerToStartFrom: { name: 'Manual Trigger', data: null },
+      };
+
+      const result = await client.runWorkflow('wf-1', payload);
+
+      expect(axios.post).toHaveBeenCalledWith(
+        'https://n8n.example.com/rest/login',
+        {
+          emailOrLdapLoginId: 'tester@example.com',
+          password: 'secret',
+        },
+        expect.objectContaining({
+          timeout: 30000,
+          validateStatus: expect.any(Function),
+        })
+      );
+      expect(mockAxiosInstance.defaults.headers.Cookie).toContain('n8n-auth=abc123');
+      expect(mockAxiosInstance.request).toHaveBeenCalledWith({
+        method: 'post',
+        url: '/workflows/wf-1/run',
+        data: payload,
+      });
+      expect(result).toEqual({
+        executionId: 'exec-1',
+        status: 'running',
+      });
     });
   });
 
@@ -1689,7 +1748,7 @@ describe('N8nApiClient', () => {
       const result = requestInterceptor(config);
       
       expect(logger.debug).toHaveBeenCalledWith(
-        'n8n API Request: GET /workflows',
+        'n8n API Request (rest): GET /workflows',
         { params: { limit: 10 }, data: undefined }
       );
       expect(result).toBe(config);
@@ -1705,7 +1764,7 @@ describe('N8nApiClient', () => {
       const result = responseInterceptor(response);
       
       expect(logger.debug).toHaveBeenCalledWith(
-        'n8n API Response: 200 /workflows'
+        'n8n API Response (rest): 200 /workflows'
       );
       expect(result).toBe(response);
     });

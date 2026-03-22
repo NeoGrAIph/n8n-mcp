@@ -54,6 +54,7 @@ export interface Workflow {
     settings?: WorkflowSettings;
     staticData?: Record<string, unknown>;
     tags?: string[];
+    parentFolderId?: string | null;
     updatedAt?: string;
     createdAt?: string;
     versionId?: string;
@@ -110,6 +111,35 @@ export interface Tag {
     workflowIds?: string[];
     createdAt?: string;
     updatedAt?: string;
+}
+export interface Folder {
+    id: string;
+    name: string;
+    parentFolderId?: string | null;
+    projectId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    workflowCount?: number;
+    childFolderCount?: number;
+}
+export interface FolderListParams {
+    projectId?: string;
+    parentFolderId?: string;
+    filter?: Record<string, unknown> | string;
+    projectRelation?: boolean;
+    projectRole?: boolean;
+    cursor?: string;
+    limit?: number;
+}
+export interface Project {
+    id: string;
+    name?: string;
+    type?: string;
+    creatorId?: string;
+}
+export interface FolderListResponse {
+    data: Folder[];
+    nextCursor?: string | null;
 }
 export interface Variable {
     id?: string;
@@ -256,6 +286,27 @@ export interface WebhookRequest {
     data?: Record<string, unknown>;
     headers?: Record<string, string>;
     waitForResponse?: boolean;
+    timeoutMs?: number;
+}
+export interface WorkflowRunStartNode {
+    name: string;
+    sourceData?: unknown;
+}
+export interface WorkflowRunTriggerNode {
+    name: string;
+    data?: unknown;
+}
+export interface WorkflowRunRequest {
+    workflowData: Workflow;
+    startNodes: WorkflowRunStartNode[];
+    triggerToStartFrom: WorkflowRunTriggerNode;
+}
+export interface WorkflowRunResponse {
+    executionId?: string;
+    status?: string;
+    data?: Record<string, unknown>;
+    id?: string;
+    [key: string]: unknown;
 }
 export interface McpToolResponse {
     success: boolean;

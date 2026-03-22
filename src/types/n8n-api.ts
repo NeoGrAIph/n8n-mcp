@@ -65,6 +65,7 @@ export interface Workflow {
   settings?: WorkflowSettings;
   staticData?: Record<string, unknown>;
   tags?: string[];
+  parentFolderId?: string | null;
   updatedAt?: string;
   createdAt?: string;
   versionId?: string;
@@ -131,6 +132,40 @@ export interface Tag {
   workflowIds?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Folder Types (internal REST API)
+export interface Folder {
+  id: string;
+  name: string;
+  parentFolderId?: string | null;
+  projectId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  workflowCount?: number;
+  childFolderCount?: number;
+}
+
+export interface FolderListParams {
+  projectId?: string;
+  parentFolderId?: string;
+  filter?: Record<string, unknown> | string;
+  projectRelation?: boolean;
+  projectRole?: boolean;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface Project {
+  id: string;
+  name?: string;
+  type?: string;
+  creatorId?: string;
+}
+
+export interface FolderListResponse {
+  data: Folder[];
+  nextCursor?: string | null;
 }
 
 // Variable Types
@@ -225,6 +260,84 @@ export interface HealthCheckResponse {
   };
 }
 
+// Data Table types
+export interface DataTableColumn {
+  name: string;
+  type?: 'string' | 'number' | 'boolean' | 'date';
+}
+
+export interface DataTableColumnResponse {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'date';
+  index: number;
+}
+
+export interface DataTable {
+  id: string;
+  name: string;
+  columns?: DataTableColumnResponse[];
+  projectId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DataTableRow {
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  [columnName: string]: unknown;
+}
+
+export interface DataTableFilterCondition {
+  columnName: string;
+  condition: 'eq' | 'neq' | 'like' | 'ilike' | 'gt' | 'gte' | 'lt' | 'lte';
+  value?: any;
+}
+
+export interface DataTableFilter {
+  type?: 'and' | 'or';
+  filters: DataTableFilterCondition[];
+}
+
+export interface DataTableListParams {
+  limit?: number;
+  cursor?: string;
+}
+
+export interface DataTableRowListParams {
+  limit?: number;
+  cursor?: string;
+  filter?: string;
+  sortBy?: string;
+  search?: string;
+}
+
+export interface DataTableInsertRowsParams {
+  data: Record<string, unknown>[];
+  returnType?: 'count' | 'id' | 'all';
+}
+
+export interface DataTableUpdateRowsParams {
+  filter: DataTableFilter;
+  data: Record<string, unknown>;
+  returnData?: boolean;
+  dryRun?: boolean;
+}
+
+export interface DataTableUpsertRowParams {
+  filter: DataTableFilter;
+  data: Record<string, unknown>;
+  returnData?: boolean;
+  dryRun?: boolean;
+}
+
+export interface DataTableDeleteRowsParams {
+  filter: string;
+  returnData?: boolean;
+  dryRun?: boolean;
+}
+
 // n8n Version Information
 export interface N8nVersionInfo {
   version: string;          // Full version string, e.g., "1.119.0"
@@ -306,12 +419,36 @@ export interface WebhookRequest {
   data?: Record<string, unknown>;
   headers?: Record<string, string>;
   waitForResponse?: boolean;
+  timeoutMs?: number;
+}
+
+export interface WorkflowRunStartNode {
+  name: string;
+  sourceData?: unknown;
+}
+
+export interface WorkflowRunTriggerNode {
+  name: string;
+  data?: unknown;
+}
+
+export interface WorkflowRunRequest {
+  workflowData: Workflow;
+  startNodes: WorkflowRunStartNode[];
+  triggerToStartFrom: WorkflowRunTriggerNode;
+}
+
+export interface WorkflowRunResponse {
+  executionId?: string;
+  status?: string;
+  data?: Record<string, unknown>;
+  id?: string;
+  [key: string]: unknown;
 }
 
 // MCP Tool Response Type
 export interface McpToolResponse {
   success: boolean;
-  saved?: boolean;
   data?: unknown;
   error?: string;
   message?: string;
@@ -319,7 +456,6 @@ export interface McpToolResponse {
   details?: Record<string, unknown>;
   executionId?: string;
   workflowId?: string;
-  operationsApplied?: number;
 }
 
 // Execution Filtering Types
@@ -454,82 +590,4 @@ export interface ErrorSuggestion {
   title: string;
   description: string;
   confidence: 'high' | 'medium' | 'low';
-}
-
-// Data Table types
-export interface DataTableColumn {
-  name: string;
-  type?: 'string' | 'number' | 'boolean' | 'date';
-}
-
-export interface DataTableColumnResponse {
-  id: string;
-  name: string;
-  type: 'string' | 'number' | 'boolean' | 'date';
-  index: number;
-}
-
-export interface DataTable {
-  id: string;
-  name: string;
-  columns?: DataTableColumnResponse[];
-  projectId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface DataTableRow {
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  [columnName: string]: unknown;
-}
-
-export interface DataTableFilterCondition {
-  columnName: string;
-  condition: 'eq' | 'neq' | 'like' | 'ilike' | 'gt' | 'gte' | 'lt' | 'lte';
-  value?: any;
-}
-
-export interface DataTableFilter {
-  type?: 'and' | 'or';
-  filters: DataTableFilterCondition[];
-}
-
-export interface DataTableListParams {
-  limit?: number;
-  cursor?: string;
-}
-
-export interface DataTableRowListParams {
-  limit?: number;
-  cursor?: string;
-  filter?: string;
-  sortBy?: string;
-  search?: string;
-}
-
-export interface DataTableInsertRowsParams {
-  data: Record<string, unknown>[];
-  returnType?: 'count' | 'id' | 'all';
-}
-
-export interface DataTableUpdateRowsParams {
-  filter: DataTableFilter;
-  data: Record<string, unknown>;
-  returnData?: boolean;
-  dryRun?: boolean;
-}
-
-export interface DataTableUpsertRowParams {
-  filter: DataTableFilter;
-  data: Record<string, unknown>;
-  returnData?: boolean;
-  dryRun?: boolean;
-}
-
-export interface DataTableDeleteRowsParams {
-  filter: string;
-  returnData?: boolean;
-  dryRun?: boolean;
 }

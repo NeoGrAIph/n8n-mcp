@@ -13,10 +13,16 @@ import {
   Tag,
   TagListParams,
   TagListResponse,
+  Folder,
+  FolderListParams,
+  FolderListResponse,
+  Project,
   HealthCheckResponse,
   N8nVersionInfo,
   Variable,
   WebhookRequest,
+  WorkflowRunRequest,
+  WorkflowRunResponse,
   WorkflowExport,
   WorkflowImport,
   SourceControlStatus,
@@ -32,7 +38,7 @@ import {
   DataTableUpsertRowParams,
   DataTableDeleteRowsParams,
 } from '../types/n8n-api';
-import { handleN8nApiError, logN8nError } from '../utils/n8n-errors';
+import { handleN8nApiError, logN8nError, N8nApiError } from '../utils/n8n-errors';
 import { cleanWorkflowForCreate, cleanWorkflowForUpdate } from './n8n-validation';
 import {
   fetchN8nVersion,
@@ -43,64 +49,225 @@ import {
 export interface N8nApiClientConfig {
   baseUrl: string;
   apiKey: string;
+  restEmail?: string;
+  restPassword?: string;
+  restProjectEmail?: string;
+  restProjectId?: string;
   timeout?: number;
   maxRetries?: number;
 }
 
 export class N8nApiClient {
   private client: AxiosInstance;
+  private restClient: AxiosInstance;
   private maxRetries: number;
   private baseUrl: string;
+  private restBaseUrl: string;
+  private restAuthEmail?: string;
+  private restAuthPassword?: string;
+  private restProjectEmail?: string;
+  private restProjectId?: string;
+  private restCookie?: string;
+  private restAuthPromise: Promise<void> | null = null;
+  private timeout: number;
   private versionInfo: N8nVersionInfo | null = null;
   private versionPromise: Promise<N8nVersionInfo | null> | null = null;
 
   constructor(config: N8nApiClientConfig) {
-    const { baseUrl, apiKey, timeout = 30000, maxRetries = 3 } = config;
+    const {
+      baseUrl,
+      apiKey,
+      restEmail,
+      restPassword,
+      restProjectEmail,
+      restProjectId,
+      timeout = 30000,
+      maxRetries = 3
+    } = config;
 
     this.maxRetries = maxRetries;
     this.baseUrl = baseUrl;
+    this.restAuthEmail = restEmail;
+    this.restAuthPassword = restPassword;
+    this.restProjectEmail = restProjectEmail;
+    this.restProjectId = restProjectId;
+    this.timeout = timeout;
 
-    // Ensure baseUrl ends with /api/v1
-    const apiUrl = baseUrl.endsWith('/api/v1')
-      ? baseUrl
-      : `${baseUrl.replace(/\/$/, '')}/api/v1`;
+    const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+    const apiUrl = normalizedBaseUrl.endsWith('/api/v1')
+      ? normalizedBaseUrl
+      : `${normalizedBaseUrl}/api/v1`;
+    this.restBaseUrl = normalizedBaseUrl.replace(/\/api\/v1\/?$/, '');
+    const restUrl = `${this.restBaseUrl}/rest`;
 
-    this.client = axios.create({
-      baseURL: apiUrl,
-      timeout,
-      headers: {
-        'X-N8N-API-KEY': apiKey,
-        'Content-Type': 'application/json',
+    const createClient = (baseURL: string, label: string): AxiosInstance => {
+      const client = axios.create({
+        baseURL,
+        timeout,
+        headers: {
+          'X-N8N-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      client.interceptors.request.use(
+        (config: InternalAxiosRequestConfig) => {
+          logger.debug(`n8n API Request (${label}): ${config.method?.toUpperCase()} ${config.url}`, {
+            params: config.params,
+            data: config.data,
+          });
+          return config;
+        },
+        (error: unknown) => {
+          logger.error(`n8n API Request Error (${label}):`, error);
+          return Promise.reject(error);
+        }
+      );
+
+      client.interceptors.response.use(
+        (response: any) => {
+          logger.debug(`n8n API Response (${label}): ${response.status} ${response.config.url}`);
+          return response;
+        },
+        (error: unknown) => {
+          const n8nError = handleN8nApiError(error);
+          logN8nError(n8nError, `n8n API Response (${label})`);
+          return Promise.reject(n8nError);
+        }
+      );
+
+      return client;
+    };
+
+    this.client = createClient(apiUrl, 'public');
+    this.restClient = createClient(restUrl, 'rest');
+  }
+
+  private hasRestAuth(): boolean {
+    return Boolean(this.restAuthEmail && this.restAuthPassword);
+  }
+
+  private normalizeSetCookie(setCookie?: string[] | string): string | null {
+    if (!setCookie) return null;
+    const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+    const pairs = cookies
+      .map((cookie) => cookie.split(';')[0]?.trim())
+      .filter((pair) => Boolean(pair));
+    return pairs.length > 0 ? pairs.join('; ') : null;
+  }
+
+  private setRestCookieHeader(cookie: string): void {
+    this.restCookie = cookie;
+    this.restClient.defaults.headers.Cookie = cookie;
+  }
+
+  private async loginRest(): Promise<void> {
+    if (!this.hasRestAuth()) return;
+    const loginUrl = `${this.restBaseUrl}/rest/login`;
+    const response = await axios.post(
+      loginUrl,
+      {
+        emailOrLdapLoginId: this.restAuthEmail,
+        password: this.restAuthPassword,
       },
+      {
+        timeout: this.timeout,
+        validateStatus: (status) => status < 500,
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error(`REST login failed with HTTP ${response.status}`);
+    }
+
+    const cookie = this.normalizeSetCookie(response.headers?.['set-cookie']);
+    if (!cookie) {
+      throw new Error('REST login succeeded but no session cookie was returned');
+    }
+
+    this.setRestCookieHeader(cookie);
+  }
+
+  private async ensureRestAuth(): Promise<void> {
+    if (!this.hasRestAuth()) return;
+    if (this.restCookie) return;
+    if (this.restAuthPromise) {
+      await this.restAuthPromise;
+      return;
+    }
+
+    this.restAuthPromise = this.loginRest();
+    try {
+      await this.restAuthPromise;
+    } finally {
+      this.restAuthPromise = null;
+    }
+  }
+
+  private async requestRest<T>(config: AxiosRequestConfig): Promise<T> {
+    if (this.hasRestAuth()) {
+      await this.ensureRestAuth();
+    }
+
+    try {
+      const response = await this.restClient.request<T>(config);
+      return response.data;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401) {
+        if (!this.hasRestAuth()) {
+          throw new Error(
+            'REST authentication required. Configure N8N_REST_EMAIL and N8N_REST_PASSWORD to use folder tools.'
+          );
+        }
+        this.restCookie = undefined;
+        await this.ensureRestAuth();
+        const retryResponse = await this.restClient.request<T>(config);
+        return retryResponse.data;
+      }
+      throw error;
+    }
+  }
+
+  private async resolveProjectId(explicitProjectId?: string): Promise<string> {
+    if (explicitProjectId) return explicitProjectId;
+    if (this.restProjectId) return this.restProjectId;
+
+    const projects = await this.requestRest<Project[]>({
+      method: 'get',
+      url: '/projects',
+    }).then((data) => {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object' && Array.isArray((data as any).data)) {
+        return (data as any).data as Project[];
+      }
+      return [];
     });
 
-    // Request interceptor for logging
-    this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        logger.debug(`n8n API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-          params: config.params,
-          data: config.data,
-        });
-        return config;
-      },
-      (error: unknown) => {
-        logger.error('n8n API Request Error:', error);
-        return Promise.reject(error);
-      }
-    );
+    if (projects.length === 0) {
+      throw new Error('Unable to resolve projectId: no projects returned by REST API');
+    }
 
-    // Response interceptor for logging
-    this.client.interceptors.response.use(
-      (response: any) => {
-        logger.debug(`n8n API Response: ${response.status} ${response.config.url}`);
-        return response;
-      },
-      (error: unknown) => {
-        const n8nError = handleN8nApiError(error);
-        logN8nError(n8nError, 'n8n API Response');
-        return Promise.reject(n8nError);
+    const personalProjects = projects.filter((p) => p.type === 'personal');
+    if (personalProjects.length === 0) {
+      throw new Error('Unable to resolve projectId: no personal projects found');
+    }
+
+    const targetEmail = this.restProjectEmail?.toLowerCase();
+    if (targetEmail) {
+      const match = personalProjects.find((p) => p.name?.toLowerCase().includes(targetEmail));
+      if (!match) {
+        throw new Error(`Unable to resolve projectId: no personal project found for ${this.restProjectEmail}`);
       }
-    );
+      return match.id;
+    }
+
+    const email = this.restAuthEmail?.toLowerCase();
+    const match = email
+      ? personalProjects.find((p) => p.name?.toLowerCase().includes(email))
+      : undefined;
+
+    return (match ?? personalProjects[0]).id;
   }
 
   /**
@@ -239,8 +406,13 @@ export class N8nApiClient {
         const response = await this.client.put(`/workflows/${id}`, cleanedWorkflow);
         return response.data;
       } catch (putError: any) {
+        const status =
+          putError?.response?.status ??
+          putError?.statusCode ??
+          putError?.status ??
+          (putError instanceof N8nApiError ? putError.statusCode : undefined);
         // If PUT fails with 405 (Method Not Allowed), try PATCH
-        if (putError.response?.status === 405) {
+        if (status === 405) {
           logger.debug('PUT method not supported, falling back to PATCH');
           const response = await this.client.patch(`/workflows/${id}`, cleanedWorkflow);
           return response.data;
@@ -351,10 +523,125 @@ export class N8nApiClient {
     }
   }
 
+  // Folder Management (internal REST API)
+  async listFolders(params: FolderListParams): Promise<FolderListResponse> {
+    try {
+      const { projectId, filter, ...rest } = params;
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      const query: Record<string, unknown> = { ...rest };
+      if (filter !== undefined) {
+        query.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
+      }
+      const response = await this.requestRest<FolderListResponse>({
+        method: 'get',
+        url: `/projects/${resolvedProjectId}/folders`,
+        params: query,
+      });
+      return this.validateListResponse<Folder>(response, 'folders');
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async createFolder(projectId: string | undefined, name: string, parentFolderId?: string | null): Promise<Folder> {
+    try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      const payload: Record<string, unknown> = { name };
+      if (parentFolderId !== undefined) {
+        payload.parentFolderId = parentFolderId;
+      }
+      return await this.requestRest<Folder>({
+        method: 'post',
+        url: `/projects/${resolvedProjectId}/folders`,
+        data: payload,
+      });
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async updateFolder(
+    projectId: string | undefined,
+    folderId: string,
+    updates: { name?: string; parentFolderId?: string | null }
+  ): Promise<Folder> {
+    try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      const payload: Record<string, unknown> = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.parentFolderId !== undefined) payload.parentFolderId = updates.parentFolderId;
+
+      try {
+        return await this.requestRest<Folder>({
+          method: 'patch',
+          url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+          data: payload,
+        });
+      } catch (patchError: any) {
+        if (patchError?.response?.status === 405) {
+          return await this.requestRest<Folder>({
+            method: 'put',
+            url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+            data: payload,
+          });
+        }
+        throw patchError;
+      }
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async deleteFolder(projectId: string | undefined, folderId: string): Promise<void> {
+    try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      await this.requestRest<void>({
+        method: 'delete',
+        url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+      });
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  async moveWorkflowToFolder(id: string, parentFolderId: string | null, projectId?: string): Promise<Workflow> {
+    try {
+      const resolvedProjectId = await this.resolveProjectId(projectId);
+      const payload: { destinationProjectId: string; destinationParentFolderId?: string } = {
+        destinationProjectId: resolvedProjectId,
+      };
+      if (parentFolderId) payload.destinationParentFolderId = parentFolderId;
+      await this.requestRest<void>({
+        method: 'put',
+        url: `/workflows/${id}/transfer`,
+        data: payload,
+      });
+      return { id, parentFolderId } as Workflow;
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
+  hasRestAuthConfigured(): boolean {
+    return this.hasRestAuth();
+  }
+
+  async runWorkflow(id: string, request: WorkflowRunRequest): Promise<WorkflowRunResponse> {
+    try {
+      return await this.requestRest<WorkflowRunResponse>({
+        method: 'post',
+        url: `/workflows/${id}/run`,
+        data: request,
+      });
+    } catch (error) {
+      throw handleN8nApiError(error);
+    }
+  }
+
   // Webhook Execution
   async triggerWebhook(request: WebhookRequest): Promise<any> {
     try {
-      const { webhookUrl, httpMethod, data, headers, waitForResponse = true } = request;
+      const { webhookUrl, httpMethod, data, headers, waitForResponse = true, timeoutMs } = request;
 
       // SECURITY: Validate URL for SSRF protection (includes DNS resolution)
       // See: https://github.com/czlonkowski/n8n-mcp/issues/265 (HIGH-03)
@@ -381,13 +668,13 @@ export class N8nApiClient {
         data: httpMethod !== 'GET' ? data : undefined,
         params: httpMethod === 'GET' ? data : undefined,
         // Webhooks might take longer
-        timeout: waitForResponse ? 120000 : 30000,
+        timeout: typeof timeoutMs === 'number' ? timeoutMs : (waitForResponse ? 120000 : 30000),
       };
 
       // Create a new axios instance for webhook requests to avoid API interceptors
       const webhookClient = axios.create({
         baseURL: new URL('/', webhookUrl).toString(),
-        validateStatus: (status: number) => status < 500, // Don't throw on 4xx
+        validateStatus: (status: number) => status < 600, // Don't throw on 4xx/5xx to allow error payload parsing
       });
 
       const response = await webhookClient.request(config);

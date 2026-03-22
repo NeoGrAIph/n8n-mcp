@@ -94,6 +94,7 @@ export class WebhookHandler extends BaseTriggerHandler<WebhookTriggerInput> {
         data: input.data,
         headers: input.headers,
         waitForResponse: input.waitForResponse ?? true,
+        timeoutMs: input.timeout,
       };
 
       // Trigger the webhook

@@ -11,6 +11,10 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const n8nApiConfigSchema = zod_1.z.object({
     N8N_API_URL: zod_1.z.string().url().optional(),
     N8N_API_KEY: zod_1.z.string().min(1).optional(),
+    N8N_REST_EMAIL: zod_1.z.string().min(1).optional(),
+    N8N_REST_PASSWORD: zod_1.z.string().min(1).optional(),
+    N8N_REST_PROJECT_EMAIL: zod_1.z.string().min(1).optional(),
+    N8N_REST_PROJECT_ID: zod_1.z.string().min(1).optional(),
     N8N_API_TIMEOUT: zod_1.z.coerce.number().positive().default(30000),
     N8N_API_MAX_RETRIES: zod_1.z.coerce.number().positive().default(3),
 });
@@ -31,6 +35,10 @@ function getN8nApiConfig() {
     return {
         baseUrl: config.N8N_API_URL,
         apiKey: config.N8N_API_KEY,
+        restEmail: config.N8N_REST_EMAIL,
+        restPassword: config.N8N_REST_PASSWORD,
+        restProjectEmail: config.N8N_REST_PROJECT_EMAIL,
+        restProjectId: config.N8N_REST_PROJECT_ID,
         timeout: config.N8N_API_TIMEOUT,
         maxRetries: config.N8N_API_MAX_RETRIES,
     };
@@ -46,6 +54,10 @@ function getN8nApiConfigFromContext(context) {
     return {
         baseUrl: context.n8nApiUrl,
         apiKey: context.n8nApiKey,
+        restEmail: context.n8nRestEmail,
+        restPassword: context.n8nRestPassword,
+        restProjectEmail: context.n8nRestProjectEmail,
+        restProjectId: context.n8nRestProjectId,
         timeout: context.n8nApiTimeout ?? 30000,
         maxRetries: context.n8nApiMaxRetries ?? 3,
     };

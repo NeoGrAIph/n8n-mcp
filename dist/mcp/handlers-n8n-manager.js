@@ -45,10 +45,19 @@ exports.handleGetWorkflowMinimal = handleGetWorkflowMinimal;
 exports.handleUpdateWorkflow = handleUpdateWorkflow;
 exports.handleDeleteWorkflow = handleDeleteWorkflow;
 exports.handleListWorkflows = handleListWorkflows;
+exports.handleListFolders = handleListFolders;
+exports.handleCreateFolder = handleCreateFolder;
+exports.handleMoveFolder = handleMoveFolder;
+exports.handleDeleteFolder = handleDeleteFolder;
+exports.handleMoveWorkflowToFolder = handleMoveWorkflowToFolder;
 exports.handleValidateWorkflow = handleValidateWorkflow;
 exports.handleAutofixWorkflow = handleAutofixWorkflow;
 exports.handleTestWorkflow = handleTestWorkflow;
+exports.handleTestWorkflowFull = handleTestWorkflowFull;
+exports.handleTestCodeNode = handleTestCodeNode;
+exports.handleTestWorkflowRunner = handleTestWorkflowRunner;
 exports.handleGetExecution = handleGetExecution;
+exports.handleGetWorkflowExecution = handleGetWorkflowExecution;
 exports.handleListExecutions = handleListExecutions;
 exports.handleDeleteExecution = handleDeleteExecution;
 exports.handleCreateTable = handleCreateTable;
@@ -83,7 +92,9 @@ const handlers_workflow_diff_1 = require("./handlers-workflow-diff");
 const telemetry_1 = require("../telemetry");
 const cache_utils_1 = require("../utils/cache-utils");
 const execution_processor_1 = require("../services/execution-processor");
+const workflow_subgraph_1 = require("../services/workflow-subgraph");
 const npm_version_checker_1 = require("../utils/npm-version-checker");
+const node_type_utils_1 = require("../utils/node-type-utils");
 let defaultApiClient = null;
 let lastDefaultConfigUrl = null;
 const cacheMutex = new cache_utils_1.CacheMutex();
@@ -185,6 +196,8 @@ const createWorkflowSchema = zod_1.z.object({
         executionTimeout: zod_1.z.number().optional(),
         errorWorkflow: zod_1.z.string().optional(),
     }).optional(),
+    parentFolderId: zod_1.z.string().nullable().optional(),
+    projectId: zod_1.z.string().optional(),
 });
 const updateWorkflowSchema = zod_1.z.object({
     id: zod_1.z.string(),
@@ -202,6 +215,35 @@ const listWorkflowsSchema = zod_1.z.object({
     tags: zod_1.z.array(zod_1.z.string()).optional(),
     projectId: zod_1.z.string().optional(),
     excludePinnedData: zod_1.z.boolean().optional(),
+});
+const listFoldersSchema = zod_1.z.object({
+    projectId: zod_1.z.string().optional(),
+    parentFolderId: zod_1.z.string().optional(),
+    filter: zod_1.z.union([zod_1.z.record(zod_1.z.unknown()), zod_1.z.string()]).optional(),
+    projectRelation: zod_1.z.boolean().optional(),
+    projectRole: zod_1.z.boolean().optional(),
+    cursor: zod_1.z.string().optional(),
+    limit: zod_1.z.number().min(1).max(200).optional(),
+});
+const createFolderSchema = zod_1.z.object({
+    projectId: zod_1.z.string().optional(),
+    name: zod_1.z.string().min(1),
+    parentFolderId: zod_1.z.string().nullable().optional(),
+});
+const moveFolderSchema = zod_1.z.object({
+    projectId: zod_1.z.string().optional(),
+    folderId: zod_1.z.string(),
+    name: zod_1.z.string().optional(),
+    parentFolderId: zod_1.z.string().nullable().optional(),
+}).refine((data) => data.name !== undefined || data.parentFolderId !== undefined, { message: 'At least one of name or parentFolderId must be provided' });
+const deleteFolderSchema = zod_1.z.object({
+    projectId: zod_1.z.string().optional(),
+    folderId: zod_1.z.string(),
+});
+const moveWorkflowToFolderSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    parentFolderId: zod_1.z.string().nullable(),
+    projectId: zod_1.z.string().optional(),
 });
 const validateWorkflowSchema = zod_1.z.object({
     id: zod_1.z.string(),
@@ -239,6 +281,96 @@ const testWorkflowSchema = zod_1.z.object({
     timeout: zod_1.z.number().optional(),
     waitForResponse: zod_1.z.boolean().optional(),
 });
+const workflowRunnerTestSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    items: zod_1.z.array(zod_1.z.unknown()).optional(),
+    item: zod_1.z.unknown().optional(),
+    dryRun: zod_1.z.boolean().optional(),
+    timeout: zod_1.z.number().int().positive().optional(),
+    diagnostics: zod_1.z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
+    diagnosticsItemsLimit: zod_1.z.number().int().min(0).optional(),
+    responseMode: zod_1.z.enum(['result', 'full']).optional(),
+    runnerWorkflowId: zod_1.z.string().optional(),
+    runnerWebhookPath: zod_1.z.string().optional(),
+    waitForResponse: zod_1.z.boolean().optional(),
+}).superRefine((value, ctx) => {
+    if (value.dryRun && value.diagnostics && value.diagnostics !== 'none') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'diagnostics cannot be used when dryRun=true',
+            path: ['diagnostics'],
+        });
+    }
+});
+const workflowFullTestSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    triggerNode: zod_1.z.object({
+        name: zod_1.z.string(),
+        data: zod_1.z.unknown().optional(),
+    }).optional(),
+    startNodes: zod_1.z.array(zod_1.z.object({
+        name: zod_1.z.string(),
+        sourceData: zod_1.z.unknown().optional(),
+    })).optional(),
+    waitForCompletion: zod_1.z.boolean().optional(),
+    timeout: zod_1.z.number().int().positive().optional(),
+    pollIntervalMs: zod_1.z.number().int().positive().optional(),
+    diagnostics: zod_1.z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
+    diagnosticsItemsLimit: zod_1.z.number().int().min(0).optional(),
+    responseMode: zod_1.z.enum(['result', 'full']).optional(),
+}).superRefine((value, ctx) => {
+    if (value.waitForCompletion === false && value.diagnostics && value.diagnostics !== 'none') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'diagnostics cannot be used when waitForCompletion=false',
+            path: ['diagnostics'],
+        });
+    }
+});
+const codeNodeTestSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    mode: zod_1.z.enum(['full', 'node', 'subgraph']).optional(),
+    nodeId: zod_1.z.string().optional(),
+    nodeName: zod_1.z.string().optional(),
+    startNode: zod_1.z.string().optional(),
+    endNodes: zod_1.z.array(zod_1.z.string()).optional(),
+    includeUpstream: zod_1.z.boolean().optional(),
+    includeDownstream: zod_1.z.boolean().optional(),
+    items: zod_1.z.array(zod_1.z.unknown()).optional(),
+    item: zod_1.z.unknown().optional(),
+    timeout: zod_1.z.number().int().positive().optional(),
+    diagnostics: zod_1.z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
+    diagnosticsItemsLimit: zod_1.z.number().int().min(0).optional(),
+    responseMode: zod_1.z.enum(['result', 'full']).optional(),
+    runnerWorkflowId: zod_1.z.string().optional(),
+    runnerWebhookPath: zod_1.z.string().optional(),
+    waitForResponse: zod_1.z.boolean().optional(),
+}).superRefine((value, ctx) => {
+    const mode = value.mode ?? 'node';
+    const hasNode = !!value.nodeId || !!value.nodeName;
+    if (mode === 'full') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'mode=full has moved to n8n_workflow_runner_test',
+            path: ['mode'],
+        });
+        return;
+    }
+    if (mode === 'node' && !hasNode) {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'nodeId or nodeName is required for mode=node',
+            path: ['nodeId'],
+        });
+    }
+    if (mode === 'subgraph' && !hasNode) {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'nodeId or nodeName is required for mode=subgraph; startNode only controls traversal',
+            path: ['nodeId'],
+        });
+    }
+});
 const listExecutionsSchema = zod_1.z.object({
     limit: zod_1.z.number().min(1).max(100).optional(),
     cursor: zod_1.z.string().optional(),
@@ -261,8 +393,9 @@ async function handleCreateWorkflow(args, context) {
     try {
         const client = ensureApiConfigured(context);
         const input = createWorkflowSchema.parse(args);
+        const { parentFolderId, projectId, ...workflowInput } = input;
         const shortFormErrors = [];
-        input.nodes?.forEach((node, index) => {
+        workflowInput.nodes?.forEach((node, index) => {
             if (node.type?.startsWith('nodes-base.') || node.type?.startsWith('nodes-langchain.')) {
                 const fullForm = node.type.startsWith('nodes-base.')
                     ? node.type.replace('nodes-base.', 'n8n-nodes-base.')
@@ -272,7 +405,7 @@ async function handleCreateWorkflow(args, context) {
             }
         });
         if (shortFormErrors.length > 0) {
-            telemetry_1.telemetry.trackWorkflowCreation(input, false);
+            telemetry_1.telemetry.trackWorkflowCreation(workflowInput, false);
             return {
                 success: false,
                 error: 'Node type format error: n8n API requires FULL form node types',
@@ -282,16 +415,20 @@ async function handleCreateWorkflow(args, context) {
                 }
             };
         }
-        const errors = (0, n8n_validation_1.validateWorkflowStructure)(input);
+        const errors = (0, n8n_validation_1.validateWorkflowStructure)(workflowInput);
         if (errors.length > 0) {
-            telemetry_1.telemetry.trackWorkflowCreation(input, false);
+            telemetry_1.telemetry.trackWorkflowCreation(workflowInput, false);
             return {
                 success: false,
                 error: 'Workflow validation failed',
                 details: { errors }
             };
         }
-        const workflow = await client.createWorkflow(input);
+        const workflow = await client.createWorkflow(workflowInput);
+        if (parentFolderId !== undefined || projectId !== undefined) {
+            const targetFolderId = parentFolderId === '' ? null : parentFolderId ?? null;
+            await client.moveWorkflowToFolder(workflow.id, targetFolderId, projectId);
+        }
         telemetry_1.telemetry.trackWorkflowCreation(workflow, true);
         return {
             success: true,
@@ -702,6 +839,204 @@ async function handleListWorkflows(args, context) {
         };
     }
 }
+async function handleListFolders(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = listFoldersSchema.parse(args || {});
+        const response = await client.listFolders({
+            projectId: input.projectId,
+            parentFolderId: input.parentFolderId,
+            filter: input.filter,
+            projectRelation: input.projectRelation,
+            projectRole: input.projectRole,
+            cursor: input.cursor,
+            limit: input.limit
+        });
+        const folders = response.data ?? [];
+        return {
+            success: true,
+            data: {
+                folders,
+                returned: folders.length,
+                nextCursor: response.nextCursor,
+                hasMore: !!response.nextCursor,
+                ...(response.nextCursor ? {
+                    _note: "More folders available. Use cursor to get next page."
+                } : {})
+            }
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors }
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+async function handleCreateFolder(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = createFolderSchema.parse(args);
+        const folder = await client.createFolder(input.projectId, input.name, input.parentFolderId ?? undefined);
+        return {
+            success: true,
+            data: {
+                folder
+            },
+            message: `Folder "${folder?.name || input.name}" created successfully.`
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors }
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+async function handleMoveFolder(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = moveFolderSchema.parse(args);
+        if (input.parentFolderId === input.folderId) {
+            throw new Error('parentFolderId cannot match folderId');
+        }
+        const folder = await client.updateFolder(input.projectId, input.folderId, {
+            name: input.name,
+            parentFolderId: input.parentFolderId
+        });
+        return {
+            success: true,
+            data: {
+                folder
+            },
+            message: `Folder "${folder?.name || input.folderId}" moved/renamed successfully.`
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors }
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+async function handleDeleteFolder(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = deleteFolderSchema.parse(args);
+        await client.deleteFolder(input.projectId, input.folderId);
+        return {
+            success: true,
+            data: {
+                id: input.folderId,
+                deleted: true
+            },
+            message: `Folder "${input.folderId}" deleted successfully.`
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors }
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+async function handleMoveWorkflowToFolder(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = moveWorkflowToFolderSchema.parse(args);
+        const parentFolderId = input.parentFolderId === '' ? null : input.parentFolderId;
+        const updated = await client.moveWorkflowToFolder(input.workflowId, parentFolderId, input.projectId);
+        return {
+            success: true,
+            data: {
+                id: updated?.id || input.workflowId,
+                parentFolderId: updated?.parentFolderId ?? parentFolderId
+            },
+            message: `Workflow "${updated?.id || input.workflowId}" moved successfully.`
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors }
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
 async function handleValidateWorkflow(args, repository, context) {
     try {
         const client = ensureApiConfigured(context);
@@ -1029,6 +1364,925 @@ async function handleTestWorkflow(args, context) {
         };
     }
 }
+async function handleTestWorkflowFull(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = workflowFullTestSchema.parse(args);
+        if (!client.hasRestAuthConfigured()) {
+            return {
+                success: false,
+                error: 'REST authentication required for native full test mode',
+                details: {
+                    workflowId: input.workflowId,
+                    hint: 'Configure N8N_REST_EMAIL and N8N_REST_PASSWORD to use n8n_workflow_full_test',
+                },
+            };
+        }
+        const workflow = await client.getWorkflow(input.workflowId);
+        const selection = resolveWorkflowFullTestSelection(workflow, input);
+        if (!isWorkflowFullTestSelectionSuccess(selection)) {
+            return selection;
+        }
+        const runResponse = await client.runWorkflow(input.workflowId, {
+            workflowData: workflow,
+            startNodes: selection.startNodes,
+            triggerToStartFrom: {
+                name: selection.triggerNode.name,
+                data: input.triggerNode?.data ?? null,
+            },
+        });
+        const executionId = extractExecutionIdFromWorkflowRunResponse(runResponse);
+        const runStatus = extractWorkflowRunStatus(runResponse);
+        const responseMode = input.responseMode ?? 'result';
+        const baseData = {
+            workflowId: input.workflowId,
+            executionId,
+            status: runStatus,
+            triggerNodeName: selection.triggerNode.name,
+            startNodeNames: selection.startNodes.map((node) => node.name),
+        };
+        if (input.waitForCompletion === false) {
+            return {
+                success: true,
+                data: responseMode === 'full'
+                    ? {
+                        ...baseData,
+                        runResponse,
+                    }
+                    : baseData,
+                executionId,
+                workflowId: input.workflowId,
+                message: 'Workflow started via native full test mode',
+            };
+        }
+        if (!executionId) {
+            return {
+                success: false,
+                error: 'Workflow run did not return executionId',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    hint: 'Retry with responseMode="full" and inspect the native run response',
+                },
+                workflowId: input.workflowId,
+            };
+        }
+        const timeoutMs = input.timeout ?? DEFAULT_WORKFLOW_FULL_TEST_TIMEOUT;
+        const pollIntervalMs = input.pollIntervalMs ?? DEFAULT_WORKFLOW_FULL_TEST_POLL_INTERVAL;
+        const completion = await waitForWorkflowExecutionCompletion({
+            client,
+            executionId,
+            pollIntervalMs,
+            timeoutMs,
+        });
+        if (completion.timedOut) {
+            return {
+                success: false,
+                error: 'Timed out waiting for workflow execution to finish',
+                code: 'EXECUTION_TIMEOUT',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    lastKnownStatus: completion.execution?.status ?? runStatus,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                    hint: 'Use n8n_workflow_execution_get or n8n_executions_get with the returned executionId to inspect the run',
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        if (!completion.execution) {
+            return {
+                success: false,
+                error: 'Execution details could not be loaded after workflow start',
+                details: {
+                    ...baseData,
+                    runResponse,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        const diagnosticsMode = input.diagnostics ?? 'none';
+        const summaryResult = (0, execution_processor_1.processExecution)(completion.execution, { mode: 'summary' }, workflow);
+        const diagnostics = diagnosticsMode !== 'none'
+            ? (0, execution_processor_1.processExecution)(completion.execution, {
+                mode: diagnosticsMode,
+                itemsLimit: input.diagnosticsItemsLimit,
+            }, workflow)
+            : undefined;
+        if (completion.execution.status === n8n_api_2.ExecutionStatus.ERROR) {
+            return {
+                success: false,
+                error: getExecutionFailureMessage(completion.execution),
+                code: 'WORKFLOW_ERROR',
+                details: {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                    diagnostics,
+                    execution: responseMode === 'full' ? completion.execution : undefined,
+                    runResponse: responseMode === 'full' ? runResponse : undefined,
+                    polling: responseMode === 'full'
+                        ? {
+                            timeoutMs,
+                            pollIntervalMs,
+                            elapsedMs: completion.elapsedMs,
+                            polls: completion.polls,
+                        }
+                        : undefined,
+                },
+                executionId,
+                workflowId: input.workflowId,
+            };
+        }
+        return {
+            success: true,
+            data: responseMode === 'full' || diagnosticsMode !== 'none'
+                ? {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                    diagnostics,
+                    execution: completion.execution,
+                    runResponse,
+                    polling: {
+                        timeoutMs,
+                        pollIntervalMs,
+                        elapsedMs: completion.elapsedMs,
+                        polls: completion.polls,
+                    },
+                }
+                : {
+                    ...baseData,
+                    status: completion.execution.status,
+                    result: summaryResult,
+                },
+            executionId,
+            workflowId: input.workflowId,
+            message: 'Workflow executed via native full test mode',
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+    }
+}
+const CODE_NODE_RUNNER_NAME = 'MCP Utility - Code Node Runner';
+const CODE_NODE_RUNNER_WEBHOOK_PATH = 'mcp-code-node-runner';
+const CODE_NODE_TYPE = 'n8n-nodes-base.code';
+function getN8nBaseUrl(context) {
+    const apiUrl = context?.n8nApiUrl || process.env.N8N_API_URL;
+    if (!apiUrl) {
+        return null;
+    }
+    return apiUrl.replace(/\/api\/v\d+\/?$/, '');
+}
+async function resolveRunnerWorkflowId(client, runnerWorkflowId) {
+    if (runnerWorkflowId) {
+        return runnerWorkflowId;
+    }
+    let cursor;
+    do {
+        const response = await client.listWorkflows({ limit: 100, cursor: cursor || undefined });
+        const match = response.data.find(workflow => workflow.name === CODE_NODE_RUNNER_NAME);
+        if (match?.id) {
+            return match.id;
+        }
+        cursor = response.nextCursor;
+    } while (cursor);
+    return null;
+}
+function resolveNodeName(workflow, identifier) {
+    if (!identifier) {
+        return null;
+    }
+    const byId = workflow.nodes.find(node => node.id === identifier);
+    if (byId) {
+        return byId.name;
+    }
+    const byName = workflow.nodes.find(node => node.name === identifier);
+    return byName?.name || null;
+}
+function normalizeItems(items, item) {
+    const rawItems = Array.isArray(items) && items.length > 0 ? items : item !== undefined ? [item] : [];
+    if (rawItems.length === 0) {
+        return [{ json: {} }];
+    }
+    return rawItems.map(raw => {
+        if (raw && typeof raw === 'object' && ('json' in raw || 'binary' in raw)) {
+            return raw;
+        }
+        if (raw && typeof raw === 'object') {
+            return { json: raw };
+        }
+        return { json: { value: raw } };
+    });
+}
+function extractRunnerMeta(responseData, responseHeaders) {
+    const normalizeMeta = (meta) => {
+        if (meta && typeof meta === 'object') {
+            return meta;
+        }
+        return undefined;
+    };
+    const fromHeaders = () => {
+        if (!responseHeaders) {
+            return undefined;
+        }
+        const headerKeys = Object.keys(responseHeaders);
+        const executionHeaderKey = headerKeys.find(key => key.toLowerCase() === 'x-n8n-execution-id');
+        if (executionHeaderKey) {
+            return String(responseHeaders[executionHeaderKey]);
+        }
+        return undefined;
+    };
+    if (Array.isArray(responseData) && responseData.length > 0) {
+        const first = responseData[0];
+        const meta = normalizeMeta(first?.mcpMeta ?? first?.meta);
+        const executionId = meta?.executionId ? String(meta.executionId) : fromHeaders();
+        return { executionId, meta };
+    }
+    if (responseData && typeof responseData === 'object') {
+        const record = responseData;
+        const meta = normalizeMeta(record.mcpMeta ?? record.meta);
+        const executionId = meta?.executionId ? String(meta.executionId) : fromHeaders();
+        return { executionId, meta };
+    }
+    const executionId = fromHeaders();
+    return { executionId };
+}
+function extractExecutionErrorDetails(responseData) {
+    if (!responseData || typeof responseData !== 'object') {
+        return undefined;
+    }
+    const extractFromRecord = (record) => {
+        const errorMessage = typeof record.errorMessage === 'string' ? record.errorMessage : undefined;
+        const errorDetails = record.errorDetails && typeof record.errorDetails === 'object'
+            ? record.errorDetails
+            : undefined;
+        const n8nDetails = record.n8nDetails && typeof record.n8nDetails === 'object'
+            ? record.n8nDetails
+            : undefined;
+        if (!errorMessage && !errorDetails && !n8nDetails) {
+            return undefined;
+        }
+        return { errorMessage, errorDetails, n8nDetails };
+    };
+    if (Array.isArray(responseData)) {
+        for (const entry of responseData) {
+            if (!entry || typeof entry !== 'object') {
+                continue;
+            }
+            const record = entry;
+            const direct = extractFromRecord(record);
+            if (direct) {
+                return direct;
+            }
+            const nested = record.json && typeof record.json === 'object'
+                ? extractFromRecord(record.json)
+                : undefined;
+            if (nested) {
+                return nested;
+            }
+        }
+        return undefined;
+    }
+    const data = responseData;
+    const direct = extractFromRecord(data);
+    if (direct) {
+        return direct;
+    }
+    if (data.json && typeof data.json === 'object') {
+        return extractFromRecord(data.json);
+    }
+    return undefined;
+}
+function stripMcpMetaFromResult(result) {
+    if (Array.isArray(result)) {
+        return result.map(item => {
+            if (!item || typeof item !== 'object') {
+                return item;
+            }
+            const record = { ...item };
+            if ('mcpMeta' in record) {
+                delete record.mcpMeta;
+            }
+            if ('meta' in record && record.meta && typeof record.meta === 'object' && 'executionId' in record.meta) {
+                delete record.meta;
+            }
+            return record;
+        });
+    }
+    if (result && typeof result === 'object') {
+        const record = { ...result };
+        if ('mcpMeta' in record) {
+            delete record.mcpMeta;
+        }
+        if ('meta' in record && record.meta && typeof record.meta === 'object' && 'executionId' in record.meta) {
+            delete record.meta;
+        }
+        return record;
+    }
+    return result;
+}
+const DEFAULT_WORKFLOW_FULL_TEST_TIMEOUT = 120000;
+const DEFAULT_WORKFLOW_FULL_TEST_POLL_INTERVAL = 1000;
+function isRunnerExecutionContextSuccess(value) {
+    return value.success === true && 'baseUrl' in value && 'runnerWorkflowId' in value;
+}
+async function resolveRunnerExecutionContext(client, context, runnerWorkflowIdOverride) {
+    const runnerWorkflowId = await resolveRunnerWorkflowId(client, runnerWorkflowIdOverride);
+    if (!runnerWorkflowId) {
+        return {
+            success: false,
+            error: 'Runner workflow not found',
+            details: {
+                runnerWorkflowId: runnerWorkflowIdOverride,
+                runnerWorkflowName: CODE_NODE_RUNNER_NAME,
+                hint: 'Create and activate the utility workflow "MCP Utility - Code Node Runner" in n8n dev',
+            },
+        };
+    }
+    const baseUrl = getN8nBaseUrl(context);
+    if (!baseUrl) {
+        return {
+            success: false,
+            error: 'Cannot determine n8n base URL',
+            details: {
+                hint: 'Set N8N_API_URL or provide n8nApiUrl in instance context',
+            },
+        };
+    }
+    return { success: true, baseUrl, runnerWorkflowId };
+}
+function getTriggerNodes(workflow) {
+    return workflow.nodes.filter((node) => (0, node_type_utils_1.isTriggerNode)(node.type));
+}
+function getDownstreamNodeNames(workflow, nodeName) {
+    const outputs = workflow.connections?.[nodeName];
+    if (!outputs) {
+        return [];
+    }
+    const downstream = new Set();
+    for (const groups of Object.values(outputs)) {
+        if (!Array.isArray(groups)) {
+            continue;
+        }
+        for (const group of groups) {
+            if (!Array.isArray(group)) {
+                continue;
+            }
+            for (const connection of group) {
+                if (connection?.node) {
+                    downstream.add(connection.node);
+                }
+            }
+        }
+    }
+    return Array.from(downstream);
+}
+function extractExecutionIdFromWorkflowRunResponse(response) {
+    if (typeof response.executionId === 'string') {
+        return response.executionId;
+    }
+    if (typeof response.id === 'string') {
+        return response.id;
+    }
+    if (response.data && typeof response.data === 'object') {
+        const record = response.data;
+        if (typeof record.executionId === 'string') {
+            return record.executionId;
+        }
+        if (typeof record.id === 'string') {
+            return record.id;
+        }
+    }
+    return undefined;
+}
+function extractWorkflowRunStatus(response) {
+    if (typeof response.status === 'string') {
+        return response.status;
+    }
+    if (response.data && typeof response.data === 'object') {
+        const record = response.data;
+        if (typeof record.status === 'string') {
+            return record.status;
+        }
+    }
+    return undefined;
+}
+function resolveWorkflowFullTestSelection(workflow, input) {
+    const triggerNodes = getTriggerNodes(workflow);
+    let triggerNode;
+    if (input.triggerNode) {
+        triggerNode = workflow.nodes.find((node) => node.name === input.triggerNode?.name);
+        if (!triggerNode) {
+            return {
+                success: false,
+                error: `Trigger node "${input.triggerNode.name}" not found in workflow`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: input.triggerNode.name,
+                },
+            };
+        }
+        if (!(0, node_type_utils_1.isTriggerNode)(triggerNode.type)) {
+            return {
+                success: false,
+                error: `Node "${triggerNode.name}" is not a trigger node`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: triggerNode.name,
+                    nodeType: triggerNode.type,
+                },
+            };
+        }
+    }
+    else if (triggerNodes.length === 1) {
+        triggerNode = triggerNodes[0];
+    }
+    else {
+        return {
+            success: false,
+            error: 'Cannot auto-select trigger node',
+            details: {
+                workflowId: input.workflowId,
+                triggerNodes: triggerNodes.map((node) => ({ name: node.name, type: node.type })),
+                hint: 'Provide triggerNode.name when the workflow has zero or multiple trigger nodes',
+            },
+        };
+    }
+    let startNodes;
+    if (input.startNodes && input.startNodes.length > 0) {
+        const missing = input.startNodes.filter((entry) => !workflow.nodes.some((node) => node.name === entry.name));
+        if (missing.length > 0) {
+            return {
+                success: false,
+                error: 'One or more startNodes were not found in workflow',
+                details: {
+                    workflowId: input.workflowId,
+                    missingStartNodes: missing.map((entry) => entry.name),
+                },
+            };
+        }
+        startNodes = input.startNodes.map((entry) => ({
+            name: entry.name,
+            sourceData: entry.sourceData ?? null,
+        }));
+    }
+    else {
+        const downstreamNames = getDownstreamNodeNames(workflow, triggerNode.name);
+        if (downstreamNames.length === 0) {
+            return {
+                success: false,
+                error: `No downstream nodes found for trigger "${triggerNode.name}"`,
+                details: {
+                    workflowId: input.workflowId,
+                    triggerNode: triggerNode.name,
+                    hint: 'Provide startNodes explicitly when the workflow graph cannot be derived from the trigger node',
+                },
+            };
+        }
+        startNodes = downstreamNames.map((name) => ({ name, sourceData: null }));
+    }
+    return { triggerNode, startNodes };
+}
+function isWorkflowFullTestSelectionSuccess(value) {
+    return !('success' in value);
+}
+async function waitForWorkflowExecutionCompletion(params) {
+    const startedAt = Date.now();
+    let polls = 0;
+    let lastExecution = null;
+    while (Date.now() - startedAt <= params.timeoutMs) {
+        try {
+            const execution = await params.client.getExecution(params.executionId, true);
+            lastExecution = execution;
+            if (execution.finished === true ||
+                execution.status === n8n_api_2.ExecutionStatus.SUCCESS ||
+                execution.status === n8n_api_2.ExecutionStatus.ERROR) {
+                return {
+                    execution,
+                    elapsedMs: Date.now() - startedAt,
+                    polls,
+                    timedOut: false,
+                };
+            }
+        }
+        catch (error) {
+            if (!(error instanceof n8n_errors_1.N8nNotFoundError)) {
+                throw error;
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, params.pollIntervalMs));
+        polls += 1;
+    }
+    return {
+        execution: lastExecution,
+        elapsedMs: Date.now() - startedAt,
+        polls,
+        timedOut: true,
+    };
+}
+function getExecutionFailureMessage(execution) {
+    const error = execution.data?.resultData?.error;
+    if (typeof error?.message === 'string' && error.message.trim().length > 0) {
+        return error.message;
+    }
+    if (typeof error?.description === 'string' && error.description.trim().length > 0) {
+        return error.description;
+    }
+    return 'Workflow execution failed';
+}
+async function executeGeneratedSubWorkflowThroughRunner(params) {
+    const runnerPath = (params.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');
+    const baseUrlClean = params.baseUrl.replace(/\/+$/, '');
+    const standardWebhookUrl = `${baseUrlClean}/webhook/${runnerPath}`;
+    const legacyWebhookUrl = `${baseUrlClean}/webhook/${params.runnerWorkflowId}/webhook/${runnerPath}`;
+    const payloadItems = normalizeItems(params.items, params.item);
+    const webhookPayload = {
+        workflowJson: JSON.stringify(params.subWorkflowResult.workflow),
+        items: payloadItems,
+    };
+    const tryWebhook = async (url) => params.client.triggerWebhook({
+        webhookUrl: url,
+        httpMethod: 'POST',
+        data: webhookPayload,
+        waitForResponse: params.waitForResponse ?? true,
+        timeoutMs: params.timeout,
+    });
+    let webhookUrl = standardWebhookUrl;
+    let usedLegacyWebhook = false;
+    let response = await tryWebhook(standardWebhookUrl);
+    const responseMessage = response?.data?.message;
+    if (response?.status === 404 && typeof responseMessage === 'string' && responseMessage.includes('not registered')) {
+        response = await tryWebhook(legacyWebhookUrl);
+        webhookUrl = legacyWebhookUrl;
+        usedLegacyWebhook = true;
+    }
+    const metaInfo = extractRunnerMeta(response.data, response.headers);
+    const warnings = [...params.subWorkflowResult.warnings];
+    if (usedLegacyWebhook) {
+        warnings.push('Runner webhook used legacy URL pattern /webhook/<workflowId>/webhook/<path>');
+    }
+    const errorDetails = extractExecutionErrorDetails(response.data);
+    const isError = response.status >= 400 || !!errorDetails?.errorMessage;
+    let diagnostics = undefined;
+    if (params.diagnosticsMode !== 'none') {
+        if (!metaInfo.executionId) {
+            warnings.push('Diagnostics requested but runner executionId is not available');
+        }
+        else {
+            const execution = await params.client.getExecution(metaInfo.executionId, true);
+            const runnerWorkflow = await params.client.getWorkflow(execution.workflowId);
+            const filterOptions = {
+                mode: params.diagnosticsMode,
+                itemsLimit: params.diagnosticsItemsLimit,
+            };
+            diagnostics = (0, execution_processor_1.processExecution)(execution, filterOptions, runnerWorkflow);
+        }
+    }
+    const cleanedResult = params.responseMode === 'full'
+        ? response.data
+        : stripMcpMetaFromResult(response.data);
+    return {
+        cleanedResult,
+        diagnostics,
+        errorDetails,
+        isError,
+        metaInfo,
+        response,
+        runnerWebhookUrl: webhookUrl,
+        warnings,
+    };
+}
+async function handleTestCodeNode(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = codeNodeTestSchema.parse(args);
+        const workflow = await client.getWorkflow(input.workflowId);
+        const mode = input.mode ?? 'node';
+        const includeUpstream = input.includeUpstream ?? (mode === 'subgraph');
+        const includeDownstream = input.includeDownstream ?? (mode === 'subgraph');
+        const diagnosticsMode = input.diagnostics ?? 'none';
+        const responseMode = input.responseMode ?? 'result';
+        const targetNodeName = resolveNodeName(workflow, input.nodeId || input.nodeName);
+        const targetNode = targetNodeName
+            ? workflow.nodes.find(node => node.name === targetNodeName)
+            : undefined;
+        if (!targetNode) {
+            return {
+                success: false,
+                error: 'Target node not found in workflow',
+                details: {
+                    workflowId: input.workflowId,
+                    nodeId: input.nodeId,
+                    nodeName: input.nodeName,
+                },
+            };
+        }
+        if (targetNode && targetNode.type !== CODE_NODE_TYPE) {
+            return {
+                success: false,
+                error: `Node "${targetNode.name}" is not a Code node`,
+                details: {
+                    workflowId: input.workflowId,
+                    nodeId: targetNode.id,
+                    nodeName: targetNode.name,
+                    nodeType: targetNode.type,
+                },
+            };
+        }
+        const startNodeName = resolveNodeName(workflow, input.startNode);
+        if (input.startNode && !startNodeName) {
+            return {
+                success: false,
+                error: `Start node "${input.startNode}" not found in workflow`,
+                details: {
+                    workflowId: input.workflowId,
+                    startNode: input.startNode,
+                },
+            };
+        }
+        const endNodeNames = [];
+        if (input.endNodes) {
+            for (const endNode of input.endNodes) {
+                const resolved = resolveNodeName(workflow, endNode);
+                if (!resolved) {
+                    return {
+                        success: false,
+                        error: `End node "${endNode}" not found in workflow`,
+                        details: {
+                            workflowId: input.workflowId,
+                            endNode,
+                        },
+                    };
+                }
+                endNodeNames.push(resolved);
+            }
+        }
+        let subWorkflowResult;
+        try {
+            subWorkflowResult = (0, workflow_subgraph_1.buildSubWorkflow)({
+                workflow,
+                mode,
+                targetNodeName: targetNode?.name,
+                startNodeName: startNodeName || undefined,
+                endNodeNames: endNodeNames.length > 0 ? endNodeNames : undefined,
+                includeUpstream,
+                includeDownstream,
+            });
+        }
+        catch (subgraphError) {
+            return {
+                success: false,
+                error: subgraphError instanceof Error ? subgraphError.message : 'Failed to build sub-workflow',
+                details: {
+                    workflowId: input.workflowId,
+                    mode,
+                    targetNodeName: targetNode?.name,
+                    startNodeName,
+                },
+            };
+        }
+        const runnerContext = await resolveRunnerExecutionContext(client, context, input.runnerWorkflowId);
+        if (!isRunnerExecutionContextSuccess(runnerContext)) {
+            return runnerContext;
+        }
+        const runnerExecution = await executeGeneratedSubWorkflowThroughRunner({
+            baseUrl: runnerContext.baseUrl,
+            client,
+            diagnosticsItemsLimit: input.diagnosticsItemsLimit,
+            diagnosticsMode,
+            item: input.item,
+            items: input.items,
+            responseMode,
+            runnerWebhookPath: input.runnerWebhookPath,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            subWorkflowResult,
+            timeout: input.timeout,
+            waitForResponse: input.waitForResponse,
+        });
+        const baseData = {
+            workflowId: input.workflowId,
+            nodeId: targetNode?.id,
+            nodeName: targetNode?.name,
+            mode,
+            executionId: runnerExecution.metaInfo.executionId,
+            result: runnerExecution.cleanedResult,
+        };
+        if (runnerExecution.isError) {
+            return {
+                success: false,
+                error: runnerExecution.errorDetails?.errorMessage || runnerExecution.response.statusText || 'Error in workflow',
+                code: runnerExecution.response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
+                details: {
+                    ...baseData,
+                    status: runnerExecution.response.status,
+                    statusText: runnerExecution.response.statusText,
+                    error: runnerExecution.errorDetails ?? runnerExecution.response.data,
+                    runnerWorkflowId: runnerContext.runnerWorkflowId,
+                    runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+                    runnerMeta: runnerExecution.metaInfo.meta,
+                    diagnostics: diagnosticsMode !== 'none' ? runnerExecution.diagnostics : undefined,
+                    warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+                    response: responseMode === 'full' ? runnerExecution.response : undefined,
+                    selectedNodeNames: responseMode === 'full' ? subWorkflowResult.selectedNodeNames : undefined,
+                    subWorkflowName: responseMode === 'full' ? subWorkflowResult.workflow.name : undefined,
+                    triggerNodeName: responseMode === 'full' ? subWorkflowResult.triggerNodeName : undefined,
+                },
+                executionId: runnerExecution.metaInfo.executionId,
+            };
+        }
+        const fullData = {
+            ...baseData,
+            selectedNodeNames: subWorkflowResult.selectedNodeNames,
+            subWorkflowName: subWorkflowResult.workflow.name,
+            triggerNodeName: subWorkflowResult.triggerNodeName,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+            runnerMeta: runnerExecution.metaInfo.meta,
+            response: runnerExecution.response,
+            diagnostics: runnerExecution.diagnostics,
+            warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+        };
+        return {
+            success: true,
+            data: responseMode === 'full' || diagnosticsMode !== 'none' ? fullData : baseData,
+            executionId: runnerExecution.metaInfo.executionId,
+            message: `Code node "${targetNode.name}" executed via runner`,
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+    }
+}
+async function handleTestWorkflowRunner(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = workflowRunnerTestSchema.parse(args);
+        const diagnosticsMode = input.diagnostics ?? 'none';
+        const responseMode = input.responseMode ?? 'result';
+        const workflow = await client.getWorkflow(input.workflowId);
+        const subWorkflowResult = (0, workflow_subgraph_1.buildSubWorkflow)({ workflow, mode: 'full' });
+        const payloadItems = normalizeItems(input.items, input.item);
+        if (input.dryRun) {
+            const baseData = {
+                workflowId: input.workflowId,
+                mode: 'full',
+                dryRun: true,
+                inputItemCount: payloadItems.length,
+                selectedNodeNames: subWorkflowResult.selectedNodeNames,
+                subWorkflowName: subWorkflowResult.workflow.name,
+                triggerNodeName: subWorkflowResult.triggerNodeName,
+                warnings: subWorkflowResult.warnings.length > 0 ? subWorkflowResult.warnings : undefined,
+            };
+            return {
+                success: true,
+                data: responseMode === 'full'
+                    ? {
+                        ...baseData,
+                        generatedWorkflow: subWorkflowResult.workflow,
+                    }
+                    : baseData,
+                message: 'Workflow runner dry-run completed',
+            };
+        }
+        const runnerContext = await resolveRunnerExecutionContext(client, context, input.runnerWorkflowId);
+        if (!isRunnerExecutionContextSuccess(runnerContext)) {
+            return runnerContext;
+        }
+        const runnerExecution = await executeGeneratedSubWorkflowThroughRunner({
+            baseUrl: runnerContext.baseUrl,
+            client,
+            diagnosticsItemsLimit: input.diagnosticsItemsLimit,
+            diagnosticsMode,
+            item: input.item,
+            items: input.items,
+            responseMode,
+            runnerWebhookPath: input.runnerWebhookPath,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            subWorkflowResult,
+            timeout: input.timeout,
+            waitForResponse: input.waitForResponse,
+        });
+        const baseData = {
+            workflowId: input.workflowId,
+            mode: 'full',
+            executionId: runnerExecution.metaInfo.executionId,
+            result: runnerExecution.cleanedResult,
+        };
+        if (runnerExecution.isError) {
+            return {
+                success: false,
+                error: runnerExecution.errorDetails?.errorMessage || runnerExecution.response.statusText || 'Error in workflow',
+                code: runnerExecution.response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
+                details: {
+                    ...baseData,
+                    status: runnerExecution.response.status,
+                    statusText: runnerExecution.response.statusText,
+                    error: runnerExecution.errorDetails ?? runnerExecution.response.data,
+                    runnerWorkflowId: runnerContext.runnerWorkflowId,
+                    runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+                    runnerMeta: runnerExecution.metaInfo.meta,
+                    diagnostics: diagnosticsMode !== 'none' ? runnerExecution.diagnostics : undefined,
+                    warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+                    response: responseMode === 'full' ? runnerExecution.response : undefined,
+                    selectedNodeNames: responseMode === 'full' ? subWorkflowResult.selectedNodeNames : undefined,
+                    subWorkflowName: responseMode === 'full' ? subWorkflowResult.workflow.name : undefined,
+                    triggerNodeName: responseMode === 'full' ? subWorkflowResult.triggerNodeName : undefined,
+                },
+                executionId: runnerExecution.metaInfo.executionId,
+            };
+        }
+        const fullData = {
+            ...baseData,
+            selectedNodeNames: subWorkflowResult.selectedNodeNames,
+            subWorkflowName: subWorkflowResult.workflow.name,
+            triggerNodeName: subWorkflowResult.triggerNodeName,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+            runnerMeta: runnerExecution.metaInfo.meta,
+            response: runnerExecution.response,
+            diagnostics: runnerExecution.diagnostics,
+            warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+        };
+        return {
+            success: true,
+            data: responseMode === 'full' || diagnosticsMode !== 'none' ? fullData : baseData,
+            executionId: runnerExecution.metaInfo.executionId,
+            message: 'Workflow executed via runner',
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+    }
+}
 async function handleGetExecution(args, context) {
     try {
         const client = ensureApiConfigured(context);
@@ -1103,6 +2357,80 @@ async function handleGetExecution(args, context) {
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+async function handleGetWorkflowExecution(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const schema = zod_1.z.object({
+            workflowId: zod_1.z.string(),
+            executionId: zod_1.z.string(),
+            mode: zod_1.z.enum(['preview', 'summary', 'filtered', 'full', 'error']).optional(),
+            nodeNames: zod_1.z.array(zod_1.z.string()).optional(),
+            itemsLimit: zod_1.z.number().optional(),
+            includeInputData: zod_1.z.boolean().optional(),
+            errorItemsLimit: zod_1.z.number().min(0).max(100).optional(),
+            includeStackTrace: zod_1.z.boolean().optional(),
+            includeExecutionPath: zod_1.z.boolean().optional(),
+            fetchWorkflow: zod_1.z.boolean().optional(),
+        });
+        const params = schema.parse(args);
+        const { workflowId, executionId, mode, nodeNames, itemsLimit, includeInputData, errorItemsLimit, includeStackTrace, includeExecutionPath, fetchWorkflow, } = params;
+        const execution = await client.getExecution(executionId, true);
+        if (execution.workflowId !== workflowId) {
+            return {
+                success: false,
+                error: 'Execution does not belong to the specified workflow',
+                details: {
+                    workflowId,
+                    executionId,
+                    executionWorkflowId: execution.workflowId,
+                },
+            };
+        }
+        const workflow = fetchWorkflow === false ? undefined : await client.getWorkflow(execution.workflowId);
+        const filterOptions = {
+            mode: mode ?? 'summary',
+            nodeNames,
+            itemsLimit,
+            includeInputData,
+            errorItemsLimit,
+            includeStackTrace,
+            includeExecutionPath,
+        };
+        const processed = workflow
+            ? (0, execution_processor_1.processExecution)(execution, filterOptions, workflow)
+            : execution;
+        return {
+            success: true,
+            data: {
+                workflowId,
+                executionId,
+                status: execution.status,
+                result: processed,
+            },
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
         };
     }
 }
@@ -1675,6 +3003,8 @@ async function handleDiagnostic(request, context) {
     const envVars = {
         N8N_API_URL: process.env.N8N_API_URL || null,
         N8N_API_KEY: process.env.N8N_API_KEY ? '***configured***' : null,
+        N8N_REST_EMAIL: process.env.N8N_REST_EMAIL ? '***configured***' : null,
+        N8N_REST_PASSWORD: process.env.N8N_REST_PASSWORD ? '***configured***' : null,
         NODE_ENV: process.env.NODE_ENV || 'production',
         MCP_MODE: mcpMode,
         isDocker,
@@ -1702,8 +3032,10 @@ async function handleDiagnostic(request, context) {
         }
     }
     const documentationTools = 7;
-    const managementTools = apiConfigured ? 13 : 0;
-    const totalTools = documentationTools + managementTools;
+    const workflowFileTools = process.env.N8N_WORKFLOWS_ROOT ? 7 : 0;
+    const managementTools = apiConfigured ? 29 : 0;
+    const totalTools = documentationTools + managementTools + workflowFileTools;
+    const totalToolsWithApi = documentationTools + workflowFileTools + 29;
     const versionCheck = await (0, npm_version_checker_1.checkNpmVersion)();
     const cacheMetricsData = getInstanceCacheMetrics();
     const responseTime = Date.now() - startTime;
@@ -1716,7 +3048,10 @@ async function handleDiagnostic(request, context) {
             config: apiConfig ? {
                 baseUrl: apiConfig.baseUrl,
                 timeout: apiConfig.timeout,
-                maxRetries: apiConfig.maxRetries
+                maxRetries: apiConfig.maxRetries,
+                restAuthConfigured: Boolean(apiConfig.restEmail && apiConfig.restPassword),
+                restProjectEmail: apiConfig.restProjectEmail,
+                restProjectId: apiConfig.restProjectId
             } : null
         },
         versionInfo: {
@@ -1732,11 +3067,18 @@ async function handleDiagnostic(request, context) {
                 enabled: true,
                 description: 'Always available - node info, search, validation, etc.'
             },
+            workflowFileTools: {
+                count: workflowFileTools,
+                enabled: workflowFileTools > 0,
+                description: workflowFileTools > 0 ?
+                    'Workflow file tools are ENABLED - edit Code/Set files' :
+                    'Workflow file tools are DISABLED - configure N8N_WORKFLOWS_ROOT to enable'
+            },
             managementTools: {
                 count: managementTools,
                 enabled: apiConfigured,
                 description: apiConfigured ?
-                    'Management tools are ENABLED - create, update, execute workflows' :
+                    'Management tools are ENABLED - create, update, execute workflows (folder tools require REST auth)' :
                     'Management tools are DISABLED - configure N8N_API_URL and N8N_API_KEY to enable'
             },
             totalAvailable: totalTools
@@ -1829,7 +3171,7 @@ async function handleDiagnostic(request, context) {
                         example: 'n8n_workflow_json_validate({workflow: {...}})'
                     }
                 ],
-                note: '14 documentation tools available without API configuration'
+                note: `${documentationTools + workflowFileTools} tools available without API configuration`
             },
             whatYouCannotDo: [
                 '✗ Create/update workflows in n8n instance',
@@ -1845,7 +3187,7 @@ async function handleDiagnostic(request, context) {
                     '   N8N_API_KEY=your_api_key_here',
                     '3. Restart the MCP server',
                     '4. Run n8n_health_check with mode="diagnostic" to verify',
-                    '5. All 19 tools will be available!'
+                    `5. All ${totalToolsWithApi} tools will be available!`
                 ],
                 documentation: 'https://github.com/czlonkowski/n8n-mcp?tab=readme-ov-file#n8n-management-tools-optional---requires-api-configuration'
             }
@@ -2211,6 +3553,7 @@ async function handleTriggerWebhookWorkflow(args, context) {
         data: zod_1.z.record(zod_1.z.unknown()).optional(),
         headers: zod_1.z.record(zod_1.z.string()).optional(),
         waitForResponse: zod_1.z.boolean().optional(),
+        timeout: zod_1.z.number().optional(),
     });
     try {
         const client = ensureApiConfigured(context);
@@ -2220,7 +3563,8 @@ async function handleTriggerWebhookWorkflow(args, context) {
             httpMethod: input.httpMethod || 'POST',
             data: input.data,
             headers: input.headers,
-            waitForResponse: input.waitForResponse ?? true
+            waitForResponse: input.waitForResponse ?? true,
+            timeoutMs: input.timeout
         };
         const response = await client.triggerWebhook(webhookRequest);
         return {

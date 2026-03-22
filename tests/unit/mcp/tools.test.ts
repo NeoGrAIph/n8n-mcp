@@ -89,8 +89,10 @@ describe('n8nDocumentationToolsFinal', () => {
         expect(tool?.inputSchema.required).toContain('nodeType');
       });
 
-      it('should mention detail levels in description', () => {
-        expect(tool?.description).toMatch(/minimal|standard|full/i);
+      it('should expose detail levels via detail enum', () => {
+        const detailParam = tool?.inputSchema.properties?.detail;
+        expect(detailParam).toBeDefined();
+        expect(detailParam.enum).toEqual(['minimal', 'standard', 'full']);
       });
     });
 
@@ -226,7 +228,7 @@ describe('n8nDocumentationToolsFinal', () => {
 
       toolsWithLimit.forEach(tool => {
         const limitParam = tool.inputSchema.properties.limit;
-        expect(limitParam.type).toBe('number');
+        expect(limitParam.type).toBe('integer');
         expect(limitParam.default).toBeDefined();
         expect(limitParam.default).toBeGreaterThan(0);
       });
@@ -255,7 +257,7 @@ describe('n8nDocumentationToolsFinal', () => {
 
   describe('Parameter Validation', () => {
     it('should have proper type definitions for all parameters', () => {
-      const validTypes = ['string', 'number', 'boolean', 'object', 'array'];
+      const validTypes = ['string', 'number', 'integer', 'boolean', 'object', 'array'];
 
       n8nDocumentationToolsFinal.forEach(tool => {
         if (tool.inputSchema.properties) {
@@ -346,13 +348,13 @@ describe('n8nDocumentationToolsFinal', () => {
         const offsetProp = tool?.inputSchema.properties?.offset;
 
         expect(limitProp).toBeDefined();
-        expect(limitProp.type).toBe('number');
+        expect(limitProp.type).toBe('integer');
         expect(limitProp.default).toBe(20);
         expect(limitProp.maximum).toBe(100);
         expect(limitProp.minimum).toBe(1);
 
         expect(offsetProp).toBeDefined();
-        expect(offsetProp.type).toBe('number');
+        expect(offsetProp.type).toBe('integer');
         expect(offsetProp.default).toBe(0);
         expect(offsetProp.minimum).toBe(0);
       });

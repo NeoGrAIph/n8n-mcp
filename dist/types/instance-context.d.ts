@@ -3,6 +3,10 @@ export interface InstanceContext {
     n8nApiKey?: string;
     n8nApiTimeout?: number;
     n8nApiMaxRetries?: number;
+    n8nRestEmail?: string;
+    n8nRestPassword?: string;
+    n8nRestProjectEmail?: string;
+    n8nRestProjectId?: string;
     instanceId?: string;
     sessionId?: string;
     metadata?: Record<string, any>;

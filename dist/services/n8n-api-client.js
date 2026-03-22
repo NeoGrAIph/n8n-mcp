@@ -44,40 +44,166 @@ const n8n_validation_1 = require("./n8n-validation");
 const n8n_version_1 = require("./n8n-version");
 class N8nApiClient {
     constructor(config) {
+        this.restAuthPromise = null;
         this.versionInfo = null;
         this.versionPromise = null;
-        const { baseUrl, apiKey, timeout = 30000, maxRetries = 3 } = config;
+        const { baseUrl, apiKey, restEmail, restPassword, restProjectEmail, restProjectId, timeout = 30000, maxRetries = 3 } = config;
         this.maxRetries = maxRetries;
         this.baseUrl = baseUrl;
-        const apiUrl = baseUrl.endsWith('/api/v1')
-            ? baseUrl
-            : `${baseUrl.replace(/\/$/, '')}/api/v1`;
-        this.client = axios_1.default.create({
-            baseURL: apiUrl,
-            timeout,
-            headers: {
-                'X-N8N-API-KEY': apiKey,
-                'Content-Type': 'application/json',
-            },
-        });
-        this.client.interceptors.request.use((config) => {
-            logger_1.logger.debug(`n8n API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-                params: config.params,
-                data: config.data,
+        this.restAuthEmail = restEmail;
+        this.restAuthPassword = restPassword;
+        this.restProjectEmail = restProjectEmail;
+        this.restProjectId = restProjectId;
+        this.timeout = timeout;
+        const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+        const apiUrl = normalizedBaseUrl.endsWith('/api/v1')
+            ? normalizedBaseUrl
+            : `${normalizedBaseUrl}/api/v1`;
+        this.restBaseUrl = normalizedBaseUrl.replace(/\/api\/v1\/?$/, '');
+        const restUrl = `${this.restBaseUrl}/rest`;
+        const createClient = (baseURL, label) => {
+            const client = axios_1.default.create({
+                baseURL,
+                timeout,
+                headers: {
+                    'X-N8N-API-KEY': apiKey,
+                    'Content-Type': 'application/json',
+                },
             });
-            return config;
-        }, (error) => {
-            logger_1.logger.error('n8n API Request Error:', error);
-            return Promise.reject(error);
+            client.interceptors.request.use((config) => {
+                logger_1.logger.debug(`n8n API Request (${label}): ${config.method?.toUpperCase()} ${config.url}`, {
+                    params: config.params,
+                    data: config.data,
+                });
+                return config;
+            }, (error) => {
+                logger_1.logger.error(`n8n API Request Error (${label}):`, error);
+                return Promise.reject(error);
+            });
+            client.interceptors.response.use((response) => {
+                logger_1.logger.debug(`n8n API Response (${label}): ${response.status} ${response.config.url}`);
+                return response;
+            }, (error) => {
+                const n8nError = (0, n8n_errors_1.handleN8nApiError)(error);
+                (0, n8n_errors_1.logN8nError)(n8nError, `n8n API Response (${label})`);
+                return Promise.reject(n8nError);
+            });
+            return client;
+        };
+        this.client = createClient(apiUrl, 'public');
+        this.restClient = createClient(restUrl, 'rest');
+    }
+    hasRestAuth() {
+        return Boolean(this.restAuthEmail && this.restAuthPassword);
+    }
+    normalizeSetCookie(setCookie) {
+        if (!setCookie)
+            return null;
+        const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+        const pairs = cookies
+            .map((cookie) => cookie.split(';')[0]?.trim())
+            .filter((pair) => Boolean(pair));
+        return pairs.length > 0 ? pairs.join('; ') : null;
+    }
+    setRestCookieHeader(cookie) {
+        this.restCookie = cookie;
+        this.restClient.defaults.headers.Cookie = cookie;
+    }
+    async loginRest() {
+        if (!this.hasRestAuth())
+            return;
+        const loginUrl = `${this.restBaseUrl}/rest/login`;
+        const response = await axios_1.default.post(loginUrl, {
+            emailOrLdapLoginId: this.restAuthEmail,
+            password: this.restAuthPassword,
+        }, {
+            timeout: this.timeout,
+            validateStatus: (status) => status < 500,
         });
-        this.client.interceptors.response.use((response) => {
-            logger_1.logger.debug(`n8n API Response: ${response.status} ${response.config.url}`);
-            return response;
-        }, (error) => {
-            const n8nError = (0, n8n_errors_1.handleN8nApiError)(error);
-            (0, n8n_errors_1.logN8nError)(n8nError, 'n8n API Response');
-            return Promise.reject(n8nError);
+        if (response.status !== 200) {
+            throw new Error(`REST login failed with HTTP ${response.status}`);
+        }
+        const cookie = this.normalizeSetCookie(response.headers?.['set-cookie']);
+        if (!cookie) {
+            throw new Error('REST login succeeded but no session cookie was returned');
+        }
+        this.setRestCookieHeader(cookie);
+    }
+    async ensureRestAuth() {
+        if (!this.hasRestAuth())
+            return;
+        if (this.restCookie)
+            return;
+        if (this.restAuthPromise) {
+            await this.restAuthPromise;
+            return;
+        }
+        this.restAuthPromise = this.loginRest();
+        try {
+            await this.restAuthPromise;
+        }
+        finally {
+            this.restAuthPromise = null;
+        }
+    }
+    async requestRest(config) {
+        if (this.hasRestAuth()) {
+            await this.ensureRestAuth();
+        }
+        try {
+            const response = await this.restClient.request(config);
+            return response.data;
+        }
+        catch (error) {
+            const status = error?.response?.status;
+            if (status === 401) {
+                if (!this.hasRestAuth()) {
+                    throw new Error('REST authentication required. Configure N8N_REST_EMAIL and N8N_REST_PASSWORD to use folder tools.');
+                }
+                this.restCookie = undefined;
+                await this.ensureRestAuth();
+                const retryResponse = await this.restClient.request(config);
+                return retryResponse.data;
+            }
+            throw error;
+        }
+    }
+    async resolveProjectId(explicitProjectId) {
+        if (explicitProjectId)
+            return explicitProjectId;
+        if (this.restProjectId)
+            return this.restProjectId;
+        const projects = await this.requestRest({
+            method: 'get',
+            url: '/projects',
+        }).then((data) => {
+            if (Array.isArray(data))
+                return data;
+            if (data && typeof data === 'object' && Array.isArray(data.data)) {
+                return data.data;
+            }
+            return [];
         });
+        if (projects.length === 0) {
+            throw new Error('Unable to resolve projectId: no projects returned by REST API');
+        }
+        const personalProjects = projects.filter((p) => p.type === 'personal');
+        if (personalProjects.length === 0) {
+            throw new Error('Unable to resolve projectId: no personal projects found');
+        }
+        const targetEmail = this.restProjectEmail?.toLowerCase();
+        if (targetEmail) {
+            const match = personalProjects.find((p) => p.name?.toLowerCase().includes(targetEmail));
+            if (!match) {
+                throw new Error(`Unable to resolve projectId: no personal project found for ${this.restProjectEmail}`);
+            }
+            return match.id;
+        }
+        const email = this.restAuthEmail?.toLowerCase();
+        const match = email
+            ? personalProjects.find((p) => p.name?.toLowerCase().includes(email))
+            : undefined;
+        return (match ?? personalProjects[0]).id;
     }
     async getVersion() {
         if (this.versionInfo) {
@@ -173,7 +299,11 @@ class N8nApiClient {
                 return response.data;
             }
             catch (putError) {
-                if (putError.response?.status === 405) {
+                const status = putError?.response?.status ??
+                    putError?.statusCode ??
+                    putError?.status ??
+                    (putError instanceof n8n_errors_1.N8nApiError ? putError.statusCode : undefined);
+                if (status === 405) {
                     logger_1.logger.debug('PUT method not supported, falling back to PATCH');
                     const response = await this.client.patch(`/workflows/${id}`, cleanedWorkflow);
                     return response.data;
@@ -257,9 +387,121 @@ class N8nApiClient {
             throw (0, n8n_errors_1.handleN8nApiError)(error);
         }
     }
+    async listFolders(params) {
+        try {
+            const { projectId, filter, ...rest } = params;
+            const resolvedProjectId = await this.resolveProjectId(projectId);
+            const query = { ...rest };
+            if (filter !== undefined) {
+                query.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
+            }
+            const response = await this.requestRest({
+                method: 'get',
+                url: `/projects/${resolvedProjectId}/folders`,
+                params: query,
+            });
+            return this.validateListResponse(response, 'folders');
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
+    async createFolder(projectId, name, parentFolderId) {
+        try {
+            const resolvedProjectId = await this.resolveProjectId(projectId);
+            const payload = { name };
+            if (parentFolderId !== undefined) {
+                payload.parentFolderId = parentFolderId;
+            }
+            return await this.requestRest({
+                method: 'post',
+                url: `/projects/${resolvedProjectId}/folders`,
+                data: payload,
+            });
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
+    async updateFolder(projectId, folderId, updates) {
+        try {
+            const resolvedProjectId = await this.resolveProjectId(projectId);
+            const payload = {};
+            if (updates.name !== undefined)
+                payload.name = updates.name;
+            if (updates.parentFolderId !== undefined)
+                payload.parentFolderId = updates.parentFolderId;
+            try {
+                return await this.requestRest({
+                    method: 'patch',
+                    url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+                    data: payload,
+                });
+            }
+            catch (patchError) {
+                if (patchError?.response?.status === 405) {
+                    return await this.requestRest({
+                        method: 'put',
+                        url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+                        data: payload,
+                    });
+                }
+                throw patchError;
+            }
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
+    async deleteFolder(projectId, folderId) {
+        try {
+            const resolvedProjectId = await this.resolveProjectId(projectId);
+            await this.requestRest({
+                method: 'delete',
+                url: `/projects/${resolvedProjectId}/folders/${folderId}`,
+            });
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
+    async moveWorkflowToFolder(id, parentFolderId, projectId) {
+        try {
+            const resolvedProjectId = await this.resolveProjectId(projectId);
+            const payload = {
+                destinationProjectId: resolvedProjectId,
+            };
+            if (parentFolderId)
+                payload.destinationParentFolderId = parentFolderId;
+            await this.requestRest({
+                method: 'put',
+                url: `/workflows/${id}/transfer`,
+                data: payload,
+            });
+            return { id, parentFolderId };
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
+    hasRestAuthConfigured() {
+        return this.hasRestAuth();
+    }
+    async runWorkflow(id, request) {
+        try {
+            return await this.requestRest({
+                method: 'post',
+                url: `/workflows/${id}/run`,
+                data: request,
+            });
+        }
+        catch (error) {
+            throw (0, n8n_errors_1.handleN8nApiError)(error);
+        }
+    }
     async triggerWebhook(request) {
         try {
-            const { webhookUrl, httpMethod, data, headers, waitForResponse = true } = request;
+            const { webhookUrl, httpMethod, data, headers, waitForResponse = true, timeoutMs } = request;
             const { SSRFProtection } = await Promise.resolve().then(() => __importStar(require('../utils/ssrf-protection')));
             const validation = await SSRFProtection.validateWebhookUrl(webhookUrl);
             if (!validation.valid) {
@@ -276,11 +518,11 @@ class N8nApiClient {
                 },
                 data: httpMethod !== 'GET' ? data : undefined,
                 params: httpMethod === 'GET' ? data : undefined,
-                timeout: waitForResponse ? 120000 : 30000,
+                timeout: typeof timeoutMs === 'number' ? timeoutMs : (waitForResponse ? 120000 : 30000),
             };
             const webhookClient = axios_1.default.create({
                 baseURL: new URL('/', webhookUrl).toString(),
-                validateStatus: (status) => status < 500,
+                validateStatus: (status) => status < 600,
             });
             const response = await webhookClient.request(config);
             return {
