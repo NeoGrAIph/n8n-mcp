@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774148954759,
+  "lastUpdate": 1774199384072,
   "repoUrl": "https://github.com/NeoGrAIph/n8n-mcp",
   "entries": {
     "n8n-mcp Benchmarks": [
@@ -178,6 +178,37 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/df5bba49efcc48c2eea4212383f3943332948092"
         },
         "date": 1774148954386,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "sample - array sorting - small",
+            "value": 0.0136,
+            "range": "0.3096",
+            "unit": "ms",
+            "extra": "73341 ops/sec"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "committer": {
+            "email": "neograiph@gmail.com",
+            "name": "Nikolay Satsuk",
+            "username": "NeoGrAIph"
+          },
+          "distinct": true,
+          "id": "4cc7981f50e5033a16b683b83a9dd952c0039912",
+          "message": "docs: add workflow full test timing guidance",
+          "timestamp": "2026-03-23T01:07:38+08:00",
+          "tree_id": "a2aea694d9bfffff507300f1e11057accad0eb8b",
+          "url": "https://github.com/NeoGrAIph/n8n-mcp/commit/4cc7981f50e5033a16b683b83a9dd952c0039912"
+        },
+        "date": 1774199383809,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
