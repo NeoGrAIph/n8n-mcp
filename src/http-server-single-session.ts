@@ -115,6 +115,8 @@ export class SingleSessionHTTPServer {
   ) * 60 * 1000;
   private authToken: string | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
+  private statelessTransport: StreamableHTTPServerTransport | null = null;
+  private statelessServer: N8NDocumentationMCPServer | null = null;
   
   constructor() {
     // Validate environment on construction
@@ -572,12 +574,16 @@ export class SingleSessionHTTPServer {
           });
           
           // Set up cleanup handlers
+          const keepSessions = process.env.STREAMABLE_HTTP_KEEP_SESSIONS !== 'false';
           transport.onclose = () => {
             const sid = transport.sessionId;
-            if (sid) {
-              logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
-              this.removeSession(sid, 'transport_closed');
+            if (!sid) return;
+            if (keepSessions) {
+              logger.info('handleRequest: Transport closed, keeping session', { sessionId: sid });
+              return;
             }
+            logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
+            this.removeSession(sid, 'transport_closed');
           };
           
           // Handle transport errors to prevent connection drops
@@ -595,7 +601,27 @@ export class SingleSessionHTTPServer {
           logger.info('handleRequest: Connecting server to new transport');
           await server.connect(transport);
           
-        } else if (sessionId && this.transports[sessionId]) {
+        } else {
+          const allowStateless = process.env.MCP_ALLOW_STATELESS === 'true';
+
+          if (allowStateless && !isInitialize && (!sessionId || !this.transports[sessionId])) {
+            // Stateless fallback for clients that don't initialize or lost session state
+            logger.info('handleRequest: Using stateless transport for request', {
+              hasSessionId: !!sessionId,
+              sessionFound: sessionId ? !!this.transports[sessionId] : false
+            });
+
+            if (!this.statelessTransport || !this.statelessServer) {
+              this.statelessServer = new N8NDocumentationMCPServer(instanceContext);
+              this.statelessTransport = new StreamableHTTPServerTransport({
+                sessionIdGenerator: undefined
+              });
+              // Connect server to transport (stateless; do not store in session maps)
+              await this.statelessServer.connect(this.statelessTransport);
+            }
+
+            transport = this.statelessTransport;
+          } else if (sessionId && this.transports[sessionId]) {
           // Validate session ID format
           if (!this.isValidSessionId(sessionId)) {
             logger.warn('handleRequest: Invalid session ID format', { sessionId });
@@ -626,7 +652,7 @@ export class SingleSessionHTTPServer {
           // Update session access time
           this.updateSessionAccess(sessionId);
           
-        } else {
+          } else {
           // Invalid request - no session ID and not an initialize request
           const errorDetails = {
             hasSessionId: !!sessionId,
@@ -653,6 +679,7 @@ export class SingleSessionHTTPServer {
             id: req.body?.id || null
           });
           return;
+        }
         }
         
         // Handle request with the transport

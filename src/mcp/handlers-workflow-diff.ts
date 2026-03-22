@@ -100,6 +100,7 @@ export async function handleUpdatePartialWorkflow(
     if (!client) {
       return {
         success: false,
+        saved: false,
         error: 'n8n API not configured. Please set N8N_API_URL and N8N_API_KEY environment variables.'
       };
     }
@@ -178,6 +179,8 @@ export async function handleUpdatePartialWorkflow(
         // Complete failure - return error
         return {
           success: false,
+          saved: false,
+          operationsApplied: diffResult.operationsApplied,
           error: 'Failed to apply diff operations',
           details: {
             errors: diffResult.errors,
@@ -194,6 +197,7 @@ export async function handleUpdatePartialWorkflow(
     if (input.validateOnly) {
       return {
         success: true,
+        saved: false,
         message: diffResult.message,
         data: {
           valid: true,
@@ -265,6 +269,8 @@ export async function handleUpdatePartialWorkflow(
         if (!skipValidation) {
           return {
             success: false,
+            saved: false,
+            operationsApplied: diffResult.operationsApplied,
             error: errorMessage,
             details: {
               errors: structureErrors,
@@ -287,11 +293,37 @@ export async function handleUpdatePartialWorkflow(
 
     // Update workflow via API
     try {
-      const updatedWorkflow = await client.updateWorkflow(input.id, diffResult.workflow!);
+      const hasNonActivationOps = input.operations.some(op =>
+        op.type !== 'activateWorkflow' && op.type !== 'deactivateWorkflow'
+      );
+
+      const updatedWorkflow = hasNonActivationOps
+        ? await client.updateWorkflow(input.id, diffResult.workflow!)
+        : (diffResult.workflow as any);
+
+      if (diffResult.transferToProjectId) {
+        try {
+          await client.transferWorkflow(input.id, diffResult.transferToProjectId);
+        } catch (transferError) {
+          logger.error('Failed to transfer workflow after update', transferError);
+          return {
+            success: false,
+            saved: true,
+            operationsApplied: diffResult.operationsApplied,
+            error: 'Workflow updated successfully but project transfer failed',
+            details: {
+              workflowUpdated: true,
+              transferError: transferError instanceof Error ? transferError.message : 'Unknown error'
+            }
+          };
+        }
+      }
 
       // Handle activation/deactivation if requested
       let finalWorkflow = updatedWorkflow;
-      let activationMessage = '';
+      let activationMessage = diffResult.transferToProjectId
+        ? ` Workflow transferred to project ${diffResult.transferToProjectId}.`
+        : '';
 
       // Validate workflow AFTER mutation (for telemetry)
       try {
@@ -313,12 +345,20 @@ export async function handleUpdatePartialWorkflow(
 
       if (diffResult.shouldActivate) {
         try {
-          finalWorkflow = await client.activateWorkflow(input.id);
+          const activationResponse = await client.activateWorkflow(input.id);
+          finalWorkflow = {
+            ...updatedWorkflow,
+            ...activationResponse,
+            nodes: updatedWorkflow.nodes ?? activationResponse.nodes,
+            connections: updatedWorkflow.connections ?? activationResponse.connections,
+          } as any;
           activationMessage = ' Workflow activated.';
         } catch (activationError) {
           logger.error('Failed to activate workflow after update', activationError);
           return {
             success: false,
+            saved: true,
+            operationsApplied: diffResult.operationsApplied,
             error: 'Workflow updated successfully but activation failed',
             details: {
               workflowUpdated: true,
@@ -328,12 +368,20 @@ export async function handleUpdatePartialWorkflow(
         }
       } else if (diffResult.shouldDeactivate) {
         try {
-          finalWorkflow = await client.deactivateWorkflow(input.id);
+          const deactivationResponse = await client.deactivateWorkflow(input.id);
+          finalWorkflow = {
+            ...updatedWorkflow,
+            ...deactivationResponse,
+            nodes: updatedWorkflow.nodes ?? deactivationResponse.nodes,
+            connections: updatedWorkflow.connections ?? deactivationResponse.connections,
+          } as any;
           activationMessage = ' Workflow deactivated.';
         } catch (deactivationError) {
           logger.error('Failed to deactivate workflow after update', deactivationError);
           return {
             success: false,
+            saved: true,
+            operationsApplied: diffResult.operationsApplied,
             error: 'Workflow updated successfully but deactivation failed',
             details: {
               workflowUpdated: true,
@@ -363,6 +411,8 @@ export async function handleUpdatePartialWorkflow(
 
       return {
         success: true,
+        saved: true,
+        operationsApplied: diffResult.operationsApplied,
         data: {
           id: finalWorkflow.id,
           name: finalWorkflow.name,
@@ -401,6 +451,7 @@ export async function handleUpdatePartialWorkflow(
       if (error instanceof N8nApiError) {
         return {
           success: false,
+          saved: false,
           error: getUserFriendlyErrorMessage(error),
           code: error.code,
           details: error.details as Record<string, unknown> | undefined
@@ -412,6 +463,7 @@ export async function handleUpdatePartialWorkflow(
     if (error instanceof z.ZodError) {
       return {
         success: false,
+        saved: false,
         error: 'Invalid input',
         details: { errors: error.errors }
       };
@@ -420,6 +472,7 @@ export async function handleUpdatePartialWorkflow(
     logger.error('Failed to update partial workflow', error);
     return {
       success: false,
+      saved: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }

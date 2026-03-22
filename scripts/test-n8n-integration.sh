@@ -350,13 +350,14 @@ curl -s -X POST http://localhost:${MCP_PORT}/mcp \
 echo -e "\n${YELLOW}🧪 Checking available MCP tools...${NC}"
 if [ -n "$N8N_API_KEY" ]; then
     echo -e "${GREEN}✅ n8n Management Tools Available:${NC}"
-    echo "   • n8n_list_workflows - List all workflows"
-    echo "   • n8n_get_workflow - Get workflow details"
-    echo "   • n8n_create_workflow - Create new workflows"
-    echo "   • n8n_update_workflow - Update existing workflows"
-    echo "   • n8n_delete_workflow - Delete workflows"
-    echo "   • n8n_trigger_webhook_workflow - Trigger webhook workflows"
-    echo "   • n8n_list_executions - List workflow executions"
+    echo "   • n8n_workflows_list - List all workflows"
+    echo "   • n8n_workflow_get - Get workflow details"
+    echo "   • n8n_workflow_create - Create new workflows"
+    echo "   • n8n_workflow_update_full - Replace workflow fully"
+    echo "   • n8n_workflow_update_partial - Apply diff-based changes"
+    echo "   • n8n_workflow_delete - Delete workflows"
+    echo "   • n8n_workflow_test - Trigger workflow executions"
+    echo "   • n8n_executions_list - List workflow executions"
     echo "   • And more..."
 else
     echo -e "${YELLOW}⚠️  n8n Management Tools NOT Available${NC}"
@@ -364,10 +365,11 @@ else
 fi
 
 echo -e "\n${GREEN}✅ Documentation Tools Always Available:${NC}"
-echo "   • list_nodes - List available n8n nodes"
-echo "   • search_nodes - Search for specific nodes"
-echo "   • get_node_info - Get detailed node information"
-echo "   • validate_node_operation - Validate node configurations"
+echo "   • n8n_tools_documentation - Tool docs and guides"
+echo "   • n8n_nodes_search - Search for specific nodes"
+echo "   • n8n_node_get - Get detailed node information"
+echo "   • n8n_node_validate - Validate node configurations"
+echo "   • n8n_workflow_json_validate - Validate workflow JSON locally"
 echo "   • And many more..."
 
 echo -e "\n${GREEN}✅ Setup complete!${NC}"

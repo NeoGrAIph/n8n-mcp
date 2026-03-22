@@ -12,6 +12,7 @@ describe('SimpleCache Memory Leak Fix', () => {
     if (cache && typeof cache.destroy === 'function') {
       cache.destroy();
     }
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
   

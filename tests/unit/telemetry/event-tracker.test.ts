@@ -3,7 +3,22 @@ import { TelemetryEventTracker } from '../../../src/telemetry/event-tracker';
 import { TelemetryEvent, WorkflowTelemetry } from '../../../src/telemetry/telemetry-types';
 import { TelemetryError, TelemetryErrorType } from '../../../src/telemetry/telemetry-error';
 import { WorkflowSanitizer } from '../../../src/telemetry/workflow-sanitizer';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+
+const CLOUD_ENV_VARS = [
+  'RAILWAY_ENVIRONMENT',
+  'RENDER',
+  'FLY_APP_NAME',
+  'HEROKU_APP_NAME',
+  'AWS_EXECUTION_ENV',
+  'KUBERNETES_SERVICE_HOST',
+  'GOOGLE_CLOUD_PROJECT',
+  'AZURE_FUNCTIONS_ENVIRONMENT'
+];
+
+function clearCloudEnvVars() {
+  CLOUD_ENV_VARS.forEach(envVar => delete process.env[envVar]);
+}
 
 // Mock dependencies
 vi.mock('../../../src/utils/logger', () => ({
@@ -404,8 +419,7 @@ describe('TelemetryEventTracker', () => {
     beforeEach(() => {
       // Mock existsSync and readFileSync for package.json reading
       vi.mocked(existsSync).mockReturnValue(true);
-      const mockReadFileSync = vi.fn().mockReturnValue(JSON.stringify({ version: '1.2.3' }));
-      vi.doMock('fs', () => ({ existsSync: vi.mocked(existsSync), readFileSync: mockReadFileSync }));
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify({ version: '1.2.3' }) as any);
     });
 
     it('should track session start with system info', () => {
@@ -779,6 +793,12 @@ describe('TelemetryEventTracker', () => {
     // Store original env vars
     const originalEnv = { ...process.env };
 
+    beforeEach(() => {
+      process.env = { ...originalEnv };
+      delete process.env.IS_DOCKER;
+      clearCloudEnvVars();
+    });
+
     afterEach(() => {
       // Restore original env vars after each test
       process.env = { ...originalEnv };
@@ -899,14 +919,7 @@ describe('TelemetryEventTracker', () => {
     it('should handle local environment (no Docker, no cloud)', () => {
       // Ensure no Docker or cloud env vars are set
       delete process.env.IS_DOCKER;
-      delete process.env.RAILWAY_ENVIRONMENT;
-      delete process.env.RENDER;
-      delete process.env.FLY_APP_NAME;
-      delete process.env.HEROKU_APP_NAME;
-      delete process.env.AWS_EXECUTION_ENV;
-      delete process.env.KUBERNETES_SERVICE_HOST;
-      delete process.env.GOOGLE_CLOUD_PROJECT;
-      delete process.env.AZURE_FUNCTIONS_ENVIRONMENT;
+      clearCloudEnvVars();
 
       eventTracker.trackSessionStart();
 

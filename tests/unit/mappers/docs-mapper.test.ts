@@ -3,12 +3,17 @@ import { DocsMapper } from '@/mappers/docs-mapper';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// Mock fs promises
-vi.mock('fs', () => ({
-  promises: {
-    readFile: vi.fn()
-  }
-}));
+// Mock fs.promises.readFile while preserving the rest of fs exports
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<typeof import('fs')>('fs');
+  return {
+    ...actual,
+    promises: {
+      ...actual.promises,
+      readFile: vi.fn()
+    }
+  };
+});
 
 // Mock process.cwd()
 const originalCwd = process.cwd;

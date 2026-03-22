@@ -17,20 +17,8 @@ export interface ToolDefinition {
         required?: string[];
         additionalProperties?: boolean | Record<string, any>;
     };
-    outputSchema?: {
-        type: string;
-        properties: Record<string, any>;
-        required?: string[];
-        additionalProperties?: boolean | Record<string, any>;
-    };
-    _meta?: {
-        ui?: {
-            resourceUri?: string;
-        };
-    };
 }
 export interface ToolAnnotations {
-    title?: string;
     readOnlyHint?: boolean;
     destructiveHint?: boolean;
     openWorldHint?: boolean;

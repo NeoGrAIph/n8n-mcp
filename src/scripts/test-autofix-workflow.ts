@@ -1,5 +1,5 @@
 /**
- * Test script for n8n_autofix_workflow functionality
+ * Test script for n8n_workflow_autofix functionality
  *
  * Tests the automatic fixing of common workflow validation errors:
  * 1. Expression format errors (missing = prefix)

@@ -16,7 +16,7 @@ export const n8nSetFileReadDoc: ToolDocumentation = {
   full: {
     description: 'Reads the Set(raw) node JSON file for a given workflowId and nodeId. Returns content along with metadata for concurrency control. Use this before editing Set raw JSON payloads.',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true },
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true },
       nodeId: { type: 'string', description: 'Node UUID for the Set(raw) node file', required: true }
     },
     returns: 'Object with content (string), uri, etag, size, lastModified, workflowId, and nodeId.',

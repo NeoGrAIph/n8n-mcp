@@ -357,8 +357,7 @@ describe('Database Utils', () => {
     it('should measure operation duration', async () => {
       const duration = await measureDatabaseOperation('test operation', async () => {
         await seedTestNodes(testDb.nodeRepository);
-        // Add a small delay to ensure measurable time passes
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await Promise.resolve();
       });
       
       expect(duration).toBeGreaterThanOrEqual(0);

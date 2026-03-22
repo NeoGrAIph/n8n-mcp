@@ -14,6 +14,8 @@ export declare class SingleSessionHTTPServer {
     private sessionTimeout;
     private authToken;
     private cleanupTimer;
+    private statelessTransport;
+    private statelessServer;
     constructor();
     private startSessionCleanup;
     private cleanupExpiredSessions;

@@ -17,7 +17,7 @@ async function testMutations() {
   // Test data with valid workflow structure
   const testMutation = {
     sessionId: 'test_session_' + Date.now(),
-    toolName: 'n8n_update_partial_workflow',
+    toolName: 'n8n_workflow_update_partial',
     userIntent: 'Add a Merge node for data consolidation',
     operations: [
       {
