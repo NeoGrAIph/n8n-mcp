@@ -3,7 +3,7 @@
 /**
  * Test script for Code node enhancements
  * Tests:
- * 1. Code node documentation in tools_documentation
+ * 1. Code node documentation in n8n_tools_documentation
  * 2. Enhanced validation for Code nodes
  * 3. Code node examples
  * 4. Code node task templates

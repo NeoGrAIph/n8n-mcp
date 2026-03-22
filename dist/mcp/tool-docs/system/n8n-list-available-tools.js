@@ -25,7 +25,7 @@ This tool provides:
 - Dynamic availability based on API configuration
 
 The tool list is dynamic:
-- Shows 14+ management tools when N8N_API_URL and N8N_API_KEY are configured
+- Shows 25 management tools when N8N_API_URL and N8N_API_KEY are configured
 - Shows only documentation tools when API is not configured
 - Helps discover available functionality
 - Provides quick reference for tool names and purposes`,
@@ -67,9 +67,9 @@ The tool list is dynamic:
             'Tool list is empty if N8N_API_URL and N8N_API_KEY are not set',
             'Does not validate if tools will actually work - just shows availability',
             'Tool names must be used exactly as returned',
-            'Does not show tool parameters - use tools_documentation for details'
+            'Does not show tool parameters - use n8n_tools_documentation for details'
         ],
-        relatedTools: ['n8n_diagnostic', 'n8n_health_check', 'tools_documentation']
+        relatedTools: ['n8n_diagnostic', 'n8n_health_check', 'n8n_tools_documentation']
     }
 };
 //# sourceMappingURL=n8n-list-available-tools.js.map

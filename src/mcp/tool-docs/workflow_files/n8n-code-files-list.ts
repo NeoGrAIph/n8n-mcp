@@ -16,7 +16,7 @@ export const n8nCodeFilesListDoc: ToolDocumentation = {
   full: {
     description: 'Lists Code node source files (.py for Python, .json for JavaScript) stored in the workflow folder. Returns metadata only; it does not include file contents. Use this to discover which Code nodes have file-backed source in a workflow.',
     parameters: {
-      workflowId: { type: 'string', description: 'Workflow ID (folder name under workflows)', required: true }
+      workflowId: { type: 'string', description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)', required: true }
     },
     returns: 'Object with files[] (metadata entries: workflowId, nodeId, language, uri, etag, size, lastModified), returned, and workflowId.',
     examples: [
@@ -34,7 +34,7 @@ export const n8nCodeFilesListDoc: ToolDocumentation = {
       'Prefer read-before-write for safe edits'
     ],
     pitfalls: [
-      'workflowId must match the folder name exactly',
+      'workflowId maps to the workflow ID; directory may be code_nodes_<workflowId>',
       'Only Code nodes with file-backed sources are listed'
     ],
     relatedTools: ['n8n_code_file_read', 'n8n_code_file_write', 'n8n_set_files_list']

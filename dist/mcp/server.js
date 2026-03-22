@@ -344,6 +344,7 @@ class N8NDocumentationMCPServer {
     }
     setupHandlers() {
         workflowFileHandlers.logWorkflowFilesConfig();
+        const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
         this.server.setRequestHandler(types_js_1.InitializeRequestSchema, async (request) => {
             const clientVersion = request.params.protocolVersion;
             const clientCapabilities = request.params.capabilities;
@@ -434,52 +435,54 @@ class N8NDocumentationMCPServer {
             });
             return { tools };
         });
-        this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
-            const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
-            return { resourceTemplates: templates };
-        });
-        this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
-            const cursor = request.params?.cursor;
-            const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
-            return {
-                resources,
-                ...(nextCursor ? { nextCursor } : {})
-            };
-        });
-        this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
-            const uri = request.params.uri;
-            const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
-            return {
-                contents: [
-                    {
-                        uri: resource.uri,
-                        mimeType: resource.mimeType,
-                        text: resource.text,
-                        _meta: resource._meta
-                    }
-                ]
-            };
-        });
-        this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
-            const params = request.params ?? {};
-            const uri = params.uri;
-            const expectedEtag = params.expectedEtag;
-            const contents = params.contents;
-            const directText = params.text;
-            const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
-            if (typeof text !== 'string') {
-                throw new Error('resources/write requires text content');
-            }
-            const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
-            return {
-                uri: result.uri,
-                _meta: {
-                    etag: result.etag,
-                    size: result.size,
-                    lastModified: result.lastModified
+        if (workflowFilesConfigured) {
+            this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
+                const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
+                return { resourceTemplates: templates };
+            });
+            this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
+                const cursor = request.params?.cursor;
+                const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
+                return {
+                    resources,
+                    ...(nextCursor ? { nextCursor } : {})
+                };
+            });
+            this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
+                const uri = request.params.uri;
+                const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
+                return {
+                    contents: [
+                        {
+                            uri: resource.uri,
+                            mimeType: resource.mimeType,
+                            text: resource.text,
+                            _meta: resource._meta
+                        }
+                    ]
+                };
+            });
+            this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
+                const params = request.params ?? {};
+                const uri = params.uri;
+                const expectedEtag = params.expectedEtag;
+                const contents = params.contents;
+                const directText = params.text;
+                const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
+                if (typeof text !== 'string') {
+                    throw new Error('resources/write requires text content');
                 }
-            };
-        });
+                const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
+                return {
+                    uri: result.uri,
+                    _meta: {
+                        etag: result.etag,
+                        size: result.size,
+                        lastModified: result.lastModified
+                    }
+                };
+            });
+        }
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
             logger_1.logger.info('Tool call received - DETAILED DEBUG', {
@@ -708,6 +711,26 @@ class N8NDocumentationMCPServer {
                 case 'n8n_workflow_validate':
                 case 'n8n_workflow_autofix':
                     validationResult = validation_schemas_1.ToolValidation.validateWorkflowId(args);
+                    break;
+                case 'n8n_code_node_test':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
+                case 'n8n_workflow_runner_test':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
+                case 'n8n_workflow_full_test':
+                    validationResult = args.workflowId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
+                    break;
+                case 'n8n_workflow_execution_get':
+                    validationResult = args.workflowId && args.executionId
+                        ? { valid: true, errors: [] }
+                        : { valid: false, errors: [{ field: 'workflowId/executionId', message: 'workflowId and executionId are required' }] };
                     break;
                 case 'n8n_executions_get':
                 case 'n8n_executions_delete':
@@ -983,6 +1006,21 @@ class N8NDocumentationMCPServer {
                 return n8nHandlers.handleDeleteWorkflow(args, this.instanceContext);
             case 'n8n_workflows_list':
                 return n8nHandlers.handleListWorkflows(args, this.instanceContext);
+            case 'n8n_folders_list':
+                this.validateToolParams(name, args, ['projectId']);
+                return n8nHandlers.handleListFolders(args, this.instanceContext);
+            case 'n8n_folder_create':
+                this.validateToolParams(name, args, ['projectId', 'name']);
+                return n8nHandlers.handleCreateFolder(args, this.instanceContext);
+            case 'n8n_folder_move':
+                this.validateToolParams(name, args, ['projectId', 'folderId']);
+                return n8nHandlers.handleMoveFolder(args, this.instanceContext);
+            case 'n8n_folder_delete':
+                this.validateToolParams(name, args, ['projectId', 'folderId']);
+                return n8nHandlers.handleDeleteFolder(args, this.instanceContext);
+            case 'n8n_workflow_move_to_folder':
+                this.validateToolParams(name, args, ['workflowId', 'parentFolderId']);
+                return n8nHandlers.handleMoveWorkflowToFolder(args, this.instanceContext);
             case 'n8n_workflow_validate':
                 this.validateToolParams(name, args, ['id']);
                 await this.ensureInitialized();
@@ -998,6 +1036,18 @@ class N8NDocumentationMCPServer {
             case 'n8n_workflow_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
+            case 'n8n_workflow_runner_test':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleTestWorkflowRunner(args, this.instanceContext);
+            case 'n8n_workflow_full_test':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleTestWorkflowFull(args, this.instanceContext);
+            case 'n8n_code_node_test':
+                this.validateToolParams(name, args, ['workflowId']);
+                return n8nHandlers.handleTestCodeNode(args, this.instanceContext);
+            case 'n8n_workflow_execution_get':
+                this.validateToolParams(name, args, ['workflowId', 'executionId']);
+                return n8nHandlers.handleGetWorkflowExecution(args, this.instanceContext);
             case 'n8n_executions_get':
                 this.validateToolParams(name, args, ['id']);
                 return n8nHandlers.handleGetExecution(args, this.instanceContext);

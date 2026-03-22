@@ -24,7 +24,7 @@ This tool provides:
 - Dynamic availability based on API configuration
 
 The tool list is dynamic:
-- Shows 14+ management tools when N8N_API_URL and N8N_API_KEY are configured
+- Shows 25 management tools when N8N_API_URL and N8N_API_KEY are configured
 - Shows only documentation tools when API is not configured
 - Helps discover available functionality
 - Provides quick reference for tool names and purposes`,

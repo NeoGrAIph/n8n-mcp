@@ -15,7 +15,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         }
       },
       required: ['workflowId']
@@ -29,7 +29,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         },
         nodeId: {
           type: 'string',
@@ -47,7 +47,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         },
         nodeId: {
           type: 'string',
@@ -77,7 +77,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         }
       },
       required: ['workflowId']
@@ -91,7 +91,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         },
         nodeId: {
           type: 'string',
@@ -109,7 +109,7 @@ export const n8nWorkflowFileTools: ToolDefinition[] = [
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID (folder name under workflows)'
+          description: 'Workflow ID (directory is code_nodes_<workflowId> under workflows; pass raw workflowId)'
         },
         nodeId: {
           type: 'string',

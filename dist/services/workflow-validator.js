@@ -1287,13 +1287,13 @@ class WorkflowValidator {
             result.suggestions.unshift('🔧 RECOVERY: Workflow structure errors. Fix with:', '   • Ensure "nodes" is an array: "nodes": [...]', '   • Ensure "connections" is an object: "connections": {...}', '   • Add at least one node to create a valid workflow');
         }
         if (errorTypes.configuration.length > 0) {
-            result.suggestions.unshift('🔧 RECOVERY: Node configuration errors. Fix with:', '   • Check required fields using validate_node_minimal first', '   • Use get_node_essentials to see what fields are needed', '   • Ensure operation-specific fields match the node\'s requirements');
+            result.suggestions.unshift('🔧 RECOVERY: Node configuration errors. Fix with:', '   • Check required fields using n8n_node_validate with mode=minimal', '   • Use get_node_essentials to see what fields are needed', '   • Ensure operation-specific fields match the node\'s requirements');
         }
         if (errorTypes.typeVersion.length > 0) {
             result.suggestions.unshift('🔧 RECOVERY: TypeVersion errors. Fix with:', '   • Add "typeVersion": 1 (or latest version) to each node', '   • Use get_node_info to check the correct version for each node type');
         }
         if (result.errors.length > 3) {
-            result.suggestions.push('📋 SUGGESTED WORKFLOW: Too many errors detected. Try this approach:', '   1. Fix structural issues first (nodes array, connections object)', '   2. Validate node types and fix invalid ones', '   3. Add required typeVersion to all nodes', '   4. Test connections step by step', '   5. Use validate_node_minimal on individual nodes to verify configuration');
+            result.suggestions.push('📋 SUGGESTED WORKFLOW: Too many errors detected. Try this approach:', '   1. Fix structural issues first (nodes array, connections object)', '   2. Validate node types and fix invalid ones', '   3. Add required typeVersion to all nodes', '   4. Test connections step by step', '   5. Use n8n_node_validate with mode=minimal on individual nodes to verify configuration');
         }
     }
 }

@@ -10,18 +10,19 @@ export interface MCPServerConfig {
 export interface ToolDefinition {
     name: string;
     description: string;
+    annotations?: ToolAnnotations;
     inputSchema: {
         type: string;
         properties: Record<string, any>;
         required?: string[];
         additionalProperties?: boolean | Record<string, any>;
     };
-    outputSchema?: {
-        type: string;
-        properties: Record<string, any>;
-        required?: string[];
-        additionalProperties?: boolean | Record<string, any>;
-    };
+}
+export interface ToolAnnotations {
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    openWorldHint?: boolean;
+    idempotentHint?: boolean;
 }
 export interface ResourceDefinition {
     uri: string;

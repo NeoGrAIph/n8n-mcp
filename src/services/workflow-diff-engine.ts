@@ -1109,7 +1109,7 @@ export class WorkflowDiffEngine {
    * - "Path\\to\\file" === "Path\\\\to\\\\file" (escaped backslashes)
    *
    * Best Practice: For node names with special characters, prefer using node IDs
-   * to avoid ambiguity. Use n8n_get_workflow_structure() to get node IDs.
+   * to avoid ambiguity. Use n8n_workflow_get_structure() to get node IDs.
    *
    * @param name - The node name to normalize
    * @returns Normalized node name for safe comparison

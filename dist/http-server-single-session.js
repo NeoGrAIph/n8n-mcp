@@ -55,6 +55,8 @@ class SingleSessionHTTPServer {
         this.sessionTimeout = 30 * 60 * 1000;
         this.authToken = null;
         this.cleanupTimer = null;
+        this.statelessTransport = null;
+        this.statelessServer = null;
         this.validateEnvironment();
         this.startSessionCleanup();
     }
@@ -327,12 +329,17 @@ class SingleSessionHTTPServer {
                             this.sessionContexts[initializedSessionId] = instanceContext;
                         }
                     });
+                    const keepSessions = process.env.STREAMABLE_HTTP_KEEP_SESSIONS !== 'false';
                     transport.onclose = () => {
                         const sid = transport.sessionId;
-                        if (sid) {
-                            logger_1.logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
-                            this.removeSession(sid, 'transport_closed');
+                        if (!sid)
+                            return;
+                        if (keepSessions) {
+                            logger_1.logger.info('handleRequest: Transport closed, keeping session', { sessionId: sid });
+                            return;
                         }
+                        logger_1.logger.info('handleRequest: Transport closed, cleaning up', { sessionId: sid });
+                        this.removeSession(sid, 'transport_closed');
                     };
                     transport.onerror = (error) => {
                         const sid = transport.sessionId;
@@ -346,52 +353,69 @@ class SingleSessionHTTPServer {
                     logger_1.logger.info('handleRequest: Connecting server to new transport');
                     await server.connect(transport);
                 }
-                else if (sessionId && this.transports[sessionId]) {
-                    if (!this.isValidSessionId(sessionId)) {
-                        logger_1.logger.warn('handleRequest: Invalid session ID format', { sessionId });
+                else {
+                    const allowStateless = process.env.MCP_ALLOW_STATELESS === 'true';
+                    if (allowStateless && !isInitialize && (!sessionId || !this.transports[sessionId])) {
+                        logger_1.logger.info('handleRequest: Using stateless transport for request', {
+                            hasSessionId: !!sessionId,
+                            sessionFound: sessionId ? !!this.transports[sessionId] : false
+                        });
+                        if (!this.statelessTransport || !this.statelessServer) {
+                            this.statelessServer = new server_1.N8NDocumentationMCPServer(instanceContext);
+                            this.statelessTransport = new streamableHttp_js_1.StreamableHTTPServerTransport({
+                                sessionIdGenerator: undefined
+                            });
+                            await this.statelessServer.connect(this.statelessTransport);
+                        }
+                        transport = this.statelessTransport;
+                    }
+                    else if (sessionId && this.transports[sessionId]) {
+                        if (!this.isValidSessionId(sessionId)) {
+                            logger_1.logger.warn('handleRequest: Invalid session ID format', { sessionId });
+                            res.status(400).json({
+                                jsonrpc: '2.0',
+                                error: {
+                                    code: -32602,
+                                    message: 'Invalid session ID format'
+                                },
+                                id: req.body?.id || null
+                            });
+                            return;
+                        }
+                        logger_1.logger.info('handleRequest: Reusing existing transport for session', { sessionId });
+                        transport = this.transports[sessionId];
+                        const isMultiTenantEnabled = process.env.ENABLE_MULTI_TENANT === 'true';
+                        const sessionStrategy = process.env.MULTI_TENANT_SESSION_STRATEGY || 'instance';
+                        if (isMultiTenantEnabled && sessionStrategy === 'shared' && instanceContext) {
+                            await this.switchSessionContext(sessionId, instanceContext);
+                        }
+                        this.updateSessionAccess(sessionId);
+                    }
+                    else {
+                        const errorDetails = {
+                            hasSessionId: !!sessionId,
+                            isInitialize: isInitialize,
+                            sessionIdValid: sessionId ? this.isValidSessionId(sessionId) : false,
+                            sessionExists: sessionId ? !!this.transports[sessionId] : false
+                        };
+                        logger_1.logger.warn('handleRequest: Invalid request - no session ID and not initialize', errorDetails);
+                        let errorMessage = 'Bad Request: No valid session ID provided and not an initialize request';
+                        if (sessionId && !this.isValidSessionId(sessionId)) {
+                            errorMessage = 'Bad Request: Invalid session ID format';
+                        }
+                        else if (sessionId && !this.transports[sessionId]) {
+                            errorMessage = 'Bad Request: Session not found or expired';
+                        }
                         res.status(400).json({
                             jsonrpc: '2.0',
                             error: {
-                                code: -32602,
-                                message: 'Invalid session ID format'
+                                code: -32000,
+                                message: errorMessage
                             },
                             id: req.body?.id || null
                         });
                         return;
                     }
-                    logger_1.logger.info('handleRequest: Reusing existing transport for session', { sessionId });
-                    transport = this.transports[sessionId];
-                    const isMultiTenantEnabled = process.env.ENABLE_MULTI_TENANT === 'true';
-                    const sessionStrategy = process.env.MULTI_TENANT_SESSION_STRATEGY || 'instance';
-                    if (isMultiTenantEnabled && sessionStrategy === 'shared' && instanceContext) {
-                        await this.switchSessionContext(sessionId, instanceContext);
-                    }
-                    this.updateSessionAccess(sessionId);
-                }
-                else {
-                    const errorDetails = {
-                        hasSessionId: !!sessionId,
-                        isInitialize: isInitialize,
-                        sessionIdValid: sessionId ? this.isValidSessionId(sessionId) : false,
-                        sessionExists: sessionId ? !!this.transports[sessionId] : false
-                    };
-                    logger_1.logger.warn('handleRequest: Invalid request - no session ID and not initialize', errorDetails);
-                    let errorMessage = 'Bad Request: No valid session ID provided and not an initialize request';
-                    if (sessionId && !this.isValidSessionId(sessionId)) {
-                        errorMessage = 'Bad Request: Invalid session ID format';
-                    }
-                    else if (sessionId && !this.transports[sessionId]) {
-                        errorMessage = 'Bad Request: Session not found or expired';
-                    }
-                    res.status(400).json({
-                        jsonrpc: '2.0',
-                        error: {
-                            code: -32000,
-                            message: errorMessage
-                        },
-                        id: req.body?.id || null
-                    });
-                    return;
                 }
                 logger_1.logger.info('handleRequest: Handling request with transport', {
                     sessionId: isInitialize ? 'new' : sessionId,

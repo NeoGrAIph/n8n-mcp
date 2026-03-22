@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateWorkflowDoc = void 0;
 exports.validateWorkflowDoc = {
-    name: 'validate_workflow',
+    name: 'n8n_workflow_json_validate',
     category: 'validation',
     essentials: {
         description: 'Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy.',
         keyParameters: ['workflow', 'options'],
-        example: 'validate_workflow({workflow: {nodes: [...], connections: {...}}})',
+        example: 'n8n_workflow_json_validate({workflow: {nodes: [...], connections: {...}}})',
         performance: 'Moderate (100-500ms)',
         tips: [
             'Always validate before n8n_workflow_create to catch errors early',
@@ -52,9 +52,9 @@ exports.validateWorkflowDoc = {
         },
         returns: 'Object with valid (boolean), errors (array), warnings (array), statistics (object), and suggestions (array)',
         examples: [
-            'validate_workflow({workflow: myWorkflow}) - Full validation with default settings',
-            'validate_workflow({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
-            'validate_workflow({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
+            'n8n_workflow_json_validate({workflow: myWorkflow}) - Full validation with default settings',
+            'n8n_workflow_json_validate({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
+            'n8n_workflow_json_validate({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
         ],
         useCases: [
             'Pre-deployment validation to catch all workflow issues',
@@ -80,7 +80,7 @@ exports.validateWorkflowDoc = {
             'Validation cannot catch all runtime errors (e.g., API failures)',
             'Profile setting only affects node validation, not connection/expression checks'
         ],
-        relatedTools: ['validate_node', 'n8n_workflow_create', 'n8n_workflow_update_partial', 'n8n_workflow_autofix']
+        relatedTools: ['n8n_node_validate', 'n8n_workflow_create', 'n8n_workflow_update_partial', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=validate-workflow.js.map

@@ -7,7 +7,7 @@ exports.aiAgentsGuide = {
     essentials: {
         description: 'Comprehensive guide to building AI Agent workflows in n8n. Covers architecture, connections, tools, validation, and best practices for production AI systems.',
         keyParameters: [],
-        example: 'Use tools_documentation({topic: "ai_agents_guide"}) to access this guide',
+        example: 'Use n8n_tools_documentation({topic: "ai_agents_guide"}) to access this guide',
         performance: 'N/A - Documentation only',
         tips: [
             'Start with Chat Trigger → AI Agent → Language Model pattern',
@@ -690,17 +690,17 @@ n8n_workflow_validate({id: "workflow_id"})
 
 - **FINAL_AI_VALIDATION_SPEC.md**: Complete validation rules
 - **n8n_workflow_update_partial**: Workflow modification tool
-- **search_nodes({query: "AI", includeExamples: true})**: Find AI nodes with examples
-- **get_node({nodeType: "...", detail: "standard", includeExamples: true})**: Node details with examples
+- **n8n_nodes_search({query: "AI", includeExamples: true})**: Find AI nodes with examples
+- **n8n_node_get({nodeType: "...", detail: "standard", includeExamples: true})**: Node details with examples
 
 ---
 
-*This guide is part of the n8n-mcp documentation system. For questions or issues, refer to the validation spec or use tools_documentation() for specific topics.*`,
+*This guide is part of the n8n-mcp documentation system. For questions or issues, refer to the validation spec or use n8n_tools_documentation() for specific topics.*`,
         parameters: {},
         returns: 'Complete AI Agents guide with architecture, patterns, validation, and troubleshooting',
         examples: [
-            'tools_documentation({topic: "ai_agents_guide"}) - Full guide',
-            'tools_documentation({topic: "ai_agents_guide", depth: "essentials"}) - Quick reference',
+            'n8n_tools_documentation({topic: "ai_agents_guide"}) - Full guide',
+            'n8n_tools_documentation({topic: "ai_agents_guide", depth: "essentials"}) - Quick reference',
             'When user asks about AI Agents, Chat Trigger, or building AI workflows → Point to this guide'
         ],
         useCases: [
@@ -716,7 +716,7 @@ n8n_workflow_validate({id: "workflow_id"})
         bestPractices: [
             'Reference this guide when users ask about AI Agents',
             'Point to specific sections based on user needs',
-            'Combine with search_nodes(includeExamples=true) for working examples',
+            'Combine with n8n_nodes_search(includeExamples=true) for working examples',
             'Validate workflows after following guide instructions',
             'Use FINAL_AI_VALIDATION_SPEC.md for detailed requirements'
         ],
@@ -731,8 +731,8 @@ n8n_workflow_validate({id: "workflow_id"})
             'n8n_workflow_create',
             'n8n_workflow_update_partial',
             'n8n_workflow_validate',
-            'search_nodes',
-            'get_node'
+            'n8n_nodes_search',
+            'n8n_node_get'
         ]
     }
 };

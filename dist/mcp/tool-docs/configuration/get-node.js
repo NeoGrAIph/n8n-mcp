@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNodeDoc = void 0;
 exports.getNodeDoc = {
-    name: 'get_node',
+    name: 'n8n_node_get',
     category: 'configuration',
     essentials: {
         description: 'Unified node information tool with progressive detail levels and multiple modes. Get node schema, docs, search properties, or version info.',
         keyParameters: ['nodeType', 'detail', 'mode', 'includeTypeInfo', 'includeExamples'],
-        example: 'get_node({nodeType: "nodes-base.httpRequest", detail: "standard"})',
+        example: 'n8n_node_get({nodeType: "nodes-base.httpRequest", detail: "standard"})',
         performance: 'Instant (<10ms) for minimal/standard, moderate for full',
         tips: [
             'Use detail="standard" (default) for most tasks - shows required fields',
@@ -84,7 +84,7 @@ exports.getNodeDoc = {
             'includeExamples only works with mode=info and detail=standard',
             'Version modes require nodes with multiple versions in database'
         ],
-        relatedTools: ['search_nodes', 'validate_node', 'validate_workflow']
+        relatedTools: ['n8n_nodes_search', 'n8n_node_validate', 'n8n_workflow_json_validate']
     }
 };
 //# sourceMappingURL=get-node.js.map

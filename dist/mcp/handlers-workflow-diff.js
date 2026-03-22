@@ -213,7 +213,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                 });
                 const recoverySteps = [];
                 if (errorTypes.has('operator_issues')) {
-                    recoverySteps.push('Operator structure issue detected. Use validate_node_operation to check specific nodes.');
+                    recoverySteps.push('Operator structure issue detected. Use n8n_node_validate to check specific nodes.');
                     recoverySteps.push('Binary operators (equals, contains, greaterThan, etc.) must NOT have singleValue:true');
                     recoverySteps.push('Unary operators (isEmpty, isNotEmpty, true, false) REQUIRE singleValue:true');
                 }
@@ -231,7 +231,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                 if (recoverySteps.length === 0) {
                     recoverySteps.push('Review the validation errors listed above');
                     recoverySteps.push('Fix issues using updateNode or cleanStaleConnections operations');
-                    recoverySteps.push('Run validate_workflow again to verify fixes');
+                    recoverySteps.push('Run n8n_workflow_json_validate again to verify fixes');
                 }
                 const errorMessage = structureErrors.length === 1
                     ? `Workflow validation failed: ${structureErrors[0]}`
@@ -258,7 +258,10 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
         }
         try {
-            const updatedWorkflow = await client.updateWorkflow(input.id, diffResult.workflow);
+            const hasNonActivationOps = input.operations.some(op => op.type !== 'activateWorkflow' && op.type !== 'deactivateWorkflow');
+            const updatedWorkflow = hasNonActivationOps
+                ? await client.updateWorkflow(input.id, diffResult.workflow)
+                : diffResult.workflow;
             let finalWorkflow = updatedWorkflow;
             let activationMessage = '';
             try {
@@ -279,7 +282,13 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
             if (diffResult.shouldActivate) {
                 try {
-                    finalWorkflow = await client.activateWorkflow(input.id);
+                    const activationResponse = await client.activateWorkflow(input.id);
+                    finalWorkflow = {
+                        ...updatedWorkflow,
+                        ...activationResponse,
+                        nodes: updatedWorkflow.nodes ?? activationResponse.nodes,
+                        connections: updatedWorkflow.connections ?? activationResponse.connections,
+                    };
                     activationMessage = ' Workflow activated.';
                 }
                 catch (activationError) {
@@ -296,7 +305,13 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
             else if (diffResult.shouldDeactivate) {
                 try {
-                    finalWorkflow = await client.deactivateWorkflow(input.id);
+                    const deactivationResponse = await client.deactivateWorkflow(input.id);
+                    finalWorkflow = {
+                        ...updatedWorkflow,
+                        ...deactivationResponse,
+                        nodes: updatedWorkflow.nodes ?? deactivationResponse.nodes,
+                        connections: updatedWorkflow.connections ?? deactivationResponse.connections,
+                    };
                     activationMessage = ' Workflow deactivated.';
                 }
                 catch (deactivationError) {

@@ -10,7 +10,7 @@ export const workflowFilesResourcesGuide: ToolDocumentation = {
     performance: 'Instant (static content)',
     tips: [
       'Use resources/list to discover available files before reading or writing',
-      'workflowId is the workflow folder name, nodeId is the file name stem',
+      'workflowId maps to directory code_nodes_<workflowId> under workflows; nodeId is the file name stem',
       'Always pass expectedEtag when writing to avoid conflicts',
       'For partial changes, use n8n_workflow_file_patch',
       'Use resource tools for Code/Set edits instead of workflow_update_*'

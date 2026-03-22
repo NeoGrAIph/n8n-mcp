@@ -24,7 +24,7 @@ exports.n8nValidateWorkflowDoc = {
 - Validates n8n expression syntax in all fields
 - Returns categorized issues with fix suggestions
 
-The validation uses the same engine as validate_workflow but works with workflows already in n8n, making it perfect for validating existing workflows before execution.
+The validation uses the same engine as n8n_workflow_json_validate but works with workflows already in n8n, making it perfect for validating existing workflows before execution.
 
 Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
         parameters: {
@@ -67,7 +67,7 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
             'Profile affects validation time - strict is slower but more thorough',
             'Expression validation may flag working but non-standard syntax'
         ],
-        relatedTools: ['validate_workflow', 'n8n_workflow_get', 'n8n_health_check', 'n8n_workflow_autofix']
+        relatedTools: ['n8n_workflow_json_validate', 'n8n_workflow_get', 'n8n_health_check', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=n8n-validate-workflow.js.map

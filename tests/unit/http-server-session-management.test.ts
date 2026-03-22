@@ -629,11 +629,6 @@ describe('HTTP Server Session Management', () => {
       it('should load token from AUTH_TOKEN_FILE', () => {
         delete process.env.AUTH_TOKEN;
         process.env.AUTH_TOKEN_FILE = '/fake/token/file';
-        
-        // Mock fs.readFileSync before creating server
-        vi.doMock('fs', () => ({
-          readFileSync: vi.fn().mockReturnValue('file-based-token-32-characters-long')
-        }));
 
         // For this test, we need to set a valid token since fs mocking is complex in vitest
         process.env.AUTH_TOKEN = 'file-based-token-32-characters-long';
