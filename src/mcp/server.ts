@@ -1,23 +1,20 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
+import { 
+  CallToolRequestSchema, 
   ListToolsRequestSchema,
   InitializeRequestSchema,
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { existsSync, promises as fs } from 'fs';
 import path from 'path';
 import { n8nDocumentationToolsFinal } from './tools';
-import { UIAppRegistry } from './ui';
 import { n8nManagementTools } from './tools-n8n-manager';
 import { makeToolsN8nFriendly } from './tools-n8n-friendly';
+import { withToolAnnotations } from './tool-annotations';
 import { getWorkflowExampleString } from './workflow-examples';
 import { logger } from '../utils/logger';
 import { NodeRepository } from '../database/node-repository';
 import { DatabaseAdapter, createDatabaseAdapter } from '../database/database-adapter';
-import { getSharedDatabase, releaseSharedDatabase, SharedDatabaseState } from '../database/shared-database';
 import { PropertyFilter } from '../services/property-filter';
 import { TaskTemplates } from '../services/task-templates';
 import { ConfigValidator } from '../services/config-validator';
@@ -45,6 +42,12 @@ import { telemetry } from '../telemetry';
 import { EarlyErrorLogger } from '../telemetry/early-error-logger';
 import { STARTUP_CHECKPOINTS } from '../telemetry/startup-checkpoints';
 
+const VALIDATION_TOOL_NAMES = new Set([
+  'n8n_node_validate',
+  'n8n_workflow_validate',
+  'n8n_workflow_json_validate'
+]);
+
 interface NodeRow {
   node_type: string;
   package_name: string;
@@ -64,9 +67,6 @@ interface NodeRow {
   properties_schema?: string;
   operations?: string;
   credentials_required?: string;
-  // AI documentation fields
-  ai_documentation_summary?: string;
-  ai_summary_generated_at?: string;
 }
 
 interface VersionSummary {
@@ -154,9 +154,6 @@ export class N8NDocumentationMCPServer {
   private previousToolTimestamp: number = Date.now();
   private earlyLogger: EarlyErrorLogger | null = null;
   private disabledToolsCache: Set<string> | null = null;
-  private useSharedDatabase: boolean = false;  // Track if using shared DB for cleanup
-  private sharedDbState: SharedDatabaseState | null = null;  // Reference to shared DB state for release
-  private isShutdown: boolean = false;  // Prevent double-shutdown
 
   constructor(instanceContext?: InstanceContext, earlyLogger?: EarlyErrorLogger) {
     this.instanceContext = instanceContext;
@@ -210,13 +207,6 @@ export class N8NDocumentationMCPServer {
       }
     });
 
-    // Attach a no-op catch handler to prevent Node.js from flagging this as an
-    // unhandled rejection in the interval between construction and the first
-    // await of this.initialized (via ensureInitialized). This does NOT suppress
-    // the error: the original this.initialized promise still rejects, and
-    // ensureInitialized() will re-throw it when awaited.
-    this.initialized.catch(() => {});
-
     logger.info('Initializing n8n Documentation MCP server');
     
     this.server = new Server(
@@ -245,12 +235,10 @@ export class N8NDocumentationMCPServer {
       {
         capabilities: {
           tools: {},
-          resources: {},
         },
       }
     );
 
-    UIAppRegistry.load();
     this.setupHandlers();
   }
 
@@ -261,39 +249,18 @@ export class N8NDocumentationMCPServer {
    * Order of cleanup:
    * 1. Close MCP server connection
    * 2. Destroy cache (clears entries AND stops cleanup timer)
-   * 3. Release shared database OR close dedicated connection
+   * 3. Close database connection
    * 4. Null out references to help GC
-   *
-   * IMPORTANT: For shared databases, we only release the reference (decrement refCount),
-   * NOT close the database. The database stays open for other sessions.
-   * For in-memory databases (tests), we close the dedicated connection.
    */
   async close(): Promise<void> {
-    // Wait for initialization to complete (or fail) before cleanup
-    // This prevents race conditions where close runs while init is in progress
-    try {
-      await this.initialized;
-    } catch (error) {
-      // Initialization failed - that's OK, we still need to clean up
-      logger.debug('Initialization had failed, proceeding with cleanup', {
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-
     try {
       await this.server.close();
 
       // Use destroy() not clear() - also stops the cleanup timer
       this.cache.destroy();
 
-      // Handle database cleanup based on whether it's shared or dedicated
-      if (this.useSharedDatabase && this.sharedDbState) {
-        // Shared database: release reference, don't close
-        // The database stays open for other sessions
-        releaseSharedDatabase(this.sharedDbState);
-        logger.debug('Released shared database reference');
-      } else if (this.db) {
-        // Dedicated database (in-memory for tests): close it
+      // Close database connection before nullifying reference
+      if (this.db) {
         try {
           this.db.close();
         } catch (dbError) {
@@ -308,7 +275,6 @@ export class N8NDocumentationMCPServer {
       this.repository = null;
       this.templateService = null;
       this.earlyLogger = null;
-      this.sharedDbState = null;
     } catch (error) {
       // Log but don't throw - cleanup should be best-effort
       logger.warn('Error closing MCP server', { error: error instanceof Error ? error.message : String(error) });
@@ -324,32 +290,23 @@ export class N8NDocumentationMCPServer {
 
       logger.debug('Database initialization starting...', { dbPath });
 
-      // For in-memory databases (tests), create a dedicated connection
-      // For regular databases, use the shared connection to prevent memory leaks
+      this.db = await createDatabaseAdapter(dbPath);
+      logger.debug('Database adapter created');
+
+      // If using in-memory database for tests, initialize schema
       if (dbPath === ':memory:') {
-        this.db = await createDatabaseAdapter(dbPath);
-        logger.debug('Database adapter created (in-memory mode)');
         await this.initializeInMemorySchema();
         logger.debug('In-memory schema initialized');
-        this.repository = new NodeRepository(this.db);
-        this.templateService = new TemplateService(this.db);
-        // Initialize similarity services for enhanced validation
-        EnhancedConfigValidator.initializeSimilarityServices(this.repository);
-        this.useSharedDatabase = false;
-      } else {
-        // Use shared database connection to prevent ~900MB memory leak per session
-        // See: Memory leak fix - database was being duplicated per session
-        const sharedState = await getSharedDatabase(dbPath);
-        this.db = sharedState.db;
-        this.repository = sharedState.repository;
-        this.templateService = sharedState.templateService;
-        this.sharedDbState = sharedState;
-        this.useSharedDatabase = true;
-        logger.debug('Using shared database connection');
       }
 
+      this.repository = new NodeRepository(this.db);
       logger.debug('Node repository initialized');
+
+      this.templateService = new TemplateService(this.db);
       logger.debug('Template service initialized');
+
+      // Initialize similarity services for enhanced validation
+      EnhancedConfigValidator.initializeSimilarityServices(this.repository);
       logger.debug('Similarity services initialized');
 
       // Checkpoint: Database connected (v2.18.3)
@@ -575,7 +532,6 @@ export class N8NDocumentationMCPServer {
         protocolVersion: negotiationResult.version,
         capabilities: {
           tools: {},
-          resources: {},
         },
         serverInfo: {
           name: 'n8n-documentation-mcp',
@@ -646,19 +602,19 @@ export class N8NDocumentationMCPServer {
         logger.info('Detected n8n client, using n8n-friendly tool descriptions');
         tools = makeToolsN8nFriendly(tools);
       }
+
+      tools = withToolAnnotations(tools);
       
       // Log validation tools' input schemas for debugging
-      const validationTools = tools.filter(t => t.name.startsWith('validate_'));
+      const validationTools = tools.filter(t => VALIDATION_TOOL_NAMES.has(t.name));
       validationTools.forEach(tool => {
         logger.info('Validation tool schema', {
           toolName: tool.name,
           inputSchema: JSON.stringify(tool.inputSchema, null, 2),
-          hasOutputSchema: !!tool.outputSchema,
           description: tool.description
         });
       });
       
-      UIAppRegistry.injectToolMeta(tools);
       return { tools };
     });
 
@@ -694,23 +650,9 @@ export class N8NDocumentationMCPServer {
         };
       }
 
-      // Safeguard: if the entire args object arrives as a JSON string, parse it.
-      // Some MCP clients may serialize the arguments object itself.
-      let processedArgs: Record<string, any> | undefined = args;
-      if (typeof args === 'string') {
-        try {
-          const parsed = JSON.parse(args as unknown as string);
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            processedArgs = parsed;
-            logger.warn(`Coerced stringified args object for tool "${name}"`);
-          }
-        } catch {
-          logger.warn(`Tool "${name}" received string args that are not valid JSON`);
-        }
-      }
-
       // Workaround for n8n's nested output bug
       // Check if args contains nested 'output' structure from n8n's memory corruption
+      let processedArgs = args;
       if (args && typeof args === 'object' && 'output' in args) {
         try {
           const possibleNestedData = args.output;
@@ -741,13 +683,7 @@ export class N8NDocumentationMCPServer {
           });
         }
       }
-
-      // Workaround for Claude Desktop / Claude.ai MCP client bugs that
-      // serialize parameters with wrong types. Coerces ALL mismatched types
-      // (string↔object, string↔number, string↔boolean, etc.) using the
-      // tool's inputSchema as the source of truth.
-      processedArgs = this.coerceStringifiedJsonParams(name, processedArgs);
-
+      
       try {
         logger.debug(`Executing tool: ${name}`, { args: processedArgs });
         const startTime = Date.now();
@@ -774,8 +710,8 @@ export class N8NDocumentationMCPServer {
         
         try {
           // For validation tools, check if we should use structured content
-          if (name.startsWith('validate_') && typeof result === 'object' && result !== null) {
-            // Clean up the result to ensure it matches the outputSchema
+          if (VALIDATION_TOOL_NAMES.has(name) && typeof result === 'object' && result !== null) {
+            // Clean up the result to ensure it matches the expected structured output
             const cleanResult = this.sanitizeValidationResult(result, name);
             structuredContent = cleanResult;
             responseText = JSON.stringify(cleanResult, null, 2);
@@ -804,11 +740,11 @@ export class N8NDocumentationMCPServer {
           ],
         };
         
-        // For tools with outputSchema, structuredContent is REQUIRED by MCP spec
-        if (name.startsWith('validate_') && structuredContent !== null) {
+        // For validation tools, also include structuredContent for typed output
+        if (VALIDATION_TOOL_NAMES.has(name) && structuredContent !== null) {
           mcpResponse.structuredContent = structuredContent;
         }
-
+        
         return mcpResponse;
       } catch (error) {
         logger.error(`Error executing tool ${name}`, error);
@@ -835,7 +771,7 @@ export class N8NDocumentationMCPServer {
 
         // Provide more helpful error messages for common n8n issues
         let helpfulMessage = `Error executing tool ${name}: ${errorMessage}`;
-
+        
         if (errorMessage.includes('required') || errorMessage.includes('missing')) {
           helpfulMessage += '\n\nNote: This error often occurs when the AI agent sends incomplete or incorrectly formatted parameters. Please ensure all required fields are provided with the correct types.';
         } else if (errorMessage.includes('type') || errorMessage.includes('expected')) {
@@ -843,20 +779,12 @@ export class N8NDocumentationMCPServer {
         } else if (errorMessage.includes('Unknown category') || errorMessage.includes('not found')) {
           helpfulMessage += '\n\nNote: The requested resource or category was not found. Please check the available options.';
         }
-
+        
         // For n8n schema errors, add specific guidance
-        if (name.startsWith('validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
+        if (VALIDATION_TOOL_NAMES.has(name) && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
           helpfulMessage += '\n\nFor validation tools:\n- nodeType should be a string (e.g., "nodes-base.webhook")\n- config should be an object (e.g., {})';
         }
-
-        // Include diagnostic info about received args to help debug client issues
-        try {
-          const argDiag = processedArgs && typeof processedArgs === 'object'
-            ? Object.entries(processedArgs).map(([k, v]) => `${k}: ${typeof v}`).join(', ')
-            : `args type: ${typeof processedArgs}`;
-          helpfulMessage += `\n\n[Diagnostic] Received arg types: {${argDiag}}`;
-        } catch { /* ignore diagnostic errors */ }
-
+        
         return {
           content: [
             {
@@ -868,50 +796,10 @@ export class N8NDocumentationMCPServer {
         };
       }
     });
-
-    // Handle ListResources for UI apps
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      const apps = UIAppRegistry.getAllApps();
-      return {
-        resources: apps
-          .filter(app => app.html !== null)
-          .map(app => ({
-            uri: app.config.uri,
-            name: app.config.displayName,
-            description: app.config.description,
-            mimeType: app.config.mimeType,
-          })),
-      };
-    });
-
-    // Handle ReadResource for UI apps
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const uri = request.params.uri;
-      // Parse ui://n8n-mcp/{id} pattern
-      const match = uri.match(/^ui:\/\/n8n-mcp\/(.+)$/);
-      if (!match) {
-        throw new Error(`Unknown resource URI: ${uri}`);
-      }
-
-      const app = UIAppRegistry.getAppById(match[1]);
-      if (!app || !app.html) {
-        throw new Error(`UI app not found or not built: ${match[1]}`);
-      }
-
-      return {
-        contents: [
-          {
-            uri: app.config.uri,
-            mimeType: app.config.mimeType,
-            text: app.html,
-          },
-        ],
-      };
-    });
   }
 
   /**
-   * Sanitize validation result to match outputSchema
+   * Sanitize validation result to match expected structured output
    */
   private sanitizeValidationResult(result: any, toolName: string): any {
     if (!result || typeof result !== 'object') {
@@ -921,19 +809,18 @@ export class N8NDocumentationMCPServer {
     const sanitized = { ...result };
 
     // Ensure required fields exist with proper types and filter to schema-defined fields only
-    if (toolName === 'validate_node_minimal') {
-      // Filter to only schema-defined fields
-      const filtered = {
-        nodeType: String(sanitized.nodeType || ''),
-        displayName: String(sanitized.displayName || ''),
-        valid: Boolean(sanitized.valid),
-        missingRequiredFields: Array.isArray(sanitized.missingRequiredFields) 
-          ? sanitized.missingRequiredFields.map(String) 
-          : []
-      };
-      return filtered;
-    } else if (toolName === 'validate_node_operation') {
-      // Ensure summary exists
+    if (toolName === 'n8n_node_validate') {
+      // Minimal mode shape (missingRequiredFields) vs full mode shape (errors/warnings)
+      if (Array.isArray(sanitized.missingRequiredFields)) {
+        const filtered = {
+          nodeType: String(sanitized.nodeType || ''),
+          displayName: String(sanitized.displayName || ''),
+          valid: Boolean(sanitized.valid),
+          missingRequiredFields: sanitized.missingRequiredFields.map(String)
+        };
+        return filtered;
+      }
+
       let summary = sanitized.summary;
       if (!summary || typeof summary !== 'object') {
         summary = {
@@ -943,8 +830,7 @@ export class N8NDocumentationMCPServer {
           suggestionCount: Array.isArray(sanitized.suggestions) ? sanitized.suggestions.length : 0
         };
       }
-      
-      // Filter to only schema-defined fields
+
       const filtered = {
         nodeType: String(sanitized.nodeType || ''),
         workflowNodeType: String(sanitized.workflowNodeType || sanitized.nodeType || ''),
@@ -956,7 +842,7 @@ export class N8NDocumentationMCPServer {
         summary: summary
       };
       return filtered;
-    } else if (toolName.startsWith('validate_workflow')) {
+    } else if (toolName.startsWith('n8n_workflow_json_validate')) {
       sanitized.valid = Boolean(sanitized.valid);
       
       // Ensure arrays exist
@@ -964,7 +850,7 @@ export class N8NDocumentationMCPServer {
       sanitized.warnings = Array.isArray(sanitized.warnings) ? sanitized.warnings : [];
       
       // Ensure statistics/summary exists
-      if (toolName === 'validate_workflow') {
+      if (toolName === 'n8n_workflow_json_validate') {
         if (!sanitized.summary || typeof sanitized.summary !== 'object') {
           sanitized.summary = {
             totalNodes: 0,
@@ -1003,38 +889,54 @@ export class N8NDocumentationMCPServer {
       let validationResult;
       
       switch (toolName) {
-        case 'validate_node':
+        case 'n8n_node_validate':
           // Consolidated tool handles both modes - validate as operation for now
           validationResult = ToolValidation.validateNodeOperation(args);
           break;
-        case 'validate_workflow':
+        case 'n8n_workflow_json_validate':
           validationResult = ToolValidation.validateWorkflow(args);
           break;
-      case 'search_nodes':
+      case 'n8n_nodes_search':
         validationResult = ToolValidation.validateSearchNodes(args);
         break;
-      case 'n8n_create_workflow':
+      case 'n8n_workflow_create':
         validationResult = ToolValidation.validateCreateWorkflow(args);
         break;
-      case 'n8n_get_workflow':
-      case 'n8n_update_full_workflow':
-      case 'n8n_delete_workflow':
-      case 'n8n_validate_workflow':
-      case 'n8n_autofix_workflow':
+      case 'n8n_workflow_get':
+      case 'n8n_workflow_update_full':
+      case 'n8n_workflow_delete':
+      case 'n8n_workflow_validate':
+      case 'n8n_workflow_autofix':
         validationResult = ToolValidation.validateWorkflowId(args);
         break;
-      case 'n8n_executions':
-        // Requires action parameter, id validation done in handler based on action
-        validationResult = args.action
+      case 'n8n_executions_get':
+      case 'n8n_executions_delete':
+        validationResult = args.id
           ? { valid: true, errors: [] }
-          : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
+          : { valid: false, errors: [{ field: 'id', message: 'id is required' }] };
         break;
-      case 'n8n_manage_datatable':
-        validationResult = args.action
+      case 'n8n_executions_list':
+        validationResult = { valid: true, errors: [] };
+        break;
+      case 'n8n_workflow_versions_list':
+      case 'n8n_workflow_versions_rollback':
+      case 'n8n_workflow_versions_delete':
+      case 'n8n_workflow_versions_prune':
+        validationResult = args.workflowId
           ? { valid: true, errors: [] }
-          : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
+          : { valid: false, errors: [{ field: 'workflowId', message: 'workflowId is required' }] };
         break;
-      case 'n8n_deploy_template':
+      case 'n8n_workflow_versions_get':
+        validationResult = args.versionId !== undefined
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'versionId', message: 'versionId is required' }] };
+        break;
+      case 'n8n_workflow_versions_truncate':
+        validationResult = args.confirmTruncate === true
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'confirmTruncate', message: 'confirmTruncate must be true' }] };
+        break;
+      case 'n8n_template_deploy':
         // Requires templateId parameter
         validationResult = args.templateId !== undefined
           ? { valid: true, errors: [] }
@@ -1165,109 +1067,6 @@ export class N8NDocumentationMCPServer {
     return true;
   }
 
-  /**
-   * Coerce mistyped parameters back to their expected types.
-   * Workaround for Claude Desktop / Claude.ai MCP client bugs that serialize
-   * parameters incorrectly (objects as strings, numbers as strings, etc.).
-   *
-   * Handles ALL type mismatches based on the tool's inputSchema:
-   *   string→object, string→array   : JSON.parse
-   *   string→number, string→integer : Number()
-   *   string→boolean                : "true"/"false" parsing
-   *   number→string, boolean→string : .toString()
-   */
-  private coerceStringifiedJsonParams(
-    toolName: string,
-    args: Record<string, any> | undefined
-  ): Record<string, any> | undefined {
-    if (!args || typeof args !== 'object') return args;
-
-    const allTools = [...n8nDocumentationToolsFinal, ...n8nManagementTools];
-    const tool = allTools.find(t => t.name === toolName);
-    if (!tool?.inputSchema?.properties) return args;
-
-    const properties = tool.inputSchema.properties;
-    const coerced = { ...args };
-    let coercedAny = false;
-
-    for (const [key, value] of Object.entries(coerced)) {
-      if (value === undefined || value === null) continue;
-
-      const propSchema = (properties as any)[key];
-      if (!propSchema) continue;
-      const expectedType = propSchema.type;
-      if (!expectedType) continue;
-
-      const actualType = typeof value;
-
-      // Already correct type — skip
-      if (expectedType === 'string' && actualType === 'string') continue;
-      if ((expectedType === 'number' || expectedType === 'integer') && actualType === 'number') continue;
-      if (expectedType === 'boolean' && actualType === 'boolean') continue;
-      if (expectedType === 'object' && actualType === 'object' && !Array.isArray(value)) continue;
-      if (expectedType === 'array' && Array.isArray(value)) continue;
-
-      // --- Coercion: string value → expected type ---
-      if (actualType === 'string') {
-        const trimmed = (value as string).trim();
-
-        if (expectedType === 'object' && trimmed.startsWith('{')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-              coerced[key] = parsed;
-              coercedAny = true;
-            }
-          } catch { /* keep original */ }
-          continue;
-        }
-
-        if (expectedType === 'array' && trimmed.startsWith('[')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (Array.isArray(parsed)) {
-              coerced[key] = parsed;
-              coercedAny = true;
-            }
-          } catch { /* keep original */ }
-          continue;
-        }
-
-        if (expectedType === 'number' || expectedType === 'integer') {
-          const num = Number(trimmed);
-          if (!isNaN(num) && trimmed !== '') {
-            coerced[key] = expectedType === 'integer' ? Math.trunc(num) : num;
-            coercedAny = true;
-          }
-          continue;
-        }
-
-        if (expectedType === 'boolean') {
-          if (trimmed === 'true') { coerced[key] = true; coercedAny = true; }
-          else if (trimmed === 'false') { coerced[key] = false; coercedAny = true; }
-          continue;
-        }
-      }
-
-      // --- Coercion: number/boolean value → expected string ---
-      if (expectedType === 'string' && (actualType === 'number' || actualType === 'boolean')) {
-        coerced[key] = String(value);
-        coercedAny = true;
-        continue;
-      }
-    }
-
-    if (coercedAny) {
-      logger.warn(`Coerced mistyped params for tool "${toolName}"`, {
-        original: Object.fromEntries(
-          Object.entries(args).map(([k, v]) => [k, `${typeof v}: ${typeof v === 'string' ? v.substring(0, 80) : v}`])
-        ),
-      });
-    }
-
-    return coerced;
-  }
-
   async executeTool(name: string, args: any): Promise<any> {
     // Ensure args is an object and validate it
     args = args || {};
@@ -1293,19 +1092,15 @@ export class N8NDocumentationMCPServer {
     }
 
     switch (name) {
-      case 'tools_documentation':
+      case 'n8n_tools_documentation':
         // No required parameters
         return this.getToolsDocumentation(args.topic, args.depth);
-      case 'search_nodes':
+      case 'n8n_nodes_search':
         this.validateToolParams(name, args, ['query']);
         // Convert limit to number if provided, otherwise use default
         const limit = args.limit !== undefined ? Number(args.limit) || 20 : 20;
-        return this.searchNodes(args.query, limit, {
-          mode: args.mode,
-          includeExamples: args.includeExamples,
-          source: args.source
-        });
-      case 'get_node':
+        return this.searchNodes(args.query, limit, { mode: args.mode, includeExamples: args.includeExamples });
+      case 'n8n_node_get':
         this.validateToolParams(name, args, ['nodeType']);
         // Handle consolidated modes: docs, search_properties
         if (args.mode === 'docs') {
@@ -1327,11 +1122,11 @@ export class N8NDocumentationMCPServer {
           args.fromVersion,
           args.toVersion
         );
-      case 'validate_node':
+      case 'n8n_node_validate':
         this.validateToolParams(name, args, ['nodeType', 'config']);
         // Ensure config is an object
         if (typeof args.config !== 'object' || args.config === null) {
-          logger.warn(`validate_node called with invalid config type: ${typeof args.config}`);
+          logger.warn(`n8n_node_validate called with invalid config type: ${typeof args.config}`);
           const validationMode = args.mode || 'full';
           if (validationMode === 'minimal') {
             return {
@@ -1359,7 +1154,7 @@ export class N8NDocumentationMCPServer {
             suggestions: [
               '🔧 RECOVERY: Invalid config detected. Fix with:',
               '   • Ensure config is an object: { "resource": "...", "operation": "..." }',
-              '   • Use get_node to see required fields for this node type',
+              '   • Use n8n_node_get to see required fields for this node type',
               '   • Check if the node type is correct before configuring it'
             ],
             summary: {
@@ -1376,12 +1171,12 @@ export class N8NDocumentationMCPServer {
           return this.validateNodeMinimal(args.nodeType, args.config);
         }
         return this.validateNodeConfig(args.nodeType, args.config, 'operation', args.profile);
-      case 'get_template':
+      case 'n8n_template_get':
         this.validateToolParams(name, args, ['templateId']);
         const templateId = Number(args.templateId);
         const templateMode = args.mode || 'full';
         return this.getTemplate(templateId, templateMode);
-      case 'search_templates': {
+      case 'n8n_templates_search': {
         // Consolidated tool with searchMode parameter
         const searchMode = args.searchMode || 'keyword';
         const searchLimit = Math.min(Math.max(Number(args.limit) || 20, 1), 100);
@@ -1416,15 +1211,15 @@ export class N8NDocumentationMCPServer {
             return this.searchTemplates(args.query, searchLimit, searchOffset, searchFields);
         }
       }
-      case 'validate_workflow':
+      case 'n8n_workflow_json_validate':
         this.validateToolParams(name, args, ['workflow']);
         return this.validateWorkflow(args.workflow, args.options);
 
       // n8n Management Tools (if API is configured)
-      case 'n8n_create_workflow':
+      case 'n8n_workflow_create':
         this.validateToolParams(name, args, ['name', 'nodes', 'connections']);
         return n8nHandlers.handleCreateWorkflow(args, this.instanceContext);
-      case 'n8n_get_workflow': {
+      case 'n8n_workflow_get': {
         this.validateToolParams(name, args, ['id']);
         const workflowMode = args.mode || 'full';
         switch (workflowMode) {
@@ -1439,87 +1234,73 @@ export class N8NDocumentationMCPServer {
             return n8nHandlers.handleGetWorkflow(args, this.instanceContext);
         }
       }
-      case 'n8n_update_full_workflow':
+      case 'n8n_workflow_update_full':
         this.validateToolParams(name, args, ['id']);
         return n8nHandlers.handleUpdateWorkflow(args, this.repository!, this.instanceContext);
-      case 'n8n_update_partial_workflow':
+      case 'n8n_workflow_update_partial':
         this.validateToolParams(name, args, ['id', 'operations']);
         return handleUpdatePartialWorkflow(args, this.repository!, this.instanceContext);
-      case 'n8n_delete_workflow':
+      case 'n8n_workflow_delete':
         this.validateToolParams(name, args, ['id']);
         return n8nHandlers.handleDeleteWorkflow(args, this.instanceContext);
-      case 'n8n_list_workflows':
+      case 'n8n_workflows_list':
         // No required parameters
         return n8nHandlers.handleListWorkflows(args, this.instanceContext);
-      case 'n8n_validate_workflow':
+      case 'n8n_workflow_validate':
         this.validateToolParams(name, args, ['id']);
         await this.ensureInitialized();
         if (!this.repository) throw new Error('Repository not initialized');
         return n8nHandlers.handleValidateWorkflow(args, this.repository, this.instanceContext);
-      case 'n8n_autofix_workflow':
+      case 'n8n_workflow_autofix':
         this.validateToolParams(name, args, ['id']);
         await this.ensureInitialized();
         if (!this.repository) throw new Error('Repository not initialized');
         return n8nHandlers.handleAutofixWorkflow(args, this.repository, this.instanceContext);
-      case 'n8n_test_workflow':
+      case 'n8n_workflow_test':
         this.validateToolParams(name, args, ['workflowId']);
         return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
-      case 'n8n_executions': {
-        this.validateToolParams(name, args, ['action']);
-        const execAction = args.action;
-        switch (execAction) {
-          case 'get':
-            if (!args.id) {
-              throw new Error('id is required for action=get');
-            }
-            return n8nHandlers.handleGetExecution(args, this.instanceContext);
-          case 'list':
-            return n8nHandlers.handleListExecutions(args, this.instanceContext);
-          case 'delete':
-            if (!args.id) {
-              throw new Error('id is required for action=delete');
-            }
-            return n8nHandlers.handleDeleteExecution(args, this.instanceContext);
-          default:
-            throw new Error(`Unknown action: ${execAction}. Valid actions: get, list, delete`);
-        }
-      }
+      case 'n8n_executions_get':
+        this.validateToolParams(name, args, ['id']);
+        return n8nHandlers.handleGetExecution(args, this.instanceContext);
+      case 'n8n_executions_list':
+        return n8nHandlers.handleListExecutions(args, this.instanceContext);
+      case 'n8n_executions_delete':
+        this.validateToolParams(name, args, ['id']);
+        return n8nHandlers.handleDeleteExecution(args, this.instanceContext);
       case 'n8n_health_check':
         // No required parameters - supports mode='status' (default) or mode='diagnostic'
         if (args.mode === 'diagnostic') {
           return n8nHandlers.handleDiagnostic({ params: { arguments: args } }, this.instanceContext);
         }
         return n8nHandlers.handleHealthCheck(this.instanceContext);
-      case 'n8n_workflow_versions':
-        this.validateToolParams(name, args, ['mode']);
-        return n8nHandlers.handleWorkflowVersions(args, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_list':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'list' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_get':
+        this.validateToolParams(name, args, ['versionId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'get' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_rollback':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'rollback' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_delete':
+        this.validateToolParams(name, args, ['workflowId']);
+        if (!args.versionId && !args.deleteAll) {
+          throw new Error('versionId is required unless deleteAll=true');
+        }
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'delete' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_prune':
+        this.validateToolParams(name, args, ['workflowId']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'prune' }, this.repository!, this.instanceContext);
+      case 'n8n_workflow_versions_truncate':
+        this.validateToolParams(name, args, ['confirmTruncate']);
+        return n8nHandlers.handleWorkflowVersions({ ...args, mode: 'truncate' }, this.repository!, this.instanceContext);
 
-      case 'n8n_deploy_template':
+      case 'n8n_template_deploy':
         this.validateToolParams(name, args, ['templateId']);
         await this.ensureInitialized();
         if (!this.templateService) throw new Error('Template service not initialized');
         if (!this.repository) throw new Error('Repository not initialized');
         return n8nHandlers.handleDeployTemplate(args, this.templateService, this.repository, this.instanceContext);
-
-      case 'n8n_manage_datatable': {
-        this.validateToolParams(name, args, ['action']);
-        const dtAction = args.action;
-        // Each handler validates its own inputs via Zod schemas
-        switch (dtAction) {
-          case 'createTable':  return n8nHandlers.handleCreateTable(args, this.instanceContext);
-          case 'listTables':   return n8nHandlers.handleListTables(args, this.instanceContext);
-          case 'getTable':     return n8nHandlers.handleGetTable(args, this.instanceContext);
-          case 'updateTable':  return n8nHandlers.handleUpdateTable(args, this.instanceContext);
-          case 'deleteTable':  return n8nHandlers.handleDeleteTable(args, this.instanceContext);
-          case 'getRows':      return n8nHandlers.handleGetRows(args, this.instanceContext);
-          case 'insertRows':   return n8nHandlers.handleInsertRows(args, this.instanceContext);
-          case 'updateRows':   return n8nHandlers.handleUpdateRows(args, this.instanceContext);
-          case 'upsertRows':   return n8nHandlers.handleUpsertRows(args, this.instanceContext);
-          case 'deleteRows':   return n8nHandlers.handleDeleteRows(args, this.instanceContext);
-          default:
-            throw new Error(`Unknown action: ${dtAction}. Valid actions: createTable, listTables, getTable, updateTable, deleteTable, getRows, insertRows, updateRows, upsertRows, deleteRows`);
-        }
-      }
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1674,7 +1455,6 @@ export class N8NDocumentationMCPServer {
       mode?: 'OR' | 'AND' | 'FUZZY';
       includeSource?: boolean;
       includeExamples?: boolean;
-      source?: 'all' | 'core' | 'community' | 'verified';
     }
   ): Promise<any> {
     await this.ensureInitialized();
@@ -1713,11 +1493,7 @@ export class N8NDocumentationMCPServer {
     query: string,
     limit: number,
     mode: 'OR' | 'AND' | 'FUZZY',
-    options?: {
-      includeSource?: boolean;
-      includeExamples?: boolean;
-      source?: 'all' | 'core' | 'community' | 'verified';
-    }
+    options?: { includeSource?: boolean; includeExamples?: boolean; }
   ): Promise<any> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -1757,22 +1533,6 @@ export class N8NDocumentationMCPServer {
     }
     
     try {
-      // Build source filter SQL
-      let sourceFilter = '';
-      const sourceValue = options?.source || 'all';
-      switch (sourceValue) {
-        case 'core':
-          sourceFilter = 'AND n.is_community = 0';
-          break;
-        case 'community':
-          sourceFilter = 'AND n.is_community = 1';
-          break;
-        case 'verified':
-          sourceFilter = 'AND n.is_community = 1 AND n.is_verified = 1';
-          break;
-        // 'all' - no filter
-      }
-
       // Use FTS5 with ranking
       const nodes = this.db.prepare(`
         SELECT
@@ -1781,7 +1541,6 @@ export class N8NDocumentationMCPServer {
         FROM nodes n
         JOIN nodes_fts ON n.rowid = nodes_fts.rowid
         WHERE nodes_fts MATCH ?
-        ${sourceFilter}
         ORDER BY
           CASE
             WHEN LOWER(n.display_name) = LOWER(?) THEN 0
@@ -1825,31 +1584,15 @@ export class N8NDocumentationMCPServer {
       
       const result: any = {
         query,
-        results: scoredNodes.map(node => {
-          const nodeResult: any = {
-            nodeType: node.node_type,
-            workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
-            displayName: node.display_name,
-            description: node.description,
-            category: node.category,
-            package: node.package_name,
-            relevance: this.calculateRelevance(node, cleanedQuery)
-          };
-
-          // Add community metadata if this is a community node
-          if ((node as any).is_community === 1) {
-            nodeResult.isCommunity = true;
-            nodeResult.isVerified = (node as any).is_verified === 1;
-            if ((node as any).author_name) {
-              nodeResult.authorName = (node as any).author_name;
-            }
-            if ((node as any).npm_downloads) {
-              nodeResult.npmDownloads = (node as any).npm_downloads;
-            }
-          }
-
-          return nodeResult;
-        }),
+        results: scoredNodes.map(node => ({
+          nodeType: node.node_type,
+          workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
+          displayName: node.display_name,
+          description: node.description,
+          category: node.category,
+          package: node.package_name,
+          relevance: this.calculateRelevance(node, cleanedQuery)
+        })),
         totalCount: scoredNodes.length
       };
 
@@ -2065,29 +1808,9 @@ export class N8NDocumentationMCPServer {
   private async searchNodesLIKE(
     query: string,
     limit: number,
-    options?: {
-      includeSource?: boolean;
-      includeExamples?: boolean;
-      source?: 'all' | 'core' | 'community' | 'verified';
-    }
+    options?: { includeSource?: boolean; includeExamples?: boolean; }
   ): Promise<any> {
     if (!this.db) throw new Error('Database not initialized');
-
-    // Build source filter SQL
-    let sourceFilter = '';
-    const sourceValue = options?.source || 'all';
-    switch (sourceValue) {
-      case 'core':
-        sourceFilter = 'AND is_community = 0';
-        break;
-      case 'community':
-        sourceFilter = 'AND is_community = 1';
-        break;
-      case 'verified':
-        sourceFilter = 'AND is_community = 1 AND is_verified = 1';
-        break;
-      // 'all' - no filter
-    }
 
     // This is the existing LIKE-based implementation
     // Handle exact phrase searches with quotes
@@ -2095,8 +1818,7 @@ export class N8NDocumentationMCPServer {
       const exactPhrase = query.slice(1, -1);
       const nodes = this.db!.prepare(`
         SELECT * FROM nodes
-        WHERE (node_type LIKE ? OR display_name LIKE ? OR description LIKE ?)
-        ${sourceFilter}
+        WHERE node_type LIKE ? OR display_name LIKE ? OR description LIKE ?
         LIMIT ?
       `).all(`%${exactPhrase}%`, `%${exactPhrase}%`, `%${exactPhrase}%`, limit * 3) as NodeRow[];
 
@@ -2105,30 +1827,14 @@ export class N8NDocumentationMCPServer {
 
       const result: any = {
         query,
-        results: rankedNodes.map(node => {
-          const nodeResult: any = {
-            nodeType: node.node_type,
-            workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
-            displayName: node.display_name,
-            description: node.description,
-            category: node.category,
-            package: node.package_name
-          };
-
-          // Add community metadata if this is a community node
-          if ((node as any).is_community === 1) {
-            nodeResult.isCommunity = true;
-            nodeResult.isVerified = (node as any).is_verified === 1;
-            if ((node as any).author_name) {
-              nodeResult.authorName = (node as any).author_name;
-            }
-            if ((node as any).npm_downloads) {
-              nodeResult.npmDownloads = (node as any).npm_downloads;
-            }
-          }
-
-          return nodeResult;
-        }),
+        results: rankedNodes.map(node => ({
+          nodeType: node.node_type,
+          workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
+          displayName: node.display_name,
+          description: node.description,
+          category: node.category,
+          package: node.package_name
+        })),
         totalCount: rankedNodes.length
       };
 
@@ -2180,9 +1886,8 @@ export class N8NDocumentationMCPServer {
     params.push(limit * 3);
     
     const nodes = this.db!.prepare(`
-      SELECT DISTINCT * FROM nodes
-      WHERE (${conditions})
-      ${sourceFilter}
+      SELECT DISTINCT * FROM nodes 
+      WHERE ${conditions}
       LIMIT ?
     `).all(...params) as NodeRow[];
     
@@ -2191,30 +1896,14 @@ export class N8NDocumentationMCPServer {
 
     const result: any = {
       query,
-      results: rankedNodes.map(node => {
-        const nodeResult: any = {
-          nodeType: node.node_type,
-          workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
-          displayName: node.display_name,
-          description: node.description,
-          category: node.category,
-          package: node.package_name
-        };
-
-        // Add community metadata if this is a community node
-        if ((node as any).is_community === 1) {
-          nodeResult.isCommunity = true;
-          nodeResult.isVerified = (node as any).is_verified === 1;
-          if ((node as any).author_name) {
-            nodeResult.authorName = (node as any).author_name;
-          }
-          if ((node as any).npm_downloads) {
-            nodeResult.npmDownloads = (node as any).npm_downloads;
-          }
-        }
-
-        return nodeResult;
-      }),
+      results: rankedNodes.map(node => ({
+        nodeType: node.node_type,
+        workflowNodeType: getWorkflowNodeType(node.package_name, node.node_type),
+        displayName: node.display_name,
+        description: node.description,
+        category: node.category,
+        package: node.package_name
+      })),
       totalCount: rankedNodes.length
     };
 
@@ -2439,34 +2128,31 @@ export class N8NDocumentationMCPServer {
     // First try with normalized type
     const normalizedType = NodeTypeNormalizer.normalizeToFullForm(nodeType);
     let node = this.db!.prepare(`
-      SELECT node_type, display_name, documentation, description,
-             ai_documentation_summary, ai_summary_generated_at
-      FROM nodes
+      SELECT node_type, display_name, documentation, description 
+      FROM nodes 
       WHERE node_type = ?
     `).get(normalizedType) as NodeRow | undefined;
-
+    
     // If not found and normalization changed the type, try original
     if (!node && normalizedType !== nodeType) {
       node = this.db!.prepare(`
-        SELECT node_type, display_name, documentation, description,
-               ai_documentation_summary, ai_summary_generated_at
-        FROM nodes
+        SELECT node_type, display_name, documentation, description 
+        FROM nodes 
         WHERE node_type = ?
       `).get(nodeType) as NodeRow | undefined;
     }
-
+    
     // If still not found, try alternatives
     if (!node) {
       const alternatives = getNodeTypeAlternatives(normalizedType);
-
+      
       for (const alt of alternatives) {
         node = this.db!.prepare(`
-          SELECT node_type, display_name, documentation, description,
-                 ai_documentation_summary, ai_summary_generated_at
-          FROM nodes
+          SELECT node_type, display_name, documentation, description 
+          FROM nodes 
           WHERE node_type = ?
         `).get(alt) as NodeRow | undefined;
-
+        
         if (node) break;
       }
     }
@@ -2475,11 +2161,6 @@ export class N8NDocumentationMCPServer {
       throw new Error(`Node ${nodeType} not found`);
     }
     
-    // Parse AI documentation summary if present
-    const aiDocSummary = node.ai_documentation_summary
-      ? this.safeJsonParse(node.ai_documentation_summary, null)
-      : null;
-
     // If no documentation, generate fallback with null safety
     if (!node.documentation) {
       const essentials = await this.getNodeEssentials(nodeType);
@@ -2503,9 +2184,7 @@ ${essentials?.commonProperties?.length > 0 ?
 ## Note
 Full documentation is being prepared. For now, use get_node_essentials for configuration help.
 `,
-        hasDocumentation: false,
-        aiDocumentationSummary: aiDocSummary,
-        aiSummaryGeneratedAt: node.ai_summary_generated_at || null,
+        hasDocumentation: false
       };
     }
 
@@ -2514,17 +2193,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
       displayName: node.display_name || 'Unknown Node',
       documentation: node.documentation,
       hasDocumentation: true,
-      aiDocumentationSummary: aiDocSummary,
-      aiSummaryGeneratedAt: node.ai_summary_generated_at || null,
     };
-  }
-
-  private safeJsonParse(json: string, defaultValue: any = null): any {
-    try {
-      return JSON.parse(json);
-    } catch {
-      return defaultValue;
-    }
   }
 
   private async getDatabaseStatistics(): Promise<any> {
@@ -2649,7 +2318,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         action: op.action,
         resource: op.resource
       })),
-      // Examples removed - use validate_node_operation for working configurations
+      // Examples removed - use n8n_node_validate for working configurations
       metadata: {
         totalProperties: allProperties.length,
         isAITool: node.isAITool ?? false,
@@ -2671,7 +2340,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     if (includeExamples) {
       try {
         // Use the already-computed workflowNodeType from result (line 1888)
-        // This ensures consistency with search_nodes behavior (line 1203)
+        // This ensures consistency with n8n_nodes_search behavior (line 1203)
         const examples = this.db!.prepare(`
           SELECT
             parameters_json,
@@ -2761,11 +2430,11 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     const validModes = ['info', 'versions', 'compare', 'breaking', 'migrations'];
 
     if (!validDetailLevels.includes(detail)) {
-      throw new Error(`get_node: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
+      throw new Error(`n8n_node_get: Invalid detail level "${detail}". Valid options: ${validDetailLevels.join(', ')}`);
     }
 
     if (!validModes.includes(mode)) {
-      throw new Error(`get_node: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
+      throw new Error(`n8n_node_get: Invalid mode "${mode}". Valid options: ${validModes.join(', ')}`);
     }
 
     const normalizedType = NodeTypeNormalizer.normalizeToFullForm(nodeType);
@@ -2892,24 +2561,24 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
 
       case 'compare':
         if (!fromVersion) {
-          throw new Error(`get_node: fromVersion is required for compare mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_node_get: fromVersion is required for compare mode (nodeType: ${nodeType})`);
         }
         return this.compareVersions(nodeType, fromVersion, toVersion);
 
       case 'breaking':
         if (!fromVersion) {
-          throw new Error(`get_node: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_node_get: fromVersion is required for breaking mode (nodeType: ${nodeType})`);
         }
         return this.getBreakingChanges(nodeType, fromVersion, toVersion);
 
       case 'migrations':
         if (!fromVersion || !toVersion) {
-          throw new Error(`get_node: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
+          throw new Error(`n8n_node_get: Both fromVersion and toVersion are required for migrations mode (nodeType: ${nodeType})`);
         }
         return this.getMigrations(nodeType, fromVersion, toVersion);
 
       default:
-        throw new Error(`get_node: Unknown mode: ${mode} (nodeType: ${nodeType})`);
+        throw new Error(`n8n_node_get: Unknown mode: ${mode} (nodeType: ${nodeType})`);
     }
   }
 
@@ -3710,7 +3379,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     return {
       ...result,
       tip: result.items.length > 0 ? 
-        `Use get_template(templateId) to get full workflow details. Total: ${result.total} templates available.` :
+        `Use n8n_template_get(templateId) to get full workflow details. Total: ${result.total} templates available.` :
         "No templates found. Run 'npm run fetch:templates' to update template database"
     };
   }
@@ -3744,7 +3413,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
     if (!template) {
       return {
         error: `Template ${templateId} not found`,
-        tip: "Use list_templates, list_node_templates or search_templates to find available templates"
+        tip: "Use list_templates, list_node_templates or n8n_templates_search to find available templates"
       };
     }
     
@@ -3792,7 +3461,7 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         ...result,
         message: `No templates found for task: ${task}`,
         availableTasks,
-        tip: "Try a different task or use search_templates for custom searches"
+        tip: "Try a different task or use n8n_templates_search for custom searches"
       };
     }
     
@@ -4155,33 +3824,8 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
   }
   
   async shutdown(): Promise<void> {
-    // Prevent double-shutdown
-    if (this.isShutdown) {
-      logger.debug('Shutdown already called, skipping');
-      return;
-    }
-    this.isShutdown = true;
-
     logger.info('Shutting down MCP server...');
-
-    // Wait for initialization to complete (or fail) before cleanup
-    // This prevents race conditions where shutdown runs while init is in progress
-    try {
-      await this.initialized;
-    } catch (error) {
-      // Initialization failed - that's OK, we still need to clean up
-      logger.debug('Initialization had failed, proceeding with cleanup', {
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-
-    // Close MCP server connection (for consistency with close() method)
-    try {
-      await this.server.close();
-    } catch (error) {
-      logger.error('Error closing MCP server:', error);
-    }
-
+    
     // Clean up cache timers to prevent memory leaks
     if (this.cache) {
       try {
@@ -4191,31 +3835,15 @@ Full documentation is being prepared. For now, use get_node_essentials for confi
         logger.error('Error cleaning up cache:', error);
       }
     }
-
-    // Handle database cleanup based on whether it's shared or dedicated
-    // For shared databases, we only release the reference (decrement refCount)
-    // For dedicated databases (in-memory for tests), we close the connection
-    if (this.useSharedDatabase && this.sharedDbState) {
+    
+    // Close database connection if it exists
+    if (this.db) {
       try {
-        releaseSharedDatabase(this.sharedDbState);
-        logger.info('Released shared database reference');
-      } catch (error) {
-        logger.error('Error releasing shared database:', error);
-      }
-    } else if (this.db) {
-      try {
-        this.db.close();
+        await this.db.close();
         logger.info('Database connection closed');
       } catch (error) {
         logger.error('Error closing database:', error);
       }
     }
-
-    // Null out references to help garbage collection
-    this.db = null;
-    this.repository = null;
-    this.templateService = null;
-    this.earlyLogger = null;
-    this.sharedDbState = null;
   }
 }

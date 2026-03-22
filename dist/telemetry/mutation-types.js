@@ -12,7 +12,7 @@ var IntentClassification;
 })(IntentClassification || (exports.IntentClassification = IntentClassification = {}));
 var MutationToolName;
 (function (MutationToolName) {
-    MutationToolName["UPDATE_PARTIAL"] = "n8n_update_partial_workflow";
-    MutationToolName["UPDATE_FULL"] = "n8n_update_full_workflow";
+    MutationToolName["UPDATE_PARTIAL"] = "n8n_workflow_update_partial";
+    MutationToolName["UPDATE_FULL"] = "n8n_workflow_update_full";
 })(MutationToolName || (exports.MutationToolName = MutationToolName = {}));
 //# sourceMappingURL=mutation-types.js.map

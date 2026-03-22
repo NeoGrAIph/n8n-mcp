@@ -8,7 +8,7 @@ import {
   WebhookRequest,
   McpToolResponse,
   ExecutionFilterOptions,
-  ExecutionMode,
+  ExecutionMode
 } from '../types/n8n-api';
 import type { TriggerType, TestWorkflowInput } from '../triggers/types';
 import {
@@ -383,7 +383,6 @@ const createWorkflowSchema = z.object({
     executionTimeout: z.number().optional(),
     errorWorkflow: z.string().optional(),
   }).optional(),
-  projectId: z.string().optional(),
 });
 
 const updateWorkflowSchema = z.object({
@@ -425,19 +424,13 @@ const autofixWorkflowSchema = z.object({
     'node-type-correction',
     'webhook-missing-path',
     'typeversion-upgrade',
-    'version-migration',
-    'tool-variant-correction',
-    'connection-numeric-keys',
-    'connection-invalid-type',
-    'connection-id-to-name',
-    'connection-duplicate-removal',
-    'connection-input-index'
+    'version-migration'
   ])).optional(),
   confidenceThreshold: z.enum(['high', 'medium', 'low']).optional().default('medium'),
   maxFixes: z.number().optional().default(50)
 });
 
-// Schema for n8n_test_workflow tool
+// Schema for n8n_workflow_test tool
 const testWorkflowSchema = z.object({
   workflowId: z.string(),
   triggerType: z.enum(['webhook', 'form', 'chat']).optional(),
@@ -520,17 +513,6 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
     // Create workflow (n8n API expects node types in FULL form)
     const workflow = await client.createWorkflow(input);
 
-    // Defensive check: ensure the API returned a valid workflow with an ID
-    if (!workflow || !workflow.id) {
-      return {
-        success: false,
-        error: 'Workflow creation failed: n8n API returned an empty or invalid response. Verify your N8N_API_URL points to the correct /api/v1 endpoint and that the n8n instance supports workflow creation.',
-        details: {
-          response: workflow ? { keys: Object.keys(workflow) } : null
-        }
-      };
-    }
-
     // Track successful workflow creation
     telemetry.trackWorkflowCreation(workflow, true);
 
@@ -542,7 +524,7 @@ export async function handleCreateWorkflow(args: unknown, context?: InstanceCont
         active: workflow.active,
         nodeCount: workflow.nodes?.length || 0
       },
-      message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_get_workflow with mode 'structure' to verify current state.`
+      message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_workflow_get with mode 'structure' to verify current state.`
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -822,7 +804,7 @@ export async function handleUpdateWorkflow(
     if (workflowBefore) {
       trackWorkflowMutationForFullUpdate({
         sessionId,
-        toolName: 'n8n_update_full_workflow',
+        toolName: 'n8n_workflow_update_full',
         userIntent,
         operations: [], // Full update doesn't use diff operations
         workflowBefore,
@@ -842,14 +824,14 @@ export async function handleUpdateWorkflow(
         active: workflow.active,
         nodeCount: workflow.nodes?.length || 0
       },
-      message: `Workflow "${workflow.name}" updated successfully. Use n8n_get_workflow with mode 'structure' to verify current state.`
+      message: `Workflow "${workflow.name}" updated successfully. Use n8n_workflow_get with mode 'structure' to verify current state.`
     };
   } catch (error) {
     // Track failed mutation
     if (workflowBefore) {
       trackWorkflowMutationForFullUpdate({
         sessionId,
-        toolName: 'n8n_update_full_workflow',
+        toolName: 'n8n_workflow_update_full',
         userIntent,
         operations: [],
         workflowBefore,
@@ -1030,7 +1012,7 @@ export async function handleValidateWorkflow(
     // Run validation
     const validationResult = await validator.validateWorkflow(workflow, input.options);
     
-    // Format the response (same format as the regular validate_workflow tool)
+    // Format the response (same format as the regular n8n_workflow_json_validate tool)
     const response: WorkflowValidationResponse = {
       valid: validationResult.valid,
       workflowId: workflow.id,
@@ -1275,7 +1257,7 @@ export async function handleAutofixWorkflow(
 // Execution Management Handlers
 
 /**
- * Handler for n8n_test_workflow tool
+ * Handler for n8n_workflow_test tool
  * Triggers workflow execution via auto-detected or specified trigger type
  */
 export async function handleTestWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
@@ -1359,7 +1341,7 @@ export async function handleTestWorkflow(args: unknown, context?: InstanceContex
         details: {
           workflowId: input.workflowId,
           triggerType,
-          hint: 'Activate the workflow in n8n using n8n_update_partial_workflow with [{type: "activateWorkflow"}]',
+          hint: 'Activate the workflow in n8n using n8n_workflow_update_partial with [{type: "activateWorkflow"}]',
         },
       };
     }
@@ -1695,10 +1677,10 @@ export async function handleHealthCheck(context?: InstanceContext): Promise<McpT
 
     // Add next steps guidance based on telemetry insights
     responseData.nextSteps = [
-      '• Create workflow: n8n_create_workflow',
-      '• List workflows: n8n_list_workflows',
-      '• Search nodes: search_nodes',
-      '• Browse templates: search_templates'
+      '• Create workflow: n8n_workflow_create',
+      '• List workflows: n8n_workflows_list',
+      '• Search nodes: n8n_nodes_search',
+      '• Browse templates: n8n_templates_search'
     ];
 
     // Add update warning if outdated
@@ -1975,7 +1957,7 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
 
   // Check which tools are available
   const documentationTools = 7; // Base documentation tools (after v2.26.0 consolidation)
-  const managementTools = apiConfigured ? 14 : 0; // Management tools requiring API (includes n8n_manage_datatable)
+  const managementTools = apiConfigured ? 13 : 0; // Management tools requiring API (includes n8n_template_deploy)
   const totalTools = documentationTools + managementTools;
 
   // Check npm version
@@ -2037,30 +2019,30 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       message: '✓ API connected! Here\'s what you can do:',
       recommended: [
         {
-          action: 'n8n_list_workflows',
+          action: 'n8n_workflows_list',
           description: 'See your existing workflows',
           timing: 'Fast (6 seconds median)'
         },
         {
-          action: 'n8n_create_workflow',
+          action: 'n8n_workflow_create',
           description: 'Create a new workflow',
           timing: 'Typically 6-14 minutes to build'
         },
         {
-          action: 'search_nodes',
+          action: 'n8n_nodes_search',
           description: 'Discover available nodes',
           timing: 'Fast - explore 500+ nodes'
         },
         {
-          action: 'search_templates',
+          action: 'n8n_templates_search',
           description: 'Browse pre-built workflows',
           timing: 'Find examples quickly'
         }
       ],
       tips: [
         '82% of users start creating workflows after diagnostics - you\'re ready to go!',
-        'Most common first action: n8n_update_partial_workflow (managing existing workflows)',
-        'Use n8n_validate_workflow before deploying to catch issues early'
+        'Most common first action: n8n_workflow_update_partial (managing existing workflows)',
+        'Use n8n_workflow_validate before deploying to catch issues early'
       ]
     };
   } else if (apiConfigured && !apiStatus.connected) {
@@ -2091,9 +2073,9 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
       whatYouCanDoNow: {
         documentation: [
           {
-            tool: 'search_nodes',
+            tool: 'n8n_nodes_search',
             description: 'Search 500+ n8n nodes',
-            example: 'search_nodes({query: "slack"})'
+            example: 'n8n_nodes_search({query: "slack"})'
           },
           {
             tool: 'get_node_essentials',
@@ -2101,14 +2083,14 @@ export async function handleDiagnostic(request: any, context?: InstanceContext):
             example: 'get_node_essentials({nodeType: "nodes-base.httpRequest"})'
           },
           {
-            tool: 'search_templates',
+            tool: 'n8n_templates_search',
             description: 'Browse workflow templates',
-            example: 'search_templates({query: "chatbot"})'
+            example: 'n8n_templates_search({query: "chatbot"})'
           },
           {
-            tool: 'validate_workflow',
+            tool: 'n8n_workflow_json_validate',
             description: 'Validate workflow JSON',
-            example: 'validate_workflow({workflow: {...}})'
+            example: 'n8n_workflow_json_validate({workflow: {...}})'
           }
         ],
         note: '14 documentation tools available without API configuration'
@@ -2423,7 +2405,7 @@ export async function handleDeployTemplate(
         success: false,
         error: `Template ${input.templateId} not found`,
         details: {
-          hint: 'Use search_templates to find available templates',
+          hint: 'Use n8n_templates_search to find available templates',
           templateUrl: `https://n8n.io/workflows/${input.templateId}`
         }
       };
@@ -2687,259 +2669,5 @@ export async function handleTriggerWebhookWorkflow(args: unknown, context?: Inst
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
-  }
-}
-
-// ========================================================================
-// Data Table Handlers
-// ========================================================================
-
-// Shared Zod schemas for data table operations
-const dataTableFilterConditionSchema = z.object({
-  columnName: z.string().min(1),
-  condition: z.enum(['eq', 'neq', 'like', 'ilike', 'gt', 'gte', 'lt', 'lte']),
-  value: z.any(),
-});
-
-const dataTableFilterSchema = z.object({
-  type: z.enum(['and', 'or']).optional().default('and'),
-  filters: z.array(dataTableFilterConditionSchema).min(1, 'At least one filter condition is required'),
-});
-
-// Shared base schema for actions requiring a tableId
-const tableIdSchema = z.object({
-  tableId: z.string().min(1, 'tableId is required'),
-});
-
-// Per-action Zod schemas
-const createTableSchema = z.object({
-  name: z.string().min(1, 'Table name cannot be empty'),
-  columns: z.array(z.object({
-    name: z.string().min(1, 'Column name cannot be empty'),
-    type: z.enum(['string', 'number', 'boolean', 'date']).optional(),
-  })).optional(),
-});
-
-const listTablesSchema = z.object({
-  limit: z.number().min(1).max(100).optional(),
-  cursor: z.string().optional(),
-});
-
-const updateTableSchema = tableIdSchema.extend({
-  name: z.string().min(1, 'New table name cannot be empty'),
-});
-
-// MCP transports may serialize JSON objects/arrays as strings.
-// Parse them back, but return the original value on failure so Zod reports a proper type error.
-function tryParseJson(val: unknown): unknown {
-  if (typeof val !== 'string') return val;
-  try { return JSON.parse(val); } catch { return val; }
-}
-
-const coerceJsonArray = z.preprocess(tryParseJson, z.array(z.record(z.unknown())));
-const coerceJsonObject = z.preprocess(tryParseJson, z.record(z.unknown()));
-const coerceJsonFilter = z.preprocess(tryParseJson, dataTableFilterSchema);
-
-const getRowsSchema = tableIdSchema.extend({
-  limit: z.number().min(1).max(100).optional(),
-  cursor: z.string().optional(),
-  filter: z.union([coerceJsonFilter, z.string()]).optional(),
-  sortBy: z.string().optional(),
-  search: z.string().optional(),
-});
-
-const insertRowsSchema = tableIdSchema.extend({
-  data: coerceJsonArray.pipe(z.array(z.record(z.unknown())).min(1, 'At least one row is required')),
-  returnType: z.enum(['count', 'id', 'all']).optional(),
-});
-
-// Shared schema for update/upsert (identical structure)
-const mutateRowsSchema = tableIdSchema.extend({
-  filter: coerceJsonFilter,
-  data: coerceJsonObject,
-  returnData: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-const deleteRowsSchema = tableIdSchema.extend({
-  filter: coerceJsonFilter,
-  returnData: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-function handleDataTableError(error: unknown): McpToolResponse {
-  if (error instanceof z.ZodError) {
-    return { success: false, error: 'Invalid input', details: { errors: error.errors } };
-  }
-  if (error instanceof N8nApiError) {
-    return {
-      success: false,
-      error: getUserFriendlyErrorMessage(error),
-      code: error.code,
-      details: error.details as Record<string, unknown> | undefined,
-    };
-  }
-  return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
-}
-
-export async function handleCreateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const input = createTableSchema.parse(args);
-    const dataTable = await client.createDataTable(input);
-    if (!dataTable || !dataTable.id) {
-      return { success: false, error: 'Data table creation failed: n8n API returned an empty or invalid response' };
-    }
-    return {
-      success: true,
-      data: { id: dataTable.id, name: dataTable.name },
-      message: `Data table "${dataTable.name}" created with ID: ${dataTable.id}`,
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleListTables(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const input = listTablesSchema.parse(args || {});
-    const result = await client.listDataTables(input);
-    return {
-      success: true,
-      data: {
-        tables: result.data,
-        count: result.data.length,
-        nextCursor: result.nextCursor || undefined,
-      },
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleGetTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId } = tableIdSchema.parse(args);
-    const dataTable = await client.getDataTable(tableId);
-    return { success: true, data: dataTable };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleUpdateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, name } = updateTableSchema.parse(args);
-    const dataTable = await client.updateDataTable(tableId, { name });
-    return {
-      success: true,
-      data: dataTable,
-      message: `Data table renamed to "${dataTable.name}"`,
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleDeleteTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId } = tableIdSchema.parse(args);
-    await client.deleteDataTable(tableId);
-    return { success: true, message: `Data table ${tableId} deleted successfully` };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleGetRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, filter, sortBy, ...params } = getRowsSchema.parse(args);
-    const queryParams: Record<string, unknown> = { ...params };
-    if (filter) {
-      queryParams.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
-    }
-    if (sortBy) {
-      queryParams.sortBy = sortBy;
-    }
-    const result = await client.getDataTableRows(tableId, queryParams as any);
-    return {
-      success: true,
-      data: {
-        rows: result.data,
-        count: result.data.length,
-        nextCursor: result.nextCursor || undefined,
-      },
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleInsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, ...params } = insertRowsSchema.parse(args);
-    const result = await client.insertDataTableRows(tableId, params);
-    return {
-      success: true,
-      data: result,
-      message: `Rows inserted into data table ${tableId}`,
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleUpdateRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, ...params } = mutateRowsSchema.parse(args);
-    const result = await client.updateDataTableRows(tableId, params);
-    return {
-      success: true,
-      data: result,
-      message: params.dryRun ? 'Dry run: rows matched (no changes applied)' : 'Rows updated successfully',
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleUpsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, ...params } = mutateRowsSchema.parse(args);
-    const result = await client.upsertDataTableRow(tableId, params);
-    return {
-      success: true,
-      data: result,
-      message: params.dryRun ? 'Dry run: upsert previewed (no changes applied)' : 'Row upserted successfully',
-    };
-  } catch (error) {
-    return handleDataTableError(error);
-  }
-}
-
-export async function handleDeleteRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
-  try {
-    const client = ensureApiConfigured(context);
-    const { tableId, filter, ...params } = deleteRowsSchema.parse(args);
-    const queryParams = {
-      filter: JSON.stringify(filter),
-      ...params,
-    };
-    const result = await client.deleteDataTableRows(tableId, queryParams as any);
-    return {
-      success: true,
-      data: result,
-      message: params.dryRun ? 'Dry run: rows matched for deletion (no changes applied)' : 'Rows deleted successfully',
-    };
-  } catch (error) {
-    return handleDataTableError(error);
   }
 }

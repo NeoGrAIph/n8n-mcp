@@ -56,16 +56,6 @@ exports.handleDiagnostic = handleDiagnostic;
 exports.handleWorkflowVersions = handleWorkflowVersions;
 exports.handleDeployTemplate = handleDeployTemplate;
 exports.handleTriggerWebhookWorkflow = handleTriggerWebhookWorkflow;
-exports.handleCreateTable = handleCreateTable;
-exports.handleListTables = handleListTables;
-exports.handleGetTable = handleGetTable;
-exports.handleUpdateTable = handleUpdateTable;
-exports.handleDeleteTable = handleDeleteTable;
-exports.handleGetRows = handleGetRows;
-exports.handleInsertRows = handleInsertRows;
-exports.handleUpdateRows = handleUpdateRows;
-exports.handleUpsertRows = handleUpsertRows;
-exports.handleDeleteRows = handleDeleteRows;
 const n8n_api_client_1 = require("../services/n8n-api-client");
 const n8n_api_1 = require("../config/n8n-api");
 const n8n_api_2 = require("../types/n8n-api");
@@ -185,7 +175,6 @@ const createWorkflowSchema = zod_1.z.object({
         executionTimeout: zod_1.z.number().optional(),
         errorWorkflow: zod_1.z.string().optional(),
     }).optional(),
-    projectId: zod_1.z.string().optional(),
 });
 const updateWorkflowSchema = zod_1.z.object({
     id: zod_1.z.string(),
@@ -223,13 +212,7 @@ const autofixWorkflowSchema = zod_1.z.object({
         'node-type-correction',
         'webhook-missing-path',
         'typeversion-upgrade',
-        'version-migration',
-        'tool-variant-correction',
-        'connection-numeric-keys',
-        'connection-invalid-type',
-        'connection-id-to-name',
-        'connection-duplicate-removal',
-        'connection-input-index'
+        'version-migration'
     ])).optional(),
     confidenceThreshold: zod_1.z.enum(['high', 'medium', 'low']).optional().default('medium'),
     maxFixes: zod_1.z.number().optional().default(50)
@@ -299,15 +282,6 @@ async function handleCreateWorkflow(args, context) {
             };
         }
         const workflow = await client.createWorkflow(input);
-        if (!workflow || !workflow.id) {
-            return {
-                success: false,
-                error: 'Workflow creation failed: n8n API returned an empty or invalid response. Verify your N8N_API_URL points to the correct /api/v1 endpoint and that the n8n instance supports workflow creation.',
-                details: {
-                    response: workflow ? { keys: Object.keys(workflow) } : null
-                }
-            };
-        }
         telemetry_1.telemetry.trackWorkflowCreation(workflow, true);
         return {
             success: true,
@@ -317,7 +291,7 @@ async function handleCreateWorkflow(args, context) {
                 active: workflow.active,
                 nodeCount: workflow.nodes?.length || 0
             },
-            message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_get_workflow with mode 'structure' to verify current state.`
+            message: `Workflow "${workflow.name}" created successfully with ID: ${workflow.id}. Use n8n_workflow_get with mode 'structure' to verify current state.`
         };
     }
     catch (error) {
@@ -555,7 +529,7 @@ async function handleUpdateWorkflow(args, repository, context) {
         if (workflowBefore) {
             trackWorkflowMutationForFullUpdate({
                 sessionId,
-                toolName: 'n8n_update_full_workflow',
+                toolName: 'n8n_workflow_update_full',
                 userIntent,
                 operations: [],
                 workflowBefore,
@@ -574,14 +548,14 @@ async function handleUpdateWorkflow(args, repository, context) {
                 active: workflow.active,
                 nodeCount: workflow.nodes?.length || 0
             },
-            message: `Workflow "${workflow.name}" updated successfully. Use n8n_get_workflow with mode 'structure' to verify current state.`
+            message: `Workflow "${workflow.name}" updated successfully. Use n8n_workflow_get with mode 'structure' to verify current state.`
         };
     }
     catch (error) {
         if (workflowBefore) {
             trackWorkflowMutationForFullUpdate({
                 sessionId,
-                toolName: 'n8n_update_full_workflow',
+                toolName: 'n8n_workflow_update_full',
                 userIntent,
                 operations: [],
                 workflowBefore,
@@ -981,7 +955,7 @@ async function handleTestWorkflow(args, context) {
                 details: {
                     workflowId: input.workflowId,
                     triggerType,
-                    hint: 'Activate the workflow in n8n using n8n_update_partial_workflow with [{type: "activateWorkflow"}]',
+                    hint: 'Activate the workflow in n8n using n8n_workflow_update_partial with [{type: "activateWorkflow"}]',
                 },
             };
         }
@@ -1234,10 +1208,10 @@ async function handleHealthCheck(context) {
             }
         };
         responseData.nextSteps = [
-            '• Create workflow: n8n_create_workflow',
-            '• List workflows: n8n_list_workflows',
-            '• Search nodes: search_nodes',
-            '• Browse templates: search_templates'
+            '• Create workflow: n8n_workflow_create',
+            '• List workflows: n8n_workflows_list',
+            '• Search nodes: n8n_nodes_search',
+            '• Browse templates: n8n_templates_search'
         ];
         if (versionCheck.isOutdated && versionCheck.latestVersion) {
             responseData.updateWarning = `⚠️  n8n-mcp v${versionCheck.latestVersion} is available (you have v${versionCheck.currentVersion}). Update recommended.`;
@@ -1481,7 +1455,7 @@ async function handleDiagnostic(request, context) {
         }
     }
     const documentationTools = 7;
-    const managementTools = apiConfigured ? 14 : 0;
+    const managementTools = apiConfigured ? 13 : 0;
     const totalTools = documentationTools + managementTools;
     const versionCheck = await (0, npm_version_checker_1.checkNpmVersion)();
     const cacheMetricsData = getInstanceCacheMetrics();
@@ -1534,30 +1508,30 @@ async function handleDiagnostic(request, context) {
             message: '✓ API connected! Here\'s what you can do:',
             recommended: [
                 {
-                    action: 'n8n_list_workflows',
+                    action: 'n8n_workflows_list',
                     description: 'See your existing workflows',
                     timing: 'Fast (6 seconds median)'
                 },
                 {
-                    action: 'n8n_create_workflow',
+                    action: 'n8n_workflow_create',
                     description: 'Create a new workflow',
                     timing: 'Typically 6-14 minutes to build'
                 },
                 {
-                    action: 'search_nodes',
+                    action: 'n8n_nodes_search',
                     description: 'Discover available nodes',
                     timing: 'Fast - explore 500+ nodes'
                 },
                 {
-                    action: 'search_templates',
+                    action: 'n8n_templates_search',
                     description: 'Browse pre-built workflows',
                     timing: 'Find examples quickly'
                 }
             ],
             tips: [
                 '82% of users start creating workflows after diagnostics - you\'re ready to go!',
-                'Most common first action: n8n_update_partial_workflow (managing existing workflows)',
-                'Use n8n_validate_workflow before deploying to catch issues early'
+                'Most common first action: n8n_workflow_update_partial (managing existing workflows)',
+                'Use n8n_workflow_validate before deploying to catch issues early'
             ]
         };
     }
@@ -1588,9 +1562,9 @@ async function handleDiagnostic(request, context) {
             whatYouCanDoNow: {
                 documentation: [
                     {
-                        tool: 'search_nodes',
+                        tool: 'n8n_nodes_search',
                         description: 'Search 500+ n8n nodes',
-                        example: 'search_nodes({query: "slack"})'
+                        example: 'n8n_nodes_search({query: "slack"})'
                     },
                     {
                         tool: 'get_node_essentials',
@@ -1598,14 +1572,14 @@ async function handleDiagnostic(request, context) {
                         example: 'get_node_essentials({nodeType: "nodes-base.httpRequest"})'
                     },
                     {
-                        tool: 'search_templates',
+                        tool: 'n8n_templates_search',
                         description: 'Browse workflow templates',
-                        example: 'search_templates({query: "chatbot"})'
+                        example: 'n8n_templates_search({query: "chatbot"})'
                     },
                     {
-                        tool: 'validate_workflow',
+                        tool: 'n8n_workflow_json_validate',
                         description: 'Validate workflow JSON',
-                        example: 'validate_workflow({workflow: {...}})'
+                        example: 'n8n_workflow_json_validate({workflow: {...}})'
                     }
                 ],
                 note: '14 documentation tools available without API configuration'
@@ -1843,7 +1817,7 @@ async function handleDeployTemplate(args, templateService, repository, context) 
                 success: false,
                 error: `Template ${input.templateId} not found`,
                 details: {
-                    hint: 'Use search_templates to find available templates',
+                    hint: 'Use n8n_templates_search to find available templates',
                     templateUrl: `https://n8n.io/workflows/${input.templateId}`
                 }
             };
@@ -2047,243 +2021,6 @@ async function handleTriggerWebhookWorkflow(args, context) {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
-    }
-}
-const dataTableFilterConditionSchema = zod_1.z.object({
-    columnName: zod_1.z.string().min(1),
-    condition: zod_1.z.enum(['eq', 'neq', 'like', 'ilike', 'gt', 'gte', 'lt', 'lte']),
-    value: zod_1.z.any(),
-});
-const dataTableFilterSchema = zod_1.z.object({
-    type: zod_1.z.enum(['and', 'or']).optional().default('and'),
-    filters: zod_1.z.array(dataTableFilterConditionSchema).min(1, 'At least one filter condition is required'),
-});
-const tableIdSchema = zod_1.z.object({
-    tableId: zod_1.z.string().min(1, 'tableId is required'),
-});
-const createTableSchema = zod_1.z.object({
-    name: zod_1.z.string().min(1, 'Table name cannot be empty'),
-    columns: zod_1.z.array(zod_1.z.object({
-        name: zod_1.z.string().min(1, 'Column name cannot be empty'),
-        type: zod_1.z.enum(['string', 'number', 'boolean', 'date']).optional(),
-    })).optional(),
-});
-const listTablesSchema = zod_1.z.object({
-    limit: zod_1.z.number().min(1).max(100).optional(),
-    cursor: zod_1.z.string().optional(),
-});
-const updateTableSchema = tableIdSchema.extend({
-    name: zod_1.z.string().min(1, 'New table name cannot be empty'),
-});
-function tryParseJson(val) {
-    if (typeof val !== 'string')
-        return val;
-    try {
-        return JSON.parse(val);
-    }
-    catch {
-        return val;
-    }
-}
-const coerceJsonArray = zod_1.z.preprocess(tryParseJson, zod_1.z.array(zod_1.z.record(zod_1.z.unknown())));
-const coerceJsonObject = zod_1.z.preprocess(tryParseJson, zod_1.z.record(zod_1.z.unknown()));
-const coerceJsonFilter = zod_1.z.preprocess(tryParseJson, dataTableFilterSchema);
-const getRowsSchema = tableIdSchema.extend({
-    limit: zod_1.z.number().min(1).max(100).optional(),
-    cursor: zod_1.z.string().optional(),
-    filter: zod_1.z.union([coerceJsonFilter, zod_1.z.string()]).optional(),
-    sortBy: zod_1.z.string().optional(),
-    search: zod_1.z.string().optional(),
-});
-const insertRowsSchema = tableIdSchema.extend({
-    data: coerceJsonArray.pipe(zod_1.z.array(zod_1.z.record(zod_1.z.unknown())).min(1, 'At least one row is required')),
-    returnType: zod_1.z.enum(['count', 'id', 'all']).optional(),
-});
-const mutateRowsSchema = tableIdSchema.extend({
-    filter: coerceJsonFilter,
-    data: coerceJsonObject,
-    returnData: zod_1.z.boolean().optional(),
-    dryRun: zod_1.z.boolean().optional(),
-});
-const deleteRowsSchema = tableIdSchema.extend({
-    filter: coerceJsonFilter,
-    returnData: zod_1.z.boolean().optional(),
-    dryRun: zod_1.z.boolean().optional(),
-});
-function handleDataTableError(error) {
-    if (error instanceof zod_1.z.ZodError) {
-        return { success: false, error: 'Invalid input', details: { errors: error.errors } };
-    }
-    if (error instanceof n8n_errors_1.N8nApiError) {
-        return {
-            success: false,
-            error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
-            code: error.code,
-            details: error.details,
-        };
-    }
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
-}
-async function handleCreateTable(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const input = createTableSchema.parse(args);
-        const dataTable = await client.createDataTable(input);
-        if (!dataTable || !dataTable.id) {
-            return { success: false, error: 'Data table creation failed: n8n API returned an empty or invalid response' };
-        }
-        return {
-            success: true,
-            data: { id: dataTable.id, name: dataTable.name },
-            message: `Data table "${dataTable.name}" created with ID: ${dataTable.id}`,
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleListTables(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const input = listTablesSchema.parse(args || {});
-        const result = await client.listDataTables(input);
-        return {
-            success: true,
-            data: {
-                tables: result.data,
-                count: result.data.length,
-                nextCursor: result.nextCursor || undefined,
-            },
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleGetTable(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId } = tableIdSchema.parse(args);
-        const dataTable = await client.getDataTable(tableId);
-        return { success: true, data: dataTable };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleUpdateTable(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, name } = updateTableSchema.parse(args);
-        const dataTable = await client.updateDataTable(tableId, { name });
-        return {
-            success: true,
-            data: dataTable,
-            message: `Data table renamed to "${dataTable.name}"`,
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleDeleteTable(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId } = tableIdSchema.parse(args);
-        await client.deleteDataTable(tableId);
-        return { success: true, message: `Data table ${tableId} deleted successfully` };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleGetRows(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, filter, sortBy, ...params } = getRowsSchema.parse(args);
-        const queryParams = { ...params };
-        if (filter) {
-            queryParams.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
-        }
-        if (sortBy) {
-            queryParams.sortBy = sortBy;
-        }
-        const result = await client.getDataTableRows(tableId, queryParams);
-        return {
-            success: true,
-            data: {
-                rows: result.data,
-                count: result.data.length,
-                nextCursor: result.nextCursor || undefined,
-            },
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleInsertRows(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, ...params } = insertRowsSchema.parse(args);
-        const result = await client.insertDataTableRows(tableId, params);
-        return {
-            success: true,
-            data: result,
-            message: `Rows inserted into data table ${tableId}`,
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleUpdateRows(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, ...params } = mutateRowsSchema.parse(args);
-        const result = await client.updateDataTableRows(tableId, params);
-        return {
-            success: true,
-            data: result,
-            message: params.dryRun ? 'Dry run: rows matched (no changes applied)' : 'Rows updated successfully',
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleUpsertRows(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, ...params } = mutateRowsSchema.parse(args);
-        const result = await client.upsertDataTableRow(tableId, params);
-        return {
-            success: true,
-            data: result,
-            message: params.dryRun ? 'Dry run: upsert previewed (no changes applied)' : 'Row upserted successfully',
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
-    }
-}
-async function handleDeleteRows(args, context) {
-    try {
-        const client = ensureApiConfigured(context);
-        const { tableId, filter, ...params } = deleteRowsSchema.parse(args);
-        const queryParams = {
-            filter: JSON.stringify(filter),
-            ...params,
-        };
-        const result = await client.deleteDataTableRows(tableId, queryParams);
-        return {
-            success: true,
-            data: result,
-            message: params.dryRun ? 'Dry run: rows matched for deletion (no changes applied)' : 'Rows deleted successfully',
-        };
-    }
-    catch (error) {
-        return handleDataTableError(error);
     }
 }
 //# sourceMappingURL=handlers-n8n-manager.js.map

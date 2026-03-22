@@ -1,5 +1,5 @@
 /**
- * Trigger system for n8n_test_workflow tool
+ * Trigger system for n8n_workflow_test tool
  *
  * Provides extensible trigger handling for different n8n trigger types:
  * - webhook: HTTP-based triggers

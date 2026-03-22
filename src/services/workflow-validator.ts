@@ -2319,7 +2319,7 @@ export class WorkflowValidator {
     if (errorTypes.configuration.length > 0) {
       result.suggestions.unshift(
         '🔧 RECOVERY: Node configuration errors. Fix with:',
-        '   • Check required fields using validate_node_minimal first',
+        '   • Check required fields using n8n_node_validate with mode=minimal',
         '   • Use get_node_essentials to see what fields are needed',
         '   • Ensure operation-specific fields match the node\'s requirements'
       );
@@ -2341,7 +2341,7 @@ export class WorkflowValidator {
         '   2. Validate node types and fix invalid ones',
         '   3. Add required typeVersion to all nodes',
         '   4. Test connections step by step',
-        '   5. Use validate_node_minimal on individual nodes to verify configuration'
+        '   5. Use n8n_node_validate with mode=minimal on individual nodes to verify configuration'
       );
     }
   }

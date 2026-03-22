@@ -1,15 +1,15 @@
 import { ToolDocumentation } from '../types';
 
 export const validateWorkflowDoc: ToolDocumentation = {
-  name: 'validate_workflow',
+  name: 'n8n_workflow_json_validate',
   category: 'validation',
   essentials: {
     description: 'Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy.',
     keyParameters: ['workflow', 'options'],
-    example: 'validate_workflow({workflow: {nodes: [...], connections: {...}}})',
+    example: 'n8n_workflow_json_validate({workflow: {nodes: [...], connections: {...}}})',
     performance: 'Moderate (100-500ms)',
     tips: [
-      'Always validate before n8n_create_workflow to catch errors early',
+      'Always validate before n8n_workflow_create to catch errors early',
       'Use options.profile="minimal" for quick checks during development',
       'AI tool connections are automatically validated for proper node references',
       'Detects operator structure issues (binary vs unary, singleValue requirements)'
@@ -51,9 +51,9 @@ export const validateWorkflowDoc: ToolDocumentation = {
     },
     returns: 'Object with valid (boolean), errors (array), warnings (array), statistics (object), and suggestions (array)',
     examples: [
-      'validate_workflow({workflow: myWorkflow}) - Full validation with default settings',
-      'validate_workflow({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
-      'validate_workflow({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
+      'n8n_workflow_json_validate({workflow: myWorkflow}) - Full validation with default settings',
+      'n8n_workflow_json_validate({workflow: myWorkflow, options: {profile: "minimal"}}) - Quick validation for editing',
+      'n8n_workflow_json_validate({workflow: myWorkflow, options: {validateExpressions: false}}) - Skip expression validation'
     ],
     useCases: [
       'Pre-deployment validation to catch all workflow issues',
@@ -70,7 +70,7 @@ export const validateWorkflowDoc: ToolDocumentation = {
       'Validate after any workflow modifications, especially connection changes',
       'Check statistics to understand workflow complexity',
       '**Auto-sanitization runs during create/update**: Operator structures and missing metadata are automatically fixed when workflows are created or updated, but validation helps catch issues before they reach n8n',
-      'If validation detects operator issues, they will be auto-fixed during n8n_create_workflow or n8n_update_partial_workflow'
+      'If validation detects operator issues, they will be auto-fixed during n8n_workflow_create or n8n_workflow_update_partial'
     ],
     pitfalls: [
       'Large workflows (100+ nodes) may take longer to validate',
@@ -79,6 +79,6 @@ export const validateWorkflowDoc: ToolDocumentation = {
       'Validation cannot catch all runtime errors (e.g., API failures)',
       'Profile setting only affects node validation, not connection/expression checks'
     ],
-    relatedTools: ['validate_node', 'n8n_create_workflow', 'n8n_update_partial_workflow', 'n8n_autofix_workflow']
+    relatedTools: ['n8n_node_validate', 'n8n_workflow_create', 'n8n_workflow_update_partial', 'n8n_workflow_autofix']
   }
 };

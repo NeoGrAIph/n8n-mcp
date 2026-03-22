@@ -1,5 +1,5 @@
 /**
- * Trigger system types for n8n_test_workflow tool
+ * Trigger system types for n8n_workflow_test tool
  *
  * Supports 3 trigger categories (all input-capable):
  * - webhook: AI can pass HTTP body/headers/params

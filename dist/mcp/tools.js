@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nDocumentationToolsFinal = void 0;
 exports.n8nDocumentationToolsFinal = [
     {
-        name: 'tools_documentation',
-        description: `Get documentation for n8n MCP tools. Call without parameters for quick start guide. Use topic parameter to get documentation for specific tools. Use depth='full' for comprehensive documentation.`,
+        name: 'n8n_tools_documentation',
+        description: `Fetch the built-in documentation for n8n MCP tools and guides. Use topic to target a specific tool or "overview" for the index, and set depth to control verbosity. Returns Markdown with usage guidance, examples, and best practices.`,
         inputSchema: {
             type: 'object',
             properties: {
                 topic: {
                     type: 'string',
-                    description: 'Tool name (e.g., "search_nodes") or "overview" for general guide. Leave empty for quick reference.',
+                    description: 'Tool name (e.g., "n8n_nodes_search") or "overview" for general guide. Leave empty for quick reference.',
                 },
                 depth: {
                     type: 'string',
@@ -20,15 +20,10 @@ exports.n8nDocumentationToolsFinal = [
                 },
             },
         },
-        annotations: {
-            title: 'Tools Documentation',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'search_nodes',
-        description: `Search n8n nodes by keyword with optional real-world examples. Pass query as string. Example: query="webhook" or query="database". Returns max 20 results. Use includeExamples=true to get top 2 template configs per node.`,
+        name: 'n8n_nodes_search',
+        description: `Search the local n8n node catalog by keyword to discover node types. Provide query plus optional mode/limit and includeExamples to control matching and sample configs. Returns a ranked list of node types with basic metadata.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -37,7 +32,7 @@ exports.n8nDocumentationToolsFinal = [
                     description: 'Search terms. Use quotes for exact phrase.',
                 },
                 limit: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Max results (default 20)',
                     default: 20,
                 },
@@ -61,15 +56,10 @@ exports.n8nDocumentationToolsFinal = [
             },
             required: ['query'],
         },
-        annotations: {
-            title: 'Search Nodes',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'get_node',
-        description: `Get node info with progressive detail levels and multiple modes. Detail: minimal (~200 tokens), standard (~1-2K, default), full (~3-8K). Modes: info (default), docs (markdown documentation), search_properties (find properties), versions/compare/breaking/migrations (version info). Use format='docs' for readable documentation, mode='search_properties' with propertyQuery for finding specific fields.`,
+        name: 'n8n_node_get',
+        description: `Retrieve detailed metadata for a specific node type. Provide nodeType and optionally detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -112,22 +102,17 @@ exports.n8nDocumentationToolsFinal = [
                     description: 'For mode=search_properties: search term to find properties (e.g., "auth", "header", "body")',
                 },
                 maxPropertyResults: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'For mode=search_properties: max results (default 20)',
                     default: 20,
                 },
             },
             required: ['nodeType'],
         },
-        annotations: {
-            title: 'Get Node Info',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'validate_node',
-        description: `Validate n8n node configuration. Use mode='full' for comprehensive validation with errors/warnings/suggestions, mode='minimal' for quick required fields check. Example: nodeType="nodes-base.slack", config={resource:"channel",operation:"create"}`,
+        name: 'n8n_node_validate',
+        description: `Validate a node configuration against its schema. Provide nodeType and config, and set mode to minimal or full with an optional profile for strictness. Returns a structured validation result with errors, warnings, and suggestions.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -204,20 +189,15 @@ exports.n8nDocumentationToolsFinal = [
             },
             required: ['nodeType', 'displayName', 'valid']
         },
-        annotations: {
-            title: 'Validate Node Config',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'get_template',
-        description: `Get template by ID. Use mode to control response size: nodes_only (minimal), structure (nodes+connections), full (complete workflow).`,
+        name: 'n8n_template_get',
+        description: `Fetch a workflow template from the local template database by templateId. Use mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.`,
         inputSchema: {
             type: 'object',
             properties: {
                 templateId: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'The template ID to retrieve',
                 },
                 mode: {
@@ -229,15 +209,10 @@ exports.n8nDocumentationToolsFinal = [
             },
             required: ['templateId'],
         },
-        annotations: {
-            title: 'Get Template',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'search_templates',
-        description: `Search templates with multiple modes. Use searchMode='keyword' for text search, 'by_nodes' to find templates using specific nodes, 'by_task' for curated task-based templates, 'by_metadata' for filtering by complexity/setup time/services.`,
+        name: 'n8n_templates_search',
+        description: `Search the local workflow templates catalog. Choose searchMode and provide matching parameters (query, nodeTypes, task, or metadata filters) plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -290,13 +265,13 @@ exports.n8nDocumentationToolsFinal = [
                     description: 'For searchMode=by_metadata: filter by complexity level',
                 },
                 maxSetupMinutes: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'For searchMode=by_metadata: maximum setup time in minutes',
                     minimum: 5,
                     maximum: 480,
                 },
                 minSetupMinutes: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'For searchMode=by_metadata: minimum setup time in minutes',
                     minimum: 5,
                     maximum: 480,
@@ -310,29 +285,24 @@ exports.n8nDocumentationToolsFinal = [
                     description: 'For searchMode=by_metadata: filter by target audience (e.g., "developers", "marketers")',
                 },
                 limit: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Maximum number of results. Default 20.',
                     default: 20,
                     minimum: 1,
                     maximum: 100,
                 },
                 offset: {
-                    type: 'number',
+                    type: 'integer',
                     description: 'Pagination offset. Default 0.',
                     default: 0,
                     minimum: 0,
                 },
             },
         },
-        annotations: {
-            title: 'Search Templates',
-            readOnlyHint: true,
-            idempotentHint: true,
-        },
     },
     {
-        name: 'validate_workflow',
-        description: `Full workflow validation: structure, connections, expressions, AI tools. Returns errors/warnings/fixes. Essential before deploy.`,
+        name: 'n8n_workflow_json_validate',
+        description: `Validate a workflow JSON object locally without calling n8n. Provide workflow with nodes and connections, plus optional options to control validation depth. Returns validity, summary, errors, warnings, and suggestions.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -413,11 +383,6 @@ exports.n8nDocumentationToolsFinal = [
                 suggestions: { type: 'array', items: { type: 'string' } }
             },
             required: ['valid', 'summary']
-        },
-        annotations: {
-            title: 'Validate Workflow',
-            readOnlyHint: true,
-            idempotentHint: true,
         },
     },
 ];

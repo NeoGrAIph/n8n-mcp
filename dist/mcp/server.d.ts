@@ -13,9 +13,6 @@ export declare class N8NDocumentationMCPServer {
     private previousToolTimestamp;
     private earlyLogger;
     private disabledToolsCache;
-    private useSharedDatabase;
-    private sharedDbState;
-    private isShutdown;
     constructor(instanceContext?: InstanceContext, earlyLogger?: EarlyErrorLogger);
     close(): Promise<void>;
     private initializeDatabase;
@@ -30,7 +27,6 @@ export declare class N8NDocumentationMCPServer {
     private validateToolParams;
     private validateToolParamsBasic;
     private validateExtractedArgs;
-    private coerceStringifiedJsonParams;
     private listNodes;
     private getNodeInfo;
     private searchNodes;
@@ -44,7 +40,6 @@ export declare class N8NDocumentationMCPServer {
     private rankSearchResults;
     private listAITools;
     private getNodeDocumentation;
-    private safeJsonParse;
     private getDatabaseStatistics;
     private getNodeEssentials;
     private getNode;

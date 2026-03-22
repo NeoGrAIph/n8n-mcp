@@ -14,6 +14,7 @@ import express from 'express';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { n8nDocumentationToolsFinal } from './mcp/tools';
 import { n8nManagementTools } from './mcp/tools-n8n-manager';
+import { withToolAnnotations } from './mcp/tool-annotations';
 import { N8NDocumentationMCPServer } from './mcp/server';
 import { logger } from './utils/logger';
 import { AuthManager } from './utils/auth';
@@ -416,11 +417,13 @@ export async function startFixedHTTPServer() {
               if (isN8nApiConfigured()) {
                 tools.push(...n8nManagementTools);
               }
+
+              const toolsWithAnnotations = withToolAnnotations(tools);
               
               response = {
                 jsonrpc: '2.0',
                 result: {
-                  tools
+                  tools: toolsWithAnnotations
                 },
                 id: jsonRpcRequest.id
               };
@@ -447,9 +450,9 @@ export async function startFixedHTTPServer() {
                   ]
                 };
 
-                // Add structuredContent for validation tools (they have outputSchema)
+                // Add structuredContent for validation tools (typed output)
                 // Apply 1MB safety limit to prevent memory issues (matches STDIO server behavior)
-                if (toolName.startsWith('validate_')) {
+                if (toolName === 'n8n_node_validate' || toolName === 'n8n_workflow_validate' || toolName === 'n8n_workflow_json_validate') {
                   const resultSize = responseText.length;
 
                   if (resultSize > 1000000) {
