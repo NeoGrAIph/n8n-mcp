@@ -1,0 +1,14 @@
+verbose = "error"
+no_progress = true
+include_fragments = true
+accept = [200, 204, 206, 429]
+max_retries = 2
+timeout = 20
+
+exclude = [
+  "^mailto:",
+  "^http://localhost",
+  "^http://127\\.0\\.0\\.1",
+  "^http://0\\.0\\.0\\.0"
+]
+
