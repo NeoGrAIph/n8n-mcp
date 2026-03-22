@@ -233,7 +233,7 @@ describe('handlers-n8n-manager', () => {
           active: true,
           nodeCount: 1,
         },
-        message: 'Workflow "Test Workflow" created successfully with ID: test-workflow-id. Use n8n_get_workflow with mode \'structure\' to verify current state.',
+        message: 'Workflow "Test Workflow" created successfully with ID: test-workflow-id. Use n8n_workflow_get with mode \'structure\' to verify current state.',
       });
 
       // Should send input as-is to API (n8n expects FULL form: n8n-nodes-base.*)
@@ -1178,7 +1178,7 @@ describe('handlers-n8n-manager', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Workflow wf_xyz789 execution exec_abc123 failed');
-      expect(result.error).toContain('n8n_get_execution');
+      expect(result.error).toContain('n8n_executions_get');
       expect(result.error).toContain("mode: 'preview'");
       expect(result.executionId).toBe('exec_abc123');
       expect(result.workflowId).toBe('wf_xyz789');
@@ -1199,7 +1199,7 @@ describe('handlers-n8n-manager', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Execution exec_only_123 failed');
-      expect(result.error).toContain('n8n_get_execution');
+      expect(result.error).toContain('n8n_executions_get');
       expect(result.error).toContain("mode: 'preview'");
       expect(result.executionId).toBe('exec_only_123');
       expect(result.workflowId).toBeUndefined();
@@ -1236,8 +1236,8 @@ describe('handlers-n8n-manager', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Workflow failed to execute');
-      expect(result.error).toContain('n8n_list_executions');
-      expect(result.error).toContain('n8n_get_execution');
+      expect(result.error).toContain('n8n_executions_list');
+      expect(result.error).toContain('n8n_executions_get');
       expect(result.error).toContain("mode='preview'");
       expect(result.executionId).toBeUndefined();
     });

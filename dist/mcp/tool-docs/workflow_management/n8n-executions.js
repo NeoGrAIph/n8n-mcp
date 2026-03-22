@@ -103,7 +103,7 @@ exports.n8nExecutionsDoc = {
             'Execution must exist or returns 404',
             'Delete is permanent - cannot undo'
         ],
-        relatedTools: ['n8n_get_workflow', 'n8n_test_workflow', 'n8n_validate_workflow']
+        relatedTools: ['n8n_workflow_get', 'n8n_workflow_test', 'n8n_workflow_validate']
     }
 };
 //# sourceMappingURL=n8n-executions.js.map

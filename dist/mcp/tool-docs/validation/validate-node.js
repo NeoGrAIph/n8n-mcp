@@ -76,7 +76,7 @@ Validates complex n8n types automatically:
             'Some warnings may be acceptable for specific use cases',
             'Credential validation requires runtime context'
         ],
-        relatedTools: ['get_node', 'validate_workflow', 'n8n_autofix_workflow']
+        relatedTools: ['get_node', 'validate_workflow', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=validate-node.js.map

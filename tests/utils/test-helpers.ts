@@ -165,7 +165,7 @@ export function createTestDatabase(data: Record<string, any[]> = {}) {
   // Initialize with default tables
   db.set('nodes', data.nodes || []);
   db.set('templates', data.templates || []);
-  db.set('tools_documentation', data.tools_documentation || []);
+  db.set('n8n_tools_documentation', data.n8n_tools_documentation || []);
   
   // Add any additional tables from data
   Object.entries(data).forEach(([table, rows]) => {

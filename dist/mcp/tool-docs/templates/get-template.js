@@ -78,7 +78,7 @@ exports.getTemplateDoc = {
             'Not all templates work with all n8n versions',
             'Template may reference external services you don\'t have access to'
         ],
-        relatedTools: ['search_templates', 'n8n_create_workflow']
+        relatedTools: ['search_templates', 'n8n_workflow_create']
     }
 };
 //# sourceMappingURL=get-template.js.map

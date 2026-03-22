@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nDeployTemplateDoc = void 0;
 exports.n8nDeployTemplateDoc = {
-    name: 'n8n_deploy_template',
+    name: 'n8n_template_deploy',
     category: 'workflow_management',
     essentials: {
         description: 'Deploy a workflow template from n8n.io directly to your n8n instance. Deploys first, then auto-fixes common issues (expression format, typeVersions).',
         keyParameters: ['templateId', 'name', 'autoUpgradeVersions', 'autoFix', 'stripCredentials'],
-        example: 'n8n_deploy_template({templateId: 2776, name: "My Deployed Template"})',
+        example: 'n8n_template_deploy({templateId: 2776, name: "My Deployed Template"})',
         performance: 'Network-dependent',
         tips: [
             'Auto-fixes expression format issues after deployment',
@@ -28,19 +28,19 @@ exports.n8nDeployTemplateDoc = {
         returns: 'Object with workflowId, name, nodeCount, triggerType, requiredCredentials array, url, templateId, templateUrl, autoFixStatus (success/failed/skipped), and fixesApplied array',
         examples: [
             `// Deploy template with default settings (auto-fix enabled)
-n8n_deploy_template({templateId: 2776})`,
+n8n_template_deploy({templateId: 2776})`,
             `// Deploy with custom name
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2776,
   name: "My Google Drive to Airtable Sync"
 })`,
             `// Deploy without auto-fix (not recommended)
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2776,
   autoFix: false
 })`,
             `// Keep original node versions (useful for compatibility)
-n8n_deploy_template({
+n8n_template_deploy({
   templateId: 2776,
   autoUpgradeVersions: false
 })`
@@ -67,7 +67,7 @@ n8n_deploy_template({
             'Template database must be populated - run npm run fetch:templates if templates not found',
             'Some issues may not be auto-fixable (e.g., missing required fields that need user input)'
         ],
-        relatedTools: ['search_templates', 'get_template', 'n8n_create_workflow', 'n8n_autofix_workflow']
+        relatedTools: ['search_templates', 'get_template', 'n8n_workflow_create', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=n8n-deploy-template.js.map

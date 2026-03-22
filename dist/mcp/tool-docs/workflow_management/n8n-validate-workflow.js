@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nValidateWorkflowDoc = void 0;
 exports.n8nValidateWorkflowDoc = {
-    name: 'n8n_validate_workflow',
+    name: 'n8n_workflow_validate',
     category: 'workflow_management',
     essentials: {
         description: 'Validate workflow from n8n instance by ID - checks nodes, connections, expressions, and returns errors/warnings',
         keyParameters: ['id'],
-        example: 'n8n_validate_workflow({id: "wf_abc123"})',
+        example: 'n8n_workflow_validate({id: "wf_abc123"})',
         performance: 'Network-dependent (100-500ms) - fetches and validates workflow',
         tips: [
             'Use options.profile to control validation strictness (minimal/runtime/ai-friendly/strict)',
@@ -41,9 +41,9 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
         },
         returns: 'ValidationResult object containing isValid boolean, arrays of errors/warnings, and suggestions for fixes',
         examples: [
-            'n8n_validate_workflow({id: "wf_abc123"}) - Validate with default settings',
-            'n8n_validate_workflow({id: "wf_abc123", options: {profile: "strict"}}) - Strict validation',
-            'n8n_validate_workflow({id: "wf_abc123", options: {validateExpressions: false}}) - Skip expression validation'
+            'n8n_workflow_validate({id: "wf_abc123"}) - Validate with default settings',
+            'n8n_workflow_validate({id: "wf_abc123", options: {profile: "strict"}}) - Strict validation',
+            'n8n_workflow_validate({id: "wf_abc123", options: {validateExpressions: false}}) - Skip expression validation'
         ],
         useCases: [
             'Validating workflows before running them in production',
@@ -67,7 +67,7 @@ Requires N8N_API_URL and N8N_API_KEY environment variables to be configured.`,
             'Profile affects validation time - strict is slower but more thorough',
             'Expression validation may flag working but non-standard syntax'
         ],
-        relatedTools: ['validate_workflow', 'n8n_get_workflow', 'n8n_health_check', 'n8n_autofix_workflow']
+        relatedTools: ['validate_workflow', 'n8n_workflow_get', 'n8n_health_check', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=n8n-validate-workflow.js.map

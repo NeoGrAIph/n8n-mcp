@@ -1,12 +1,12 @@
 import { ToolDocumentation } from '../types';
 
 export const n8nGetWorkflowDoc: ToolDocumentation = {
-  name: 'n8n_get_workflow',
+  name: 'n8n_workflow_get',
   category: 'workflow_management',
   essentials: {
     description: 'Get workflow by ID with different detail levels. Use mode to control response size and content.',
     keyParameters: ['id', 'mode'],
-    example: 'n8n_get_workflow({id: "workflow_123", mode: "structure"})',
+    example: 'n8n_workflow_get({id: "workflow_123", mode: "structure"})',
     performance: 'Fast (50-200ms)',
     tips: [
       'mode="full" (default): Complete workflow with all data',
@@ -31,10 +31,10 @@ export const n8nGetWorkflowDoc: ToolDocumentation = {
 - structure: { nodes: [...], connections: {...} } - topology only
 - minimal: { id, name, active, tags, createdAt, updatedAt }`,
     examples: [
-      '// Get complete workflow (default)\nn8n_get_workflow({id: "abc123"})',
-      '// Get workflow with execution stats\nn8n_get_workflow({id: "abc123", mode: "details"})',
-      '// Get just the topology\nn8n_get_workflow({id: "abc123", mode: "structure"})',
-      '// Quick metadata check\nn8n_get_workflow({id: "abc123", mode: "minimal"})'
+      '// Get complete workflow (default)\nn8n_workflow_get({id: "abc123"})',
+      '// Get workflow with execution stats\nn8n_workflow_get({id: "abc123", mode: "details"})',
+      '// Get just the topology\nn8n_workflow_get({id: "abc123", mode: "structure"})',
+      '// Quick metadata check\nn8n_workflow_get({id: "abc123", mode: "minimal"})'
     ],
     useCases: [
       'View and edit workflow (mode=full)',
@@ -61,6 +61,6 @@ export const n8nGetWorkflowDoc: ToolDocumentation = {
       'Workflow must exist or returns 404 error',
       'Credentials are referenced by ID but values not included'
     ],
-    relatedTools: ['n8n_list_workflows', 'n8n_update_full_workflow', 'n8n_update_partial_workflow', 'n8n_validate_workflow']
+    relatedTools: ['n8n_workflows_list', 'n8n_workflow_update_full', 'n8n_workflow_update_partial', 'n8n_workflow_validate']
   }
 };

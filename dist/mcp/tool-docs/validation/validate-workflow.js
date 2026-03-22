@@ -10,7 +10,7 @@ exports.validateWorkflowDoc = {
         example: 'validate_workflow({workflow: {nodes: [...], connections: {...}}})',
         performance: 'Moderate (100-500ms)',
         tips: [
-            'Always validate before n8n_create_workflow to catch errors early',
+            'Always validate before n8n_workflow_create to catch errors early',
             'Use options.profile="minimal" for quick checks during development',
             'AI tool connections are automatically validated for proper node references',
             'Detects operator structure issues (binary vs unary, singleValue requirements)'
@@ -71,7 +71,7 @@ exports.validateWorkflowDoc = {
             'Validate after any workflow modifications, especially connection changes',
             'Check statistics to understand workflow complexity',
             '**Auto-sanitization runs during create/update**: Operator structures and missing metadata are automatically fixed when workflows are created or updated, but validation helps catch issues before they reach n8n',
-            'If validation detects operator issues, they will be auto-fixed during n8n_create_workflow or n8n_update_partial_workflow'
+            'If validation detects operator issues, they will be auto-fixed during n8n_workflow_create or n8n_workflow_update_partial'
         ],
         pitfalls: [
             'Large workflows (100+ nodes) may take longer to validate',
@@ -80,7 +80,7 @@ exports.validateWorkflowDoc = {
             'Validation cannot catch all runtime errors (e.g., API failures)',
             'Profile setting only affects node validation, not connection/expression checks'
         ],
-        relatedTools: ['validate_node', 'n8n_create_workflow', 'n8n_update_partial_workflow', 'n8n_autofix_workflow']
+        relatedTools: ['validate_node', 'n8n_workflow_create', 'n8n_workflow_update_partial', 'n8n_workflow_autofix']
     }
 };
 //# sourceMappingURL=validate-workflow.js.map

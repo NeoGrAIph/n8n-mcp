@@ -157,7 +157,7 @@ describe('handlers-workflow-diff', () => {
           nodeCount: 3,
           operationsApplied: 1,
         },
-        message: 'Workflow "Test Workflow" updated successfully. Applied 1 operations. Use n8n_get_workflow with mode \'structure\' to verify current state.',
+        message: 'Workflow "Test Workflow" updated successfully. Applied 1 operations. Use n8n_workflow_get with mode \'structure\' to verify current state.',
         details: {
           applied: [0],
           failed: [],

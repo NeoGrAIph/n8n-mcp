@@ -619,14 +619,14 @@ class N8NDocumentationMCPServer {
                 case 'search_nodes':
                     validationResult = validation_schemas_1.ToolValidation.validateSearchNodes(args);
                     break;
-                case 'n8n_create_workflow':
+                case 'n8n_workflow_create':
                     validationResult = validation_schemas_1.ToolValidation.validateCreateWorkflow(args);
                     break;
-                case 'n8n_get_workflow':
-                case 'n8n_update_full_workflow':
-                case 'n8n_delete_workflow':
-                case 'n8n_validate_workflow':
-                case 'n8n_autofix_workflow':
+                case 'n8n_workflow_get':
+                case 'n8n_workflow_update_full':
+                case 'n8n_workflow_delete':
+                case 'n8n_workflow_validate':
+                case 'n8n_workflow_autofix':
                     validationResult = validation_schemas_1.ToolValidation.validateWorkflowId(args);
                     break;
                 case 'n8n_executions':
@@ -634,7 +634,7 @@ class N8NDocumentationMCPServer {
                         ? { valid: true, errors: [] }
                         : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
                     break;
-                case 'n8n_deploy_template':
+                case 'n8n_template_deploy':
                     validationResult = args.templateId !== undefined
                         ? { valid: true, errors: [] }
                         : { valid: false, errors: [{ field: 'templateId', message: 'templateId is required' }] };
@@ -852,10 +852,10 @@ class N8NDocumentationMCPServer {
             case 'validate_workflow':
                 this.validateToolParams(name, args, ['workflow']);
                 return this.validateWorkflow(args.workflow, args.options);
-            case 'n8n_create_workflow':
+            case 'n8n_workflow_create':
                 this.validateToolParams(name, args, ['name', 'nodes', 'connections']);
                 return n8nHandlers.handleCreateWorkflow(args, this.instanceContext);
-            case 'n8n_get_workflow': {
+            case 'n8n_workflow_get': {
                 this.validateToolParams(name, args, ['id']);
                 const workflowMode = args.mode || 'full';
                 switch (workflowMode) {
@@ -870,30 +870,30 @@ class N8NDocumentationMCPServer {
                         return n8nHandlers.handleGetWorkflow(args, this.instanceContext);
                 }
             }
-            case 'n8n_update_full_workflow':
+            case 'n8n_workflow_update_full':
                 this.validateToolParams(name, args, ['id']);
                 return n8nHandlers.handleUpdateWorkflow(args, this.repository, this.instanceContext);
-            case 'n8n_update_partial_workflow':
+            case 'n8n_workflow_update_partial':
                 this.validateToolParams(name, args, ['id', 'operations']);
                 return (0, handlers_workflow_diff_1.handleUpdatePartialWorkflow)(args, this.repository, this.instanceContext);
-            case 'n8n_delete_workflow':
+            case 'n8n_workflow_delete':
                 this.validateToolParams(name, args, ['id']);
                 return n8nHandlers.handleDeleteWorkflow(args, this.instanceContext);
-            case 'n8n_list_workflows':
+            case 'n8n_workflows_list':
                 return n8nHandlers.handleListWorkflows(args, this.instanceContext);
-            case 'n8n_validate_workflow':
+            case 'n8n_workflow_validate':
                 this.validateToolParams(name, args, ['id']);
                 await this.ensureInitialized();
                 if (!this.repository)
                     throw new Error('Repository not initialized');
                 return n8nHandlers.handleValidateWorkflow(args, this.repository, this.instanceContext);
-            case 'n8n_autofix_workflow':
+            case 'n8n_workflow_autofix':
                 this.validateToolParams(name, args, ['id']);
                 await this.ensureInitialized();
                 if (!this.repository)
                     throw new Error('Repository not initialized');
                 return n8nHandlers.handleAutofixWorkflow(args, this.repository, this.instanceContext);
-            case 'n8n_test_workflow':
+            case 'n8n_workflow_test':
                 this.validateToolParams(name, args, ['workflowId']);
                 return n8nHandlers.handleTestWorkflow(args, this.instanceContext);
             case 'n8n_executions': {
@@ -924,7 +924,7 @@ class N8NDocumentationMCPServer {
             case 'n8n_workflow_versions':
                 this.validateToolParams(name, args, ['mode']);
                 return n8nHandlers.handleWorkflowVersions(args, this.repository, this.instanceContext);
-            case 'n8n_deploy_template':
+            case 'n8n_template_deploy':
                 this.validateToolParams(name, args, ['templateId']);
                 await this.ensureInitialized();
                 if (!this.templateService)

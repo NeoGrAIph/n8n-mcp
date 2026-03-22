@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.n8nManagementTools = void 0;
 exports.n8nManagementTools = [
     {
-        name: 'n8n_create_workflow',
+        name: 'n8n_workflow_create',
         description: `Create workflow. Requires: name, nodes[], connections{}. Created inactive. Returns workflow with ID.`,
         inputSchema: {
             type: 'object',
@@ -63,7 +63,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_get_workflow',
+        name: 'n8n_workflow_get',
         description: `Get workflow by ID with different detail levels. Use mode='full' for complete workflow, 'details' for metadata+stats, 'structure' for nodes/connections only, 'minimal' for id/name/active/tags.`,
         inputSchema: {
             type: 'object',
@@ -83,8 +83,8 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_update_full_workflow',
-        description: `Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_update_partial_workflow.`,
+        name: 'n8n_workflow_update_full',
+        description: `Full workflow update. Requires complete nodes[] and connections{}. For incremental use n8n_workflow_update_partial.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -117,8 +117,8 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_update_partial_workflow',
-        description: `Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, updateSettings, updateName, add/removeTag. See tools_documentation("n8n_update_partial_workflow", "full") for details.`,
+        name: 'n8n_workflow_update_partial',
+        description: `Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, updateSettings, updateName, add/removeTag. See tools_documentation("n8n_workflow_update_partial", "full") for details.`,
         inputSchema: {
             type: 'object',
             additionalProperties: true,
@@ -148,7 +148,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_delete_workflow',
+        name: 'n8n_workflow_delete',
         description: `Permanently delete a workflow. This action cannot be undone.`,
         inputSchema: {
             type: 'object',
@@ -162,7 +162,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_list_workflows',
+        name: 'n8n_workflows_list',
         description: `List workflows (minimal metadata only). Returns id/name/active/dates/tags. Check hasMore/nextCursor for pagination.`,
         inputSchema: {
             type: 'object',
@@ -196,7 +196,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_validate_workflow',
+        name: 'n8n_workflow_validate',
         description: `Validate workflow by ID. Checks nodes, connections, expressions. Returns errors/warnings/suggestions.`,
         inputSchema: {
             type: 'object',
@@ -233,7 +233,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_autofix_workflow',
+        name: 'n8n_workflow_autofix',
         description: `Automatically fix common workflow validation errors. Preview fixes or apply them. Fixes expression format, typeVersion, error output config, webhook paths.`,
         inputSchema: {
             type: 'object',
@@ -268,7 +268,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_test_workflow',
+        name: 'n8n_workflow_test',
         description: `Test/trigger workflow execution. Auto-detects trigger type (webhook/form/chat). Supports: webhook (HTTP), form (fields), chat (message). Note: Only workflows with these trigger types can be executed externally.`,
         inputSchema: {
             type: 'object',
@@ -471,7 +471,7 @@ exports.n8nManagementTools = [
         }
     },
     {
-        name: 'n8n_deploy_template',
+        name: 'n8n_template_deploy',
         description: `Deploy a workflow template from n8n.io directly to your n8n instance. Deploys first, then auto-fixes common issues (expression format, typeVersions). Returns workflow ID, required credentials, and fixes applied.`,
         inputSchema: {
             type: 'object',
