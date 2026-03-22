@@ -4,7 +4,7 @@ export const n8nUpdatePartialWorkflowDoc: ToolDocumentation = {
   name: 'n8n_workflow_update_partial',
   category: 'workflow_management',
   essentials: {
-    description: 'Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, rewireConnection, cleanStaleConnections, replaceConnections, updateSettings, updateName, add/removeTag, activateWorkflow, deactivateWorkflow, transferWorkflow. Supports smart parameters (branch, case) for multi-output nodes. Full support for AI connections (ai_languageModel, ai_tool, ai_memory, ai_embedding, ai_vectorStore, ai_document, ai_textSplitter, ai_outputParser).',
+    description: 'Update workflow incrementally with diff operations. Types: addNode, removeNode, updateNode, moveNode, enable/disableNode, addConnection, removeConnection, rewireConnection, cleanStaleConnections, replaceConnections, updateSettings, updateName, add/removeTag, activateWorkflow, deactivateWorkflow, transferWorkflow. Supports smart parameters (branch, case) for multi-output nodes. Full support for AI connections (ai_languageModel, ai_tool, ai_memory, ai_embedding, ai_vectorStore, ai_document, ai_textSplitter, ai_outputParser). For Code/Set file edits, use n8n_workflow_file_patch or resources/write.',
     keyParameters: ['id', 'operations', 'continueOnError'],
     example: 'n8n_workflow_update_partial({id: "wf_123", operations: [{type: "rewireConnection", source: "IF", from: "Old", to: "New", branch: "true"}]})',
     performance: 'Fast (50-200ms)',
@@ -18,6 +18,7 @@ export const n8nUpdatePartialWorkflowDoc: ToolDocumentation = {
       'Set ignoreErrors:true on removeConnection for cleanup',
       'Use continueOnError mode for best-effort bulk operations',
       'Validate with validateOnly first',
+      'Use n8n_workflow_file_patch for Code/Set edits',
       'For AI connections, specify sourceOutput type (ai_languageModel, ai_tool, etc.)',
       'Batch AI component connections for atomic updates',
       'Auto-sanitization: ALL nodes auto-fixed during updates (operator structures, missing metadata)',
@@ -342,11 +343,14 @@ n8n_workflow_update_partial({
       '// Rewire AI Agent to use different language model\nn8n_workflow_update_partial({id: "ai9", operations: [{type: "rewireConnection", source: "AI Agent", from: "OpenAI Chat Model", to: "Anthropic Chat Model", sourceOutput: "ai_languageModel"}]})',
       '// Replace all AI tools for an agent\nn8n_workflow_update_partial({id: "ai10", operations: [\n  {type: "removeConnection", source: "Old Tool 1", target: "AI Agent", sourceOutput: "ai_tool"},\n  {type: "removeConnection", source: "Old Tool 2", target: "AI Agent", sourceOutput: "ai_tool"},\n  {type: "addConnection", source: "New HTTP Tool", target: "AI Agent", sourceOutput: "ai_tool"},\n  {type: "addConnection", source: "New Code Tool", target: "AI Agent", sourceOutput: "ai_tool"}\n]})',
       '\n// ============ REMOVING PROPERTIES EXAMPLES ============',
-      '// Remove a simple property\nn8n_workflow_update_partial({id: "rm1", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {onError: undefined}}]})',
-      '// Migrate from deprecated continueOnFail to onError\nn8n_workflow_update_partial({id: "rm2", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {continueOnFail: undefined, onError: "continueErrorOutput"}}]})',
-      '// Remove nested property\nn8n_workflow_update_partial({id: "rm3", operations: [{type: "updateNode", nodeName: "API Request", updates: {"parameters.authentication": undefined}}]})',
-      '// Remove multiple properties\nn8n_workflow_update_partial({id: "rm4", operations: [{type: "updateNode", nodeName: "Data Processor", updates: {continueOnFail: undefined, alwaysOutputData: undefined, "parameters.legacy_option": undefined}}]})',
-      '// Remove entire array property\nn8n_workflow_update_partial({id: "rm5", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {"parameters.headers": undefined}}]})'
+      '// Remove a simple property\nn8n_workflow_update_partial({id: "rm1", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {onError: null}}]})',
+      '// Migrate from deprecated continueOnFail to onError\nn8n_workflow_update_partial({id: "rm2", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {continueOnFail: null, onError: "continueErrorOutput"}}]})',
+      '// Remove nested property\nn8n_workflow_update_partial({id: "rm3", operations: [{type: "updateNode", nodeName: "API Request", updates: {"parameters.authentication": null}}]})',
+      '// Remove multiple properties\nn8n_workflow_update_partial({id: "rm4", operations: [{type: "updateNode", nodeName: "Data Processor", updates: {continueOnFail: null, alwaysOutputData: null, "parameters.legacy_option": null}}]})',
+      '// Remove entire array property\nn8n_workflow_update_partial({id: "rm5", operations: [{type: "updateNode", nodeName: "HTTP Request", updates: {"parameters.headers": null}}]})',
+      '\n// ============ PROJECT TRANSFER EXAMPLES ============',
+      '// Transfer workflow to a different project\nn8n_workflow_update_partial({id: "tf1", operations: [{type: "transferWorkflow", destinationProjectId: "project-abc-123"}]})',
+      '// Transfer and activate in one call\nn8n_workflow_update_partial({id: "tf2", operations: [{type: "transferWorkflow", destinationProjectId: "project-abc-123"}, {type: "activateWorkflow"}]})'
     ],
     useCases: [
       'Rewire connections when replacing nodes',

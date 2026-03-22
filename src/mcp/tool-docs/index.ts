@@ -9,7 +9,7 @@ import {
   toolsDocumentationDoc,
   n8nHealthCheckDoc
 } from './system';
-import { aiAgentsGuide } from './guides';
+import { aiAgentsGuide, workflowFilesResourcesGuide } from './guides';
 import {
   n8nCreateWorkflowDoc,
   n8nGetWorkflowDoc,
@@ -29,9 +29,17 @@ import {
   n8nWorkflowVersionsDeleteDoc,
   n8nWorkflowVersionsPruneDoc,
   n8nWorkflowVersionsTruncateDoc,
-  n8nDeployTemplateDoc,
-  n8nManageDatatableDoc
+  n8nDeployTemplateDoc
 } from './workflow_management';
+import {
+  n8nCodeFilesListDoc,
+  n8nCodeFileReadDoc,
+  n8nCodeFileWriteDoc,
+  n8nSetFilesListDoc,
+  n8nSetFileReadDoc,
+  n8nSetFileWriteDoc,
+  n8nWorkflowFilePatchDoc
+} from './workflow_files';
 
 // Combine all tool documentations into a single object
 export const toolsDocumentation: Record<string, ToolDocumentation> = {
@@ -41,6 +49,7 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
 
   // Guides
   ai_agents_guide: aiAgentsGuide,
+  workflow_files_resources_guide: workflowFilesResourcesGuide,
 
   // Discovery tools
   n8n_nodes_search: searchNodesDoc,
@@ -76,7 +85,15 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_workflow_versions_prune: n8nWorkflowVersionsPruneDoc,
   n8n_workflow_versions_truncate: n8nWorkflowVersionsTruncateDoc,
   n8n_template_deploy: n8nDeployTemplateDoc,
-  n8n_manage_datatable: n8nManageDatatableDoc
+
+  // Workflow file tools
+  n8n_code_files_list: n8nCodeFilesListDoc,
+  n8n_code_file_read: n8nCodeFileReadDoc,
+  n8n_code_file_write: n8nCodeFileWriteDoc,
+  n8n_set_files_list: n8nSetFilesListDoc,
+  n8n_set_file_read: n8nSetFileReadDoc,
+  n8n_set_file_write: n8nSetFileWriteDoc,
+  n8n_workflow_file_patch: n8nWorkflowFilePatchDoc
 };
 
 // Re-export types

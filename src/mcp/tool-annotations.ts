@@ -31,7 +31,6 @@ export const toolAnnotations: Record<string, ToolAnnotations> = {
   n8n_workflow_versions_prune: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_workflow_versions_truncate: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   n8n_template_deploy: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
-  n8n_manage_datatable: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
 };
 
 export function withToolAnnotations(tools: ToolDefinition[]): ToolDefinition[] {

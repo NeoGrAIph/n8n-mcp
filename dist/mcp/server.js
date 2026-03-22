@@ -40,10 +40,12 @@ exports.N8NDocumentationMCPServer = void 0;
 const index_js_1 = require("@modelcontextprotocol/sdk/server/index.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
 const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
+const zod_1 = require("zod");
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
 const tools_1 = require("./tools");
 const tools_n8n_manager_1 = require("./tools-n8n-manager");
+const tools_workflow_files_1 = require("./tools-workflow-files");
 const tools_n8n_friendly_1 = require("./tools-n8n-friendly");
 const tool_annotations_1 = require("./tool-annotations");
 const workflow_examples_1 = require("./workflow-examples");
@@ -67,14 +69,27 @@ const version_1 = require("../utils/version");
 const node_utils_1 = require("../utils/node-utils");
 const node_type_normalizer_1 = require("../utils/node-type-normalizer");
 const validation_schemas_1 = require("../utils/validation-schemas");
+const workflow_files_service_1 = require("../services/workflow-files-service");
 const protocol_version_1 = require("../utils/protocol-version");
 const telemetry_1 = require("../telemetry");
 const startup_checkpoints_1 = require("../telemetry/startup-checkpoints");
+const workflowFileHandlers = __importStar(require("./handlers-workflow-files"));
 const VALIDATION_TOOL_NAMES = new Set([
     'n8n_node_validate',
     'n8n_workflow_validate',
     'n8n_workflow_json_validate'
 ]);
+const WriteResourceRequestSchema = zod_1.z.object({
+    method: zod_1.z.literal('resources/write'),
+    params: zod_1.z
+        .object({
+        uri: zod_1.z.string(),
+        contents: zod_1.z.array(zod_1.z.any()).optional(),
+        text: zod_1.z.string().optional(),
+        expectedEtag: zod_1.z.string().optional()
+    })
+        .passthrough()
+});
 class N8NDocumentationMCPServer {
     constructor(instanceContext, earlyLogger) {
         this.db = null;
@@ -117,15 +132,17 @@ class N8NDocumentationMCPServer {
                 this.earlyLogger.logCheckpoint(startup_checkpoints_1.STARTUP_CHECKPOINTS.N8N_API_CHECKING);
             }
             const apiConfigured = (0, n8n_api_1.isN8nApiConfigured)();
-            const totalTools = apiConfigured ?
-                tools_1.n8nDocumentationToolsFinal.length + tools_n8n_manager_1.n8nManagementTools.length :
-                tools_1.n8nDocumentationToolsFinal.length;
-            logger_1.logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'})`);
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const totalTools = tools_1.n8nDocumentationToolsFinal.length +
+                (apiConfigured ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
+                (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
+            logger_1.logger.info(`MCP server initialized with ${totalTools} tools (n8n API: ${apiConfigured ? 'configured' : 'not configured'}, workflow files: ${workflowFilesConfigured ? 'configured' : 'not configured'})`);
             if (this.earlyLogger) {
                 this.earlyLogger.logCheckpoint(startup_checkpoints_1.STARTUP_CHECKPOINTS.N8N_API_READY);
             }
         });
         logger_1.logger.info('Initializing n8n Documentation MCP server');
+        const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
         this.server = new index_js_1.Server({
             name: 'n8n-documentation-mcp',
             version: version_1.PROJECT_VERSION,
@@ -150,6 +167,7 @@ class N8NDocumentationMCPServer {
         }, {
             capabilities: {
                 tools: {},
+                ...(workflowFilesConfigured ? { resources: {} } : {})
             },
         });
         this.setupHandlers();
@@ -325,6 +343,7 @@ class N8NDocumentationMCPServer {
         return this.disabledToolsCache;
     }
     setupHandlers() {
+        workflowFileHandlers.logWorkflowFilesConfig();
         this.server.setRequestHandler(types_js_1.InitializeRequestSchema, async (request) => {
             const clientVersion = request.params.protocolVersion;
             const clientCapabilities = request.params.capabilities;
@@ -343,11 +362,14 @@ class N8NDocumentationMCPServer {
                     reasoning: negotiationResult.reasoning
                 });
             }
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const capabilities = { tools: {} };
+            if (workflowFilesConfigured) {
+                capabilities.resources = {};
+            }
             const response = {
                 protocolVersion: negotiationResult.version,
-                capabilities: {
-                    tools: {},
-                },
+                capabilities,
                 serverInfo: {
                     name: 'n8n-documentation-mcp',
                     version: version_1.PROJECT_VERSION,
@@ -358,6 +380,7 @@ class N8NDocumentationMCPServer {
         });
         this.server.setRequestHandler(types_js_1.ListToolsRequestSchema, async (request) => {
             const disabledTools = this.getDisabledTools();
+            const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
             const enabledDocTools = tools_1.n8nDocumentationToolsFinal.filter(tool => !disabledTools.has(tool.name));
             let tools = [...enabledDocTools];
             const hasEnvConfig = (0, n8n_api_1.isN8nApiConfigured)();
@@ -382,8 +405,15 @@ class N8NDocumentationMCPServer {
                     disabledToolsCount: disabledTools.size
                 });
             }
+            if (workflowFilesConfigured) {
+                const enabledFileTools = tools_workflow_files_1.n8nWorkflowFileTools.filter(tool => !disabledTools.has(tool.name));
+                tools.push(...enabledFileTools);
+                logger_1.logger.debug(`Workflow file tools enabled (${enabledFileTools.length} tools)`);
+            }
             if (disabledTools.size > 0) {
-                const totalAvailableTools = tools_1.n8nDocumentationToolsFinal.length + (shouldIncludeManagementTools ? tools_n8n_manager_1.n8nManagementTools.length : 0);
+                const totalAvailableTools = tools_1.n8nDocumentationToolsFinal.length +
+                    (shouldIncludeManagementTools ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
+                    (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
                 logger_1.logger.debug(`Filtered ${disabledTools.size} disabled tools, ${tools.length}/${totalAvailableTools} tools available`);
             }
             const clientInfo = this.clientInfo;
@@ -403,6 +433,52 @@ class N8NDocumentationMCPServer {
                 });
             });
             return { tools };
+        });
+        this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
+            const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
+            return { resourceTemplates: templates };
+        });
+        this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
+            const cursor = request.params?.cursor;
+            const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
+            return {
+                resources,
+                ...(nextCursor ? { nextCursor } : {})
+            };
+        });
+        this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
+            const uri = request.params.uri;
+            const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
+            return {
+                contents: [
+                    {
+                        uri: resource.uri,
+                        mimeType: resource.mimeType,
+                        text: resource.text,
+                        _meta: resource._meta
+                    }
+                ]
+            };
+        });
+        this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
+            const params = request.params ?? {};
+            const uri = params.uri;
+            const expectedEtag = params.expectedEtag;
+            const contents = params.contents;
+            const directText = params.text;
+            const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
+            if (typeof text !== 'string') {
+                throw new Error('resources/write requires text content');
+            }
+            const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
+            return {
+                uri: result.uri,
+                _meta: {
+                    etag: result.etag,
+                    size: result.size,
+                    lastModified: result.lastModified
+                }
+            };
         });
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
@@ -707,7 +783,7 @@ class N8NDocumentationMCPServer {
         if (!args || typeof args !== 'object') {
             return false;
         }
-        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools];
+        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools, ...tools_workflow_files_1.n8nWorkflowFileTools];
         const tool = allTools.find(t => t.name === toolName);
         if (!tool || !tool.inputSchema) {
             return true;
@@ -776,7 +852,10 @@ class N8NDocumentationMCPServer {
             case 'n8n_nodes_search':
                 this.validateToolParams(name, args, ['query']);
                 const limit = args.limit !== undefined ? Number(args.limit) || 20 : 20;
-                return this.searchNodes(args.query, limit, { mode: args.mode, includeExamples: args.includeExamples });
+                return this.searchNodes(args.query, limit, {
+                    mode: args.mode,
+                    includeExamples: args.includeExamples
+                });
             case 'n8n_node_get':
                 this.validateToolParams(name, args, ['nodeType']);
                 if (args.mode === 'docs') {
@@ -964,6 +1043,27 @@ class N8NDocumentationMCPServer {
                 if (!this.repository)
                     throw new Error('Repository not initialized');
                 return n8nHandlers.handleDeployTemplate(args, this.templateService, this.repository, this.instanceContext);
+            case 'n8n_code_files_list':
+                this.validateToolParams(name, args, ['workflowId']);
+                return workflowFileHandlers.handleListCodeFiles(args);
+            case 'n8n_code_file_read':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+                return workflowFileHandlers.handleReadCodeFile(args);
+            case 'n8n_code_file_write':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+                return workflowFileHandlers.handleWriteCodeFile(args);
+            case 'n8n_set_files_list':
+                this.validateToolParams(name, args, ['workflowId']);
+                return workflowFileHandlers.handleListSetFiles(args);
+            case 'n8n_set_file_read':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId']);
+                return workflowFileHandlers.handleReadSetFile(args);
+            case 'n8n_set_file_write':
+                this.validateToolParams(name, args, ['workflowId', 'nodeId', 'content']);
+                return workflowFileHandlers.handleWriteSetFile(args);
+            case 'n8n_workflow_file_patch':
+                this.validateToolParams(name, args, ['uri', 'patch']);
+                return workflowFileHandlers.handlePatchWorkflowResource(args);
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }

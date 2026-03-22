@@ -17,4 +17,3 @@ export { n8nWorkflowVersionsDeleteDoc } from './n8n-workflow-versions-delete';
 export { n8nWorkflowVersionsPruneDoc } from './n8n-workflow-versions-prune';
 export { n8nWorkflowVersionsTruncateDoc } from './n8n-workflow-versions-truncate';
 export { n8nDeployTemplateDoc } from './n8n-deploy-template';
-export { n8nManageDatatableDoc } from './n8n-manage-datatable';

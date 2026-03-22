@@ -21,6 +21,16 @@ export declare function handleTestWorkflow(args: unknown, context?: InstanceCont
 export declare function handleGetExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleListExecutions(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleDeleteExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleCreateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleListTables(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleGetTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleUpdateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleDeleteTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleGetRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleInsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleUpdateRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleUpsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleDeleteRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleHealthCheck(context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleDiagnostic(request: any, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleWorkflowVersions(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;

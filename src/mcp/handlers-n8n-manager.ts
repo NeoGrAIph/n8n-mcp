@@ -1627,6 +1627,258 @@ export async function handleDeleteExecution(args: unknown, context?: InstanceCon
   }
 }
 
+// ========================================================================
+// Data Table Handlers
+// ========================================================================
+
+const dataTableFilterConditionSchema = z.object({
+  columnName: z.string().min(1),
+  condition: z.enum(['eq', 'neq', 'like', 'ilike', 'gt', 'gte', 'lt', 'lte']),
+  value: z.any(),
+});
+
+const dataTableFilterSchema = z.object({
+  type: z.enum(['and', 'or']).optional().default('and'),
+  filters: z.array(dataTableFilterConditionSchema).min(1, 'At least one filter condition is required'),
+});
+
+const tableIdSchema = z.object({
+  tableId: z.string().min(1, 'tableId is required'),
+});
+
+const createTableSchema = z.object({
+  name: z.string().min(1, 'Table name cannot be empty'),
+  columns: z.array(z.object({
+    name: z.string().min(1, 'Column name cannot be empty'),
+    type: z.enum(['string', 'number', 'boolean', 'date']).optional(),
+  })).optional(),
+});
+
+const listTablesSchema = z.object({
+  limit: z.number().min(1).max(100).optional(),
+  cursor: z.string().optional(),
+});
+
+const updateTableSchema = tableIdSchema.extend({
+  name: z.string().min(1, 'New table name cannot be empty'),
+});
+
+function tryParseJson(val: unknown): unknown {
+  if (typeof val !== 'string') return val;
+  try {
+    return JSON.parse(val);
+  } catch {
+    return val;
+  }
+}
+
+const coerceJsonArray = z.preprocess(tryParseJson, z.array(z.record(z.unknown())));
+const coerceJsonObject = z.preprocess(tryParseJson, z.record(z.unknown()));
+const coerceJsonFilter = z.preprocess(tryParseJson, dataTableFilterSchema);
+
+const getRowsSchema = tableIdSchema.extend({
+  limit: z.number().min(1).max(100).optional(),
+  cursor: z.string().optional(),
+  filter: z.union([coerceJsonFilter, z.string()]).optional(),
+  sortBy: z.string().optional(),
+  search: z.string().optional(),
+});
+
+const insertRowsSchema = tableIdSchema.extend({
+  data: coerceJsonArray.pipe(z.array(z.record(z.unknown())).min(1, 'At least one row is required')),
+  returnType: z.enum(['count', 'id', 'all']).optional(),
+});
+
+const mutateRowsSchema = tableIdSchema.extend({
+  filter: coerceJsonFilter,
+  data: coerceJsonObject,
+  returnData: z.boolean().optional(),
+  dryRun: z.boolean().optional(),
+});
+
+const deleteRowsSchema = tableIdSchema.extend({
+  filter: coerceJsonFilter,
+  returnData: z.boolean().optional(),
+  dryRun: z.boolean().optional(),
+});
+
+function handleDataTableError(error: unknown): McpToolResponse {
+  if (error instanceof z.ZodError) {
+    return { success: false, error: 'Invalid input', details: { errors: error.errors } };
+  }
+  if (error instanceof N8nApiError) {
+    return {
+      success: false,
+      error: getUserFriendlyErrorMessage(error),
+      code: error.code,
+      details: error.details as Record<string, unknown> | undefined,
+    };
+  }
+  return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+}
+
+export async function handleCreateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = createTableSchema.parse(args);
+    const dataTable = await client.createDataTable(input);
+    if (!dataTable || !dataTable.id) {
+      return { success: false, error: 'Data table creation failed: n8n API returned an empty or invalid response' };
+    }
+    return {
+      success: true,
+      data: { id: dataTable.id, name: dataTable.name },
+      message: `Data table "${dataTable.name}" created with ID: ${dataTable.id}`,
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleListTables(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const input = listTablesSchema.parse(args || {});
+    const result = await client.listDataTables(input);
+    return {
+      success: true,
+      data: {
+        tables: result.data,
+        count: result.data.length,
+        nextCursor: result.nextCursor || undefined,
+      },
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleGetTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId } = tableIdSchema.parse(args);
+    const dataTable = await client.getDataTable(tableId);
+    return { success: true, data: dataTable };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleUpdateTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, name } = updateTableSchema.parse(args);
+    const dataTable = await client.updateDataTable(tableId, { name });
+    return {
+      success: true,
+      data: dataTable,
+      message: `Data table renamed to "${dataTable.name}"`,
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleDeleteTable(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId } = tableIdSchema.parse(args);
+    await client.deleteDataTable(tableId);
+    return { success: true, message: `Data table ${tableId} deleted successfully` };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleGetRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, filter, sortBy, ...params } = getRowsSchema.parse(args);
+    const queryParams: Record<string, unknown> = { ...params };
+    if (filter) {
+      queryParams.filter = typeof filter === 'string' ? filter : JSON.stringify(filter);
+    }
+    if (sortBy) {
+      queryParams.sortBy = sortBy;
+    }
+    const result = await client.getDataTableRows(tableId, queryParams as any);
+    return {
+      success: true,
+      data: {
+        rows: result.data,
+        count: result.data.length,
+        nextCursor: result.nextCursor || undefined,
+      },
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleInsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, ...params } = insertRowsSchema.parse(args);
+    const result = await client.insertDataTableRows(tableId, params);
+    return {
+      success: true,
+      data: result,
+      message: `Rows inserted into data table ${tableId}`,
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleUpdateRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, ...params } = mutateRowsSchema.parse(args);
+    const result = await client.updateDataTableRows(tableId, params);
+    return {
+      success: true,
+      data: result,
+      message: params.dryRun ? 'Dry run: rows matched (no changes applied)' : 'Rows updated successfully',
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleUpsertRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, ...params } = mutateRowsSchema.parse(args);
+    const result = await client.upsertDataTableRow(tableId, params);
+    return {
+      success: true,
+      data: result,
+      message: params.dryRun ? 'Dry run: upsert previewed (no changes applied)' : 'Row upserted successfully',
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
+export async function handleDeleteRows(args: unknown, context?: InstanceContext): Promise<McpToolResponse> {
+  try {
+    const client = ensureApiConfigured(context);
+    const { tableId, filter, ...params } = deleteRowsSchema.parse(args);
+    const queryParams = {
+      filter: JSON.stringify(filter),
+      ...params,
+    };
+    const result = await client.deleteDataTableRows(tableId, queryParams as any);
+    return {
+      success: true,
+      data: result,
+      message: params.dryRun ? 'Dry run: rows matched for deletion (no changes applied)' : 'Rows deleted successfully',
+    };
+  } catch (error) {
+    return handleDataTableError(error);
+  }
+}
+
 // System Tools Handlers
 
 export async function handleHealthCheck(context?: InstanceContext): Promise<McpToolResponse> {

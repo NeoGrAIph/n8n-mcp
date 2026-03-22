@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.n8nManageDatatableDoc = exports.n8nDeployTemplateDoc = exports.n8nWorkflowVersionsTruncateDoc = exports.n8nWorkflowVersionsPruneDoc = exports.n8nWorkflowVersionsDeleteDoc = exports.n8nWorkflowVersionsRollbackDoc = exports.n8nWorkflowVersionsGetDoc = exports.n8nWorkflowVersionsListDoc = exports.n8nExecutionsDeleteDoc = exports.n8nExecutionsListDoc = exports.n8nExecutionsGetDoc = exports.n8nTestWorkflowDoc = exports.n8nAutofixWorkflowDoc = exports.n8nValidateWorkflowDoc = exports.n8nListWorkflowsDoc = exports.n8nDeleteWorkflowDoc = exports.n8nUpdatePartialWorkflowDoc = exports.n8nUpdateFullWorkflowDoc = exports.n8nGetWorkflowDoc = exports.n8nCreateWorkflowDoc = void 0;
+exports.n8nDeployTemplateDoc = exports.n8nWorkflowVersionsTruncateDoc = exports.n8nWorkflowVersionsPruneDoc = exports.n8nWorkflowVersionsDeleteDoc = exports.n8nWorkflowVersionsRollbackDoc = exports.n8nWorkflowVersionsGetDoc = exports.n8nWorkflowVersionsListDoc = exports.n8nExecutionsDeleteDoc = exports.n8nExecutionsListDoc = exports.n8nExecutionsGetDoc = exports.n8nTestWorkflowDoc = exports.n8nAutofixWorkflowDoc = exports.n8nValidateWorkflowDoc = exports.n8nListWorkflowsDoc = exports.n8nDeleteWorkflowDoc = exports.n8nUpdatePartialWorkflowDoc = exports.n8nUpdateFullWorkflowDoc = exports.n8nGetWorkflowDoc = exports.n8nCreateWorkflowDoc = void 0;
 var n8n_create_workflow_1 = require("./n8n-create-workflow");
 Object.defineProperty(exports, "n8nCreateWorkflowDoc", { enumerable: true, get: function () { return n8n_create_workflow_1.n8nCreateWorkflowDoc; } });
 var n8n_get_workflow_1 = require("./n8n-get-workflow");
@@ -39,6 +39,4 @@ var n8n_workflow_versions_truncate_1 = require("./n8n-workflow-versions-truncate
 Object.defineProperty(exports, "n8nWorkflowVersionsTruncateDoc", { enumerable: true, get: function () { return n8n_workflow_versions_truncate_1.n8nWorkflowVersionsTruncateDoc; } });
 var n8n_deploy_template_1 = require("./n8n-deploy-template");
 Object.defineProperty(exports, "n8nDeployTemplateDoc", { enumerable: true, get: function () { return n8n_deploy_template_1.n8nDeployTemplateDoc; } });
-var n8n_manage_datatable_1 = require("./n8n-manage-datatable");
-Object.defineProperty(exports, "n8nManageDatatableDoc", { enumerable: true, get: function () { return n8n_manage_datatable_1.n8nManageDatatableDoc; } });
 //# sourceMappingURL=index.js.map
