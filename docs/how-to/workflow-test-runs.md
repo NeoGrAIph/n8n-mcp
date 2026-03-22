@@ -201,6 +201,19 @@
 Этот tool запускает реальные nodes внутри workflow.
 Если в workflow есть внешние side effects, они тоже сработают.
 
+### Operational timing guidance
+
+Для practical use полезно зафиксировать baseline ожидания:
+- для этого workflow `waitForCompletion=true` может занимать около 40 секунд;
+- рабочий timeout: `120000`;
+- безопасный timeout с запасом: `180000`.
+
+Выбор режима:
+- если нужен итоговый payload сразу, используйте `waitForCompletion=true` и `timeout=180000`;
+- если нужен только надёжный старт и `executionId`, используйте `waitForCompletion=false`, а затем читайте execution через `n8n_workflow_execution_get` или `n8n_executions_get`.
+
+Короткое ожидание клиента само по себе не означает зависание workflow.
+
 ## Variant 3: `n8n_workflow_runner_test`
 
 ### When it works

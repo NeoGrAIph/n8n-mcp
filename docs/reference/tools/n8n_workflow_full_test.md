@@ -40,6 +40,14 @@ Execute a full workflow through n8n's native `/rest/workflows/:id/run` endpoint.
 - При `waitForCompletion=true` обычно содержит `workflowId`, `executionId`, `triggerNodeName`, `startNodeNames`, `status` и `result`.
 - При `responseMode=full` или diagnostics дополнительно возвращает raw execution, processed diagnostics и polling metadata.
 
+## Operational Notes
+
+- Для workflow с LLM-нодами нормальное время ожидания может составлять десятки секунд.
+- Практический timeout по умолчанию: `120000`.
+- Безопасный timeout с запасом для интерактивного ожидания итогового payload: `180000`.
+- Если нужен только факт старта и `executionId`, используйте `waitForCompletion=false`, а затем `n8n_workflow_execution_get` или `n8n_executions_get`.
+- Короткое ожидание клиента не означает зависание workflow: сначала проверьте execution tools, и только потом считайте это ошибкой выполнения.
+
 ## Examples
 
 ### Native Full Test with Auto Selection
