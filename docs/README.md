@@ -1,58 +1,47 @@
-# n8n-MCP Documentation
+# Documentation
 
-Welcome to the n8n-MCP documentation. This directory contains comprehensive guides for installation, configuration, and troubleshooting.
+## Start here
 
-## 📚 Documentation Index
+- User: [Install](./tutorials/INSTALLATION.md), [Claude Desktop setup](./how-to/clients/README_CLAUDE_SETUP.md), [Remote HTTP access](./how-to/http-remote-access.md)
+- Dev: [Tools reference](./reference/tools/README.md), [How-to index](./how-to/README.md)
+- Oncall: [Runbooks](./runbooks/README.md), [Troubleshooting](./TROUBLESHOOTING.md)
 
-### Getting Started
-- **[Installation Guide](./INSTALLATION.md)** - Comprehensive installation guide covering all methods
-- **[Claude Desktop Setup](./README_CLAUDE_SETUP.md)** - Step-by-step guide for Claude Desktop configuration
-- **[Quick Start Tutorial](../README.md)** - Basic overview and quick start instructions
+## Tutorials
 
-### Deployment
-- **[HTTP Deployment Guide](./HTTP_DEPLOYMENT.md)** - Deploy n8n-MCP as an HTTP server for remote access
-- **[Docker Deployment](./DOCKER_README.md)** - Complete Docker deployment and configuration guide
-- **[Release Guide](./RELEASE_GUIDE.md)** - How to create releases and manage Docker tags
+- [Installation](./tutorials/INSTALLATION.md)
+- [MCP essentials usage](./tutorials/MCP_ESSENTIALS_README.md)
 
-### Reference
-- **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions for common issues and errors
-- **[HTTP Server Fix Documentation](./HTTP_SERVER_FINAL_FIX.md)** - Technical details of v2.3.2 HTTP server fixes
-- **[Docker Optimization Guide](./DOCKER_OPTIMIZATION_GUIDE.md)** - Reference for optimized Docker builds (~150MB)
-- **[Changelog](./CHANGELOG.md)** - Version history and release notes
+## How-to
 
-## 🚀 Quick Links
+- [How-to index](./how-to/README.md)
 
-### For Users
-- [Install n8n-MCP](./INSTALLATION.md)
-- [Configure Claude Desktop](./README_CLAUDE_SETUP.md)
-- [Deploy with Docker](./DOCKER_README.md)
-- [Troubleshoot Issues](./TROUBLESHOOTING.md)
+## Reference
 
-### For Developers
-- [HTTP Server Architecture](./HTTP_SERVER_FINAL_FIX.md)
-- [Docker Build Optimization](./DOCKER_OPTIMIZATION_GUIDE.md)
-- [Release Process](./RELEASE_GUIDE.md)
+- Capabilities: [reference/capabilities.md](./reference/capabilities.md)
+- Tools: [reference/tools/README.md](./reference/tools/README.md)
+- [reference/http-endpoints.md](./reference/http-endpoints.md)
+- [reference/cli.md](./reference/cli.md)
+- [CHANGELOG.md](./reference/CHANGELOG.md)
+- [SESSION_PERSISTENCE.md](./reference/SESSION_PERSISTENCE.md)
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
-## 📋 Environment Variables
+## Explanation
 
-Key configuration options:
+- [LIBRARY_USAGE.md](./explanation/LIBRARY_USAGE.md)
+- [FLEXIBLE_INSTANCE_CONFIGURATION.md](./explanation/FLEXIBLE_INSTANCE_CONFIGURATION.md)
+- [TYPE_STRUCTURE_VALIDATION.md](./explanation/TYPE_STRUCTURE_VALIDATION.md)
+- [SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md](./explanation/SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md)
+- [FINAL_AI_VALIDATION_SPEC.md](./explanation/FINAL_AI_VALIDATION_SPEC.md)
+- Research/analysis notes: `docs/local/` (не канон; используйте как исследовательские материалы)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MCP_MODE` | Server mode: `stdio` or `http` | `stdio` |
-| `USE_FIXED_HTTP` | Use fixed HTTP implementation (v2.3.2+) | `true` |
-| `AUTH_TOKEN` | Authentication token for HTTP mode | Required |
-| `PORT` | HTTP server port | `3000` |
-| `LOG_LEVEL` | Logging verbosity | `info` |
+## ADR
 
-See [Installation Guide](./INSTALLATION.md#environment-configuration) for complete list.
+- [adr/README.md](./adr/README.md)
 
-## 🆘 Getting Help
+## Runbooks
 
-1. Check the [Troubleshooting Guide](./TROUBLESHOOTING.md)
-2. Review [HTTP Server Fix Documentation](./HTTP_SERVER_FINAL_FIX.md) for v2.3.2 issues
-3. Open an issue on [GitHub](https://github.com/czlonkowski/n8n-mcp/issues)
+- [runbooks/README.md](./runbooks/README.md)
 
-## 📝 License
+## Configuration
 
-This project uses the Sustainable Use License. See [LICENSE](../LICENSE) for details.
+Полный список переменных окружения и комментарии: [../.env.example](../.env.example).

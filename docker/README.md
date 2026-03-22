@@ -1,10 +1,10 @@
-# Docker Usage Guide for n8n-mcp
+# Руководство по использованию Docker для n8n-mcp
 
-## Running in HTTP Mode
+## Работа в режиме HTTP
 
-The n8n-mcp Docker container can be run in HTTP mode using several methods:
+Docker-контейнер n8n-mcp можно запустить в режиме HTTP несколькими способами:
 
-### Method 1: Using Environment Variables (Recommended)
+### Способ 1: использование переменных среды (рекомендуется)
 
 ```bash
 docker run -d -p 3000:3000 \
@@ -14,7 +14,7 @@ docker run -d -p 3000:3000 \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-### Method 2: Using docker-compose
+### Способ 2: использование docker-compose
 
 ```bash
 # Create a .env file
@@ -28,9 +28,9 @@ EOF
 docker-compose up -d
 ```
 
-### Method 3: Using a Configuration File
+### Способ 3: использование файла конфигурации
 
-Create a `config.json` file:
+Создайте файл `config.json`:
 ```json
 {
   "MCP_MODE": "http",
@@ -40,7 +40,7 @@ Create a `config.json` file:
 }
 ```
 
-Run with the config file:
+Запускаем с конфигурационным файлом:
 ```bash
 docker run -d -p 3000:3000 \
   --name n8n-mcp-server \
@@ -48,7 +48,7 @@ docker run -d -p 3000:3000 \
   ghcr.io/czlonkowski/n8n-mcp:latest
 ```
 
-### Method 4: Using the n8n-mcp serve Command
+### Способ 4: использование команды n8n-mcp submit
 
 ```bash
 docker run -d -p 3000:3000 \
@@ -58,30 +58,30 @@ docker run -d -p 3000:3000 \
   n8n-mcp serve
 ```
 
-## Important Notes
+## Важные примечания
 
-1. **AUTH_TOKEN is required** for HTTP mode. Generate a secure token:
+1. **AUTH_TOKEN требуется** для режима HTTP. Создайте безопасный токен:
    ```bash
    openssl rand -base64 32
    ```
 
-2. **Environment variables take precedence** over config file values
+2. **Переменные среды имеют приоритет** над значениями файла конфигурации.
 
-3. **Default mode is stdio** if MCP_MODE is not specified
+3. **Режим по умолчанию — stdio**, если MCP_MODE не указан.
 
-4. **Health check endpoint** is available at `http://localhost:3000/health`
+4. **Конечная точка проверки работоспособности** доступна по адресу `http://localhost:3000/health`.
 
-## Troubleshooting
+## Поиск неисправностей
 
-### Container exits immediately
-- Check logs: `docker logs n8n-mcp-server`
-- Ensure AUTH_TOKEN is set for HTTP mode
+### Контейнер немедленно завершает работу
+- Проверить логи: `docker logs n8n-mcp-server`
+- Убедитесь, что AUTH_TOKEN установлен для режима HTTP.
 
-### "n8n-mcp: not found" error
-- This has been fixed in the latest version
-- Use the full command: `node /app/dist/mcp/index.js` as a workaround
+### Ошибка «n8n-mcp: не найден»
+- Это исправлено в последней версии
+- Используйте полную команду: `node /app/dist/mcp/index.js` в качестве обходного пути.
 
-### Config file not working
-- Ensure the file is valid JSON
-- Mount as read-only: `-v $(pwd)/config.json:/app/config.json:ro`
-- Check that the config parser is present: `docker exec n8n-mcp-server ls -la /app/docker/`
+### Файл конфигурации не работает
+- Убедитесь, что файл является действительным JSON.
+- Монтировать как доступный только для чтения: `-v $(pwd)/config.json:/app/config.json:ro`
+- Проверьте наличие парсера конфига: `docker exec n8n-mcp-server ls -la /app/docker/`
