@@ -135,7 +135,8 @@ ALWAYS explicitly configure ALL parameters that control node behavior.
    - `n8n_workflow_create(workflow)` - Deploy
    - `n8n_workflow_validate({id})` - Post-deployment check
    - `n8n_workflow_update_partial({id, operations: [...]})` - Batch updates
-   - `n8n_workflow_test()` - Test workflow execution
+   - `n8n_workflow_test()` - Test externally-triggerable workflow execution
+   - `n8n_workflow_runner_test()` - Test manual-only workflows through the runner
 
 ## Critical Warnings
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Trigger a workflow execution via webhook, form, or chat. Use this when you need to run a workflow and observe outputs or side effects. Provide workflowId and optional trigger parameters such as triggerType, message, or httpMethod. Returns execution details or response data when available.
+Trigger a workflow execution via webhook, form, or chat. Use this when you need to run an externally-triggerable workflow and observe outputs or side effects. Manual, schedule, and other non-HTTP triggers are not supported here; use `n8n_workflow_runner_test` for runner-based full-workflow execution.
 
 - Доступность: появляется в `tools/list` при конфигурации n8n API (`N8N_API_URL` + `N8N_API_KEY`) или при включённом multi-tenant (`ENABLE_MULTI_TENANT=true`) / наличии instance context.
 - Транспорт: stdio и http.
@@ -34,6 +34,16 @@ Trigger a workflow execution via webhook, form, or chat. Use this when you need 
 | `webhookPath` | string | no |  | For webhook: override the webhook path |
 | `workflowId` | string | yes |  | Workflow ID to execute (required) |
 
+Supported trigger types:
+- `webhook`
+- `form`
+- `chat`
+
+Unsupported workflow trigger classes:
+- `manualTrigger`
+- `schedule`
+- other triggers without external HTTP entrypoint
+
 ## Outputs
 
 - Возвращает JSON-результат операции.
@@ -47,7 +57,11 @@ Trigger a workflow execution via webhook, form, or chat. Use this when you need 
 {
   "name": "n8n_workflow_test",
   "arguments": {
-    "workflowId": "example-id"
+    "workflowId": "example-id",
+    "triggerType": "webhook",
+    "data": {
+      "sample": true
+    }
   }
 }
 ```
@@ -59,7 +73,10 @@ Trigger a workflow execution via webhook, form, or chat. Use this when you need 
   "name": "n8n_workflow_test",
   "arguments": {
     "workflowId": "example-id",
-    "data": {}
+    "triggerType": "chat",
+    "message": "hello",
+    "sessionId": "debug-session-1",
+    "waitForResponse": true
   }
 }
 ```
@@ -69,6 +86,9 @@ Trigger a workflow execution via webhook, form, or chat. Use this when you need 
 - `invalid_arguments`: отсутствуют обязательные поля или неверные типы.
 - `tool_disabled`: инструмент выключен через `DISABLED_TOOLS`.
 - `not_configured`: требуется конфигурация (например, n8n API или workflow-files root) и она отсутствует.
+- `Workflow cannot be triggered externally`: workflow не содержит `webhook`, `form` или `chat` trigger.
+- `Workflow must be active to trigger via this method`: externally-triggerable workflow найден, но workflow не активирован.
+- Для manual-only workflows используйте `n8n_workflow_runner_test`.
 - В HTTP режиме: `401/403` при отсутствии/неверном `Authorization: Bearer ...`.
 
 ## Security / Permissions

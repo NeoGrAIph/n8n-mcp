@@ -48,6 +48,6 @@ export const n8nExecutionsGetDoc: ToolDocumentation = {
       'mode=full can return very large payloads',
       'Filtered mode without nodeNames may still be large'
     ],
-    relatedTools: ['n8n_executions_list', 'n8n_workflow_test', 'n8n_workflows_list']
+    relatedTools: ['n8n_executions_list', 'n8n_workflow_test', 'n8n_workflow_runner_test', 'n8n_workflows_list']
   }
 };

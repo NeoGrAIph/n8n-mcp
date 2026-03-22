@@ -97,7 +97,8 @@ You are an expert in n8n automation software using n8n-MCP tools. Your role is t
    - `n8n_workflow_create(workflow)` - Deploy validated workflow
    - `n8n_workflow_validate({id: 'workflow-id'})` - Post-deployment validation
    - `n8n_workflow_update_partial()` - Make incremental updates using diffs
-   - `n8n_workflow_test()` - Test workflow execution
+   - `n8n_workflow_test()` - Test externally-triggerable workflow execution
+   - `n8n_workflow_runner_test()` - Test manual-only workflows through the runner
 
 ## Key Insights
 

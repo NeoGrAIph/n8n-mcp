@@ -51,13 +51,24 @@
    }
    ```
 
-4. Запустите тестовое выполнение:
+4. Запустите тестовое выполнение подходящим способом:
    ```json
    {
      "name": "n8n_workflow_test",
      "arguments": {
+        "workflowId": "workflow-id-here",
+       "triggerType": "webhook"
+     }
+   }
+   ```
+
+   Для manual-only workflow вместо этого используйте runner path:
+   ```json
+   {
+     "name": "n8n_workflow_runner_test",
+     "arguments": {
        "workflowId": "workflow-id-here",
-       "triggerType": "manual"
+       "dryRun": true
      }
    }
    ```
@@ -68,6 +79,5 @@
 
 ## References
 
-- Tools: `docs/reference/tools/n8n_workflow_create.md`, `docs/reference/tools/n8n_workflow_update_partial.md`, `docs/reference/tools/n8n_workflow_validate.md`, `docs/reference/tools/n8n_workflow_test.md`
+- Tools: `docs/reference/tools/n8n_workflow_create.md`, `docs/reference/tools/n8n_workflow_update_partial.md`, `docs/reference/tools/n8n_workflow_validate.md`, `docs/reference/tools/n8n_workflow_test.md`, `docs/reference/tools/n8n_workflow_runner_test.md`
 - Examples: `docs/workflow-diff-examples.md`
-

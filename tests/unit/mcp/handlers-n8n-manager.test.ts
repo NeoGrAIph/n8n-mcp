@@ -1312,4 +1312,144 @@ describe('handlers-n8n-manager', () => {
       expect(result.error).toMatch(/mode:\s*'preview'/);
     });
   });
+
+  describe('workflow runner test split', () => {
+    const createManualWorkflow = (overrides = {}) => createTestWorkflow({
+      active: false,
+      nodes: [
+        {
+          id: 'manual-trigger',
+          name: 'When clicking "Execute workflow"',
+          type: 'n8n-nodes-base.manualTrigger',
+          typeVersion: 1,
+          position: [100, 100],
+          parameters: {},
+        },
+        {
+          id: 'set-node',
+          name: 'Prepare Data',
+          type: 'n8n-nodes-base.set',
+          typeVersion: 3,
+          position: [320, 100],
+          parameters: {
+            assignments: {
+              assignments: [
+                {
+                  id: 'field-1',
+                  name: 'status',
+                  value: 'ok',
+                  type: 'string',
+                },
+              ],
+            },
+          },
+        },
+      ],
+      connections: {
+        'When clicking "Execute workflow"': {
+          main: [[{ node: 'Prepare Data', type: 'main', index: 0 }]],
+        },
+      },
+      ...overrides,
+    });
+
+    it('should reject n8n_code_node_test mode=full with migration guidance', async () => {
+      const result = await handlers.handleTestCodeNode({
+        workflowId: 'wf-manual',
+        mode: 'full',
+        nodeName: 'Any Node',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid input');
+      expect(result.details.errors[0].message).toContain('mode=full has moved to n8n_workflow_runner_test');
+    });
+
+    it('should require nodeId or nodeName for subgraph mode even when startNode is provided', async () => {
+      const result = await handlers.handleTestCodeNode({
+        workflowId: 'wf-manual',
+        mode: 'subgraph',
+        startNode: 'When clicking "Execute workflow"',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid input');
+      expect(result.details.errors[0].message).toContain(
+        'nodeId or nodeName is required for mode=subgraph; startNode only controls traversal'
+      );
+    });
+
+    it('should support dry-run for full workflow runner execution', async () => {
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+
+      const result = await handlers.handleTestWorkflowRunner({
+        workflowId: 'wf-manual',
+        dryRun: true,
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: {
+          workflowId: 'wf-manual',
+          mode: 'full',
+          dryRun: true,
+          inputItemCount: 1,
+          selectedNodeNames: ['Prepare Data'],
+          subWorkflowName: 'MCP Code Test: Test Workflow / [full]',
+          triggerNodeName: 'MCP Execute Workflow Trigger',
+          warnings: ['Removed trigger nodes from sub-workflow: When clicking "Execute workflow"'],
+        },
+        message: 'Workflow runner dry-run completed',
+      });
+      expect(mockApiClient.triggerWebhook).not.toHaveBeenCalled();
+    });
+
+    it('should execute manual-only workflow via n8n_workflow_runner_test', async () => {
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+      mockApiClient.listWorkflows.mockResolvedValue({
+        data: [{ id: 'runner-wf', name: 'MCP Utility - Code Node Runner' }],
+        nextCursor: null,
+      });
+      mockApiClient.triggerWebhook.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        data: {
+          ok: true,
+          mcpMeta: {
+            executionId: 'exec-runner-1',
+          },
+        },
+        headers: {},
+      });
+
+      const result = await handlers.handleTestWorkflowRunner({
+        workflowId: 'wf-manual',
+        item: { input: 'value' },
+      }, {
+        n8nApiUrl: 'https://n8n.test.com/api/v1',
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: {
+          workflowId: 'wf-manual',
+          mode: 'full',
+          executionId: 'exec-runner-1',
+          result: { ok: true },
+        },
+        executionId: 'exec-runner-1',
+        message: 'Workflow executed via runner',
+      });
+      expect(mockApiClient.triggerWebhook).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.triggerWebhook).toHaveBeenCalledWith(expect.objectContaining({
+        webhookUrl: 'https://n8n.test.com/webhook/mcp-code-node-runner',
+        httpMethod: 'POST',
+        waitForResponse: true,
+        timeoutMs: undefined,
+        data: expect.objectContaining({
+          items: [{ json: { input: 'value' } }],
+        }),
+      }));
+    });
+  });
 });

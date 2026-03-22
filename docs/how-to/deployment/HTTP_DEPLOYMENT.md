@@ -196,7 +196,8 @@ npm run start:http
 - `n8n_workflow_versions_truncate` - ​​Усекать ВСЕ версии (опасно)
 
 **Управление выполнением:**
-- `n8n_workflow_test` - ​​Запустить выполнение рабочего процесса.
+- `n8n_workflow_test` - ​​Запустить externally-triggerable workflow (`webhook` / `form` / `chat`).
+- `n8n_workflow_runner_test` - Выполнить full workflow через utility runner, включая manual-only сценарии.
 - `n8n_executions_get` - ​​Получить подробности выполнения
 - `n8n_executions_list` - ​​Список выполнений
 - `n8n_executions_delete` - ​​Удалить записи выполнения

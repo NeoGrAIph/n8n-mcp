@@ -412,7 +412,7 @@ export const n8nManagementTools: ToolDefinition[] = [
   // Execution Management Tools
   {
     name: 'n8n_workflow_test',
-    description: `Trigger a workflow execution via webhook, form, or chat. Use this when you need to run a workflow and observe outputs or side effects. Provide workflowId and optional trigger parameters such as triggerType, message, or httpMethod. Returns execution details or response data when available.`,
+    description: `Trigger a workflow execution via webhook, form, or chat. Use this when you need to run an externally-triggerable workflow and observe outputs or side effects. Manual, schedule, and other non-HTTP triggers are not supported. Provide workflowId and optional trigger parameters such as triggerType, message, or httpMethod. Returns execution details or response data when available.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -466,31 +466,90 @@ export const n8nManagementTools: ToolDefinition[] = [
     }
   },
   {
-    name: 'n8n_code_node_test',
-    description: `Test a Code node or branch from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes full|node|subgraph and optional upstream/downstream inclusion. Provide workflowId and nodeId/nodeName (or startNode for subgraph). Returns minimal result by default; use responseMode=full or diagnostics to get full details.`,
+    name: 'n8n_workflow_runner_test',
+    description: `Execute a full workflow through the MCP utility runner. Use this when you need a reproducible runner-based test for workflows that are not externally triggerable, such as manual-only workflows. Supports optional dryRun, diagnostics, and custom runner overrides.`,
     inputSchema: {
       type: 'object',
       properties: {
         workflowId: {
           type: 'string',
-          description: 'Workflow ID that contains the Code node'
+          description: 'Workflow ID to execute through the utility runner'
+        },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object'
+          },
+          description: 'Optional array of input items. Each item can be a full n8n item ({json, binary}) or a plain object (will be wrapped as {json}).'
+        },
+        item: {
+          type: 'object',
+          description: 'Optional single input object (used if items is not provided)'
+        },
+        dryRun: {
+          type: 'boolean',
+          description: 'Build the generated sub-workflow and return metadata without executing the runner webhook'
+        },
+        timeout: {
+          type: 'integer',
+          description: 'Timeout in ms for the runner webhook call'
+        },
+        diagnostics: {
+          type: 'string',
+          enum: ['none', 'preview', 'summary', 'full', 'error'],
+          description: 'Execution diagnostics mode (default: none). Not allowed when dryRun=true.'
+        },
+        diagnosticsItemsLimit: {
+          type: 'integer',
+          description: 'Items per node for diagnostics (default: 2)'
+        },
+        responseMode: {
+          type: 'string',
+          enum: ['result', 'full'],
+          description: 'Response shape: minimal result or full runner payload (default: result)'
+        },
+        runnerWorkflowId: {
+          type: 'string',
+          description: 'Optional override for the utility runner workflow ID'
+        },
+        runnerWebhookPath: {
+          type: 'string',
+          description: 'Optional override for the runner webhook path (default: mcp-code-node-runner)'
+        },
+        waitForResponse: {
+          type: 'boolean',
+          description: 'Wait for workflow completion (default: true)'
+        }
+      },
+      required: ['workflowId']
+    }
+  },
+  {
+    name: 'n8n_code_node_test',
+    description: `Test a Code node or Code-node-centered subgraph from an existing workflow by executing a generated sub-workflow through the utility runner. Supports modes node|subgraph and optional upstream/downstream inclusion. Use n8n_workflow_runner_test for full-workflow runner execution.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workflowId: {
+          type: 'string',
+          description: 'Workflow ID that contains the target Code node'
         },
         mode: {
           type: 'string',
           enum: ['full', 'node', 'subgraph'],
-          description: 'Execution mode: full workflow, single node, or subgraph (default: node)'
+          description: 'Execution mode: single Code node or Code-node-centered subgraph (default: node). mode=full has moved to n8n_workflow_runner_test.'
         },
         nodeId: {
           type: 'string',
-          description: 'Code node ID (preferred for precision)'
+          description: 'Code node ID (preferred for precision). Required for mode=node and mode=subgraph if nodeName is not provided.'
         },
         nodeName: {
           type: 'string',
-          description: 'Code node name (used if nodeId is not provided)'
+          description: 'Code node name (used if nodeId is not provided). Required for mode=node and mode=subgraph if nodeId is not provided.'
         },
         startNode: {
           type: 'string',
-          description: 'Start node for subgraph mode (node name or id)'
+          description: 'Start node for subgraph traversal (node name or id). Does not replace nodeId/nodeName.'
         },
         endNodes: {
           type: 'array',

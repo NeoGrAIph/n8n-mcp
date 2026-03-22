@@ -136,7 +136,8 @@
 - **`n8n_workflow_validate`** — Проверка рабочих процессов в n8n по идентификатору.
 - **`n8n_workflow_autofix`** — автоматическое исправление распространенных ошибок рабочего процесса.
 - **`n8n_template_deploy`** - Развертывание шаблонов из n8n.io
-- **`n8n_workflow_test`** — запуск рабочего процесса.
+- **`n8n_workflow_test`** — запуск externally-triggerable workflow (`webhook` / `form` / `chat`).
+- **`n8n_workflow_runner_test`** — runner-based запуск full workflow, включая manual-only workflows.
 - **`n8n_executions_get`** - Получить подробности выполнения
 - **`n8n_executions_list`** - Список выполнений
 - **`n8n_executions_delete`** - Удалить записи выполнения

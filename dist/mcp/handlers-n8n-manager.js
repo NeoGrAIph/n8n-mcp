@@ -54,6 +54,7 @@ exports.handleValidateWorkflow = handleValidateWorkflow;
 exports.handleAutofixWorkflow = handleAutofixWorkflow;
 exports.handleTestWorkflow = handleTestWorkflow;
 exports.handleTestCodeNode = handleTestCodeNode;
+exports.handleTestWorkflowRunner = handleTestWorkflowRunner;
 exports.handleGetExecution = handleGetExecution;
 exports.handleGetWorkflowExecution = handleGetWorkflowExecution;
 exports.handleListExecutions = handleListExecutions;
@@ -268,6 +269,27 @@ const testWorkflowSchema = zod_1.z.object({
     timeout: zod_1.z.number().optional(),
     waitForResponse: zod_1.z.boolean().optional(),
 });
+const workflowRunnerTestSchema = zod_1.z.object({
+    workflowId: zod_1.z.string(),
+    items: zod_1.z.array(zod_1.z.unknown()).optional(),
+    item: zod_1.z.unknown().optional(),
+    dryRun: zod_1.z.boolean().optional(),
+    timeout: zod_1.z.number().int().positive().optional(),
+    diagnostics: zod_1.z.enum(['none', 'preview', 'summary', 'full', 'error']).optional(),
+    diagnosticsItemsLimit: zod_1.z.number().int().min(0).optional(),
+    responseMode: zod_1.z.enum(['result', 'full']).optional(),
+    runnerWorkflowId: zod_1.z.string().optional(),
+    runnerWebhookPath: zod_1.z.string().optional(),
+    waitForResponse: zod_1.z.boolean().optional(),
+}).superRefine((value, ctx) => {
+    if (value.dryRun && value.diagnostics && value.diagnostics !== 'none') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'diagnostics cannot be used when dryRun=true',
+            path: ['diagnostics'],
+        });
+    }
+});
 const codeNodeTestSchema = zod_1.z.object({
     workflowId: zod_1.z.string(),
     mode: zod_1.z.enum(['full', 'node', 'subgraph']).optional(),
@@ -289,6 +311,14 @@ const codeNodeTestSchema = zod_1.z.object({
 }).superRefine((value, ctx) => {
     const mode = value.mode ?? 'node';
     const hasNode = !!value.nodeId || !!value.nodeName;
+    if (mode === 'full') {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: 'mode=full has moved to n8n_workflow_runner_test',
+            path: ['mode'],
+        });
+        return;
+    }
     if (mode === 'node' && !hasNode) {
         ctx.addIssue({
             code: zod_1.z.ZodIssueCode.custom,
@@ -296,11 +326,11 @@ const codeNodeTestSchema = zod_1.z.object({
             path: ['nodeId'],
         });
     }
-    if (mode === 'subgraph' && !hasNode && !value.startNode) {
+    if (mode === 'subgraph' && !hasNode) {
         ctx.addIssue({
             code: zod_1.z.ZodIssueCode.custom,
-            message: 'Provide nodeId/nodeName or startNode for mode=subgraph',
-            path: ['startNode'],
+            message: 'nodeId or nodeName is required for mode=subgraph; startNode only controls traversal',
+            path: ['nodeId'],
         });
     }
 });
@@ -1455,6 +1485,96 @@ function stripMcpMetaFromResult(result) {
     }
     return result;
 }
+function isRunnerExecutionContextSuccess(value) {
+    return value.success === true && 'baseUrl' in value && 'runnerWorkflowId' in value;
+}
+async function resolveRunnerExecutionContext(client, context, runnerWorkflowIdOverride) {
+    const runnerWorkflowId = await resolveRunnerWorkflowId(client, runnerWorkflowIdOverride);
+    if (!runnerWorkflowId) {
+        return {
+            success: false,
+            error: 'Runner workflow not found',
+            details: {
+                runnerWorkflowId: runnerWorkflowIdOverride,
+                runnerWorkflowName: CODE_NODE_RUNNER_NAME,
+                hint: 'Create and activate the utility workflow "MCP Utility - Code Node Runner" in n8n dev',
+            },
+        };
+    }
+    const baseUrl = getN8nBaseUrl(context);
+    if (!baseUrl) {
+        return {
+            success: false,
+            error: 'Cannot determine n8n base URL',
+            details: {
+                hint: 'Set N8N_API_URL or provide n8nApiUrl in instance context',
+            },
+        };
+    }
+    return { success: true, baseUrl, runnerWorkflowId };
+}
+async function executeGeneratedSubWorkflowThroughRunner(params) {
+    const runnerPath = (params.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');
+    const baseUrlClean = params.baseUrl.replace(/\/+$/, '');
+    const standardWebhookUrl = `${baseUrlClean}/webhook/${runnerPath}`;
+    const legacyWebhookUrl = `${baseUrlClean}/webhook/${params.runnerWorkflowId}/webhook/${runnerPath}`;
+    const payloadItems = normalizeItems(params.items, params.item);
+    const webhookPayload = {
+        workflowJson: JSON.stringify(params.subWorkflowResult.workflow),
+        items: payloadItems,
+    };
+    const tryWebhook = async (url) => params.client.triggerWebhook({
+        webhookUrl: url,
+        httpMethod: 'POST',
+        data: webhookPayload,
+        waitForResponse: params.waitForResponse ?? true,
+        timeoutMs: params.timeout,
+    });
+    let webhookUrl = standardWebhookUrl;
+    let usedLegacyWebhook = false;
+    let response = await tryWebhook(standardWebhookUrl);
+    const responseMessage = response?.data?.message;
+    if (response?.status === 404 && typeof responseMessage === 'string' && responseMessage.includes('not registered')) {
+        response = await tryWebhook(legacyWebhookUrl);
+        webhookUrl = legacyWebhookUrl;
+        usedLegacyWebhook = true;
+    }
+    const metaInfo = extractRunnerMeta(response.data, response.headers);
+    const warnings = [...params.subWorkflowResult.warnings];
+    if (usedLegacyWebhook) {
+        warnings.push('Runner webhook used legacy URL pattern /webhook/<workflowId>/webhook/<path>');
+    }
+    const errorDetails = extractExecutionErrorDetails(response.data);
+    const isError = response.status >= 400 || !!errorDetails?.errorMessage;
+    let diagnostics = undefined;
+    if (params.diagnosticsMode !== 'none') {
+        if (!metaInfo.executionId) {
+            warnings.push('Diagnostics requested but runner executionId is not available');
+        }
+        else {
+            const execution = await params.client.getExecution(metaInfo.executionId, true);
+            const runnerWorkflow = await params.client.getWorkflow(execution.workflowId);
+            const filterOptions = {
+                mode: params.diagnosticsMode,
+                itemsLimit: params.diagnosticsItemsLimit,
+            };
+            diagnostics = (0, execution_processor_1.processExecution)(execution, filterOptions, runnerWorkflow);
+        }
+    }
+    const cleanedResult = params.responseMode === 'full'
+        ? response.data
+        : stripMcpMetaFromResult(response.data);
+    return {
+        cleanedResult,
+        diagnostics,
+        errorDetails,
+        isError,
+        metaInfo,
+        response,
+        runnerWebhookUrl: webhookUrl,
+        warnings,
+    };
+}
 async function handleTestCodeNode(args, context) {
     try {
         const client = ensureApiConfigured(context);
@@ -1469,7 +1589,7 @@ async function handleTestCodeNode(args, context) {
         const targetNode = targetNodeName
             ? workflow.nodes.find(node => node.name === targetNodeName)
             : undefined;
-        if (mode !== 'full' && !targetNode) {
+        if (!targetNode) {
             return {
                 success: false,
                 error: 'Target node not found in workflow',
@@ -1520,32 +1640,6 @@ async function handleTestCodeNode(args, context) {
                 endNodeNames.push(resolved);
             }
         }
-        const runnerWorkflowId = await resolveRunnerWorkflowId(client, input.runnerWorkflowId);
-        if (!runnerWorkflowId) {
-            return {
-                success: false,
-                error: 'Runner workflow not found',
-                details: {
-                    runnerWorkflowId: input.runnerWorkflowId,
-                    runnerWorkflowName: CODE_NODE_RUNNER_NAME,
-                    hint: 'Create and activate the utility workflow "MCP Utility - Code Node Runner" in n8n dev',
-                },
-            };
-        }
-        const baseUrl = getN8nBaseUrl(context);
-        if (!baseUrl) {
-            return {
-                success: false,
-                error: 'Cannot determine n8n base URL',
-                details: {
-                    hint: 'Set N8N_API_URL or provide n8nApiUrl in instance context',
-                },
-            };
-        }
-        const runnerPath = (input.runnerWebhookPath || CODE_NODE_RUNNER_WEBHOOK_PATH).replace(/^\/+/, '');
-        const baseUrlClean = baseUrl.replace(/\/+$/, '');
-        const standardWebhookUrl = `${baseUrlClean}/webhook/${runnerPath}`;
-        const legacyWebhookUrl = `${baseUrlClean}/webhook/${runnerWorkflowId}/webhook/${runnerPath}`;
         let subWorkflowResult;
         try {
             subWorkflowResult = (0, workflow_subgraph_1.buildSubWorkflow)({
@@ -1570,86 +1664,53 @@ async function handleTestCodeNode(args, context) {
                 },
             };
         }
-        const payloadItems = normalizeItems(input.items, input.item);
-        const webhookPayload = {
-            workflowJson: JSON.stringify(subWorkflowResult.workflow),
-            items: payloadItems,
-        };
-        const tryWebhook = async (url) => client.triggerWebhook({
-            webhookUrl: url,
-            httpMethod: 'POST',
-            data: webhookPayload,
-            waitForResponse: input.waitForResponse ?? true,
-            timeoutMs: input.timeout,
+        const runnerContext = await resolveRunnerExecutionContext(client, context, input.runnerWorkflowId);
+        if (!isRunnerExecutionContextSuccess(runnerContext)) {
+            return runnerContext;
+        }
+        const runnerExecution = await executeGeneratedSubWorkflowThroughRunner({
+            baseUrl: runnerContext.baseUrl,
+            client,
+            diagnosticsItemsLimit: input.diagnosticsItemsLimit,
+            diagnosticsMode,
+            item: input.item,
+            items: input.items,
+            responseMode,
+            runnerWebhookPath: input.runnerWebhookPath,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            subWorkflowResult,
+            timeout: input.timeout,
+            waitForResponse: input.waitForResponse,
         });
-        let webhookUrl = standardWebhookUrl;
-        let usedLegacyWebhook = false;
-        let response = await tryWebhook(standardWebhookUrl);
-        const responseMessage = response?.data?.message;
-        if (response?.status === 404 && typeof responseMessage === 'string' && responseMessage.includes('not registered')) {
-            response = await tryWebhook(legacyWebhookUrl);
-            webhookUrl = legacyWebhookUrl;
-            usedLegacyWebhook = true;
-        }
-        const metaInfo = extractRunnerMeta(response.data, response.headers);
-        const warnings = [...subWorkflowResult.warnings];
-        if (usedLegacyWebhook) {
-            warnings.push('Runner webhook used legacy URL pattern /webhook/<workflowId>/webhook/<path>');
-        }
-        const errorDetails = extractExecutionErrorDetails(response.data);
-        const isError = response.status >= 400 || !!errorDetails?.errorMessage;
-        let diagnostics = undefined;
-        if (diagnosticsMode !== 'none') {
-            if (!metaInfo.executionId) {
-                warnings.push('Diagnostics requested but runner executionId is not available');
-            }
-            else {
-                try {
-                    const execution = await client.getExecution(metaInfo.executionId, true);
-                    const runnerWorkflow = await client.getWorkflow(execution.workflowId);
-                    const filterOptions = {
-                        mode: diagnosticsMode,
-                        itemsLimit: input.diagnosticsItemsLimit,
-                    };
-                    diagnostics = (0, execution_processor_1.processExecution)(execution, filterOptions, runnerWorkflow);
-                }
-                catch (diagnosticError) {
-                    warnings.push(`Failed to load diagnostics: ${diagnosticError instanceof Error ? diagnosticError.message : 'unknown error'}`);
-                }
-            }
-        }
-        const cleanedResult = responseMode === 'full'
-            ? response.data
-            : stripMcpMetaFromResult(response.data);
         const baseData = {
             workflowId: input.workflowId,
             nodeId: targetNode?.id,
             nodeName: targetNode?.name,
             mode,
-            executionId: metaInfo.executionId,
-            result: cleanedResult,
+            executionId: runnerExecution.metaInfo.executionId,
+            result: runnerExecution.cleanedResult,
         };
-        if (isError) {
+        if (runnerExecution.isError) {
             return {
                 success: false,
-                error: errorDetails?.errorMessage || response.statusText || 'Error in workflow',
-                code: response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
+                error: runnerExecution.errorDetails?.errorMessage || runnerExecution.response.statusText || 'Error in workflow',
+                code: runnerExecution.response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
                 details: {
                     ...baseData,
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorDetails ?? response.data,
-                    runnerWorkflowId,
-                    runnerWebhookUrl: webhookUrl,
-                    runnerMeta: metaInfo.meta,
-                    diagnostics: diagnosticsMode !== 'none' ? diagnostics : undefined,
-                    warnings: warnings.length > 0 ? warnings : undefined,
-                    response: responseMode === 'full' ? response : undefined,
+                    status: runnerExecution.response.status,
+                    statusText: runnerExecution.response.statusText,
+                    error: runnerExecution.errorDetails ?? runnerExecution.response.data,
+                    runnerWorkflowId: runnerContext.runnerWorkflowId,
+                    runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+                    runnerMeta: runnerExecution.metaInfo.meta,
+                    diagnostics: diagnosticsMode !== 'none' ? runnerExecution.diagnostics : undefined,
+                    warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+                    response: responseMode === 'full' ? runnerExecution.response : undefined,
                     selectedNodeNames: responseMode === 'full' ? subWorkflowResult.selectedNodeNames : undefined,
                     subWorkflowName: responseMode === 'full' ? subWorkflowResult.workflow.name : undefined,
                     triggerNodeName: responseMode === 'full' ? subWorkflowResult.triggerNodeName : undefined,
                 },
-                executionId: metaInfo.executionId,
+                executionId: runnerExecution.metaInfo.executionId,
             };
         }
         const fullData = {
@@ -1657,18 +1718,137 @@ async function handleTestCodeNode(args, context) {
             selectedNodeNames: subWorkflowResult.selectedNodeNames,
             subWorkflowName: subWorkflowResult.workflow.name,
             triggerNodeName: subWorkflowResult.triggerNodeName,
-            runnerWorkflowId,
-            runnerWebhookUrl: webhookUrl,
-            runnerMeta: metaInfo.meta,
-            response,
-            diagnostics,
-            warnings: warnings.length > 0 ? warnings : undefined,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+            runnerMeta: runnerExecution.metaInfo.meta,
+            response: runnerExecution.response,
+            diagnostics: runnerExecution.diagnostics,
+            warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
         };
         return {
             success: true,
             data: responseMode === 'full' || diagnosticsMode !== 'none' ? fullData : baseData,
-            executionId: metaInfo.executionId,
-            message: `Code node "${targetNode?.name || 'workflow'}" executed via runner`,
+            executionId: runnerExecution.metaInfo.executionId,
+            message: `Code node "${targetNode.name}" executed via runner`,
+        };
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return {
+                success: false,
+                error: 'Invalid input',
+                details: { errors: error.errors },
+            };
+        }
+        if (error instanceof n8n_errors_1.N8nApiError) {
+            return {
+                success: false,
+                error: (0, n8n_errors_1.getUserFriendlyErrorMessage)(error),
+                code: error.code,
+                details: error.details,
+            };
+        }
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+    }
+}
+async function handleTestWorkflowRunner(args, context) {
+    try {
+        const client = ensureApiConfigured(context);
+        const input = workflowRunnerTestSchema.parse(args);
+        const diagnosticsMode = input.diagnostics ?? 'none';
+        const responseMode = input.responseMode ?? 'result';
+        const workflow = await client.getWorkflow(input.workflowId);
+        const subWorkflowResult = (0, workflow_subgraph_1.buildSubWorkflow)({ workflow, mode: 'full' });
+        const payloadItems = normalizeItems(input.items, input.item);
+        if (input.dryRun) {
+            const baseData = {
+                workflowId: input.workflowId,
+                mode: 'full',
+                dryRun: true,
+                inputItemCount: payloadItems.length,
+                selectedNodeNames: subWorkflowResult.selectedNodeNames,
+                subWorkflowName: subWorkflowResult.workflow.name,
+                triggerNodeName: subWorkflowResult.triggerNodeName,
+                warnings: subWorkflowResult.warnings.length > 0 ? subWorkflowResult.warnings : undefined,
+            };
+            return {
+                success: true,
+                data: responseMode === 'full'
+                    ? {
+                        ...baseData,
+                        generatedWorkflow: subWorkflowResult.workflow,
+                    }
+                    : baseData,
+                message: 'Workflow runner dry-run completed',
+            };
+        }
+        const runnerContext = await resolveRunnerExecutionContext(client, context, input.runnerWorkflowId);
+        if (!isRunnerExecutionContextSuccess(runnerContext)) {
+            return runnerContext;
+        }
+        const runnerExecution = await executeGeneratedSubWorkflowThroughRunner({
+            baseUrl: runnerContext.baseUrl,
+            client,
+            diagnosticsItemsLimit: input.diagnosticsItemsLimit,
+            diagnosticsMode,
+            item: input.item,
+            items: input.items,
+            responseMode,
+            runnerWebhookPath: input.runnerWebhookPath,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            subWorkflowResult,
+            timeout: input.timeout,
+            waitForResponse: input.waitForResponse,
+        });
+        const baseData = {
+            workflowId: input.workflowId,
+            mode: 'full',
+            executionId: runnerExecution.metaInfo.executionId,
+            result: runnerExecution.cleanedResult,
+        };
+        if (runnerExecution.isError) {
+            return {
+                success: false,
+                error: runnerExecution.errorDetails?.errorMessage || runnerExecution.response.statusText || 'Error in workflow',
+                code: runnerExecution.response.status >= 500 ? 'SERVER_ERROR' : 'WORKFLOW_ERROR',
+                details: {
+                    ...baseData,
+                    status: runnerExecution.response.status,
+                    statusText: runnerExecution.response.statusText,
+                    error: runnerExecution.errorDetails ?? runnerExecution.response.data,
+                    runnerWorkflowId: runnerContext.runnerWorkflowId,
+                    runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+                    runnerMeta: runnerExecution.metaInfo.meta,
+                    diagnostics: diagnosticsMode !== 'none' ? runnerExecution.diagnostics : undefined,
+                    warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+                    response: responseMode === 'full' ? runnerExecution.response : undefined,
+                    selectedNodeNames: responseMode === 'full' ? subWorkflowResult.selectedNodeNames : undefined,
+                    subWorkflowName: responseMode === 'full' ? subWorkflowResult.workflow.name : undefined,
+                    triggerNodeName: responseMode === 'full' ? subWorkflowResult.triggerNodeName : undefined,
+                },
+                executionId: runnerExecution.metaInfo.executionId,
+            };
+        }
+        const fullData = {
+            ...baseData,
+            selectedNodeNames: subWorkflowResult.selectedNodeNames,
+            subWorkflowName: subWorkflowResult.workflow.name,
+            triggerNodeName: subWorkflowResult.triggerNodeName,
+            runnerWorkflowId: runnerContext.runnerWorkflowId,
+            runnerWebhookUrl: runnerExecution.runnerWebhookUrl,
+            runnerMeta: runnerExecution.metaInfo.meta,
+            response: runnerExecution.response,
+            diagnostics: runnerExecution.diagnostics,
+            warnings: runnerExecution.warnings.length > 0 ? runnerExecution.warnings : undefined,
+        };
+        return {
+            success: true,
+            data: responseMode === 'full' || diagnosticsMode !== 'none' ? fullData : baseData,
+            executionId: runnerExecution.metaInfo.executionId,
+            message: 'Workflow executed via runner',
         };
     }
     catch (error) {

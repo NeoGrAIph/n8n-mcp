@@ -542,6 +542,9 @@ describe('Parameter Validation', () => {
       await expect(server.testExecuteTool('n8n_workflow_test', {}))
         .rejects.toThrow('Missing required parameters for n8n_workflow_test: workflowId');
 
+      await expect(server.testExecuteTool('n8n_workflow_runner_test', {}))
+        .rejects.toThrow('n8n_workflow_runner_test: Validation failed:\n  • workflowId: workflowId is required');
+
       for (const tool of n8nToolsWithRequiredParams) {
         await expect(server.testExecuteTool(tool.name, tool.args))
           .rejects.toThrow(tool.expected);

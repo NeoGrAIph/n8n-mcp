@@ -24,6 +24,7 @@ export declare function handleValidateWorkflow(args: unknown, repository: NodeRe
 export declare function handleAutofixWorkflow(args: unknown, repository: NodeRepository, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestWorkflow(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleTestCodeNode(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
+export declare function handleTestWorkflowRunner(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleGetExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleGetWorkflowExecution(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;
 export declare function handleListExecutions(args: unknown, context?: InstanceContext): Promise<McpToolResponse>;

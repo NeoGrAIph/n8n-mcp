@@ -199,7 +199,7 @@ docker ps -a | grep n8n-mcp | grep Exited | awk '{print $1}' | xargs -r docker r
 ### Webhooks to Local n8n Fail (v2.16.3+)
 
 **Симптомы:**
-- `n8n_workflow_test` завершается с ошибкой «Защита SSRF».
+- `n8n_workflow_test` или `n8n_workflow_runner_test` завершается с ошибкой «Защита SSRF».
 - Сообщение об ошибке: «Защита SSRF: доступ к локальному хосту заблокирован».
 - Вебхуки работают с пользовательским интерфейсом n8n, но не с n8n-MCP.
 

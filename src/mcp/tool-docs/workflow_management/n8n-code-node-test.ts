@@ -4,13 +4,14 @@ export const n8nCodeNodeTestDoc: ToolDocumentation = {
   name: 'n8n_code_node_test',
   category: 'workflow_management',
   essentials: {
-    description: 'Execute a Code node or branch from an existing workflow using the utility runner (webhook + Execute Sub-workflow). Supports full/node/subgraph modes.',
+    description: 'Execute a generated Code-node-focused sub-workflow using the utility runner. Supports node/subgraph modes only; full-workflow runner execution moved to n8n_workflow_runner_test.',
     keyParameters: ['workflowId', 'mode', 'nodeId', 'nodeName', 'includeUpstream', 'includeDownstream', 'startNode', 'endNodes', 'items'],
-    example: 'n8n_code_node_test({workflowId: "123", nodeName: "My Code"})',
+    example: 'n8n_code_node_test({workflowId: "123", mode: "node", nodeName: "Code"})',
     performance: 'Immediate trigger, response time depends on code execution',
     tips: [
       'Runner workflow must exist and be ACTIVE',
       'Provide nodeId for precision when multiple similar node names exist',
+      'Use n8n_workflow_runner_test for full-workflow runner execution',
       'In mode=node and mode=subgraph, nodeId/nodeName selects the target Code node. startNode does NOT replace it.',
       'Use items to simulate input data from previous nodes',
       'Use mode=subgraph + includeUpstream/includeDownstream to include related non-Code nodes (e.g., Set) around the Code node',
@@ -18,9 +19,9 @@ export const n8nCodeNodeTestDoc: ToolDocumentation = {
     ]
   },
   full: {
-    description: `Test a Code node or branch by running a generated sub-workflow. Depending on the mode, the tool selects nodes from the source workflow, removes trigger nodes, adds an Execute Workflow Trigger, and connects it to the subgraph roots. The utility runner webhook then executes the generated workflow JSON.
+    description: `Execute a generated Code-node-focused sub-workflow through the utility runner. Depending on the mode, the tool selects nodes from the source workflow, removes trigger nodes, adds an Execute Workflow Trigger, and connects it to the subgraph roots. The utility runner webhook then executes the generated workflow JSON.
 
-This is useful for isolated debugging of Code nodes or their surrounding branches without modifying the original workflow.
+This tool is for isolated debugging of Code nodes and Code-node-centered subgraphs. Full-workflow runner execution is handled by n8n_workflow_runner_test.
 
 Important note for mode=subgraph:
 - nodeId/nodeName is still used to identify the Code node this tool is testing (and to validate the node type).
@@ -29,12 +30,12 @@ Important note for mode=subgraph:
       workflowId: {
         type: 'string',
         required: true,
-        description: 'Workflow ID that contains the Code node'
+        description: 'Workflow ID to execute through the utility runner'
       },
       mode: {
         type: 'string',
         required: false,
-        description: 'Execution mode: full | node | subgraph (default: node)'
+        description: 'Execution mode: node | subgraph (default: node). mode=full has moved to n8n_workflow_runner_test.'
       },
       nodeId: {
         type: 'string',
@@ -133,9 +134,7 @@ Full response (responseMode=full or diagnostics enabled):
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", item: {foo: "bar"}})',
       'n8n_code_node_test({workflowId: "123", nodeName: "Code", items: [{json: {a: 1}}, {json: {a: 2}}]})',
       'n8n_code_node_test({workflowId: "123", mode: "subgraph", nodeName: "Code", includeUpstream: true, responseMode: "full"})',
-      'n8n_code_node_test({workflowId: "123", mode: "subgraph", nodeName: "Code", startNode: "Prepare Data", includeDownstream: true, endNodes: ["Notify"], diagnostics: "summary"})',
-      'n8n_code_node_test({workflowId: "123", mode: "full", timeout: 180000})',
-      'n8n_code_node_test({workflowId: "123", mode: "full", responseMode: "full"})'
+      'n8n_code_node_test({workflowId: "123", mode: "subgraph", nodeName: "Code", startNode: "Prepare Data", includeDownstream: true, endNodes: ["Notify"], diagnostics: "summary"})'
     ],
     useCases: [
       'Debug Code node logic in isolation',
@@ -150,6 +149,7 @@ Full response (responseMode=full or diagnostics enabled):
 - Webhook call blocked by SSRF protection (invalid URL)`,
     bestPractices: [
       'Keep the utility runner workflow active',
+      'Use n8n_workflow_runner_test for manual-only workflows that cannot be started with n8n_workflow_test',
       'Provide items that match the real upstream data shape',
       'Use nodeId for consistent targeting after renames'
     ],
@@ -157,9 +157,9 @@ Full response (responseMode=full or diagnostics enabled):
       'If items are omitted, the tool uses a single empty item',
       'Code node side effects still occur if the code triggers external actions',
       'Runner webhook URL depends on your n8n base URL configuration',
-      'In mode=subgraph, startNode alone is not enough: you still must pass nodeId/nodeName to select the target Code node, otherwise you may get "Target node not found in workflow"',
+      'In mode=subgraph, startNode alone is not enough: you must still pass nodeId/nodeName to select the target Code node',
       'Trigger nodes are removed in generated sub-workflows, so trigger-specific context may be missing'
     ],
-    relatedTools: ['n8n_workflow_get', 'n8n_workflow_test', 'n8n_executions_get', 'n8n_executions_list']
+    relatedTools: ['n8n_workflow_runner_test', 'n8n_workflow_get', 'n8n_workflow_test', 'n8n_executions_get', 'n8n_executions_list']
   }
 };

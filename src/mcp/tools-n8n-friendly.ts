@@ -95,13 +95,13 @@ export const n8nFriendlyDescriptions: Record<string, {
   },
 
   n8n_code_node_test: {
-    description: 'Execute a Code node or branch from an existing workflow using the utility runner. Supports modes full/node/subgraph and optional diagnostics. Returns minimal result by default; use responseMode="full" for full payload.',
+    description: 'Execute a Code node or Code-node-centered subgraph using the utility runner. Supports modes node/subgraph and optional diagnostics. Use n8n_workflow_runner_test for full-workflow runner execution.',
     params: {
       workflowId: 'String workflow ID',
-      mode: 'Optional: "full", "node" (default), or "subgraph"',
-      nodeId: 'Optional string Code node ID (preferred)',
-      nodeName: 'Optional string Code node name (used if nodeId not provided)',
-      startNode: 'Optional start node (name or id) for subgraph mode',
+      mode: 'Optional: "node" (default) or "subgraph". mode="full" has moved to n8n_workflow_runner_test',
+      nodeId: 'Optional string Code node ID (preferred). Required for mode=node/subgraph if nodeName is not provided',
+      nodeName: 'Optional string Code node name (used if nodeId not provided). Required for mode=node/subgraph if nodeId is not provided',
+      startNode: 'Optional start node (name or id) for subgraph traversal; does not replace nodeId/nodeName',
       endNodes: 'Optional array of end node names/ids to limit subgraph',
       includeUpstream: 'Optional boolean to include upstream nodes',
       includeDownstream: 'Optional boolean to include downstream nodes',
@@ -109,6 +109,23 @@ export const n8nFriendlyDescriptions: Record<string, {
       item: 'Optional single object input',
       timeout: 'Optional timeout in ms for runner webhook',
       diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error"',
+      diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+      responseMode: 'Optional: "result" (default) or "full"',
+      runnerWorkflowId: 'Optional string runner workflow ID override',
+      runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
+      waitForResponse: 'Optional boolean (default true)'
+    }
+  },
+
+  n8n_workflow_runner_test: {
+    description: 'Execute a full workflow through the utility runner. Use this for manual-only or other non-externally-triggerable workflows. Supports dryRun, diagnostics, and optional runner overrides.',
+    params: {
+      workflowId: 'String workflow ID',
+      items: 'Optional array of items (full n8n items or plain objects)',
+      item: 'Optional single object input',
+      dryRun: 'Optional boolean: build generated workflow and return metadata without executing runner',
+      timeout: 'Optional timeout in ms for runner webhook',
+      diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error". Not allowed when dryRun=true',
       diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
       responseMode: 'Optional: "result" (default) or "full"',
       runnerWorkflowId: 'Optional string runner workflow ID override',
