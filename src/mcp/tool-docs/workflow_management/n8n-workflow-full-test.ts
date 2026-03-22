@@ -12,6 +12,7 @@ export const n8nWorkflowFullTestDoc: ToolDocumentation = {
       'Requires REST auth (N8N_REST_EMAIL and N8N_REST_PASSWORD)',
       'If the workflow has exactly one trigger node, trigger selection is automatic',
       'If startNodes are omitted, direct downstream nodes of the selected trigger are used',
+      'For LLM-heavy workflows, waitForCompletion=true may take tens of seconds; 120000ms is a practical default and 180000ms is a safer upper bound',
       'Use waitForCompletion=false to get execution metadata only',
       'Use diagnostics only when waiting for completion'
     ]
@@ -105,6 +106,7 @@ With responseMode=full or diagnostics enabled, the response also includes raw ru
     bestPractices: [
       'Prefer this tool over n8n_workflow_runner_test when you want native full-test semantics',
       'Pass triggerNode explicitly when the workflow has multiple triggers',
+      'For workflows that typically finish in ~40 seconds, prefer timeout=180000 if you need the final payload in one call',
       'Use waitForCompletion=false for long-running workflows and inspect later with execution tools',
       'Use n8n_workflow_runner_test only when you specifically want the generated runner path'
     ],
@@ -112,6 +114,7 @@ With responseMode=full or diagnostics enabled, the response also includes raw ru
       'Requires REST auth in addition to the standard API configuration',
       'Ambiguous trigger selection must be resolved explicitly',
       'Native runs execute real nodes and side effects',
+      'Short client-side waits can look like a hang even when the workflow is still executing normally',
       'Diagnostics are unavailable when waitForCompletion=false'
     ],
     relatedTools: ['n8n_workflow_test', 'n8n_workflow_runner_test', 'n8n_executions_get', 'n8n_workflow_execution_get', 'n8n_workflow_get']
