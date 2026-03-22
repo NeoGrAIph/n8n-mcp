@@ -60,11 +60,81 @@ exports.n8nFriendlyDescriptions = {
         }
     },
     n8n_workflow_file_patch: {
-        description: 'Apply a unified diff patch to a workflow file (Code or Set). Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
+        description: 'Apply a unified diff patch to a workflow file (Code or Set). Wrapper-style patches (*** Begin/End Patch, ---/+++) are accepted and stripped. Use this when you need to edit part of a file without sending full contents. Provide uri, patch, and optional expectedEtag.',
         params: {
             uri: 'String resource URI like "n8n-workflows:///code/<workflowId>/<nodeId>.json"',
             patch: 'Unified diff string',
-            expectedEtag: 'Optional string for optimistic concurrency control'
+            expectedEtag: 'Optional string for optimistic concurrency control',
+            minContextLines: 'Optional integer: minimum context lines that must match (default 0)',
+            maxFuzz: 'Optional integer: maximum fuzz allowed (default 0, max 2)',
+            ignoreWhitespaceInContext: 'Optional boolean: ignore whitespace differences in context matching'
+        }
+    },
+    n8n_code_node_test: {
+        description: 'Execute a Code node or Code-node-centered subgraph using the utility runner. Supports modes node/subgraph and optional diagnostics. Use n8n_workflow_runner_test for full-workflow runner execution.',
+        params: {
+            workflowId: 'String workflow ID',
+            mode: 'Optional: "node" (default) or "subgraph". mode="full" has moved to n8n_workflow_runner_test',
+            nodeId: 'Optional string Code node ID (preferred). Required for mode=node/subgraph if nodeName is not provided',
+            nodeName: 'Optional string Code node name (used if nodeId not provided). Required for mode=node/subgraph if nodeId is not provided',
+            startNode: 'Optional start node (name or id) for subgraph traversal; does not replace nodeId/nodeName',
+            endNodes: 'Optional array of end node names/ids to limit subgraph',
+            includeUpstream: 'Optional boolean to include upstream nodes',
+            includeDownstream: 'Optional boolean to include downstream nodes',
+            items: 'Optional array of items (full n8n items or plain objects)',
+            item: 'Optional single object input',
+            timeout: 'Optional timeout in ms for runner webhook',
+            diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error"',
+            diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+            responseMode: 'Optional: "result" (default) or "full"',
+            runnerWorkflowId: 'Optional string runner workflow ID override',
+            runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
+            waitForResponse: 'Optional boolean (default true)'
+        }
+    },
+    n8n_workflow_runner_test: {
+        description: 'Execute a full workflow through the utility runner. Use this for manual-only or other non-externally-triggerable workflows. Supports dryRun, diagnostics, and optional runner overrides.',
+        params: {
+            workflowId: 'String workflow ID',
+            items: 'Optional array of items (full n8n items or plain objects)',
+            item: 'Optional single object input',
+            dryRun: 'Optional boolean: build generated workflow and return metadata without executing runner',
+            timeout: 'Optional timeout in ms for runner webhook',
+            diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error". Not allowed when dryRun=true',
+            diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+            responseMode: 'Optional: "result" (default) or "full"',
+            runnerWorkflowId: 'Optional string runner workflow ID override',
+            runnerWebhookPath: 'Optional string runner webhook path (default mcp-code-node-runner)',
+            waitForResponse: 'Optional boolean (default true)'
+        }
+    },
+    n8n_workflow_full_test: {
+        description: 'Execute a workflow through n8n native editor-style full test mode using /rest/workflows/:id/run. Prefer this over the runner when you want native workflow semantics.',
+        params: {
+            workflowId: 'String workflow ID',
+            triggerNode: 'Optional object like {"name":"Manual Trigger","data":null}. Required only if MCP cannot auto-select a unique trigger node',
+            startNodes: 'Optional array like [{"name":"Edit Fields","sourceData":null}]. If omitted, MCP derives direct downstream nodes from the trigger',
+            waitForCompletion: 'Optional boolean (default true)',
+            timeout: 'Optional maximum wait time in ms while polling execution completion (default 120000)',
+            pollIntervalMs: 'Optional polling interval in ms (default 1000)',
+            diagnostics: 'Optional: "none" (default), "preview", "summary", "full", "error". Not allowed when waitForCompletion=false',
+            diagnosticsItemsLimit: 'Optional integer items limit for diagnostics',
+            responseMode: 'Optional: "result" (default) or "full"'
+        }
+    },
+    n8n_workflow_execution_get: {
+        description: 'Get execution results for a specific workflow. Provide workflowId and executionId to fetch and process execution data.',
+        params: {
+            workflowId: 'String workflow ID',
+            executionId: 'String execution ID',
+            mode: 'Optional: "preview", "summary" (default), "filtered", "full", "error"',
+            nodeNames: 'Optional array of node names to include',
+            itemsLimit: 'Optional integer items limit per node',
+            includeInputData: 'Optional boolean (default false)',
+            errorItemsLimit: 'Optional integer for error mode (default 2)',
+            includeStackTrace: 'Optional boolean (default false)',
+            includeExecutionPath: 'Optional boolean (default true)',
+            fetchWorkflow: 'Optional boolean (default true)'
         }
     }
 };

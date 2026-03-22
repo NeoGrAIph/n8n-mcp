@@ -21,7 +21,7 @@ exports.n8nDiagnosticDoc = {
         description: `Comprehensive diagnostic tool for troubleshooting n8n API configuration and management tool availability.
 
 This tool performs a detailed check of:
-- Environment variable configuration (N8N_API_URL, N8N_API_KEY)
+- Environment variable configuration (N8N_API_URL, N8N_API_KEY, N8N_REST_EMAIL, N8N_REST_PASSWORD)
 - API connectivity and authentication
 - Tool availability status
 - Common configuration issues
@@ -41,7 +41,7 @@ The diagnostic is essential when:
         returns: `Comprehensive diagnostic report containing:
 - timestamp: ISO timestamp of diagnostic run
 - environment: Enhanced environment variables
-  - N8N_API_URL, N8N_API_KEY (masked), NODE_ENV, MCP_MODE
+  - N8N_API_URL, N8N_API_KEY (masked), N8N_REST_EMAIL (masked), N8N_REST_PASSWORD (masked), NODE_ENV, MCP_MODE
   - isDocker: Boolean indicating if running in Docker
   - cloudPlatform: Detected cloud platform (railway/render/fly/etc.) or null
   - nodeVersion: Node.js version
@@ -69,7 +69,7 @@ The diagnostic is essential when:
             'n8n_diagnostic({verbose: false}) - Standard diagnostic without sensitive data'
         ],
         useCases: [
-            'Initial setup verification after configuring N8N_API_URL and N8N_API_KEY',
+            'Initial setup verification after configuring N8N_API_URL and N8N_API_KEY (and REST creds for folder tools)',
             'Troubleshooting when n8n management tools are not available',
             'Debugging API connection failures or authentication errors',
             'Verifying n8n instance compatibility and feature availability',
@@ -93,7 +93,7 @@ The diagnostic is essential when:
             'API connectivity test requires network access to n8n instance',
             'Does not test specific workflow operations, only basic connectivity'
         ],
-        relatedTools: ['n8n_health_check', 'n8n_list_available_tools', 'tools_documentation']
+        relatedTools: ['n8n_health_check', 'n8n_list_available_tools', 'n8n_tools_documentation']
     }
 };
 //# sourceMappingURL=n8n-diagnostic.js.map

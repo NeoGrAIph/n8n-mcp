@@ -15,6 +15,10 @@ export interface InstanceContext {
   n8nApiKey?: string;
   n8nApiTimeout?: number;
   n8nApiMaxRetries?: number;
+  n8nRestEmail?: string;
+  n8nRestPassword?: string;
+  n8nRestProjectEmail?: string;
+  n8nRestProjectId?: string;
 
   /**
    * Instance identification
@@ -114,12 +118,19 @@ export function isInstanceContext(obj: any): obj is InstanceContext {
   const hasValidRetries = obj.n8nApiMaxRetries === undefined ||
     (typeof obj.n8nApiMaxRetries === 'number' && obj.n8nApiMaxRetries >= 0);
 
+  const hasValidRestEmail = obj.n8nRestEmail === undefined || typeof obj.n8nRestEmail === 'string';
+  const hasValidRestPassword = obj.n8nRestPassword === undefined || typeof obj.n8nRestPassword === 'string';
+  const hasValidRestProjectEmail = obj.n8nRestProjectEmail === undefined || typeof obj.n8nRestProjectEmail === 'string';
+  const hasValidRestProjectId = obj.n8nRestProjectId === undefined || typeof obj.n8nRestProjectId === 'string';
+
   const hasValidInstanceId = obj.instanceId === undefined || typeof obj.instanceId === 'string';
   const hasValidSessionId = obj.sessionId === undefined || typeof obj.sessionId === 'string';
   const hasValidMetadata = obj.metadata === undefined ||
     (typeof obj.metadata === 'object' && obj.metadata !== null);
 
   return hasValidUrl && hasValidKey && hasValidTimeout && hasValidRetries &&
+         hasValidRestEmail && hasValidRestPassword &&
+         hasValidRestProjectEmail && hasValidRestProjectId &&
          hasValidInstanceId && hasValidSessionId && hasValidMetadata;
 }
 
@@ -165,6 +176,19 @@ export function validateInstanceContext(context: InstanceContext): {
       } else {
         errors.push(`Invalid n8nApiKey: format validation failed - Ensure key is valid`);
       }
+    }
+  }
+
+  // Validate REST credentials if provided
+  const restEmailProvided = context.n8nRestEmail !== undefined;
+  const restPasswordProvided = context.n8nRestPassword !== undefined;
+
+  if (restEmailProvided || restPasswordProvided) {
+    if (!context.n8nRestEmail || context.n8nRestEmail.trim() === '') {
+      errors.push('Invalid n8nRestEmail: non-empty email is required when REST auth is configured');
+    }
+    if (!context.n8nRestPassword || context.n8nRestPassword.trim() === '') {
+      errors.push('Invalid n8nRestPassword: non-empty password is required when REST auth is configured');
     }
   }
 

@@ -95,6 +95,8 @@ describe('handlers-n8n-manager', () => {
       updateWorkflow: vi.fn(),
       deleteWorkflow: vi.fn(),
       listWorkflows: vi.fn(),
+      runWorkflow: vi.fn(),
+      hasRestAuthConfigured: vi.fn().mockReturnValue(false),
       triggerWebhook: vi.fn(),
       getExecution: vi.fn(),
       listExecutions: vi.fn(),
@@ -1081,10 +1083,10 @@ describe('handlers-n8n-manager', () => {
             enabled: true,
           },
           managementTools: {
-            count: 13,
+            count: 26,
             enabled: true,
           },
-          totalAvailable: 20,
+          totalAvailable: 33,
         },
       });
 
@@ -1310,6 +1312,318 @@ describe('handlers-n8n-manager', () => {
       });
 
       expect(result.error).toMatch(/mode:\s*'preview'/);
+    });
+  });
+
+  describe('workflow runner test split', () => {
+    const createManualWorkflow = (overrides = {}) => createTestWorkflow({
+      active: false,
+      nodes: [
+        {
+          id: 'manual-trigger',
+          name: 'When clicking "Execute workflow"',
+          type: 'n8n-nodes-base.manualTrigger',
+          typeVersion: 1,
+          position: [100, 100],
+          parameters: {},
+        },
+        {
+          id: 'set-node',
+          name: 'Prepare Data',
+          type: 'n8n-nodes-base.set',
+          typeVersion: 3,
+          position: [320, 100],
+          parameters: {
+            assignments: {
+              assignments: [
+                {
+                  id: 'field-1',
+                  name: 'status',
+                  value: 'ok',
+                  type: 'string',
+                },
+              ],
+            },
+          },
+        },
+      ],
+      connections: {
+        'When clicking "Execute workflow"': {
+          main: [[{ node: 'Prepare Data', type: 'main', index: 0 }]],
+        },
+      },
+      ...overrides,
+    });
+
+    it('should reject n8n_code_node_test mode=full with migration guidance', async () => {
+      const result = await handlers.handleTestCodeNode({
+        workflowId: 'wf-manual',
+        mode: 'full',
+        nodeName: 'Any Node',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid input');
+      expect(result.details.errors[0].message).toContain('mode=full has moved to n8n_workflow_runner_test');
+    });
+
+    it('should require nodeId or nodeName for subgraph mode even when startNode is provided', async () => {
+      const result = await handlers.handleTestCodeNode({
+        workflowId: 'wf-manual',
+        mode: 'subgraph',
+        startNode: 'When clicking "Execute workflow"',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid input');
+      expect(result.details.errors[0].message).toContain(
+        'nodeId or nodeName is required for mode=subgraph; startNode only controls traversal'
+      );
+    });
+
+    it('should support dry-run for full workflow runner execution', async () => {
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+
+      const result = await handlers.handleTestWorkflowRunner({
+        workflowId: 'wf-manual',
+        dryRun: true,
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: {
+          workflowId: 'wf-manual',
+          mode: 'full',
+          dryRun: true,
+          inputItemCount: 1,
+          selectedNodeNames: ['Prepare Data'],
+          subWorkflowName: 'MCP Code Test: Test Workflow / [full]',
+          triggerNodeName: 'MCP Execute Workflow Trigger',
+          warnings: ['Removed trigger nodes from sub-workflow: When clicking "Execute workflow"'],
+        },
+        message: 'Workflow runner dry-run completed',
+      });
+      expect(mockApiClient.triggerWebhook).not.toHaveBeenCalled();
+    });
+
+    it('should execute manual-only workflow via n8n_workflow_runner_test', async () => {
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+      mockApiClient.listWorkflows.mockResolvedValue({
+        data: [{ id: 'runner-wf', name: 'MCP Utility - Code Node Runner' }],
+        nextCursor: null,
+      });
+      mockApiClient.triggerWebhook.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        data: {
+          ok: true,
+          mcpMeta: {
+            executionId: 'exec-runner-1',
+          },
+        },
+        headers: {},
+      });
+
+      const result = await handlers.handleTestWorkflowRunner({
+        workflowId: 'wf-manual',
+        item: { input: 'value' },
+      }, {
+        n8nApiUrl: 'https://n8n.test.com/api/v1',
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: {
+          workflowId: 'wf-manual',
+          mode: 'full',
+          executionId: 'exec-runner-1',
+          result: { ok: true },
+        },
+        executionId: 'exec-runner-1',
+        message: 'Workflow executed via runner',
+      });
+      expect(mockApiClient.triggerWebhook).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.triggerWebhook).toHaveBeenCalledWith(expect.objectContaining({
+        webhookUrl: 'https://n8n.test.com/webhook/mcp-code-node-runner',
+        httpMethod: 'POST',
+        waitForResponse: true,
+        timeoutMs: undefined,
+        data: expect.objectContaining({
+          items: [{ json: { input: 'value' } }],
+        }),
+      }));
+    });
+  });
+
+  describe('native full test mode', () => {
+    const createManualWorkflow = (overrides = {}) => createTestWorkflow({
+      active: false,
+      nodes: [
+        {
+          id: 'manual-trigger',
+          name: 'When clicking "Execute workflow"',
+          type: 'n8n-nodes-base.manualTrigger',
+          typeVersion: 1,
+          position: [100, 100],
+          parameters: {},
+        },
+        {
+          id: 'set-node-1',
+          name: 'Edit Fields',
+          type: 'n8n-nodes-base.set',
+          typeVersion: 3,
+          position: [320, 100],
+          parameters: {},
+        },
+        {
+          id: 'set-node-2',
+          name: 'Edit Fields2',
+          type: 'n8n-nodes-base.set',
+          typeVersion: 3,
+          position: [320, 240],
+          parameters: {},
+        },
+      ],
+      connections: {
+        'When clicking "Execute workflow"': {
+          main: [[
+            { node: 'Edit Fields', type: 'main', index: 0 },
+            { node: 'Edit Fields2', type: 'main', index: 0 },
+          ]],
+        },
+      },
+      ...overrides,
+    });
+
+    it('should require REST auth for native full test mode', async () => {
+      const result = await handlers.handleTestWorkflowFull({
+        workflowId: 'wf-manual',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('REST authentication required for native full test mode');
+    });
+
+    it('should start native full test without waiting when requested', async () => {
+      mockApiClient.hasRestAuthConfigured = vi.fn().mockReturnValue(true);
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+      mockApiClient.runWorkflow.mockResolvedValue({
+        executionId: 'exec-native-1',
+        status: 'running',
+      });
+
+      const result = await handlers.handleTestWorkflowFull({
+        workflowId: 'wf-manual',
+        waitForCompletion: false,
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: {
+          workflowId: 'wf-manual',
+          executionId: 'exec-native-1',
+          status: 'running',
+          triggerNodeName: 'When clicking "Execute workflow"',
+          startNodeNames: ['Edit Fields', 'Edit Fields2'],
+        },
+        executionId: 'exec-native-1',
+        workflowId: 'wf-manual',
+        message: 'Workflow started via native full test mode',
+      });
+      expect(mockApiClient.runWorkflow).toHaveBeenCalledWith('wf-manual', expect.objectContaining({
+        startNodes: [
+          { name: 'Edit Fields', sourceData: null },
+          { name: 'Edit Fields2', sourceData: null },
+        ],
+        triggerToStartFrom: {
+          name: 'When clicking "Execute workflow"',
+          data: null,
+        },
+      }));
+    });
+
+    it('should require explicit triggerNode when workflow has multiple triggers', async () => {
+      mockApiClient.hasRestAuthConfigured = vi.fn().mockReturnValue(true);
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({
+        id: 'wf-manual',
+        nodes: [
+          {
+            id: 'manual-trigger',
+            name: 'Manual',
+            type: 'n8n-nodes-base.manualTrigger',
+            typeVersion: 1,
+            position: [100, 100],
+            parameters: {},
+          },
+          {
+            id: 'webhook-trigger',
+            name: 'Webhook',
+            type: 'n8n-nodes-base.webhook',
+            typeVersion: 2,
+            position: [100, 240],
+            parameters: { path: 'test', httpMethod: 'POST' },
+          },
+          {
+            id: 'set-node',
+            name: 'Edit Fields',
+            type: 'n8n-nodes-base.set',
+            typeVersion: 3,
+            position: [320, 100],
+            parameters: {},
+          },
+        ],
+      }));
+
+      const result = await handlers.handleTestWorkflowFull({
+        workflowId: 'wf-manual',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot auto-select trigger node');
+    });
+
+    it('should wait for execution completion and return processed result', async () => {
+      mockApiClient.hasRestAuthConfigured = vi.fn().mockReturnValue(true);
+      mockApiClient.getWorkflow.mockResolvedValue(createManualWorkflow({ id: 'wf-manual' }));
+      mockApiClient.runWorkflow.mockResolvedValue({
+        executionId: 'exec-native-2',
+        status: 'running',
+      });
+      mockApiClient.getExecution.mockResolvedValue(createTestExecution({
+        id: 'exec-native-2',
+        workflowId: 'wf-manual',
+        finished: true,
+        data: {
+          resultData: {
+            runData: {
+              'Edit Fields': [{ startTime: 1, executionTime: 1, data: { main: [[{ json: { ok: true } }]] } }],
+            },
+          },
+        },
+      }));
+
+      const result = await handlers.handleTestWorkflowFull({
+        workflowId: 'wf-manual',
+        diagnostics: 'summary',
+        responseMode: 'full',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.executionId).toBe('exec-native-2');
+      expect(result.message).toBe('Workflow executed via native full test mode');
+      expect(result.data).toMatchObject({
+        workflowId: 'wf-manual',
+        executionId: 'exec-native-2',
+        triggerNodeName: 'When clicking "Execute workflow"',
+        startNodeNames: ['Edit Fields', 'Edit Fields2'],
+        status: ExecutionStatus.SUCCESS,
+        runResponse: {
+          executionId: 'exec-native-2',
+          status: 'running',
+        },
+      });
+      expect((result.data as any).diagnostics).toBeDefined();
+      expect(mockApiClient.getExecution).toHaveBeenCalledWith('exec-native-2', true);
     });
   });
 });

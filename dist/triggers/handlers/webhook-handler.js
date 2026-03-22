@@ -87,6 +87,7 @@ class WebhookHandler extends base_handler_1.BaseTriggerHandler {
                 data: input.data,
                 headers: input.headers,
                 waitForResponse: input.waitForResponse ?? true,
+                timeoutMs: input.timeout,
             };
             const response = await this.client.triggerWebhook(webhookRequest);
             return this.normalizeResponse(response, input, startTime, {

@@ -9,7 +9,7 @@ import {
   toolsDocumentationDoc,
   n8nHealthCheckDoc
 } from './system';
-import { aiAgentsGuide, workflowFilesResourcesGuide } from './guides';
+import { aiAgentsGuide, workflowFilesResourcesGuide, synestraCamelKDebeziumMcpN8nDevGuide } from './guides';
 import {
   n8nCreateWorkflowDoc,
   n8nGetWorkflowDoc,
@@ -17,12 +17,21 @@ import {
   n8nUpdatePartialWorkflowDoc,
   n8nDeleteWorkflowDoc,
   n8nListWorkflowsDoc,
+  n8nFoldersListDoc,
+  n8nFolderCreateDoc,
+  n8nFolderMoveDoc,
+  n8nFolderDeleteDoc,
+  n8nWorkflowMoveToFolderDoc,
   n8nValidateWorkflowDoc,
   n8nAutofixWorkflowDoc,
   n8nTestWorkflowDoc,
+  n8nWorkflowFullTestDoc,
+  n8nWorkflowRunnerTestDoc,
+  n8nCodeNodeTestDoc,
   n8nExecutionsGetDoc,
   n8nExecutionsListDoc,
   n8nExecutionsDeleteDoc,
+  n8nWorkflowExecutionGetDoc,
   n8nWorkflowVersionsListDoc,
   n8nWorkflowVersionsGetDoc,
   n8nWorkflowVersionsRollbackDoc,
@@ -50,6 +59,7 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   // Guides
   ai_agents_guide: aiAgentsGuide,
   workflow_files_resources_guide: workflowFilesResourcesGuide,
+  synestra_camelk_debezium_mcp_n8n_dev_guide: synestraCamelKDebeziumMcpN8nDevGuide,
 
   // Discovery tools
   n8n_nodes_search: searchNodesDoc,
@@ -72,12 +82,21 @@ export const toolsDocumentation: Record<string, ToolDocumentation> = {
   n8n_workflow_update_partial: n8nUpdatePartialWorkflowDoc,
   n8n_workflow_delete: n8nDeleteWorkflowDoc,
   n8n_workflows_list: n8nListWorkflowsDoc,
+  n8n_folders_list: n8nFoldersListDoc,
+  n8n_folder_create: n8nFolderCreateDoc,
+  n8n_folder_move: n8nFolderMoveDoc,
+  n8n_folder_delete: n8nFolderDeleteDoc,
+  n8n_workflow_move_to_folder: n8nWorkflowMoveToFolderDoc,
   n8n_workflow_validate: n8nValidateWorkflowDoc,
   n8n_workflow_autofix: n8nAutofixWorkflowDoc,
   n8n_workflow_test: n8nTestWorkflowDoc,
+  n8n_workflow_full_test: n8nWorkflowFullTestDoc,
+  n8n_workflow_runner_test: n8nWorkflowRunnerTestDoc,
+  n8n_code_node_test: n8nCodeNodeTestDoc,
   n8n_executions_get: n8nExecutionsGetDoc,
   n8n_executions_list: n8nExecutionsListDoc,
   n8n_executions_delete: n8nExecutionsDeleteDoc,
+  n8n_workflow_execution_get: n8nWorkflowExecutionGetDoc,
   n8n_workflow_versions_list: n8nWorkflowVersionsListDoc,
   n8n_workflow_versions_get: n8nWorkflowVersionsGetDoc,
   n8n_workflow_versions_rollback: n8nWorkflowVersionsRollbackDoc,
