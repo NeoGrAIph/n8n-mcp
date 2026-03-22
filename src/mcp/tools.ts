@@ -9,7 +9,7 @@ import { ToolDefinition } from '../types';
 export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   {
     name: 'n8n_tools_documentation',
-    description: `Fetch the built-in documentation for n8n MCP tools and guides. Use topic to target a specific tool or "overview" for the index, and set depth to control verbosity. Returns Markdown with usage guidance, examples, and best practices.`,
+    description: `Fetch the built-in documentation for n8n MCP tools and guides. Use this when you need usage guidance, examples, or the tool index. Provide topic for a specific tool or "overview", and set depth to control verbosity. Returns Markdown content.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -28,7 +28,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_nodes_search',
-    description: `Search the local n8n node catalog by keyword to discover node types. Provide query plus optional mode/limit and includeExamples to control matching and sample configs. Returns a ranked list of node types with basic metadata.`,
+    description: `Search the local n8n node catalog by keyword. Use this when you need to discover node types that fit an integration or capability. Provide query and optional mode/limit/includeExamples to adjust matching and sample configs. Returns a ranked list of node types with basic metadata.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -58,7 +58,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_node_get',
-    description: `Retrieve detailed metadata for a specific node type. Provide nodeType and optionally detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.`,
+    description: `Retrieve metadata for a specific node type. Use this when you already know the nodeType and need its schema, docs, or property search. Provide nodeType plus optional detail/mode; use mode=docs for Markdown or mode=search_properties with propertyQuery. Returns node schema metadata and focused docs/search results.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -111,7 +111,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_node_validate',
-    description: `Validate a node configuration against its schema. Provide nodeType and config, and set mode to minimal or full with an optional profile for strictness. Returns a structured validation result with errors, warnings, and suggestions.`,
+    description: `Validate a node configuration against its schema. Use this when you want to check required fields or perform full validation before building a workflow. Provide nodeType and config, and choose mode (minimal/full) with optional profile. Returns a structured validation result with errors, warnings, and suggestions.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -142,7 +142,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_template_get',
-    description: `Fetch a workflow template from the local template database by templateId. Use mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.`,
+    description: `Fetch a workflow template by templateId from the local template database. Use this when you already know the template ID and need its structure. Provide templateId and optional mode to control response size (nodes_only, structure, full). Returns template data suitable for analysis or import.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -162,7 +162,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_templates_search',
-    description: `Search the local workflow templates catalog. Choose searchMode and provide matching parameters (query, nodeTypes, task, or metadata filters) plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.`,
+    description: `Search the local workflow templates catalog. Use this when you want to discover templates by keyword, node types, task, or metadata filters. Provide searchMode and matching parameters plus limit/offset for pagination. Returns a list of templates with summary metadata and tips.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -257,7 +257,7 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
   },
   {
     name: 'n8n_workflow_json_validate',
-    description: `Validate a workflow JSON object locally without calling n8n. Provide workflow with nodes and connections, plus optional options to control validation depth. Returns validity, summary, errors, warnings, and suggestions.`,
+    description: `Validate a workflow JSON object locally without calling n8n. Use this when you want to check a workflow structure before API calls or deployment. Provide a workflow object (nodes and connections) and optional options for validation depth. Returns validity, summary, errors, warnings, and suggestions.`,
     inputSchema: {
       type: 'object',
       properties: {

@@ -11,6 +11,7 @@ export const toolsDocumentationDoc: ToolDocumentation = {
     tips: [
       'Call without parameters first to see all tools',
       'Can document itself: n8n_tools_documentation({topic: "n8n_tools_documentation"})',
+      'Workflow files resources guide: n8n_tools_documentation({topic: "workflow_files_resources_guide"})',
       'Use depth:"full" for comprehensive details'
     ]
   },
@@ -36,7 +37,10 @@ export const toolsDocumentationDoc: ToolDocumentation = {
       '',
       '// Code node guides',
       'n8n_tools_documentation({topic: "javascript_code_node_guide"})',
-      'n8n_tools_documentation({topic: "python_code_node_guide"})'
+      'n8n_tools_documentation({topic: "python_code_node_guide"})',
+      '',
+      '// Workflow files resources guide',
+      'n8n_tools_documentation({topic: "workflow_files_resources_guide"})'
     ],
     useCases: [
       'Initial discovery of available MCP tools',

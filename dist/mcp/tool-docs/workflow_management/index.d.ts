@@ -7,7 +7,14 @@ export { n8nListWorkflowsDoc } from './n8n-list-workflows';
 export { n8nValidateWorkflowDoc } from './n8n-validate-workflow';
 export { n8nAutofixWorkflowDoc } from './n8n-autofix-workflow';
 export { n8nTestWorkflowDoc } from './n8n-test-workflow';
-export { n8nExecutionsDoc } from './n8n-executions';
-export { n8nWorkflowVersionsDoc } from './n8n-workflow-versions';
+export { n8nExecutionsGetDoc } from './n8n-executions-get';
+export { n8nExecutionsListDoc } from './n8n-executions-list';
+export { n8nExecutionsDeleteDoc } from './n8n-executions-delete';
+export { n8nWorkflowVersionsListDoc } from './n8n-workflow-versions-list';
+export { n8nWorkflowVersionsGetDoc } from './n8n-workflow-versions-get';
+export { n8nWorkflowVersionsRollbackDoc } from './n8n-workflow-versions-rollback';
+export { n8nWorkflowVersionsDeleteDoc } from './n8n-workflow-versions-delete';
+export { n8nWorkflowVersionsPruneDoc } from './n8n-workflow-versions-prune';
+export { n8nWorkflowVersionsTruncateDoc } from './n8n-workflow-versions-truncate';
 export { n8nDeployTemplateDoc } from './n8n-deploy-template';
 //# sourceMappingURL=index.d.ts.map
