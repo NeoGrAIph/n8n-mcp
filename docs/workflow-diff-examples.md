@@ -1,5 +1,7 @@
 # Workflow Diff Examples
 
+> Compatibility note: используйте `n8n_workflow_update_partial` (каноническое имя). Старое имя `n8n_update_partial_workflow` доступно как deprecated-алиас.
+
 This guide demonstrates how to use the `n8n_update_partial_workflow` tool for efficient workflow editing.
 
 ## Overview

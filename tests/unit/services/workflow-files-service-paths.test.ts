@@ -93,5 +93,16 @@ describe('workflow-files-service path fields', () => {
       `~/repo/n8n-workflows/dev/workflows/development/code_nodes_${WORKFLOW_ID}/${NODE_ID}.set.json`
     );
   });
-});
 
+  it('fails when duplicate workflow directories are present', async () => {
+    process.env.N8N_WORKFLOWS_ROOT = rootDir;
+
+    const filePathA = path.join(rootDir, 'envA', `code_nodes_${WORKFLOW_ID}`, `${NODE_ID}.py`);
+    const filePathB = path.join(rootDir, 'envB', `code_nodes_${WORKFLOW_ID}`, `${NODE_ID}.py`);
+    await writeFile(filePathA, '# a\n');
+    await writeFile(filePathB, '# b\n');
+
+    const svc = await import('../../../src/services/workflow-files-service');
+    await expect(svc.listCodeFiles(WORKFLOW_ID)).rejects.toThrow(/Multiple workflow directories/);
+  });
+});

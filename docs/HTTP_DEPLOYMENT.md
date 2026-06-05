@@ -1,5 +1,7 @@
 # HTTP Deployment Guide for n8n-MCP
 
+> Compatibility note: канонические имена MCP-инструментов начинаются с `n8n_` (например, `n8n_node_get`, `n8n_templates_search`, `n8n_workflow_update_partial`). Старые имена (`get_node`, `search_templates`, `n8n_create_workflow`, …) доступны как deprecated-алиасы и могут быть удалены в будущих версиях.
+
 Deploy n8n-MCP as a remote HTTP server to provide n8n knowledge to compatible MCP Client from anywhere.
 
 ## 🎯 Overview

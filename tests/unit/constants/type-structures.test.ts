@@ -11,7 +11,7 @@ import { isTypeStructure } from '@/types/type-structures';
 import type { NodePropertyTypes } from 'n8n-workflow';
 
 describe('TYPE_STRUCTURES', () => {
-	// All 23 NodePropertyTypes from n8n-workflow
+	// All NodePropertyTypes from n8n-workflow
 	const ALL_PROPERTY_TYPES: NodePropertyTypes[] = [
 		'boolean',
 		'button',
@@ -20,7 +20,6 @@ describe('TYPE_STRUCTURES', () => {
 		'dateTime',
 		'fixedCollection',
 		'hidden',
-		'icon',
 		'json',
 		'callout',
 		'notice',

@@ -74,6 +74,42 @@ const protocol_version_1 = require("../utils/protocol-version");
 const telemetry_1 = require("../telemetry");
 const startup_checkpoints_1 = require("../telemetry/startup-checkpoints");
 const workflowFileHandlers = __importStar(require("./handlers-workflow-files"));
+const TOOL_ALIASES = {
+    tools_documentation: 'n8n_tools_documentation',
+    search_nodes: 'n8n_nodes_search',
+    get_node: 'n8n_node_get',
+    validate_node: 'n8n_node_validate',
+    search_templates: 'n8n_templates_search',
+    get_template: 'n8n_template_get',
+    validate_workflow: 'n8n_workflow_json_validate',
+    n8n_create_workflow: 'n8n_workflow_create',
+    n8n_get_workflow: 'n8n_workflow_get',
+    n8n_update_full_workflow: 'n8n_workflow_update_full',
+    n8n_update_partial_workflow: 'n8n_workflow_update_partial',
+    n8n_delete_workflow: 'n8n_workflow_delete',
+    n8n_list_workflows: 'n8n_workflows_list',
+    n8n_validate_workflow: 'n8n_workflow_validate',
+    n8n_autofix_workflow: 'n8n_workflow_autofix',
+    n8n_test_workflow: 'n8n_workflow_test',
+    n8n_executions: 'n8n_executions_list',
+    n8n_workflow_versions: 'n8n_workflow_versions_list',
+};
+function addAliasDefinitions(tools) {
+    const result = [...tools];
+    for (const [alias, target] of Object.entries(TOOL_ALIASES)) {
+        if (result.find(t => t.name === alias))
+            continue;
+        const targetDef = tools.find(t => t.name === target);
+        if (!targetDef)
+            continue;
+        result.push({
+            ...targetDef,
+            name: alias,
+            description: `${targetDef.description} (deprecated alias for ${target})`,
+        });
+    }
+    return result;
+}
 const VALIDATION_TOOL_NAMES = new Set([
     'n8n_node_validate',
     'n8n_workflow_validate',
@@ -133,6 +169,8 @@ class N8NDocumentationMCPServer {
             }
             const apiConfigured = (0, n8n_api_1.isN8nApiConfigured)();
             const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const disabledTools = this.getDisabledTools();
+            const fileSurfaceDisabled = workflowFilesConfigured && tools_workflow_files_1.n8nWorkflowFileTools.every(tool => disabledTools.has(tool.name));
             const totalTools = tools_1.n8nDocumentationToolsFinal.length +
                 (apiConfigured ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
                 (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
@@ -382,6 +420,7 @@ class N8NDocumentationMCPServer {
         this.server.setRequestHandler(types_js_1.ListToolsRequestSchema, async (request) => {
             const disabledTools = this.getDisabledTools();
             const workflowFilesConfigured = (0, workflow_files_service_1.isWorkflowFilesConfigured)();
+            const fileSurfaceDisabled = workflowFilesConfigured && tools_workflow_files_1.n8nWorkflowFileTools.every(tool => disabledTools.has(tool.name));
             const enabledDocTools = tools_1.n8nDocumentationToolsFinal.filter(tool => !disabledTools.has(tool.name));
             let tools = [...enabledDocTools];
             const hasEnvConfig = (0, n8n_api_1.isN8nApiConfigured)();
@@ -406,7 +445,7 @@ class N8NDocumentationMCPServer {
                     disabledToolsCount: disabledTools.size
                 });
             }
-            if (workflowFilesConfigured) {
+            if (workflowFilesConfigured && !fileSurfaceDisabled) {
                 const enabledFileTools = tools_workflow_files_1.n8nWorkflowFileTools.filter(tool => !disabledTools.has(tool.name));
                 tools.push(...enabledFileTools);
                 logger_1.logger.debug(`Workflow file tools enabled (${enabledFileTools.length} tools)`);
@@ -414,7 +453,7 @@ class N8NDocumentationMCPServer {
             if (disabledTools.size > 0) {
                 const totalAvailableTools = tools_1.n8nDocumentationToolsFinal.length +
                     (shouldIncludeManagementTools ? tools_n8n_manager_1.n8nManagementTools.length : 0) +
-                    (workflowFilesConfigured ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
+                    (workflowFilesConfigured && !fileSurfaceDisabled ? tools_workflow_files_1.n8nWorkflowFileTools.length : 0);
                 logger_1.logger.debug(`Filtered ${disabledTools.size} disabled tools, ${tools.length}/${totalAvailableTools} tools available`);
             }
             const clientInfo = this.clientInfo;
@@ -424,6 +463,7 @@ class N8NDocumentationMCPServer {
                 logger_1.logger.info('Detected n8n client, using n8n-friendly tool descriptions');
                 tools = (0, tools_n8n_friendly_1.makeToolsN8nFriendly)(tools);
             }
+            tools = addAliasDefinitions(tools);
             tools = (0, tool_annotations_1.withToolAnnotations)(tools);
             const validationTools = tools.filter(t => VALIDATION_TOOL_NAMES.has(t.name));
             validationTools.forEach(tool => {
@@ -436,52 +476,59 @@ class N8NDocumentationMCPServer {
             return { tools };
         });
         if (workflowFilesConfigured) {
-            this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
-                const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
-                return { resourceTemplates: templates };
-            });
-            this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
-                const cursor = request.params?.cursor;
-                const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
-                return {
-                    resources,
-                    ...(nextCursor ? { nextCursor } : {})
-                };
-            });
-            this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
-                const uri = request.params.uri;
-                const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
-                return {
-                    contents: [
-                        {
-                            uri: resource.uri,
-                            mimeType: resource.mimeType,
-                            text: resource.text,
-                            _meta: resource._meta
-                        }
-                    ]
-                };
-            });
-            this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
-                const params = request.params ?? {};
-                const uri = params.uri;
-                const expectedEtag = params.expectedEtag;
-                const contents = params.contents;
-                const directText = params.text;
-                const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
-                if (typeof text !== 'string') {
-                    throw new Error('resources/write requires text content');
-                }
-                const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
-                return {
-                    uri: result.uri,
-                    _meta: {
-                        etag: result.etag,
-                        size: result.size,
-                        lastModified: result.lastModified
+            const disabledTools = this.getDisabledTools();
+            const fileSurfaceDisabled = tools_workflow_files_1.n8nWorkflowFileTools.every(tool => disabledTools.has(tool.name));
+            if (!fileSurfaceDisabled) {
+                this.server.setRequestHandler(types_js_1.ListResourceTemplatesRequestSchema, async () => {
+                    const templates = workflowFileHandlers.handleListWorkflowResourceTemplates();
+                    return { resourceTemplates: templates };
+                });
+                this.server.setRequestHandler(types_js_1.ListResourcesRequestSchema, async (request) => {
+                    const cursor = request.params?.cursor;
+                    const { resources, nextCursor } = await workflowFileHandlers.handleListWorkflowResources(cursor ?? null);
+                    return {
+                        resources,
+                        ...(nextCursor ? { nextCursor } : {})
+                    };
+                });
+                this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
+                    const uri = request.params.uri;
+                    const resource = await workflowFileHandlers.handleReadWorkflowResource(uri);
+                    return {
+                        contents: [
+                            {
+                                uri: resource.uri,
+                                mimeType: resource.mimeType,
+                                text: resource.text,
+                                _meta: resource._meta
+                            }
+                        ]
+                    };
+                });
+                this.server.setRequestHandler(WriteResourceRequestSchema, async (request) => {
+                    const params = request.params ?? {};
+                    const uri = params.uri;
+                    const expectedEtag = params.expectedEtag;
+                    const contents = params.contents;
+                    const directText = params.text;
+                    const text = directText ?? (contents && contents.length > 0 ? contents[0].text : undefined);
+                    if (typeof text !== 'string') {
+                        throw new Error('resources/write requires text content');
                     }
-                };
-            });
+                    const result = await workflowFileHandlers.handleWriteWorkflowResource(uri, text, expectedEtag);
+                    return {
+                        uri: result.uri,
+                        _meta: {
+                            etag: result.etag,
+                            size: result.size,
+                            lastModified: result.lastModified
+                        }
+                    };
+                });
+            }
+            else {
+                logger_1.logger.info('Workflow files configured but disabled via DISABLED_TOOLS; resource handlers not registered');
+            }
         }
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
@@ -855,8 +902,101 @@ class N8NDocumentationMCPServer {
         }
         return true;
     }
+    coerceStringifiedJsonParams(toolName, args) {
+        if (!args || typeof args !== 'object')
+            return args;
+        const canonicalName = TOOL_ALIASES[toolName] || toolName;
+        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools, ...tools_workflow_files_1.n8nWorkflowFileTools];
+        const tool = allTools.find(t => t.name === canonicalName);
+        if (!tool?.inputSchema?.properties)
+            return args;
+        const properties = tool.inputSchema.properties;
+        const coerced = { ...args };
+        let coercedAny = false;
+        for (const [key, value] of Object.entries(coerced)) {
+            if (value === undefined || value === null)
+                continue;
+            const propSchema = properties[key];
+            if (!propSchema)
+                continue;
+            const expectedType = propSchema.type;
+            if (!expectedType)
+                continue;
+            const actualType = Array.isArray(value) ? 'array' : typeof value;
+            if (expectedType === 'string' && actualType === 'string')
+                continue;
+            if ((expectedType === 'number' || expectedType === 'integer') && actualType === 'number')
+                continue;
+            if (expectedType === 'boolean' && actualType === 'boolean')
+                continue;
+            if (expectedType === 'object' && actualType === 'object' && !Array.isArray(value))
+                continue;
+            if (expectedType === 'array' && Array.isArray(value))
+                continue;
+            if (actualType === 'string') {
+                const trimmed = value.trim();
+                if (expectedType === 'object' && trimmed.startsWith('{')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                            coerced[key] = parsed;
+                            coercedAny = true;
+                        }
+                    }
+                    catch { }
+                    continue;
+                }
+                if (expectedType === 'array' && trimmed.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) {
+                            coerced[key] = parsed;
+                            coercedAny = true;
+                        }
+                    }
+                    catch { }
+                    continue;
+                }
+                if (expectedType === 'number' || expectedType === 'integer') {
+                    const num = Number(trimmed);
+                    if (!isNaN(num) && trimmed !== '') {
+                        coerced[key] = expectedType === 'integer' ? Math.trunc(num) : num;
+                        coercedAny = true;
+                    }
+                    continue;
+                }
+                if (expectedType === 'boolean') {
+                    if (trimmed === 'true') {
+                        coerced[key] = true;
+                        coercedAny = true;
+                    }
+                    else if (trimmed === 'false') {
+                        coerced[key] = false;
+                        coercedAny = true;
+                    }
+                    continue;
+                }
+            }
+            if (expectedType === 'string' && (actualType === 'number' || actualType === 'boolean')) {
+                coerced[key] = String(value);
+                coercedAny = true;
+                continue;
+            }
+        }
+        if (coercedAny) {
+            logger_1.logger.warn(`Coerced mistyped params for tool "${toolName}"`, {
+                original: Object.fromEntries(Object.entries(args).map(([k, v]) => [k, `${typeof v}: ${typeof v === 'string' ? v.substring(0, 80) : v}`])),
+            });
+        }
+        return coerced;
+    }
     async executeTool(name, args) {
         args = args || {};
+        const canonical = TOOL_ALIASES[name];
+        if (canonical) {
+            logger_1.logger.warn('Using deprecated tool alias', { alias: name, target: canonical });
+            name = canonical;
+        }
         const disabledTools = this.getDisabledTools();
         if (disabledTools.has(name)) {
             throw new Error(`Tool '${name}' is disabled via DISABLED_TOOLS environment variable`);
@@ -869,6 +1009,7 @@ class N8NDocumentationMCPServer {
         if (typeof args !== 'object' || args === null) {
             throw new Error(`Invalid arguments for tool ${name}: expected object, got ${typeof args}`);
         }
+        args = this.coerceStringifiedJsonParams(name, args);
         switch (name) {
             case 'n8n_tools_documentation':
                 return this.getToolsDocumentation(args.topic, args.depth);

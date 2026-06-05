@@ -1,5 +1,7 @@
 # Visual Studio Code Setup
 
+> Compatibility note: используйте новые имена MCP-инструментов с префиксом `n8n_` (например, `n8n_tools_documentation`, `n8n_nodes_search`, `n8n_workflow_update_partial`). Старые имена в примерах ниже (`tools_documentation`, `search_nodes`, `n8n_create_workflow`, …) работают как deprecated-алиасы.
+
 :white_check_mark: This n8n MCP server is compatible with VS Code + GitHub Copilot (Chat in IDE).
 
 ## Preconditions

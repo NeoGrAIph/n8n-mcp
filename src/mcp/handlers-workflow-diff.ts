@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 import { McpToolResponse } from '../types/n8n-api';
-import { WorkflowDiffRequest, WorkflowDiffOperation } from '../types/workflow-diff';
+import { WorkflowDiffRequest, WorkflowDiffOperation, WorkflowDiffValidationError } from '../types/workflow-diff';
 import { WorkflowDiffEngine } from '../services/workflow-diff-engine';
 import { getN8nApiClient } from './handlers-n8n-manager';
 import { N8nApiError, getUserFriendlyErrorMessage } from '../utils/n8n-errors';
@@ -31,6 +31,11 @@ function getValidator(repository: NodeRepository): WorkflowValidator {
   return cachedValidator;
 }
 
+// Operation types that identify nodes by nodeId/nodeName
+const NODE_TARGETING_OPERATIONS = new Set([
+  'updateNode', 'removeNode', 'moveNode', 'enableNode', 'disableNode'
+]);
+
 // Zod schema for the diff request
 const workflowDiffSchema = z.object({
   id: z.string(),
@@ -48,8 +53,8 @@ const workflowDiffSchema = z.object({
     target: z.string().optional(),
     from: z.string().optional(),  // For rewireConnection
     to: z.string().optional(),    // For rewireConnection
-    sourceOutput: z.string().optional(),
-    targetInput: z.string().optional(),
+    sourceOutput: z.union([z.string(), z.number()]).transform(String).optional(),
+    targetInput: z.union([z.string(), z.number()]).transform(String).optional(),
     sourceIndex: z.number().optional(),
     targetIndex: z.number().optional(),
     // Smart parameters (Phase 1 UX improvement)
@@ -63,6 +68,22 @@ const workflowDiffSchema = z.object({
     settings: z.any().optional(),
     name: z.string().optional(),
     tag: z.string().optional(),
+    // Transfer operation
+    destinationProjectId: z.string().min(1).optional(),
+    // Aliases: LLMs often use "id" instead of "nodeId" — accept both
+    id: z.string().optional(),
+  }).transform((op) => {
+    if (NODE_TARGETING_OPERATIONS.has(op.type)) {
+      if (!op.nodeName && !op.nodeId && op.name) {
+        op.nodeName = op.name;
+        op.name = undefined;
+      }
+      if (!op.nodeId && op.id) {
+        op.nodeId = op.id;
+        op.id = undefined;
+      }
+    }
+    return op;
   })),
   validateOnly: z.boolean().optional(),
   continueOnError: z.boolean().optional(),
@@ -100,7 +121,6 @@ export async function handleUpdatePartialWorkflow(
     if (!client) {
       return {
         success: false,
-        saved: false,
         error: 'n8n API not configured. Please set N8N_API_URL and N8N_API_KEY environment variables.'
       };
     }
@@ -185,7 +205,6 @@ export async function handleUpdatePartialWorkflow(
           details: {
             errors: diffResult.errors,
             warnings: diffResult.warnings,
-            operationsApplied: diffResult.operationsApplied,
             applied: diffResult.applied,
             failed: diffResult.failed
           }
@@ -197,7 +216,6 @@ export async function handleUpdatePartialWorkflow(
     if (input.validateOnly) {
       return {
         success: true,
-        saved: false,
         message: diffResult.message,
         data: {
           valid: true,
@@ -301,6 +319,58 @@ export async function handleUpdatePartialWorkflow(
         ? await client.updateWorkflow(input.id, diffResult.workflow!)
         : (diffResult.workflow as any);
 
+      // Handle tag operations via dedicated API (back-compat with upstream behavior)
+      let tagWarnings: string[] = [];
+      if (diffResult.tagsToAdd?.length || diffResult.tagsToRemove?.length) {
+        try {
+          const existingTags: Array<{ id: string; name: string }> = Array.isArray(updatedWorkflow.tags)
+            ? updatedWorkflow.tags.map((t: any) => typeof t === 'object' ? { id: t.id, name: t.name } : { id: '', name: t })
+            : [];
+
+          const allTags = await client.listTags();
+          const tagMap = new Map<string, string>();
+          for (const t of allTags.data) {
+            if (t.id) tagMap.set(t.name.toLowerCase(), t.id);
+          }
+
+          for (const tagName of (diffResult.tagsToAdd || [])) {
+            if (!tagMap.has(tagName.toLowerCase())) {
+              try {
+                const newTag = await client.createTag({ name: tagName });
+                if (newTag.id) tagMap.set(tagName.toLowerCase(), newTag.id);
+              } catch (createErr) {
+                tagWarnings.push(`Failed to create tag "${tagName}": ${createErr instanceof Error ? createErr.message : 'Unknown error'}`);
+              }
+            }
+          }
+
+          const currentTagIds = new Set<string>();
+          for (const et of existingTags) {
+            if (et.id) {
+              currentTagIds.add(et.id);
+            } else {
+              const resolved = tagMap.get(et.name.toLowerCase());
+              if (resolved) currentTagIds.add(resolved);
+            }
+          }
+
+          for (const tagName of (diffResult.tagsToAdd || [])) {
+            const tagId = tagMap.get(tagName.toLowerCase());
+            if (tagId) currentTagIds.add(tagId);
+          }
+
+          for (const tagName of (diffResult.tagsToRemove || [])) {
+            const tagId = tagMap.get(tagName.toLowerCase());
+            if (tagId) currentTagIds.delete(tagId);
+          }
+
+          await client.updateWorkflowTags(input.id, Array.from(currentTagIds));
+        } catch (tagError) {
+          tagWarnings.push(`Tag update failed: ${tagError instanceof Error ? tagError.message : 'Unknown error'}`);
+          logger.warn('Tag operations failed (non-blocking)', tagError);
+        }
+      }
+
       if (diffResult.transferToProjectId) {
         try {
           await client.transferWorkflow(input.id, diffResult.transferToProjectId);
@@ -318,6 +388,11 @@ export async function handleUpdatePartialWorkflow(
           };
         }
       }
+
+      const warningsCombined = [
+        ...(diffResult.warnings || []),
+        ...tagWarnings.map(msg => ({ message: msg }))
+      ];
 
       // Handle activation/deactivation if requested
       let finalWorkflow = updatedWorkflow;
@@ -412,7 +487,6 @@ export async function handleUpdatePartialWorkflow(
       return {
         success: true,
         saved: true,
-        operationsApplied: diffResult.operationsApplied,
         data: {
           id: finalWorkflow.id,
           name: finalWorkflow.name,
@@ -425,7 +499,7 @@ export async function handleUpdatePartialWorkflow(
           applied: diffResult.applied,
           failed: diffResult.failed,
           errors: diffResult.errors,
-          warnings: diffResult.warnings
+          warnings: warningsCombined.length ? warningsCombined : undefined
         }
       };
     } catch (error) {
@@ -451,7 +525,6 @@ export async function handleUpdatePartialWorkflow(
       if (error instanceof N8nApiError) {
         return {
           success: false,
-          saved: false,
           error: getUserFriendlyErrorMessage(error),
           code: error.code,
           details: error.details as Record<string, unknown> | undefined
@@ -463,7 +536,6 @@ export async function handleUpdatePartialWorkflow(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        saved: false,
         error: 'Invalid input',
         details: { errors: error.errors }
       };
@@ -472,7 +544,6 @@ export async function handleUpdatePartialWorkflow(
     logger.error('Failed to update partial workflow', error);
     return {
       success: false,
-      saved: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }

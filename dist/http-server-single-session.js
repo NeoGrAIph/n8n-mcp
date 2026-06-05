@@ -380,14 +380,12 @@ class SingleSessionHTTPServer {
                             hasSessionId: !!sessionId,
                             sessionFound: sessionId ? !!this.transports[sessionId] : false
                         });
-                        if (!this.statelessTransport || !this.statelessServer) {
-                            this.statelessServer = new server_1.N8NDocumentationMCPServer(instanceContext);
-                            this.statelessTransport = new streamableHttp_js_1.StreamableHTTPServerTransport({
-                                sessionIdGenerator: undefined
-                            });
-                            await this.statelessServer.connect(this.statelessTransport);
-                        }
-                        transport = this.statelessTransport;
+                        const statelessServer = new server_1.N8NDocumentationMCPServer(instanceContext);
+                        const statelessTransport = new streamableHttp_js_1.StreamableHTTPServerTransport({
+                            sessionIdGenerator: undefined
+                        });
+                        await statelessServer.connect(statelessTransport);
+                        transport = statelessTransport;
                     }
                     else if (sessionId && this.transports[sessionId]) {
                         if (!this.isValidSessionId(sessionId)) {

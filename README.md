@@ -24,6 +24,11 @@ n8n-MCP serves as a bridge between n8n's workflow automation platform and AI mod
 - 🎯 **Template library** - 2,709 workflow templates with 100% metadata coverage
 - 🌐 **Community nodes** - Search verified community integrations with `source` filter (NEW!)
 
+> Compatibility (fork/2.40.2):
+> - Канонические имена инструментов теперь начинаются с `n8n_` (пример: `n8n_node_get`, `n8n_templates_search`, `n8n_workflow_update_partial`).
+> - Deprecated алиасы старых имён (`tools_documentation`, `search_templates`, `get_node`, `validate_workflow`, `n8n_create_workflow`, …) сохраняются для совместимости и логируются как устаревшие.
+> - Workflow files/resources работают в режиме read/patch/update; создание новых файлов через MCP выключено.
+
 
 ## ⚠️ Important Safety Warning
 

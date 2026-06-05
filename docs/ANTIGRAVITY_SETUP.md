@@ -1,5 +1,7 @@
 # Antigravity Setup
 
+> Compatibility note: используйте новые имена MCP-инструментов с префиксом `n8n_`. Старые имена, упомянутые в ранних примерах (`tools_documentation`, `search_templates`, `n8n_create_workflow`, …), поддерживаются как deprecated-алиасы.
+
 :white_check_mark: This n8n MCP server is compatible with Antigravity (Chat in IDE).
 
 ## Preconditions

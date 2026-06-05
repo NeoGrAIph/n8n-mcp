@@ -1,4 +1,4 @@
-import { Workflow, WorkflowListParams, WorkflowListResponse, Execution, ExecutionListParams, ExecutionListResponse, Credential, CredentialListParams, CredentialListResponse, Tag, TagListParams, TagListResponse, Folder, FolderListParams, FolderListResponse, HealthCheckResponse, N8nVersionInfo, Variable, WebhookRequest, WorkflowRunRequest, WorkflowRunResponse, SourceControlStatus, SourceControlPullResult, SourceControlPushResult } from '../types/n8n-api';
+import { Workflow, WorkflowListParams, WorkflowListResponse, Execution, ExecutionListParams, ExecutionListResponse, Credential, CredentialListParams, CredentialListResponse, Tag, TagListParams, TagListResponse, Folder, FolderListParams, FolderListResponse, HealthCheckResponse, N8nVersionInfo, Variable, WebhookRequest, WorkflowRunRequest, WorkflowRunResponse, SourceControlStatus, SourceControlPullResult, SourceControlPushResult, DataTable, DataTableColumn, DataTableListParams, DataTableRow, DataTableRowListParams, DataTableInsertRowsParams, DataTableUpdateRowsParams, DataTableUpsertRowParams, DataTableDeleteRowsParams } from '../types/n8n-api';
 export interface N8nApiClientConfig {
     baseUrl: string;
     apiKey: string;
@@ -40,6 +40,7 @@ export declare class N8nApiClient {
     getWorkflow(id: string): Promise<Workflow>;
     updateWorkflow(id: string, workflow: Partial<Workflow>): Promise<Workflow>;
     deleteWorkflow(id: string): Promise<Workflow>;
+    transferWorkflow(id: string, destinationProjectId: string): Promise<void>;
     activateWorkflow(id: string): Promise<Workflow>;
     deactivateWorkflow(id: string): Promise<Workflow>;
     listWorkflows(params?: WorkflowListParams): Promise<WorkflowListResponse>;
@@ -66,6 +67,7 @@ export declare class N8nApiClient {
     createTag(tag: Partial<Tag>): Promise<Tag>;
     updateTag(id: string, tag: Partial<Tag>): Promise<Tag>;
     deleteTag(id: string): Promise<void>;
+    updateWorkflowTags(workflowId: string, tagIds: string[]): Promise<Tag[]>;
     getSourceControlStatus(): Promise<SourceControlStatus>;
     pullSourceControl(force?: boolean): Promise<SourceControlPullResult>;
     pushSourceControl(message: string, fileNames?: string[]): Promise<SourceControlPushResult>;
@@ -73,6 +75,28 @@ export declare class N8nApiClient {
     createVariable(variable: Partial<Variable>): Promise<Variable>;
     updateVariable(id: string, variable: Partial<Variable>): Promise<Variable>;
     deleteVariable(id: string): Promise<void>;
+    createDataTable(params: {
+        name: string;
+        columns?: DataTableColumn[];
+    }): Promise<DataTable>;
+    listDataTables(params?: DataTableListParams): Promise<{
+        data: DataTable[];
+        nextCursor?: string | null;
+    }>;
+    getDataTable(id: string): Promise<DataTable>;
+    updateDataTable(id: string, params: {
+        name: string;
+    }): Promise<DataTable>;
+    deleteDataTable(id: string): Promise<void>;
+    getDataTableRows(id: string, params?: DataTableRowListParams): Promise<{
+        data: DataTableRow[];
+        nextCursor?: string | null;
+    }>;
+    insertDataTableRows(id: string, params: DataTableInsertRowsParams): Promise<any>;
+    updateDataTableRows(id: string, params: DataTableUpdateRowsParams): Promise<any>;
+    upsertDataTableRow(id: string, params: DataTableUpsertRowParams): Promise<any>;
+    deleteDataTableRows(id: string, params: DataTableDeleteRowsParams): Promise<any>;
+    private serializeDataTableParams;
     private validateListResponse;
 }
 //# sourceMappingURL=n8n-api-client.d.ts.map

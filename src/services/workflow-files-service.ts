@@ -129,6 +129,7 @@ async function findWorkflowDir(root: string, workflowId: string): Promise<string
   const queue: string[] = [root];
   let visited = 0;
   const maxVisited = 10000;
+  const matches: string[] = [];
   let legacyMatch: string | null = null;
 
   while (queue.length > 0) {
@@ -153,7 +154,8 @@ async function findWorkflowDir(root: string, workflowId: string): Promise<string
 
       const fullPath = path.join(current, entry.name);
       if (entry.name === `${CODE_NODES_PREFIX}${workflowId}`) {
-        return fullPath;
+        matches.push(fullPath);
+        continue;
       }
       if (entry.name === workflowId) {
         legacyMatch = fullPath;
@@ -161,6 +163,15 @@ async function findWorkflowDir(root: string, workflowId: string): Promise<string
       }
       queue.push(fullPath);
     }
+  }
+
+  if (matches.length > 1 || (matches.length && legacyMatch)) {
+    const dupes = [...matches, ...(legacyMatch ? [legacyMatch] : [])];
+    throw new Error(`Multiple workflow directories found for workflowId ${workflowId}: ${dupes.join(', ')}`);
+  }
+
+  if (matches.length === 1) {
+    return matches[0];
   }
 
   return legacyMatch;
@@ -337,20 +348,6 @@ export async function readSetFile(workflowId: string, nodeId: string): Promise<W
   };
 }
 
-function resolveWriteExt(language?: string): 'py' | 'json' {
-  if (!language) {
-    throw new Error('language is required when creating a new code file');
-  }
-  const normalized = language.toLowerCase();
-  if (['python', 'pythonnative', 'py'].includes(normalized)) {
-    return 'py';
-  }
-  if (['javascript', 'js', 'json'].includes(normalized)) {
-    return 'json';
-  }
-  throw new Error(`Unsupported language: ${language}`);
-}
-
 async function verifyExpectedEtag(filePath: string, expectedEtag?: string): Promise<void> {
   if (!expectedEtag) return;
   const { etag } = await statFile(filePath);
@@ -379,8 +376,7 @@ export async function writeCodeFile(workflowId: string, nodeId: string, content:
     filePath = jsPath;
     ext = 'json';
   } else {
-    ext = resolveWriteExt(language);
-    filePath = path.join(workflowDir, `${nodeId}.${ext}`);
+    throw new Error(`File not found for node ${nodeId}; creation of new code files is disabled`);
   }
 
   if (existsSync(filePath)) {
@@ -392,7 +388,6 @@ export async function writeCodeFile(workflowId: string, nodeId: string, content:
   }
 
   await fs.writeFile(filePath, content, 'utf-8');
-  await fs.chmod(filePath, 0o666).catch(() => undefined);
 
   const { etag, size, lastModified } = await statFile(filePath);
   const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
@@ -423,10 +418,11 @@ export async function writeSetFile(workflowId: string, nodeId: string, content: 
     const error = new Error('ETag mismatch: file does not exist');
     (error as any).code = 'CONFLICT';
     throw error;
+  } else {
+    throw new Error(`File not found for node ${nodeId}; creation of new set files is disabled`);
   }
 
   await fs.writeFile(filePath, content, 'utf-8');
-  await fs.chmod(filePath, 0o666).catch(() => undefined);
 
   const { etag, size, lastModified } = await statFile(filePath);
   const { relativePath, path: displayPath } = computeReturnedPaths(filePath);
@@ -601,10 +597,11 @@ export async function writeWorkflowResource(
     const error = new Error('ETag mismatch: file does not exist');
     (error as any).code = 'CONFLICT';
     throw error;
+  } else {
+    throw new Error(`File not found for URI: ${uri}; creation is disabled`);
   }
 
   await fs.writeFile(filePath, content, 'utf-8');
-  await fs.chmod(filePath, 0o666).catch(() => undefined);
   const { etag, size, lastModified } = await statFile(filePath);
   return { uri, etag, size, lastModified };
 }
@@ -638,7 +635,6 @@ export async function patchWorkflowResource(
   const updated = applyUnifiedPatch(current, patch, options);
 
   await fs.writeFile(filePath, updated, 'utf-8');
-  await fs.chmod(filePath, 0o666).catch(() => undefined);
   const { etag, size, lastModified } = await statFile(filePath);
   return { uri, etag, size, lastModified };
 }

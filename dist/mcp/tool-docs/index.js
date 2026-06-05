@@ -14,7 +14,6 @@ exports.toolsDocumentation = {
     n8n_health_check: system_1.n8nHealthCheckDoc,
     ai_agents_guide: guides_1.aiAgentsGuide,
     workflow_files_resources_guide: guides_1.workflowFilesResourcesGuide,
-    synestra_camelk_debezium_mcp_n8n_dev_guide: guides_1.synestraCamelKDebeziumMcpN8nDevGuide,
     n8n_nodes_search: discovery_1.searchNodesDoc,
     n8n_node_get: configuration_1.getNodeDoc,
     n8n_node_validate: validation_1.validateNodeDoc,

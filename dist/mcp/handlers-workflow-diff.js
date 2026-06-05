@@ -50,6 +50,9 @@ function getValidator(repository) {
     }
     return cachedValidator;
 }
+const NODE_TARGETING_OPERATIONS = new Set([
+    'updateNode', 'removeNode', 'moveNode', 'enableNode', 'disableNode'
+]);
 const workflowDiffSchema = zod_1.z.object({
     id: zod_1.z.string(),
     operations: zod_1.z.array(zod_1.z.object({
@@ -64,8 +67,8 @@ const workflowDiffSchema = zod_1.z.object({
         target: zod_1.z.string().optional(),
         from: zod_1.z.string().optional(),
         to: zod_1.z.string().optional(),
-        sourceOutput: zod_1.z.string().optional(),
-        targetInput: zod_1.z.string().optional(),
+        sourceOutput: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(String).optional(),
+        targetInput: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(String).optional(),
         sourceIndex: zod_1.z.number().optional(),
         targetIndex: zod_1.z.number().optional(),
         branch: zod_1.z.enum(['true', 'false']).optional(),
@@ -76,6 +79,20 @@ const workflowDiffSchema = zod_1.z.object({
         settings: zod_1.z.any().optional(),
         name: zod_1.z.string().optional(),
         tag: zod_1.z.string().optional(),
+        destinationProjectId: zod_1.z.string().min(1).optional(),
+        id: zod_1.z.string().optional(),
+    }).transform((op) => {
+        if (NODE_TARGETING_OPERATIONS.has(op.type)) {
+            if (!op.nodeName && !op.nodeId && op.name) {
+                op.nodeName = op.name;
+                op.name = undefined;
+            }
+            if (!op.nodeId && op.id) {
+                op.nodeId = op.id;
+                op.id = undefined;
+            }
+        }
+        return op;
     })),
     validateOnly: zod_1.z.boolean().optional(),
     continueOnError: zod_1.z.boolean().optional(),
@@ -167,11 +184,12 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             else {
                 return {
                     success: false,
+                    saved: false,
+                    operationsApplied: diffResult.operationsApplied,
                     error: 'Failed to apply diff operations',
                     details: {
                         errors: diffResult.errors,
                         warnings: diffResult.warnings,
-                        operationsApplied: diffResult.operationsApplied,
                         applied: diffResult.applied,
                         failed: diffResult.failed
                     }
@@ -239,6 +257,8 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                 if (!skipValidation) {
                     return {
                         success: false,
+                        saved: false,
+                        operationsApplied: diffResult.operationsApplied,
                         error: errorMessage,
                         details: {
                             errors: structureErrors,
@@ -262,8 +282,84 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             const updatedWorkflow = hasNonActivationOps
                 ? await client.updateWorkflow(input.id, diffResult.workflow)
                 : diffResult.workflow;
+            let tagWarnings = [];
+            if (diffResult.tagsToAdd?.length || diffResult.tagsToRemove?.length) {
+                try {
+                    const existingTags = Array.isArray(updatedWorkflow.tags)
+                        ? updatedWorkflow.tags.map((t) => typeof t === 'object' ? { id: t.id, name: t.name } : { id: '', name: t })
+                        : [];
+                    const allTags = await client.listTags();
+                    const tagMap = new Map();
+                    for (const t of allTags.data) {
+                        if (t.id)
+                            tagMap.set(t.name.toLowerCase(), t.id);
+                    }
+                    for (const tagName of (diffResult.tagsToAdd || [])) {
+                        if (!tagMap.has(tagName.toLowerCase())) {
+                            try {
+                                const newTag = await client.createTag({ name: tagName });
+                                if (newTag.id)
+                                    tagMap.set(tagName.toLowerCase(), newTag.id);
+                            }
+                            catch (createErr) {
+                                tagWarnings.push(`Failed to create tag "${tagName}": ${createErr instanceof Error ? createErr.message : 'Unknown error'}`);
+                            }
+                        }
+                    }
+                    const currentTagIds = new Set();
+                    for (const et of existingTags) {
+                        if (et.id) {
+                            currentTagIds.add(et.id);
+                        }
+                        else {
+                            const resolved = tagMap.get(et.name.toLowerCase());
+                            if (resolved)
+                                currentTagIds.add(resolved);
+                        }
+                    }
+                    for (const tagName of (diffResult.tagsToAdd || [])) {
+                        const tagId = tagMap.get(tagName.toLowerCase());
+                        if (tagId)
+                            currentTagIds.add(tagId);
+                    }
+                    for (const tagName of (diffResult.tagsToRemove || [])) {
+                        const tagId = tagMap.get(tagName.toLowerCase());
+                        if (tagId)
+                            currentTagIds.delete(tagId);
+                    }
+                    await client.updateWorkflowTags(input.id, Array.from(currentTagIds));
+                }
+                catch (tagError) {
+                    tagWarnings.push(`Tag update failed: ${tagError instanceof Error ? tagError.message : 'Unknown error'}`);
+                    logger_1.logger.warn('Tag operations failed (non-blocking)', tagError);
+                }
+            }
+            if (diffResult.transferToProjectId) {
+                try {
+                    await client.transferWorkflow(input.id, diffResult.transferToProjectId);
+                }
+                catch (transferError) {
+                    logger_1.logger.error('Failed to transfer workflow after update', transferError);
+                    return {
+                        success: false,
+                        saved: true,
+                        operationsApplied: diffResult.operationsApplied,
+                        error: 'Workflow updated successfully but project transfer failed',
+                        details: {
+                            workflowUpdated: true,
+                            transferError: transferError instanceof Error ? transferError.message : 'Unknown error'
+                        }
+                    };
+                }
+            }
+            const warningsCombined = [
+                ...(diffResult.warnings || []),
+                ...tagWarnings.map(msg => ({ message: msg }))
+            ];
             let finalWorkflow = updatedWorkflow;
-            let activationMessage = '';
+            let activationMessage = diffResult.transferToProjectId
+                ? ` Workflow transferred to project ${diffResult.transferToProjectId}.`
+                : '';
             try {
                 const validator = getValidator(repository);
                 validationAfter = await validator.validateWorkflow(finalWorkflow, {
@@ -295,6 +391,8 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                     logger_1.logger.error('Failed to activate workflow after update', activationError);
                     return {
                         success: false,
+                        saved: true,
+                        operationsApplied: diffResult.operationsApplied,
                         error: 'Workflow updated successfully but activation failed',
                         details: {
                             workflowUpdated: true,
@@ -318,6 +416,8 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                     logger_1.logger.error('Failed to deactivate workflow after update', deactivationError);
                     return {
                         success: false,
+                        saved: true,
+                        operationsApplied: diffResult.operationsApplied,
                         error: 'Workflow updated successfully but deactivation failed',
                         details: {
                             workflowUpdated: true,
@@ -344,6 +444,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
             }
             return {
                 success: true,
+                saved: true,
                 data: {
                     id: finalWorkflow.id,
                     name: finalWorkflow.name,
@@ -356,7 +457,7 @@ async function handleUpdatePartialWorkflow(args, repository, context) {
                     applied: diffResult.applied,
                     failed: diffResult.failed,
                     errors: diffResult.errors,
-                    warnings: diffResult.warnings
+                    warnings: warningsCombined.length ? warningsCombined : undefined
                 }
             };
         }

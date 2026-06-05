@@ -105,11 +105,11 @@ ai_automation, data_sync, webhook_processing, email_automation, slack_integratio
 - totalFound: Total matching templates
 - searchMode: The mode used`,
     examples: [
-      '// Keyword search (default)\nsearch_templates({query: "chatbot"})',
-      '// Find templates using specific nodes\nsearch_templates({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest", "n8n-nodes-base.slack"]})',
-      '// Get templates for a task type\nsearch_templates({searchMode: "by_task", task: "webhook_processing"})',
-      '// Filter by metadata\nsearch_templates({searchMode: "by_metadata", complexity: "simple", requiredService: "openai"})',
-      '// Combine metadata filters\nsearch_templates({searchMode: "by_metadata", maxSetupMinutes: 30, targetAudience: "developers"})'
+      '// Keyword search (default)\nn8n_templates_search({query: "chatbot"})',
+      '// Find templates using specific nodes\nn8n_templates_search({searchMode: "by_nodes", nodeTypes: ["n8n-nodes-base.httpRequest", "n8n-nodes-base.slack"]})',
+      '// Get templates for a task type\nn8n_templates_search({searchMode: "by_task", task: "webhook_processing"})',
+      '// Filter by metadata\nn8n_templates_search({searchMode: "by_metadata", complexity: "simple", requiredService: "openai"})',
+      '// Combine metadata filters\nn8n_templates_search({searchMode: "by_metadata", maxSetupMinutes: 30, targetAudience: "developers"})'
     ],
     useCases: [
       'Find workflows by business purpose (keyword search)',

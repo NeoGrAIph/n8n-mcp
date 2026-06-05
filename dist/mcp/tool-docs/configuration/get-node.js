@@ -49,13 +49,13 @@ exports.getNodeDoc = {
 - versions: Version history with breaking changes flags
 - compare/breaking/migrations: Version comparison details`,
         examples: [
-            '// Standard detail (recommended for AI agents)\nget_node({nodeType: "nodes-base.httpRequest"})',
-            '// Minimal for quick metadata check\nget_node({nodeType: "nodes-base.slack", detail: "minimal"})',
-            '// Full detail with examples\nget_node({nodeType: "nodes-base.googleSheets", detail: "full", includeExamples: true})',
-            '// Get readable documentation\nget_node({nodeType: "nodes-base.webhook", mode: "docs"})',
-            '// Search for authentication properties\nget_node({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})',
-            '// Check version history\nget_node({nodeType: "nodes-base.executeWorkflow", mode: "versions"})',
-            '// Compare specific versions\nget_node({nodeType: "nodes-base.httpRequest", mode: "compare", fromVersion: "3.0", toVersion: "4.1"})'
+            '// Standard detail (recommended for AI agents)\nn8n_node_get({nodeType: "nodes-base.httpRequest"})',
+            '// Minimal for quick metadata check\nn8n_node_get({nodeType: "nodes-base.slack", detail: "minimal"})',
+            '// Full detail with examples\nn8n_node_get({nodeType: "nodes-base.googleSheets", detail: "full", includeExamples: true})',
+            '// Get readable documentation\nn8n_node_get({nodeType: "nodes-base.webhook", mode: "docs"})',
+            '// Search for authentication properties\nn8n_node_get({nodeType: "nodes-base.httpRequest", mode: "search_properties", propertyQuery: "auth"})',
+            '// Check version history\nn8n_node_get({nodeType: "nodes-base.executeWorkflow", mode: "versions"})',
+            '// Compare specific versions\nn8n_node_get({nodeType: "nodes-base.httpRequest", mode: "compare", fromVersion: "3.0", toVersion: "4.1"})'
         ],
         useCases: [
             'Configure nodes for workflow building (use detail=standard)',

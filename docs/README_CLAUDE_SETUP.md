@@ -1,5 +1,7 @@
 # Claude Desktop Configuration for n8n-MCP
 
+> Compatibility note: используйте новые имена MCP-инструментов `n8n_*` (`n8n_tools_documentation`, `n8n_nodes_search`, `n8n_workflow_update_partial`). Старые имена из ранних примеров поддерживаются как deprecated-алиасы.
+
 This guide helps you connect n8n-MCP to Claude Desktop, giving Claude comprehensive knowledge about n8n's 525 workflow automation nodes, including 263 AI-capable tools.
 
 ## 🎯 Prerequisites
