@@ -1,4 +1,4 @@
-import { exportDiagnostics, filesStatus, listWorkflowFiles, mountDiagnostics, observeWorkflowFile, patchWorkflowFile, readWorkflowFile, replaceWorkflowFile, validateWorkflowFile } from './file-store.mjs';
+import { exportDiagnostics, filesStatus, listWorkflowFiles, mountDiagnostics, observeWorkflowFile, patchWorkflowFile, readWorkflowFile, reconcileWorkflowFiles, replaceWorkflowFile, validateWorkflowFile } from './file-store.mjs';
 import { ToolError } from './errors.mjs';
 
 export const toolDefinitions = [
@@ -6,6 +6,7 @@ export const toolDefinitions = [
   tool('synestra_workflow_files_list', 'List existing Code and Set(raw) files for one workflow resolved through workflows/.index.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
   tool('synestra_workflow_file_read', 'Read one existing Code or Set(raw) file by Synestra workflow resource URI and return content plus ETag.', true, { uri: stringProperty(512) }, ['uri']),
   tool('synestra_workflow_file_validate', 'Validate an existing or proposed Code/Set(raw) file payload without writing it.', true, { uri: stringProperty(512), content: stringProperty(262144) }, ['uri']),
+  tool('synestra_workflow_reconcile_status', 'Return read-only file-layer parity for one workflow: workflow JSON, .index, Code files and Set(raw) files.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
   tool('synestra_workflow_file_patch', 'Patch one existing Code/Set(raw) file with mandatory expectedEtag and read-after-write observe.', false, { uri: stringProperty(512), patch: stringProperty(262144), expectedEtag: etagProperty(), waitForSettle: { type: 'boolean' } }, ['uri', 'patch', 'expectedEtag'], true),
   tool('synestra_workflow_file_replace', 'Replace one existing Code/Set(raw) file with mandatory expectedEtag; requires patch_replace policy.', false, { uri: stringProperty(512), content: stringProperty(262144), expectedEtag: etagProperty(), waitForSettle: { type: 'boolean' } }, ['uri', 'content', 'expectedEtag'], true),
   tool('synestra_workflow_sync_observe', 'Observe a workflow file after a write and report ETag/content settle status.', true, { uri: stringProperty(512), expectedEtag: etagProperty(), expectedContent: stringProperty(262144), timeoutMs: { type: 'integer', minimum: 100, maximum: 120000 } }, ['uri']),
@@ -32,6 +33,8 @@ export async function callTool(config, name, args = {}) {
         return jsonContent(await readWorkflowFile(config, args.uri));
       case 'synestra_workflow_file_validate':
         return jsonContent(await validateWorkflowFile(config, args));
+      case 'synestra_workflow_reconcile_status':
+        return jsonContent(await reconcileWorkflowFiles(config, args));
       case 'synestra_workflow_file_patch':
         return jsonContent(await patchWorkflowFile(config, args));
       case 'synestra_workflow_file_replace':

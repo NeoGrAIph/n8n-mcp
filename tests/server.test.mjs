@@ -11,12 +11,13 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   const init = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05' } });
   assert.equal(init.result.serverInfo.name, 'synestra-n8n-gitops-mcp');
   const tools = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
-  assert.equal(tools.result.tools.length, 7);
+  assert.equal(tools.result.tools.length, 8);
   assert.equal(tools.result.tools.some(tool => tool.name === 'update_workflow'), false);
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
+  assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_reconcile_status'), true);
   assert.equal(tools.result.tools.every(tool => tool.inputSchema.additionalProperties === false), true);
   const writeTools = await handleJsonRpc({ ...fixture.config, writePolicy: 'patch_replace' }, { jsonrpc: '2.0', id: 22, method: 'tools/list', params: {} });
-  assert.equal(writeTools.result.tools.length, 9);
+  assert.equal(writeTools.result.tools.length, 10);
   assert.equal(writeTools.result.tools.find(tool => tool.name === 'synestra_workflow_file_replace').annotations.destructiveHint, true);
 });
 
@@ -29,6 +30,19 @@ test('tools/call list returns workflow files', async () => {
     params: { name: 'synestra_workflow_files_list', arguments: { workflowId: fixture.workflowId } }
   });
   assert.equal(result.result.structuredContent.files.length, 2);
+  assert.equal(result.result.structuredContent.files[0].locator.status, 'ready');
+});
+
+test('tools/call returns workflow reconcile status', async () => {
+  const fixture = await createWorkflowFixture();
+  const result = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 37,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_reconcile_status', arguments: { workflowId: fixture.workflowId } }
+  });
+  assert.equal(result.result.structuredContent.summary.ready, 2);
+  assert.equal(result.result.structuredContent.summary.missing_file, 0);
 });
 
 test('tools/call validates arguments against published schemas', async () => {

@@ -2,17 +2,28 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
-import { listWorkflowFiles, patchWorkflowFile, readWorkflowFile, validateWorkflowFile } from '../src/file-store.mjs';
+import { listWorkflowFiles, patchWorkflowFile, readWorkflowFile, reconcileWorkflowFiles, validateWorkflowFile } from '../src/file-store.mjs';
 import { createWorkflowFixture } from './fixtures.mjs';
 
 test('lists and reads Code and Set(raw) files with ETags', async () => {
   const fixture = await createWorkflowFixture();
   const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
   assert.equal(files.length, 2);
+  assert.equal(files.every(file => file.locator.status === 'ready'), true);
   const code = await readWorkflowFile(fixture.config, fixture.codeUri);
   assert.equal(code.kind, 'code');
   assert.equal(code.language, 'python');
+  assert.equal(code.locator.status, 'ready');
+  assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.match(code.etag, /^[a-f0-9]{64}$/);
+});
+
+test('list reports stale exports instead of ready locators', async () => {
+  const fixture = await createWorkflowFixture();
+  await fs.writeFile(path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.nodeId}.py`), 'print("stale")\n');
+  const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
+  const code = files.find(file => file.nodeId === fixture.nodeId);
+  assert.equal(code.locator.status, 'stale_export');
 });
 
 test('patch requires matching expectedEtag and clean target', async () => {
@@ -87,7 +98,7 @@ test('patch rejects missing expectedEtag, skipped settle and Set(raw) invalid JS
     uri: fixture.setUri,
     expectedEtag: setRead.etag,
     patch: '@@ -1 +1 @@\n-{"ok":true}\n+{bad'
-  }), /Set\(raw\) JSON is invalid/);
+  }), /Set\(raw\) content must be JSON/);
 });
 
 test('patch rejects read-after-write rollback or normalization', async () => {
@@ -119,6 +130,23 @@ test('validates Set(raw) JSON content', async () => {
   const fixture = await createWorkflowFixture();
   const valid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri });
   assert.equal(valid.valid, true);
+  assert.equal(valid.locator.node.type, 'n8n-nodes-base.set');
   const invalid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '{bad' });
   assert.equal(invalid.valid, false);
+});
+
+test('validates Set(raw) n8n expression content', async () => {
+  const fixture = await createWorkflowFixture();
+  const valid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '={{ { ok: true } }}' });
+  assert.equal(valid.valid, true);
+  assert.equal(valid.diagnostics.some(item => item.code === 'SET_RAW_EXPRESSION'), true);
+});
+
+test('reconcile reports workflow file-layer parity', async () => {
+  const fixture = await createWorkflowFixture();
+  const status = await reconcileWorkflowFiles(fixture.config, { workflowId: fixture.workflowId });
+  assert.equal(status.status, 'ready');
+  assert.equal(status.summary.ready, 2);
+  assert.equal(status.summary.missing_file, 0);
+  assert.equal(status.targets.length, 2);
 });

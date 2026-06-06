@@ -7,6 +7,7 @@ import { buildResourceUri, displayPath, relativePath, resolveTargetFile, resolve
 import { gitSummary, targetGitStatus } from './git-state.mjs';
 import { applyUnifiedPatch } from './patch.mjs';
 import { workflowIndexStatus } from './config.mjs';
+import { mimeTypeForFile, setRawSyntax, targetNodeMetadata, workflowReconcileStatus } from './workflow-metadata.mjs';
 
 const writeLocks = new Map();
 
@@ -37,12 +38,15 @@ export async function listWorkflowFiles(config, workflowId) {
     const set = entry.name.match(/^([0-9a-fA-F-]{36})\.set\.json$/);
     if (!code && !set) continue;
     const filePath = path.join(workflow.codeDir, entry.name);
+    const content = await fs.readFile(filePath, 'utf8');
     const meta = await statFile(config, filePath);
     if (set) {
-      files.push({ workflowId, nodeId: set[1], kind: 'set', uri: buildResourceUri('set', workflowId, set[1], 'set.json'), ...meta });
+      const file = { workflowId, nodeId: set[1], kind: 'set', uri: buildResourceUri('set', workflowId, set[1], 'set.json'), ...meta };
+      files.push({ ...file, locator: await targetNodeMetadata(config, { workflowId, nodeId: set[1], kind: 'set', ext: 'set.json' }, content) });
     } else {
       const ext = code[2];
-      files.push({ workflowId, nodeId: code[1], kind: 'code', language: ext === 'py' ? 'python' : 'javascript', uri: buildResourceUri('code', workflowId, code[1], ext), ...meta });
+      const file = { workflowId, nodeId: code[1], kind: 'code', language: ext === 'py' ? 'python' : 'javascript', uri: buildResourceUri('code', workflowId, code[1], ext), ...meta };
+      files.push({ ...file, locator: await targetNodeMetadata(config, { workflowId, nodeId: code[1], kind: 'code', ext }, content) });
     }
   }
   return files.sort((a, b) => a.uri.localeCompare(b.uri));
@@ -62,7 +66,7 @@ export async function listWorkflowResources(config) {
           uri: file.uri,
           name: `${file.workflowId}/${file.nodeId}`,
           title: `${file.kind === 'set' ? 'Set(raw)' : 'Code'} file ${file.nodeId}`,
-          mimeType: file.kind === 'set' || file.language === 'javascript' ? 'application/json' : 'text/x-python',
+          mimeType: mimeTypeForFile(file),
           annotations: { audience: ['assistant'], priority: 0.6 }
         });
       }
@@ -84,7 +88,7 @@ export async function readWorkflowResource(config, uri) {
     },
     contents: [{
       uri,
-      mimeType: file.kind === 'set' || file.language === 'javascript' ? 'application/json' : 'text/x-python',
+      mimeType: mimeTypeForFile(file),
       text: file.content
     }]
   };
@@ -108,6 +112,7 @@ export async function readWorkflowFile(config, uri) {
     nodeId: target.nodeId,
     kind: target.kind,
     language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined,
+    locator: await targetNodeMetadata(config, target, content),
     uri,
     content,
     ...(await statFile(config, target.filePath))
@@ -120,16 +125,17 @@ export async function validateWorkflowFile(config, { uri, content }) {
   if (!fssync.existsSync(target.filePath)) diagnostics.push({ level: 'error', code: 'FILE_NOT_FOUND', message: 'Target file does not exist' });
   const value = content ?? (fssync.existsSync(target.filePath) ? await fs.readFile(target.filePath, 'utf8') : '');
   if (target.kind === 'set') {
-    try {
-      JSON.parse(value);
-    } catch (error) {
-      diagnostics.push({ level: 'error', code: 'INVALID_SET_JSON', message: error.message });
-    }
+    const syntax = setRawSyntax(value);
+    if (syntax === 'invalid_json') diagnostics.push({ level: 'error', code: 'INVALID_SET_JSON', message: 'Set(raw) content must be JSON or an n8n expression starting with =' });
+    else diagnostics.push({ level: 'info', code: `SET_RAW_${syntax.toUpperCase()}`, message: `Set(raw) syntax: ${syntax}` });
   }
+  const locator = await targetNodeMetadata(config, target, value);
+  if (locator.status !== 'ready') diagnostics.push({ level: 'warning', code: locator.status.toUpperCase(), message: `File-layer locator status is ${locator.status}` });
   return {
     uri,
     valid: diagnostics.every(d => d.level !== 'error'),
     diagnostics,
+    locator,
     target: { workflowId: target.workflowId, nodeId: target.nodeId, kind: target.kind, relativePath: relativePath(config, target.filePath), path: displayPath(config, target.filePath) }
   };
 }
@@ -206,6 +212,10 @@ export async function filesStatus(config, args = {}) {
     result.target = { workflowId: target.workflowId, nodeId: target.nodeId, kind: target.kind, archived: target.archived, path: target.filePath, git: await targetGitStatus(config, target.filePath) };
   }
   return result;
+}
+
+export async function reconcileWorkflowFiles(config, { workflowId }) {
+  return workflowReconcileStatus(config, workflowId);
 }
 
 async function writeExistingFile(config, filePath, content, uri, expectedEtag) {
@@ -289,11 +299,8 @@ async function withTargetWriteLock(filePath, callback) {
 }
 
 function parseSetJson(content) {
-  try {
-    JSON.parse(content);
-  } catch (error) {
-    throw new ToolError(`Set(raw) JSON is invalid: ${error.message}`, 'INVALID_SET_JSON');
-  }
+  if (setRawSyntax(content) !== 'invalid_json') return;
+  throw new ToolError('Set(raw) content must be JSON or an n8n expression starting with =', 'INVALID_SET_JSON');
 }
 
 function settleResult(started, last, expectedEtag, expectedContent, settled) {

@@ -12,7 +12,7 @@ The active codebase is the lightweight `synestra-n8n-gitops-mcp` server. It is i
 
 Native n8n MCP is the source of truth for core n8n operations: workflow discovery/details/update, executions/tests, credentials, projects/folders, workflow builder, node/runtime semantics and data tables.
 
-Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: extracted Code files, Set(raw) files, ETag-protected file patching, Git/worktree checks, mount diagnostics and export/sync diagnostics.
+Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics.
 
 ## Tool Contract
 
@@ -22,8 +22,10 @@ Read-only tools are always available when authenticated:
 - `synestra_workflow_files_list`
 - `synestra_workflow_file_read`
 - `synestra_workflow_file_validate`
+- `synestra_workflow_reconcile_status`
 - `synestra_workflow_sync_observe`
 - `synestra_workflow_mount_diagnostics`
+- `synestra_workflow_export_diagnostics`
 
 Write tools are hidden and unavailable when `SYNESTRA_MCP_WRITE_POLICY=off`:
 
@@ -41,6 +43,12 @@ synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
 Targets are resolved through `workflows/.index/<workflowId>.path`; mutation fails without canonical index resolution.
+
+Important file semantics:
+
+- Code `.py` files contain Python source from `parameters.pythonCode`.
+- Code `.json` files contain JavaScript source from `parameters.jsCode`; they are not JSON documents.
+- Set `.set.json` files contain `parameters.jsonOutput` and may be strict JSON or an n8n expression string starting with `=`.
 
 ## Safety Contract
 

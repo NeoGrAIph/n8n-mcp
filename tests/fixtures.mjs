@@ -17,7 +17,29 @@ export async function createWorkflowFixture() {
   await fs.mkdir(path.join(root, '.index'), { recursive: true });
   await fs.mkdir(codeDir, { recursive: true });
   await fs.writeFile(path.join(root, '.index', `${workflowId}.path`), 'development\n');
-  await fs.writeFile(path.join(workflowDir, `${workflowId}.fixture.json`), JSON.stringify({ id: workflowId, name: 'fixture' }, null, 2));
+  await fs.writeFile(path.join(workflowDir, `${workflowId}.fixture.json`), JSON.stringify({
+    name: 'fixture',
+    workflow_id: workflowId,
+    workflow: {
+      name: 'fixture',
+      nodes: [
+        {
+          id: nodeId,
+          name: 'Python Code',
+          type: 'n8n-nodes-base.code',
+          parameters: { language: 'pythonNative', pythonCode: 'print("before")' }
+        },
+        {
+          id: setNodeId,
+          name: 'Raw Set',
+          type: 'n8n-nodes-base.set',
+          parameters: { mode: 'raw', jsonOutput: '{"ok":true}' }
+        }
+      ],
+      connections: {},
+      settings: {}
+    }
+  }, null, 2));
   await fs.writeFile(path.join(codeDir, `${nodeId}.py`), 'print("before")\n');
   await fs.writeFile(path.join(codeDir, `${setNodeId}.set.json`), '{"ok":true}\n');
   await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
