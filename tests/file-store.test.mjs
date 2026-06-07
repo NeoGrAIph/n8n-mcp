@@ -45,6 +45,23 @@ test('list reports stale exports instead of ready locators', async () => {
   assert.equal(code.locator.status, 'stale_export');
 });
 
+test('locator metadata redacts expected content on stale kind or extension mismatch', async () => {
+  const fixture = await createWorkflowFixture();
+  const workflowJson = path.join(fixture.root, 'development', `${fixture.workflowId}.fixture.json`);
+  const envelope = JSON.parse(await fs.readFile(workflowJson, 'utf8'));
+  const codeNode = envelope.workflow.nodes.find(node => node.id === fixture.nodeId);
+  codeNode.parameters = { language: 'javaScript', jsCode: 'return [{ json: { secret: "do-not-leak" } }];' };
+  await fs.writeFile(workflowJson, JSON.stringify(envelope, null, 2));
+  const code = await readWorkflowFile(fixture.config, fixture.codeUri);
+  const serialized = JSON.stringify(code);
+  assert.equal(code.locator.status, 'stale_export');
+  assert.equal(code.locator.node.expected.ext, 'json');
+  assert.equal(Object.prototype.hasOwnProperty.call(code.locator.node.expected, 'expectedContent'), false);
+  assert.equal(serialized.includes('expectedContent'), false);
+  assert.equal(serialized.includes('do-not-leak'), false);
+  assert.equal(serialized.includes('jsCode'), false);
+});
+
 test('validates Set(raw) JSON content', async () => {
   const fixture = await createWorkflowFixture();
   const valid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri });

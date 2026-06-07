@@ -93,7 +93,7 @@ export async function targetNodeMetadata(config, target, content) {
   const expected = expectedTargetForNode(target.workflowId, node);
   if (!expected) return targetStatus('unsupported_node_type', nodeSummary(node), metadata, content);
   if (expected.kind !== target.kind || expected.ext !== target.ext) {
-    return targetStatus('stale_export', { ...nodeSummary(node), expected }, metadata, content);
+    return targetStatus('stale_export', { ...nodeSummary(node), expected: stripExpectedContent(expected) }, metadata, content);
   }
   if (expected.nullPayload) {
     return {
