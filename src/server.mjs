@@ -9,7 +9,8 @@ const SERVER_INFO = { name: 'synestra-n8n-gitops-mcp', version: '0.1.0' };
 
 export function createServer(config) {
   const authToken = readAuthToken(config);
-  return http.createServer(async (req, res) => {
+  assertHttpAuthInvariant(config, authToken);
+  const server = http.createServer(async (req, res) => {
     try {
       if (req.method === 'GET' && req.url === '/health') {
         return writeJson(res, 200, { status: 'ok' });
@@ -33,6 +34,8 @@ export function createServer(config) {
       return writeJson(res, 500, { jsonrpc: '2.0', error: toJsonRpcError(error), id: null });
     }
   });
+  installListenAuthInvariant(server, config, authToken);
+  return server;
 }
 
 export async function handleJsonRpc(config, message) {
@@ -85,6 +88,37 @@ function isAuthorized(req, authToken) {
   const expected = Buffer.from(`Bearer ${authToken}`);
   const actual = Buffer.from(req.headers.authorization || '');
   return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+}
+
+function assertHttpAuthInvariant(config, authToken) {
+  if (authToken) return;
+  const host = config.host || '0.0.0.0';
+  if (config.allowUnauthenticatedLocal === true && isLocalHost(host)) return;
+  throw new Error('Unauthenticated MCP server is allowed only on local-only HOST');
+}
+
+function installListenAuthInvariant(server, config, authToken) {
+  if (authToken) return;
+  const originalListen = server.listen.bind(server);
+  server.listen = (...args) => {
+    const host = listenHost(args);
+    if (!host || !isLocalHost(host)) {
+      throw new Error('Unauthenticated MCP server listen host must be local-only');
+    }
+    return originalListen(...args);
+  };
+}
+
+function listenHost(args) {
+  const first = args[0];
+  if (first && typeof first === 'object') return first.host || '';
+  if (typeof first === 'string') return 'local-ipc';
+  if (typeof args[1] === 'string') return args[1];
+  return '';
+}
+
+function isLocalHost(host) {
+  return host === '127.0.0.1' || host === '::1' || host === 'localhost' || host === 'local-ipc';
 }
 
 function readBody(req) {

@@ -19,7 +19,7 @@ export function loadConfig(env = process.env) {
   if (!VALID_WRITE_POLICIES.has(writePolicy)) throw new Error(`Invalid SYNESTRA_MCP_WRITE_POLICY: ${writePolicy}`);
 
   const authTokenFile = env.SYNESTRA_MCP_AUTH_TOKEN_FILE ? path.resolve(expandHome(env.SYNESTRA_MCP_AUTH_TOKEN_FILE)) : '';
-  const allowUnauthenticatedLocal = readBoolean(env.SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL, false);
+  const allowUnauthenticatedLocal = readBoolean('SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL', env.SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL, false);
   if (!authTokenFile && !(allowUnauthenticatedLocal && isLocalHost(host))) {
     throw new Error('SYNESTRA_MCP_AUTH_TOKEN_FILE is required unless SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL=true and HOST is local-only');
   }
@@ -28,7 +28,7 @@ export function loadConfig(env = process.env) {
   const gitRoot = path.resolve(expandHome(env.N8N_WORKFLOWS_GIT_ROOT || env.WORKFLOWS_GIT_ROOT || root));
   return {
     host,
-    port: readInteger(env.PORT, 3000, 1, 65535),
+    port: readInteger('PORT', env.PORT, 3000, 1, 65535),
     serviceEnv,
     writePolicy,
     root,
@@ -36,11 +36,11 @@ export function loadConfig(env = process.env) {
     displayRoot: env.N8N_WORKFLOWS_DISPLAY_ROOT || env.WORKFLOWS_DISPLAY_ROOT || root,
     expectedBranch: env.SYNESTRA_MCP_EXPECTED_BRANCH || '',
     platformRepoDisplayRoot: env.SYNESTRA_PLATFORM_DISPLAY_ROOT || '~/repo/synestra-platform',
-    maxFileBytes: readInteger(env.SYNESTRA_MCP_MAX_FILE_BYTES, 262144, 1, 10 * 1024 * 1024),
-    resourceListLimit: readInteger(env.SYNESTRA_MCP_RESOURCE_LIST_LIMIT, 200, 1, 1000),
-    settleTimeoutMs: readInteger(env.SYNESTRA_MCP_SETTLE_TIMEOUT_MS, 15000, 100, 120000),
-    settleStableReads: readInteger(env.SYNESTRA_MCP_SETTLE_STABLE_READS, 2, 1, 20),
-    allowMissingIndexReadOnly: readBoolean(env.SYNESTRA_MCP_ALLOW_MISSING_INDEX_READONLY, false),
+    maxFileBytes: readInteger('SYNESTRA_MCP_MAX_FILE_BYTES', env.SYNESTRA_MCP_MAX_FILE_BYTES, 262144, 1, 10 * 1024 * 1024),
+    resourceListLimit: readInteger('SYNESTRA_MCP_RESOURCE_LIST_LIMIT', env.SYNESTRA_MCP_RESOURCE_LIST_LIMIT, 200, 1, 1000),
+    settleTimeoutMs: readInteger('SYNESTRA_MCP_SETTLE_TIMEOUT_MS', env.SYNESTRA_MCP_SETTLE_TIMEOUT_MS, 15000, 100, 120000),
+    settleStableReads: readInteger('SYNESTRA_MCP_SETTLE_STABLE_READS', env.SYNESTRA_MCP_SETTLE_STABLE_READS, 2, 1, 20),
+    allowMissingIndexReadOnly: readBoolean('SYNESTRA_MCP_ALLOW_MISSING_INDEX_READONLY', env.SYNESTRA_MCP_ALLOW_MISSING_INDEX_READONLY, false),
     allowUnauthenticatedLocal,
     authTokenFile
   };
@@ -77,16 +77,20 @@ function failToken() {
   throw new Error('SYNESTRA_MCP_AUTH_TOKEN_FILE is required');
 }
 
-function readInteger(value, defaultValue, min, max) {
+function readInteger(name, value, defaultValue, min, max) {
   if (value === undefined || value === '') return defaultValue;
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed)) return defaultValue;
+  const text = String(value);
+  if (!/^[0-9]+$/.test(text)) throw new Error(`Invalid integer value for ${name}: ${text}`);
+  const parsed = Number.parseInt(text, 10);
   return Math.max(min, Math.min(max, parsed));
 }
 
-function readBoolean(value, defaultValue) {
+function readBoolean(name, value, defaultValue) {
   if (value === undefined || value === '') return defaultValue;
-  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+  const text = String(value).toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(text)) return true;
+  if (['0', 'false', 'no', 'off'].includes(text)) return false;
+  throw new Error(`Invalid boolean value for ${name}: ${value}`);
 }
 
 function isLocalHost(host) {

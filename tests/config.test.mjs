@@ -51,3 +51,24 @@ test('config clamps resources/list page limit', () => {
   });
   assert.equal(high.resourceListLimit, 1000);
 });
+
+test('config rejects malformed integer values', () => {
+  assert.throws(() => loadConfig({
+    HOST: '127.0.0.1',
+    SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'true',
+    SYNESTRA_MCP_RESOURCE_LIST_LIMIT: '10oops'
+  }), /Invalid integer value for SYNESTRA_MCP_RESOURCE_LIST_LIMIT: 10oops/);
+
+  assert.throws(() => loadConfig({
+    HOST: '127.0.0.1',
+    SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'true',
+    PORT: '3000x'
+  }), /Invalid integer value for PORT: 3000x/);
+});
+
+test('config rejects malformed boolean values', () => {
+  assert.throws(() => loadConfig({
+    HOST: '127.0.0.1',
+    SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'tru'
+  }), /Invalid boolean value for SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: tru/);
+});

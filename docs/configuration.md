@@ -19,4 +19,6 @@ Runtime environment:
 - `SYNESTRA_MCP_SETTLE_STABLE_READS`: number of stable ETag reads required for observe, default `2`, clamped to `1..20`.
 - `SYNESTRA_PLATFORM_DISPLAY_ROOT`: optional display path used only in production-readiness handoff commands, default `~/repo/synestra-platform`.
 
+Numeric environment values must be unsigned integer strings. Boolean environment values must be one of `1`, `true`, `yes`, `on`, `0`, `false`, `no`, `off`. Valid out-of-range integers are clamped as documented; malformed numeric or boolean values fail startup.
+
 The main MCP server is read-only. Use normal filesystem tools for approved dev edits after locator/parity checks pass.

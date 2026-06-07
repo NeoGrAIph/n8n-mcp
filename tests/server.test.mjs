@@ -298,6 +298,50 @@ test('HTTP MCP endpoint enforces Bearer auth without leaking diagnostics', async
   }
 });
 
+test('HTTP server rejects unauthenticated non-local manual config', async () => {
+  const fixture = await createWorkflowFixture();
+  assert.throws(() => createServer({
+    ...fixture.config,
+    host: '0.0.0.0',
+    authTokenFile: '',
+    allowUnauthenticatedLocal: true
+  }), /Unauthenticated MCP server is allowed only on local-only HOST/);
+});
+
+test('HTTP server allows unauthenticated local-only manual config', async () => {
+  const fixture = await createWorkflowFixture();
+  const server = createServer({
+    ...fixture.config,
+    host: '127.0.0.1',
+    authTokenFile: '',
+    allowUnauthenticatedLocal: true
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const port = server.address().port;
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} })
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).result.serverInfo.name, 'synestra-n8n-gitops-mcp');
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
+test('HTTP server rejects unauthenticated non-local listen override', async () => {
+  const fixture = await createWorkflowFixture();
+  const server = createServer({
+    ...fixture.config,
+    host: '127.0.0.1',
+    authTokenFile: '',
+    allowUnauthenticatedLocal: true
+  });
+  assert.throws(() => server.listen(0, '0.0.0.0'), /Unauthenticated MCP server listen host must be local-only/);
+});
+
 test('resources/list and resources/read expose workflow file locators without source content', async () => {
   const fixture = await createWorkflowFixture();
   const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 4, method: 'resources/list', params: {} });

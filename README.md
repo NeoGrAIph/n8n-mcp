@@ -68,12 +68,16 @@ Do not put native n8n MCP tokens or Synestra MCP tokens into gateway adapter rec
 Required runtime settings:
 
 - `N8N_WORKFLOWS_ROOT`: mounted workflow files root.
+- `N8N_WORKFLOWS_GIT_ROOT`: Git worktree root used only for Git status diagnostics.
 - `N8N_WORKFLOWS_DISPLAY_ROOT`: human-readable display root for diagnostics.
 - `SYNESTRA_MCP_ENV`: `dev` or `prod`.
 - `SYNESTRA_MCP_WRITE_POLICY`: must be `off`.
-- `SYNESTRA_MCP_AUTH_TOKEN_FILE`: file containing the Bearer token.
+- `SYNESTRA_MCP_AUTH_TOKEN_FILE`: file containing the Bearer token; required for non-local binds.
+- `SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL`: local development escape hatch for local-only `HOST`; never use in platform deployment.
 - `SYNESTRA_MCP_EXPECTED_BRANCH`: optional diagnostic context for Git status output; it does not enable writes.
 - `SYNESTRA_PLATFORM_DISPLAY_ROOT`: optional display path for platform readiness handoff commands, default `~/repo/synestra-platform`.
+
+Numeric environment values must be unsigned integer strings. Boolean environment values must use documented true/false literals; malformed values fail startup.
 
 ## Development
 
