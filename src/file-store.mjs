@@ -19,6 +19,8 @@ export async function statFile(config, filePath) {
     etag: sha256(buffer),
     size: stats.size,
     lastModified: stats.mtime.toISOString(),
+    filesystemPath: displayPath(config, filePath),
+    containerPath: filePath,
     relativePath: relativePath(config, filePath),
     path: displayPath(config, filePath)
   };
@@ -75,18 +77,19 @@ export async function listWorkflowResources(config) {
 }
 
 export async function readWorkflowResource(config, uri) {
-  const file = await readWorkflowFile(config, uri);
+  const file = await locateWorkflowFile(config, uri);
   return {
     _meta: {
       etag: file.etag,
       size: file.size,
       lastModified: file.lastModified,
-      relativePath: file.relativePath
+      relativePath: file.relativePath,
+      filesystemPath: file.filesystemPath
     },
     contents: [{
       uri,
-      mimeType: mimeTypeForFile(file),
-      text: file.content
+      mimeType: 'application/json',
+      text: JSON.stringify(file, null, 2)
     }]
   };
 }
@@ -98,7 +101,7 @@ export async function exportDiagnostics(config) {
   };
 }
 
-export async function readWorkflowFile(config, uri) {
+export async function locateWorkflowFile(config, uri) {
   const target = await resolveTargetFile(config, uri);
   if (!fssync.existsSync(target.filePath)) throw new ToolError(`File not found for URI: ${uri}`, 'FILE_NOT_FOUND', 404);
   const stats = await fs.stat(target.filePath);
@@ -111,10 +114,11 @@ export async function readWorkflowFile(config, uri) {
     language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined,
     locator: await targetNodeMetadata(config, target, content),
     uri,
-    content,
     ...(await statFile(config, target.filePath))
   };
 }
+
+export const readWorkflowFile = locateWorkflowFile;
 
 export async function validateWorkflowFile(config, { uri, content }) {
   const target = await resolveTargetFile(config, uri);
@@ -148,11 +152,11 @@ export async function observeWorkflowFile(config, { uri, expectedEtag, expectedC
     stableReads = last.etag === previousEtag ? stableReads + 1 : 1;
     previousEtag = last.etag;
     if (stableReads >= config.settleStableReads) {
-      return settleResult(started, last, expectedEtag, expectedContent, true);
+      return settleResult(config, uri, started, last, expectedEtag, expectedContent, true);
     }
     await sleep(250);
   }
-  return settleResult(started, last, expectedEtag, expectedContent, false);
+  return settleResult(config, uri, started, last, expectedEtag, expectedContent, false);
 }
 
 export async function mountDiagnostics(config) {
@@ -189,8 +193,8 @@ export async function reconcileWorkflowFiles(config, { workflowId }) {
   return workflowReconcileStatus(config, workflowId);
 }
 
-function settleResult(started, last, expectedEtag, expectedContent, settled) {
-  const contentMatches = expectedContent === undefined || last?.content === expectedContent;
+async function settleResult(config, uri, started, last, expectedEtag, expectedContent, settled) {
+  const contentMatches = expectedContent === undefined || await workflowFileContentMatches(config, uri, expectedContent);
   return {
     settled,
     elapsedMs: Date.now() - started,
@@ -199,6 +203,12 @@ function settleResult(started, last, expectedEtag, expectedContent, settled) {
     etagMatches: expectedEtag === undefined || last?.etag === expectedEtag,
     normalized: expectedContent !== undefined && !contentMatches
   };
+}
+
+async function workflowFileContentMatches(config, uri, expectedContent) {
+  const target = await resolveTargetFile(config, uri);
+  if (!fssync.existsSync(target.filePath)) return false;
+  return await fs.readFile(target.filePath, 'utf8') === expectedContent;
 }
 
 async function listDebeziumOffsetFiles(config) {

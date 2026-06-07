@@ -2,6 +2,8 @@
 
 Native n8n MCP owns core n8n operations. This server exposes only Synestra GitOps/file locator, parity and diagnostics tools for extracted workflow files. File edits are performed by normal filesystem tools outside MCP.
 
+This server does not return Code/Set(raw) source content. `synestra_workflow_file_read` is a compatibility name for locator metadata: it returns `filesystemPath`, `containerPath`, `relativePath`, `uri`, `etag`, `kind`, `language` and locator status. `resources/read` returns the same locator metadata as JSON text, not the underlying workflow file payload.
+
 Read-only tools:
 
 - `synestra_workflow_files_status`
@@ -24,6 +26,7 @@ synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 Locator semantics:
 
 - A `ready` locator status means the file exists in the canonical `.index` path and matches a supported node in the workflow JSON projection.
+- `filesystemPath` is the path for external filesystem tools. `containerPath` is the MCP service mount path and is diagnostic-only for host-side editing.
 - `missing_file`, `stale_export`, `missing_workflow_json`, `invalid_workflow_json`, `missing_node`, `unsupported_node_type`, `null_set_raw_payload` and `ambiguous_index` are not safe file-edit targets.
 - Code `.json` resources are JavaScript source files from `parameters.jsCode`, not JSON documents.
 - Set(raw) resources may contain strict JSON or n8n expression content starting with `=`.

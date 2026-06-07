@@ -47,6 +47,21 @@ test('tools/call returns workflow reconcile status', async () => {
   assert.equal(result.result.structuredContent.summary.missing_file, 0);
 });
 
+test('tools/call file_read returns locator metadata without source content', async () => {
+  const fixture = await createWorkflowFixture();
+  const result = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 38,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_file_read', arguments: { uri: fixture.codeUri } }
+  });
+  const file = result.result.structuredContent;
+  assert.equal(file.uri, fixture.codeUri);
+  assert.equal(file.locator.status, 'ready');
+  assert.equal(Object.prototype.hasOwnProperty.call(file, 'content'), false);
+  assert.match(file.filesystemPath, /code_nodes_/);
+});
+
 test('tools/call validates arguments against published schemas', async () => {
   const fixture = await createWorkflowFixture();
   const unknown = await handleJsonRpc(fixture.config, {
@@ -155,14 +170,20 @@ test('HTTP notification-only requests return no content', async () => {
   }
 });
 
-test('resources/list and resources/read expose workflow file resources', async () => {
+test('resources/list and resources/read expose workflow file locators without source content', async () => {
   const fixture = await createWorkflowFixture();
   const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 4, method: 'resources/list', params: {} });
   assert.equal(list.result.resources.length, 2);
   assert.equal(list.result.resources.some(resource => resource.uri === fixture.codeUri), true);
   const read = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 5, method: 'resources/read', params: { uri: fixture.codeUri } });
   assert.equal(read.result.contents[0].uri, fixture.codeUri);
-  assert.equal(read.result.contents[0].text, 'print("before")\n');
+  const locator = JSON.parse(read.result.contents[0].text);
+  assert.equal(locator.uri, fixture.codeUri);
+  assert.equal(locator.kind, 'code');
+  assert.equal(locator.locator.status, 'ready');
+  assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
+  assert.match(locator.filesystemPath, /code_nodes_/);
+  assert.notEqual(read.result.contents[0].text, 'print("before")\n');
   assert.match(read.result._meta.etag, /^[a-f0-9]{64}$/);
 });
 

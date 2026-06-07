@@ -14,6 +14,8 @@ Native n8n MCP is the source of truth for core n8n operations: workflow discover
 
 Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics. Editing is done by normal filesystem tools after the MCP locator/parity checks pass; this server does not publish MCP write tools.
 
+The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language` and locator status, then use normal filesystem tools to inspect or edit the file.
+
 ## Tool Contract
 
 Read-only tools are always available when authenticated:
@@ -38,6 +40,8 @@ synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
 Targets are resolved through `workflows/.index/<workflowId>.path`. A file is an edit candidate only when the returned locator status is `ready`.
+
+`filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
 Important file semantics:
 

@@ -4,7 +4,7 @@ import { ToolError } from './errors.mjs';
 export const toolDefinitions = [
   tool('synestra_workflow_files_status', 'Return read-only GitOps status for workflow file mounts, .index and optional target URI.', true, { uri: stringProperty(512) }),
   tool('synestra_workflow_files_list', 'List existing Code and Set(raw) files for one workflow resolved through workflows/.index.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
-  tool('synestra_workflow_file_read', 'Read one existing Code or Set(raw) file by Synestra workflow resource URI and return content plus ETag.', true, { uri: stringProperty(512) }, ['uri']),
+  tool('synestra_workflow_file_read', 'Locate one existing Code or Set(raw) file by Synestra workflow resource URI and return filesystem path, ETag and locator status without file content.', true, { uri: stringProperty(512) }, ['uri']),
   tool('synestra_workflow_file_validate', 'Validate an existing or proposed Code/Set(raw) file payload without writing it.', true, { uri: stringProperty(512), content: stringProperty(262144) }, ['uri']),
   tool('synestra_workflow_reconcile_status', 'Return read-only file-layer parity for one workflow: workflow JSON, .index, Code files and Set(raw) files.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
   tool('synestra_workflow_sync_observe', 'Observe a workflow file after an external filesystem edit and report ETag/content settle status.', true, { uri: stringProperty(512), expectedEtag: etagProperty(), expectedContent: stringProperty(262144), timeoutMs: { type: 'integer', minimum: 100, maximum: 120000 } }, ['uri']),

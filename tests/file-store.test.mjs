@@ -15,6 +15,9 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.equal(code.language, 'python');
   assert.equal(code.locator.status, 'ready');
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
+  assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
+  assert.match(code.filesystemPath, /code_nodes_/);
+  assert.match(code.containerPath, /code_nodes_/);
   assert.match(code.etag, /^[a-f0-9]{64}$/);
 });
 
