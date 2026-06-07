@@ -1,16 +1,8 @@
 # Safety Contract
 
-The default mode is read-only: `SYNESTRA_MCP_WRITE_POLICY=off`.
+The MCP server is read-only: `SYNESTRA_MCP_WRITE_POLICY=off`.
 
-Production writes are not supported in v1. Dev writes require:
-
-- explicit write policy;
-- canonical `.index/<workflowId>.path` resolution;
-- `expectedEtag`;
-- expected branch checks;
-- clean Git worktree and clean target file;
-- atomic write;
-- read-after-write settle.
+Production writes are not supported in v1. Dev edits are performed by normal filesystem tools only after the MCP locator/parity status for that exact workflow/node is `ready`; after the edit, re-check with read-only validation or reconcile tools.
 
 Unauthenticated `/health` returns only `{ "status": "ok" }`. Detailed diagnostics are MCP tools behind Bearer auth.
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 
 const VALID_ENVS = new Set(['dev', 'prod']);
-const VALID_WRITE_POLICIES = new Set(['off', 'patch', 'patch_replace']);
+const VALID_WRITE_POLICIES = new Set(['off']);
 
 export function expandHome(value) {
   if (!value || value === '~') return value === '~' ? os.homedir() : value;
@@ -17,7 +17,6 @@ export function loadConfig(env = process.env) {
   if (!VALID_ENVS.has(serviceEnv)) throw new Error(`Invalid SYNESTRA_MCP_ENV: ${serviceEnv}`);
   const writePolicy = env.SYNESTRA_MCP_WRITE_POLICY || 'off';
   if (!VALID_WRITE_POLICIES.has(writePolicy)) throw new Error(`Invalid SYNESTRA_MCP_WRITE_POLICY: ${writePolicy}`);
-  if (serviceEnv === 'prod' && writePolicy !== 'off') throw new Error('Prod deployment must start with SYNESTRA_MCP_WRITE_POLICY=off');
 
   const authTokenFile = env.SYNESTRA_MCP_AUTH_TOKEN_FILE ? path.resolve(expandHome(env.SYNESTRA_MCP_AUTH_TOKEN_FILE)) : '';
   const allowUnauthenticatedLocal = readBoolean(env.SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL, false);
@@ -47,10 +46,8 @@ export function loadConfig(env = process.env) {
 
 export function assertStartupConfig(config) {
   if (!fs.existsSync(config.root) || !fs.statSync(config.root).isDirectory()) throw new Error(`N8N_WORKFLOWS_ROOT is not a directory: ${config.root}`);
-  if (config.writePolicy !== 'off' && (!fs.existsSync(config.gitRoot) || !fs.statSync(config.gitRoot).isDirectory())) throw new Error(`N8N_WORKFLOWS_GIT_ROOT is not a directory: ${config.gitRoot}`);
   const index = workflowIndexStatus(config);
   if (!index.exists && !index.degradedReadOnly) throw new Error(`Workflow index directory is missing: ${index.path}`);
-  if (config.writePolicy !== 'off' && !config.expectedBranch) throw new Error('SYNESTRA_MCP_EXPECTED_BRANCH is required when file writes are enabled');
   if (config.authTokenFile && (!fs.existsSync(config.authTokenFile) || !fs.statSync(config.authTokenFile).isFile())) throw new Error(`SYNESTRA_MCP_AUTH_TOKEN_FILE is not readable: ${config.authTokenFile}`);
   if (config.authTokenFile && fs.readFileSync(config.authTokenFile, 'utf8').trim() === '') throw new Error('SYNESTRA_MCP_AUTH_TOKEN_FILE must not be empty');
 }

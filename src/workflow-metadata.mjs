@@ -9,7 +9,7 @@ export const PYTHON_CODE_MIME = 'text/x-python';
 export const SET_RAW_MIME = 'application/json';
 
 export async function loadWorkflowMetadata(config, workflowId) {
-  const workflow = await resolveWorkflowDir(config, workflowId, { allowArchived: true });
+  const workflow = await resolveWorkflowDir(config, workflowId, { allowArchived: true, requireWorkflowJson: false });
   const workflowJson = await findWorkflowJson(workflow.workflowDir, workflowId);
   if (!workflowJson) {
     return { ...workflow, workflowJson: null, envelope: null, workflowData: null, nodes: [], targets: [], status: 'missing_workflow_json' };
@@ -44,14 +44,14 @@ export async function workflowReconcileStatus(config, workflowId) {
     nodeCount: metadata.nodes.length,
     supportedNodeCount: metadata.targets.length,
     targets: [],
-    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0 }
+    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0, missing_workflow_json: 0, invalid_workflow_json: 0, null_set_raw_payload: 0 }
   };
   if (metadata.error) result.error = metadata.error;
   for (const target of metadata.targets) {
     const fileName = target.kind === 'set' ? `${target.nodeId}.set.json` : `${target.nodeId}.${target.ext}`;
     const filePath = path.join(metadata.codeDir, fileName);
     const file = await fileStatus(config, filePath, target.expectedContent);
-    const status = file.exists ? (file.normalizedHashMatches ? 'ready' : 'stale_export') : 'missing_file';
+    const status = target.nullPayload ? 'null_set_raw_payload' : (file.exists ? (file.normalizedHashMatches ? 'ready' : 'stale_export') : 'missing_file');
     result.summary[status] += 1;
     result.targets.push({
       ...target,
@@ -69,12 +69,22 @@ export async function workflowReconcileStatus(config, workflowId) {
 
 export async function targetNodeMetadata(config, target, content) {
   const metadata = await loadWorkflowMetadata(config, target.workflowId);
+  if (metadata.status !== 'ready') return targetStatus(metadata.status, null, metadata, content);
   const node = metadata.nodes.find(item => item && item.id === target.nodeId);
   if (!node) return targetStatus('missing_node', null, metadata, content);
   const expected = expectedTargetForNode(target.workflowId, node);
   if (!expected) return targetStatus('unsupported_node_type', nodeSummary(node), metadata, content);
   if (expected.kind !== target.kind || expected.ext !== target.ext) {
     return targetStatus('stale_export', { ...nodeSummary(node), expected }, metadata, content);
+  }
+  if (expected.nullPayload) {
+    return {
+      status: 'null_set_raw_payload',
+      node: nodeSummary(node),
+      expected: stripExpectedContent(expected),
+      workflow: workflowSummary(metadata),
+      normalizedExpectedEtag: null
+    };
   }
   const normalizedHash = hashWithTrailingLf(expected.expectedContent);
   return {
@@ -130,6 +140,7 @@ function expectedTargetForNode(workflowId, node) {
     };
   }
   if (node.type === 'n8n-nodes-base.set' && node.parameters?.mode === 'raw') {
+    const rawOutput = node.parameters?.jsonOutput;
     return {
       workflowId,
       nodeId: node.id,
@@ -138,8 +149,9 @@ function expectedTargetForNode(workflowId, node) {
       kind: 'set',
       mode: 'raw',
       ext: 'set.json',
-      setRawSyntax: setRawSyntax(node.parameters?.jsonOutput || ''),
-      expectedContent: node.parameters?.jsonOutput || ''
+      setRawSyntax: rawOutput == null ? 'null' : setRawSyntax(rawOutput),
+      nullPayload: rawOutput == null,
+      expectedContent: rawOutput == null ? '' : rawOutput
     };
   }
   return null;

@@ -14,11 +14,13 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   assert.equal(tools.result.tools.length, 8);
   assert.equal(tools.result.tools.some(tool => tool.name === 'update_workflow'), false);
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
+  assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_file_replace'), false);
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_reconcile_status'), true);
   assert.equal(tools.result.tools.every(tool => tool.inputSchema.additionalProperties === false), true);
   const writeTools = await handleJsonRpc({ ...fixture.config, writePolicy: 'patch_replace' }, { jsonrpc: '2.0', id: 22, method: 'tools/list', params: {} });
-  assert.equal(writeTools.result.tools.length, 10);
-  assert.equal(writeTools.result.tools.find(tool => tool.name === 'synestra_workflow_file_replace').annotations.destructiveHint, true);
+  assert.equal(writeTools.result.tools.length, 8);
+  assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
+  assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_replace'), false);
 });
 
 test('tools/call list returns workflow files', async () => {
@@ -74,19 +76,19 @@ test('tools/call validates arguments against published schemas', async () => {
   assert.equal(badType.error.data.code, 'INVALID_TOOL_ARGUMENTS');
   assert.match(badType.error.message, /timeoutMs must be an integer/);
 
-  const badPattern = await handleJsonRpc({ ...fixture.config, writePolicy: 'patch' }, {
+  const badPattern = await handleJsonRpc(fixture.config, {
     jsonrpc: '2.0',
     id: 34,
     method: 'tools/call',
-    params: { name: 'synestra_workflow_file_patch', arguments: { uri: fixture.codeUri, patch: 'x', expectedEtag: 'bad' } }
+    params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedEtag: 'bad' } }
   });
   assert.equal(badPattern.error.data.code, 'INVALID_TOOL_ARGUMENTS');
   assert.match(badPattern.error.message, /expectedEtag does not match required pattern/);
 });
 
-test('tools/call refuses write tools that are hidden by read-only config', async () => {
+test('tools/call refuses write tools in every config', async () => {
   const fixture = await createWorkflowFixture();
-  const result = await handleJsonRpc(fixture.config, {
+  const result = await handleJsonRpc({ ...fixture.config, writePolicy: 'patch_replace' }, {
     jsonrpc: '2.0',
     id: 35,
     method: 'tools/call',
@@ -98,22 +100,20 @@ test('tools/call refuses write tools that are hidden by read-only config', async
 
 test('tools/call returns tool execution failures as MCP tool errors', async () => {
   const fixture = await createWorkflowFixture();
-  const result = await handleJsonRpc({ ...fixture.config, writePolicy: 'patch' }, {
+  const result = await handleJsonRpc(fixture.config, {
     jsonrpc: '2.0',
     id: 36,
     method: 'tools/call',
     params: {
-      name: 'synestra_workflow_file_patch',
+      name: 'synestra_workflow_file_read',
       arguments: {
-        uri: fixture.codeUri,
-        patch: '@@ -1 +1 @@\n-print("before")\n+print("after")',
-        expectedEtag: '0'.repeat(64)
+        uri: `synestra-n8n-workflows:///code/${fixture.workflowId}/00000000-0000-0000-0000-000000000000.py`
       }
     }
   });
   assert.equal(result.error, undefined);
   assert.equal(result.result.isError, true);
-  assert.equal(result.result.structuredContent.error.code, 'ETAG_MISMATCH');
+  assert.equal(result.result.structuredContent.error.code, 'FILE_NOT_FOUND');
 });
 
 test('JSON-RPC notifications do not produce response bodies', async () => {

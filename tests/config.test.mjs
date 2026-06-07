@@ -4,12 +4,12 @@ import { test } from 'node:test';
 import { assertStartupConfig, loadConfig } from '../src/config.mjs';
 import { createWorkflowFixture } from './fixtures.mjs';
 
-test('prod config refuses write policy', () => {
+test('runtime config refuses write policy', () => {
   assert.throws(() => loadConfig({
-    SYNESTRA_MCP_ENV: 'prod',
+    SYNESTRA_MCP_ENV: 'dev',
     SYNESTRA_MCP_WRITE_POLICY: 'patch',
     SYNESTRA_MCP_AUTH_TOKEN_FILE: '/tmp/token'
-  }), /Prod deployment/);
+  }), /Invalid SYNESTRA_MCP_WRITE_POLICY/);
 });
 
 test('network config requires token file by default', () => {
@@ -23,11 +23,6 @@ test('startup allows missing index only in explicit read-only degraded mode', as
   assert.doesNotThrow(() => assertStartupConfig(degraded));
   const fatal = { ...fixture.config, writePolicy: 'off', allowMissingIndexReadOnly: false };
   assert.throws(() => assertStartupConfig(fatal), /Workflow index directory is missing/);
-});
-
-test('startup requires expected branch when writes are enabled', async () => {
-  const fixture = await createWorkflowFixture();
-  assert.throws(() => assertStartupConfig({ ...fixture.config, writePolicy: 'patch', expectedBranch: '' }), /SYNESTRA_MCP_EXPECTED_BRANCH is required/);
 });
 
 test('config supports separate workflow git root for planned write rollouts', () => {

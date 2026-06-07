@@ -12,7 +12,7 @@ The active codebase is the lightweight `synestra-n8n-gitops-mcp` server. It is i
 
 Native n8n MCP is the source of truth for core n8n operations: workflow discovery/details/update, executions/tests, credentials, projects/folders, workflow builder, node/runtime semantics and data tables.
 
-Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics.
+Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics. Editing is done by normal filesystem tools after the MCP locator/parity checks pass; this server does not publish MCP write tools.
 
 ## Tool Contract
 
@@ -27,11 +27,6 @@ Read-only tools are always available when authenticated:
 - `synestra_workflow_mount_diagnostics`
 - `synestra_workflow_export_diagnostics`
 
-Write tools are hidden and unavailable when `SYNESTRA_MCP_WRITE_POLICY=off`:
-
-- `synestra_workflow_file_patch`
-- `synestra_workflow_file_replace`
-
 ## Resource URIs
 
 The server uses Synestra workflow file URIs:
@@ -42,7 +37,7 @@ synestra-n8n-workflows:///code/{workflowId}/{nodeId}.json
 synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
-Targets are resolved through `workflows/.index/<workflowId>.path`; mutation fails without canonical index resolution.
+Targets are resolved through `workflows/.index/<workflowId>.path`. A file is an edit candidate only when the returned locator status is `ready`.
 
 Important file semantics:
 
@@ -52,7 +47,7 @@ Important file semantics:
 
 ## Safety Contract
 
-Production writes are not supported in v1. Dev writes are disabled by default and require an explicit write policy, canonical `.index/<workflowId>.path` resolution, `expectedEtag`, expected branch checks, clean Git state and read-after-write settle.
+Production writes are not supported in v1, and the main MCP contract is read-only. Use normal filesystem tools for approved dev edits, then re-check the file with `synestra_workflow_file_validate`, `synestra_workflow_sync_observe` or `synestra_workflow_reconcile_status`.
 
 Do not put native n8n MCP tokens or Synestra MCP tokens into gateway adapter records, command arguments, logs or plaintext env stored by a control plane. Use SOPS/Kubernetes Secret backed files or an equivalent secret-backed injection path.
 
@@ -63,9 +58,9 @@ Required runtime settings:
 - `N8N_WORKFLOWS_ROOT`: mounted workflow files root.
 - `N8N_WORKFLOWS_DISPLAY_ROOT`: human-readable display root for diagnostics.
 - `SYNESTRA_MCP_ENV`: `dev` or `prod`.
-- `SYNESTRA_MCP_WRITE_POLICY`: `off`, `patch`, or `patch_replace`.
+- `SYNESTRA_MCP_WRITE_POLICY`: must be `off`.
 - `SYNESTRA_MCP_AUTH_TOKEN_FILE`: file containing the Bearer token.
-- `SYNESTRA_MCP_EXPECTED_BRANCH`: required branch for write-enabled dev runs.
+- `SYNESTRA_MCP_EXPECTED_BRANCH`: optional diagnostic context for future dev-only write-smoke procedures.
 
 ## Development
 

@@ -48,7 +48,7 @@ export function assertNodeId(nodeId) {
   if (!NODE_ID_RE.test(String(nodeId || ''))) throw new ToolError(`Invalid nodeId: ${nodeId}`, 'INVALID_NODE_ID');
 }
 
-export async function resolveWorkflowDir(config, workflowId, { allowArchived = false } = {}) {
+export async function resolveWorkflowDir(config, workflowId, { allowArchived = false, requireWorkflowJson = true } = {}) {
   assertWorkflowId(workflowId);
   const rootReal = await fs.realpath(config.root);
   const indexPath = path.join(rootReal, '.index', `${workflowId}.path`);
@@ -64,7 +64,7 @@ export async function resolveWorkflowDir(config, workflowId, { allowArchived = f
   if (!fssync.existsSync(workflowDir)) throw new ToolError(`Workflow directory from index does not exist: ${folderRel || '.'}`, 'STALE_INDEX');
   const dirReal = await fs.realpath(workflowDir);
   assertContainedPath(rootReal, dirReal, 'Workflow directory realpath escapes root');
-  await assertWorkflowJsonExists(dirReal, workflowId);
+  if (requireWorkflowJson) await assertWorkflowJsonExists(dirReal, workflowId);
   const codeDir = await resolveCodeDir(rootReal, dirReal, workflowId);
   return {
     rootReal,

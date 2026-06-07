@@ -5,11 +5,8 @@ import path from 'node:path';
 import { ToolError } from './errors.mjs';
 import { buildResourceUri, displayPath, relativePath, resolveTargetFile, resolveWorkflowDir } from './path-resolver.mjs';
 import { gitSummary, targetGitStatus } from './git-state.mjs';
-import { applyUnifiedPatch } from './patch.mjs';
 import { workflowIndexStatus } from './config.mjs';
 import { mimeTypeForFile, setRawSyntax, targetNodeMetadata, workflowReconcileStatus } from './workflow-metadata.mjs';
-
-const writeLocks = new Map();
 
 export function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
@@ -28,7 +25,7 @@ export async function statFile(config, filePath) {
 }
 
 export async function listWorkflowFiles(config, workflowId) {
-  const workflow = await resolveWorkflowDir(config, workflowId);
+  const workflow = await resolveWorkflowDir(config, workflowId, { requireWorkflowJson: false });
   if (!fssync.existsSync(workflow.codeDir)) return [];
   const entries = await fs.readdir(workflow.codeDir, { withFileTypes: true });
   const files = [];
@@ -140,32 +137,6 @@ export async function validateWorkflowFile(config, { uri, content }) {
   };
 }
 
-export async function patchWorkflowFile(config, { uri, patch, expectedEtag, waitForSettle = true }) {
-  const target = await resolveTargetFile(config, uri, { requireNoDuplicateCodeDir: true });
-  return withTargetWriteLock(target.filePath, async () => {
-    assertPatchWriteAllowed(config, expectedEtag, waitForSettle);
-    const current = await readWorkflowFile(config, uri);
-    await assertCleanTarget(config, target.filePath);
-    if (current.etag !== expectedEtag) throw new ToolError('ETag mismatch: file has changed', 'ETAG_MISMATCH', 409);
-    const updated = applyUnifiedPatch(current.content, patch);
-    if (target.kind === 'set') parseSetJson(updated);
-    return writeExistingFile(config, target.filePath, updated, uri, expectedEtag);
-  });
-}
-
-export async function replaceWorkflowFile(config, { uri, content, expectedEtag, waitForSettle = true }) {
-  if (config.writePolicy !== 'patch_replace') throw new ToolError('Replace writes require SYNESTRA_MCP_WRITE_POLICY=patch_replace', 'WRITE_POLICY_DENIED');
-  const target = await resolveTargetFile(config, uri, { requireNoDuplicateCodeDir: true });
-  return withTargetWriteLock(target.filePath, async () => {
-    assertWriteBaseAllowed(config, expectedEtag, waitForSettle);
-    const current = await readWorkflowFile(config, uri);
-    await assertCleanTarget(config, target.filePath);
-    if (current.etag !== expectedEtag) throw new ToolError('ETag mismatch: file has changed', 'ETAG_MISMATCH', 409);
-    if (target.kind === 'set') parseSetJson(content);
-    return writeExistingFile(config, target.filePath, content, uri, expectedEtag);
-  });
-}
-
 export async function observeWorkflowFile(config, { uri, expectedEtag, expectedContent, timeoutMs }) {
   const started = Date.now();
   const timeout = Math.min(Math.max(Number(timeoutMs || config.settleTimeoutMs), 100), 120000);
@@ -216,91 +187,6 @@ export async function filesStatus(config, args = {}) {
 
 export async function reconcileWorkflowFiles(config, { workflowId }) {
   return workflowReconcileStatus(config, workflowId);
-}
-
-async function writeExistingFile(config, filePath, content, uri, expectedEtag) {
-  if (!fssync.existsSync(filePath)) throw new ToolError('Target file does not exist; create semantics are disabled', 'FILE_NOT_FOUND', 404);
-  if (Buffer.byteLength(content, 'utf8') > config.maxFileBytes) throw new ToolError(`Content exceeds max size: ${config.maxFileBytes}`, 'FILE_TOO_LARGE');
-  const temp = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${Date.now()}.tmp`);
-  const handle = await fs.open(temp, 'wx', 0o600);
-  try {
-    await handle.writeFile(content, 'utf8');
-    await handle.sync();
-  } finally {
-    await handle.close();
-  }
-  if (config.beforeRenameForTest) await config.beforeRenameForTest(filePath);
-  const preRename = await statFile(config, filePath);
-  if (preRename.etag !== expectedEtag) {
-    await fs.unlink(temp).catch(() => {});
-    throw new ToolError('ETag mismatch: file changed before atomic rename', 'ETAG_MISMATCH', 409);
-  }
-  await fs.rename(temp, filePath);
-  if (config.afterRenameForTest) await config.afterRenameForTest(filePath);
-  await syncDirectory(path.dirname(filePath));
-  const meta = await statFile(config, filePath);
-  const settle = await observeWorkflowFile(config, { uri, expectedEtag: meta.etag, expectedContent: content });
-  if (!settle.settled || !settle.etagMatches || !settle.contentMatches) {
-    throw new ToolError('Workflow file did not settle to the written content', 'WRITE_SETTLE_MISMATCH', 409, { settle });
-  }
-  return { uri, ...meta, settle };
-}
-
-async function syncDirectory(dirPath) {
-  let fd;
-  try {
-    fd = fssync.openSync(dirPath, 'r');
-    fssync.fsyncSync(fd);
-  } catch {
-    return;
-  } finally {
-    if (fd !== undefined) fssync.closeSync(fd);
-  }
-}
-
-function assertPatchWriteAllowed(config, expectedEtag, waitForSettle) {
-  if (config.writePolicy !== 'patch' && config.writePolicy !== 'patch_replace') throw new ToolError('Patch writes require SYNESTRA_MCP_WRITE_POLICY=patch or patch_replace', 'WRITE_POLICY_DENIED');
-  assertWriteBaseAllowed(config, expectedEtag, waitForSettle);
-}
-
-function assertWriteBaseAllowed(config, expectedEtag, waitForSettle) {
-  if (config.serviceEnv !== 'dev') throw new ToolError('File writes are dev-only in v1', 'WRITE_POLICY_DENIED');
-  if (!expectedEtag) throw new ToolError('expectedEtag is mandatory for file writes', 'EXPECTED_ETAG_REQUIRED');
-  if (!config.expectedBranch) throw new ToolError('SYNESTRA_MCP_EXPECTED_BRANCH is required for file writes', 'EXPECTED_BRANCH_REQUIRED');
-  if (waitForSettle === false) throw new ToolError('waitForSettle=false is not allowed for file writes', 'WRITE_SETTLE_REQUIRED');
-}
-
-async function assertCleanTarget(config, filePath) {
-  const summary = await gitSummary(config);
-  if (!summary.available) throw new ToolError('Git status is unavailable; refusing write in GitOps mode', 'GIT_STATUS_UNAVAILABLE', 409);
-  if (summary.branch !== config.expectedBranch) throw new ToolError('Current branch does not match SYNESTRA_MCP_EXPECTED_BRANCH; refusing write', 'BRANCH_MISMATCH', 409, { expectedBranch: config.expectedBranch, actualBranch: summary.branch });
-  if (summary.dirty) throw new ToolError('Workflow Git worktree is dirty; refusing write in GitOps mode', 'DIRTY_WORKTREE', 409, { dirtyCount: summary.dirtyCount, dirtyByKind: summary.dirtyByKind });
-  const status = await targetGitStatus(config, filePath);
-  if (!status.available) throw new ToolError('Git status is unavailable; refusing write in GitOps mode', 'GIT_STATUS_UNAVAILABLE', 409);
-  if (status.dirty) throw new ToolError('Target file has git changes; refusing write', 'DIRTY_TARGET', 409, { status: status.status });
-}
-
-async function withTargetWriteLock(filePath, callback) {
-  const key = path.resolve(filePath);
-  const previous = writeLocks.get(key) || Promise.resolve();
-  let release;
-  const current = new Promise(resolve => {
-    release = resolve;
-  });
-  const chained = previous.catch(() => {}).then(() => current);
-  writeLocks.set(key, chained);
-  await previous.catch(() => {});
-  try {
-    return await callback();
-  } finally {
-    release();
-    if (writeLocks.get(key) === chained) writeLocks.delete(key);
-  }
-}
-
-function parseSetJson(content) {
-  if (setRawSyntax(content) !== 'invalid_json') return;
-  throw new ToolError('Set(raw) content must be JSON or an n8n expression starting with =', 'INVALID_SET_JSON');
 }
 
 function settleResult(started, last, expectedEtag, expectedContent, settled) {
