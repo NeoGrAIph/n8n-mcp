@@ -91,7 +91,10 @@ test('tools/call list returns workflow files', async () => {
   assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
   assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
   assert.equal(result.result.structuredContent.files[0].editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
 });
 
 test('tools/call returns workflow reconcile status', async () => {
@@ -459,8 +462,11 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
   assert.equal(locator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(locator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
+  assert.equal(locator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
+  assert.equal(locator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
   assert.equal(locator.editReadiness.requiredPlatformFields.includes('nextActions'), true);
   assert.equal(locator.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
+  assert.equal(locator.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.match(locator.filesystemPath, /code_nodes_/);
@@ -484,7 +490,10 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(setLocator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
   assert.equal(setLocator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
+  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
+  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
   assert.equal(setLocator.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
+  assert.equal(setLocator.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
   assert.equal(Object.prototype.hasOwnProperty.call(setLocator, 'content'), false);
   assertNoSourceLeak(setLocator);
   assert.equal(setRead.result.contents[0].text.includes('{"ok":true}'), false);

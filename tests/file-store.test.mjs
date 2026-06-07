@@ -29,14 +29,20 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
     'editReadiness.localLocatorReady=true',
     'editReadiness.effectiveDecision=requires-platform-preflight',
     'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
+    'filesystemToolGuard.exactTargetGatePresent=true',
     'fileLayerSafety.effectiveDecision=go',
     'fileLayerSafety.externalFileEditAllowed=true',
-    'fileLayerSafety.blockers=[]'
+    'fileLayerSafety.blockers=[]',
+    'fileLayerSafety.n8nDbContract.status=verified'
   ]);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('nextActions'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.synestraMcpBridge'), true);
   assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
+  assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
+  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.n8nDbContract.status!=verified'), true);
   assert.match(code.editReadiness.message, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
@@ -186,14 +192,23 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.handoff.workflowIdRequiredForRenderPreview, true);
   assert.equal(diagnostics.productionReadiness.handoff.nextAction, 'run-platform-readiness-gates');
   assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /locator\.status is ready/);
-  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
+  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /exact-target gate/);
+  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /sampled aggregate locator is not enough/);
   assert.deepEqual(diagnostics.productionReadiness.handoff.usePlatformPreflightFields, [
     'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+    'filesystemToolGuard.globalExternalEditPrerequisitesMet',
+    'filesystemToolGuard.exactTargetGateRequired',
+    'filesystemToolGuard.exactTargetGatePresent',
     'filesystemToolGuard.failedChecks',
     'filesystemToolGuard.checks',
+    'filesystemToolGuard.blockerMatrix',
     'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
     'fileLayerSafety.blockers',
+    'fileLayerSafety.blockerEvidence',
+    'fileLayerSafety.targetReadinessGap',
+    'fileLayerSafety.n8nDbContract.status',
+    'fileLayerSafety.n8nDbContract.schemaFingerprint',
     'externalFileEditAllowed',
     'nextActions',
     'nextActionSummary',
@@ -218,10 +233,18 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.deepEqual(aggregate.requiredFor, ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']);
   assert.deepEqual(aggregate.requiredFields, [
     'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+    'filesystemToolGuard.globalExternalEditPrerequisitesMet',
+    'filesystemToolGuard.exactTargetGateRequired',
+    'filesystemToolGuard.exactTargetGatePresent',
     'filesystemToolGuard.failedChecks',
     'filesystemToolGuard.checks',
+    'filesystemToolGuard.blockerMatrix',
     'fileLayerSafety.effectiveDecision',
-    'fileLayerSafety.blockers'
+    'fileLayerSafety.blockers',
+    'fileLayerSafety.n8nDbContract.status',
+    'fileLayerSafety.n8nDbContract.schemaFingerprint',
+    'fileLayerSafety.blockerEvidence',
+    'fileLayerSafety.targetReadinessGap'
   ]);
   assert.match(aggregate.noGoSignals.join('\n'), /filesystemToolGuard\.finalExternalFilesystemEditAllowed=false/);
   assert.match(aggregate.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_two_mcp_production_readiness\.sh --env dev /);
@@ -237,6 +260,10 @@ test('export diagnostics require platform preflight for production readiness', a
     'applyForbiddenReasons',
     'nextActions',
     'nextActionSummary',
+    'targetReadinessGap',
+    'blockerEvidence',
+    'n8nDbContract.status',
+    'n8nDbContract.schemaFingerprint',
     'dbFilesBackfillDryRun.dirtyArtifactSafety',
     'debeziumCdcFreshness.status',
     'debeziumLogRisk.overallStatus'
