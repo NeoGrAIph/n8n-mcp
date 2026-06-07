@@ -136,14 +136,20 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.ready, false);
   assert.equal(diagnostics.productionReadiness.decision, 'requires-platform-preflight');
   assert.equal(diagnostics.camelK.availableInContainer, false);
-  assert.equal(
-    diagnostics.productionReadiness.requiredChecks.some(check => check.name === 'camel-k-db-files-recovery-preflight'),
-    true
-  );
-  assert.equal(
-    diagnostics.productionReadiness.requiredChecks.some(check => check.command.includes('preflight_n8n_camelk_recovery.sh --env dev --json')),
-    true
-  );
+  const byName = new Map(diagnostics.productionReadiness.requiredChecks.map(check => [check.name, check]));
+  const aggregate = byName.get('n8n-split-mcp-production-readiness');
+  assert.equal(aggregate.readOnly, true);
+  assert.deepEqual(aggregate.requiredFor, ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']);
+  assert.match(aggregate.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_two_mcp_production_readiness\.sh --env dev /);
+  assert.match(aggregate.command, /--native-token-file '<secure-native-token-file>'/);
+  assert.match(aggregate.command, /--safe-workflow-id '<disposable-or-known-safe-workflow-id>'/);
+  assert.match(aggregate.command, / --json$/);
+  const camelK = byName.get('camel-k-db-files-recovery-preflight');
+  assert.equal(camelK.readOnly, true);
+  assert.match(camelK.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/preflight_n8n_camelk_recovery\.sh --env dev --json$/);
+  const classifier = byName.get('n8n-recovery-candidate-classifier');
+  assert.equal(classifier.readOnly, true);
+  assert.match(classifier.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/classify_n8n_recovery_candidates\.sh --env dev --json$/);
   assert.equal(JSON.stringify(diagnostics).includes('print("before")'), false);
   assert.equal(JSON.stringify(diagnostics).includes('{"ok":true}'), false);
 });

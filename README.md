@@ -16,7 +16,7 @@ Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n 
 
 The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language` and locator status, then use normal filesystem tools to inspect or edit the file.
 
-`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for platform Camel K/DB-to-files gates. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
+`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight and recovery candidate classifier. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
 
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
@@ -89,4 +89,5 @@ Relevant platform docs:
 - `~/repo/synestra-platform/docs/reference/mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/synestra-n8n-gitops-mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/mcp-gateway.md`
+- `~/repo/synestra-platform/docs/runbooks/mcp/n8n-two-mcp-production-readiness.md`
 - `docs/architecture-boundary.md`

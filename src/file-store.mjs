@@ -386,9 +386,15 @@ function localLocatorReadiness(local) {
 }
 
 function platformReadinessChecks(config) {
-  const repo = config.platformRepoDisplayRoot || '~/repo/synestra-platform';
+  const repo = shellQuote(config.platformRepoDisplayRoot || '~/repo/synestra-platform');
   const env = config.serviceEnv || 'dev';
   return [
+    {
+      name: 'n8n-split-mcp-production-readiness',
+      command: `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
+      readOnly: true,
+      requiredFor: ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']
+    },
     {
       name: 'native-n8n-mcp-service-local-acceptance',
       command: `cd ${repo} && scripts/mcp/accept_native_n8n_mcp_service_local.sh --env ${env} --safe-workflow-id '<disposable-or-known-safe-workflow-id>'`,
@@ -406,8 +412,18 @@ function platformReadinessChecks(config) {
       command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --json`,
       readOnly: true,
       requiredFor: ['production-file-layer-readiness']
+    },
+    {
+      name: 'n8n-recovery-candidate-classifier',
+      command: `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
+      readOnly: true,
+      requiredFor: ['recovery-planning', 'db-files-risk-inventory']
     }
   ];
+}
+
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
 
 function sleep(ms) {

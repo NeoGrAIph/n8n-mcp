@@ -37,6 +37,7 @@ Locator semantics:
 - Validation and observe tools may accept proposed content for comparison, but they must not echo that content back in `structuredContent`.
 - `synestra_workflow_file_validate.valid` is a safety gate: it is true only when the payload syntax is valid and the locator is safe to edit. Use `validSyntax` for syntax-only results and `safeToEdit` for file-layer edit eligibility.
 - `synestra_workflow_export_diagnostics` returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.decision=requires-platform-preflight`, and read-only platform handoff commands. It must not claim production readiness from local MCP state alone.
-- Camel K, Debezium slot/publication and n8n DB-to-files parity are platform gates. They are checked through `~/repo/synestra-platform/scripts/mcp/preflight_n8n_camelk_recovery.sh`, not from inside this MCP container.
+- The primary production gate is `~/repo/synestra-platform/scripts/mcp/audit_n8n_two_mcp_production_readiness.sh`, which combines native n8n MCP service-local acceptance, gateway hardening and Camel K/DB-to-files preflight checks.
+- Camel K, Debezium slot/publication and n8n DB-to-files parity are platform gates. They are checked through `~/repo/synestra-platform/scripts/mcp/preflight_n8n_camelk_recovery.sh`; recovery planning uses `~/repo/synestra-platform/scripts/mcp/classify_n8n_recovery_candidates.sh`. Neither command runs from inside this MCP container.
 
 Controlled errors use JSON-RPC error `data.code` values such as `FILE_NOT_FOUND`, `FILE_TOO_LARGE`, `DUPLICATE_CODE_DIR`, `ARCHIVED_TARGET`, `INVALID_SET_JSON`, and `INVALID_TOOL_ARGUMENTS`.
