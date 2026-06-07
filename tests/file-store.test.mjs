@@ -222,7 +222,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.effectiveDecision is no-go/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
-  assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --json$/);
+  assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[1], /preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[3], /--workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
   assert.match(diagnostics.productionReadiness.handoff.forbiddenActions.join('\n'), /Do not copy render preview artifacts/);

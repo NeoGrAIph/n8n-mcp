@@ -600,7 +600,7 @@ function platformReadinessHandoff(config) {
     ],
     usePlatformRenderWhenNoGo: 'If filesystemToolGuard.finalExternalFilesystemEditAllowed is false, exactTargetGatePresent is false, Camel K/DB/files preflight is no-go, fileLayerSafety.effectiveDecision is no-go, n8nDbContract is not verified, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
-      `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
+      `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json`,
       `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
       `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
       `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`
