@@ -25,7 +25,7 @@ test('startup allows missing index only in explicit read-only degraded mode', as
   assert.throws(() => assertStartupConfig(fatal), /Workflow index directory is missing/);
 });
 
-test('config supports separate workflow git root for planned write rollouts', () => {
+test('config supports separate workflow git root for diagnostics', () => {
   const config = loadConfig({
     HOST: '127.0.0.1',
     SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'true',

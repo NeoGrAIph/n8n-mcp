@@ -2,7 +2,7 @@
 
 Native n8n MCP owns core n8n operations. This server exposes only Synestra GitOps/file locator, parity and diagnostics tools for extracted workflow files. File edits are performed by normal filesystem tools outside MCP.
 
-This server does not return Code/Set(raw) source content. `synestra_workflow_file_read` is a compatibility name for locator metadata: it returns `filesystemPath`, `containerPath`, `relativePath`, `uri`, `etag`, `kind`, `language` and locator status. `resources/read` returns the same locator metadata as JSON text, not the underlying workflow file payload.
+This server does not return Code/Set(raw) source content. `synestra_workflow_file_read` is a compatibility name for locator metadata: it returns `filesystemPath`, `containerPath`, `relativePath`, `uri`, `etag`, `kind`, `language` and locator status. `resources/read` returns the same locator metadata as JSON text with `mimeType: application/json`, not the underlying workflow file payload. `resources/list` may advertise the target file MIME type to help clients understand the external file kind, but `resources/read` is always a locator JSON payload.
 
 Read-only tools:
 
@@ -30,5 +30,6 @@ Locator semantics:
 - `missing_file`, `stale_export`, `missing_workflow_json`, `invalid_workflow_json`, `nodes_empty`, `missing_node`, `unsupported_node_type`, `null_set_raw_payload` and `ambiguous_index` are not safe file-edit targets.
 - Code `.json` resources are JavaScript source files from `parameters.jsCode`, not JSON documents.
 - Set(raw) resources may contain strict JSON or n8n expression content starting with `=`.
+- Validation and observe tools may accept proposed content for comparison, but they must not echo that content back in `structuredContent`.
 
 Controlled errors use JSON-RPC error `data.code` values such as `FILE_NOT_FOUND`, `FILE_TOO_LARGE`, `DUPLICATE_CODE_DIR`, `ARCHIVED_TARGET`, `INVALID_SET_JSON`, and `INVALID_TOOL_ARGUMENTS`.

@@ -8,3 +8,4 @@ This repository contains only the Synestra n8n GitOps/file MCP extension. Legacy
 - [Safety Contract](./safety-contract.md)
 - [Configuration](./configuration.md)
 - [Platform Deployment](./platform-deployment.md)
+- [Architecture Boundary](./architecture-boundary.md)

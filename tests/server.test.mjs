@@ -12,7 +12,21 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   assert.equal(init.result.serverInfo.name, 'synestra-n8n-gitops-mcp');
   const tools = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   assert.equal(tools.result.tools.length, 8);
-  assert.equal(tools.result.tools.some(tool => tool.name === 'update_workflow'), false);
+  const absentNativeOrWriteTools = [
+    'update_workflow',
+    'create_workflow',
+    'get_workflow_details',
+    'search_workflows',
+    'search_executions',
+    'list_credentials',
+    'search_nodes',
+    'get_node_types',
+    'synestra_workflow_file_patch',
+    'synestra_workflow_file_replace'
+  ];
+  for (const name of absentNativeOrWriteTools) {
+    assert.equal(tools.result.tools.some(tool => tool.name === name), false);
+  }
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_file_replace'), false);
   assert.equal(tools.result.tools.some(tool => tool.name === 'synestra_workflow_reconcile_status'), true);
@@ -113,6 +127,28 @@ test('tools/call refuses write tools in every config', async () => {
   assert.match(result.error.message, /Unknown or unavailable tool/);
 });
 
+test('tools/call validate and observe do not echo proposed file content', async () => {
+  const fixture = await createWorkflowFixture();
+  const proposedContent = 'SYNESTRA_DO_NOT_ECHO_PROPOSED_CONTENT';
+  const validate = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 39,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_file_validate', arguments: { uri: fixture.codeUri, content: proposedContent } }
+  });
+  assert.equal(validate.error, undefined);
+  assert.equal(JSON.stringify(validate.result.structuredContent).includes(proposedContent), false);
+
+  const observe = await handleJsonRpc({ ...fixture.config, settleStableReads: 1 }, {
+    jsonrpc: '2.0',
+    id: 40,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContent: proposedContent, timeoutMs: 100 } }
+  });
+  assert.equal(observe.error, undefined);
+  assert.equal(JSON.stringify(observe.result.structuredContent).includes(proposedContent), false);
+});
+
 test('tools/call returns tool execution failures as MCP tool errors', async () => {
   const fixture = await createWorkflowFixture();
   const result = await handleJsonRpc(fixture.config, {
@@ -175,8 +211,12 @@ test('resources/list and resources/read expose workflow file locators without so
   const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 4, method: 'resources/list', params: {} });
   assert.equal(list.result.resources.length, 2);
   assert.equal(list.result.resources.some(resource => resource.uri === fixture.codeUri), true);
+  const listedCode = list.result.resources.find(resource => resource.uri === fixture.codeUri);
+  assert.equal(listedCode.mimeType, 'text/x-python');
   const read = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 5, method: 'resources/read', params: { uri: fixture.codeUri } });
   assert.equal(read.result.contents[0].uri, fixture.codeUri);
+  assert.equal(read.result.contents[0].mimeType, 'application/json');
+  assert.notEqual(read.result.contents[0].mimeType, listedCode.mimeType);
   const locator = JSON.parse(read.result.contents[0].text);
   assert.equal(locator.uri, fixture.codeUri);
   assert.equal(locator.kind, 'code');
