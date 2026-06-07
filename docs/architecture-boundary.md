@@ -29,7 +29,7 @@ The server is read-only. It must not expose native/core n8n tools and must not e
 
 ## Filesystem Tools
 
-Approved dev edits are performed by normal filesystem tools, not by this MCP server. A file is an edit candidate only when locator or reconcile status for the exact workflow/node is `ready`. After an edit, use read-only validation, observe or reconcile calls to verify the result.
+Approved dev edits are performed by normal filesystem tools, not by this MCP server. A file is a local path candidate only when locator or reconcile status for the exact workflow/node is `ready`; final external-edit permission also requires the platform file-layer gate to return `fileLayerSafety.effectiveDecision=go` and `externalFileEditAllowed=true`. After an edit, use read-only validation, observe or reconcile calls to verify the result.
 
 Production writes are outside the v1 contract.
 

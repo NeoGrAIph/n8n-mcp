@@ -21,4 +21,4 @@ Runtime environment:
 
 Numeric environment values must be unsigned integer strings. Boolean environment values must be one of `1`, `true`, `yes`, `on`, `0`, `false`, `no`, `off`. Valid out-of-range integers are clamped as documented; malformed numeric or boolean values fail startup.
 
-The main MCP server is read-only. Use normal filesystem tools for approved dev edits after locator/parity checks pass.
+The main MCP server is read-only. Use normal filesystem tools for approved dev edits after locator/parity checks pass and the platform file-layer gate returns go.

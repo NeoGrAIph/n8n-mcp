@@ -12,7 +12,7 @@ Returns workflow status, summary counts and target-level statuses. Common unsafe
 
 ## Safety
 
-No Code/Set(raw) source content is returned. Use this tool before any external filesystem edit; only exact target statuses of `ready` are file-layer edit candidates.
+No Code/Set(raw) source content is returned. Use this tool before any external filesystem edit; only exact target statuses of `ready` are local file-layer candidates, and final edit permission still requires the platform file-layer gate to return go.
 
 ## Example
 

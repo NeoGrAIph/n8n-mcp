@@ -11,10 +11,15 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
   assert.equal(files.length, 2);
   assert.equal(files.every(file => file.locator.status === 'ready'), true);
+  assert.equal(files.every(file => file.editReadiness.localLocatorReady === true), true);
+  assert.equal(files.every(file => file.editReadiness.effectiveDecision === 'requires-platform-preflight'), true);
   const code = await readWorkflowFile(fixture.config, fixture.codeUri);
   assert.equal(code.kind, 'code');
   assert.equal(code.language, 'python');
   assert.equal(code.locator.status, 'ready');
+  assert.equal(code.editReadiness.localLocatorReady, true);
+  assert.equal(code.editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(code.editReadiness.platformPreflightRequired, true);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
   assert.match(code.filesystemPath, /code_nodes_/);
@@ -43,6 +48,9 @@ test('list reports stale exports instead of ready locators', async () => {
   const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
   const code = files.find(file => file.nodeId === fixture.nodeId);
   assert.equal(code.locator.status, 'stale_export');
+  assert.equal(code.editReadiness.localLocatorReady, false);
+  assert.equal(code.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(code.editReadiness.platformPreflightRequired, true);
 });
 
 test('locator metadata redacts expected content on stale kind or extension mismatch', async () => {
@@ -68,6 +76,8 @@ test('validates Set(raw) JSON content', async () => {
   assert.equal(valid.valid, true);
   assert.equal(valid.validSyntax, true);
   assert.equal(valid.safeToEdit, true);
+  assert.equal(valid.safeToEditScope, 'local-locator-only');
+  assert.equal(valid.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(valid.locator.node.type, 'n8n-nodes-base.set');
   const invalid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '{bad' });
   assert.equal(invalid.valid, false);

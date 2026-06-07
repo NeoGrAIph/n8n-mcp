@@ -81,6 +81,10 @@ test('tools/call list returns workflow files', async () => {
   });
   assert.equal(result.result.structuredContent.files.length, 2);
   assert.equal(result.result.structuredContent.files[0].locator.status, 'ready');
+  assert.equal(result.result.structuredContent.files[0].editReadiness.localLocatorReady, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(result.result.structuredContent.files[0].editReadiness.platformPreflightRequired, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.externalEditAllowed, null);
 });
 
 test('tools/call returns workflow reconcile status', async () => {
@@ -110,8 +114,57 @@ test('tools/call file_read returns locator metadata without source content', asy
   const file = result.result.structuredContent;
   assert.equal(file.uri, fixture.codeUri);
   assert.equal(file.locator.status, 'ready');
+  assert.equal(file.editReadiness.localLocatorReady, true);
+  assert.equal(file.editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(file.editReadiness.platformPreflightRequired, true);
   assert.equal(Object.prototype.hasOwnProperty.call(file, 'content'), false);
   assert.match(file.filesystemPath, /code_nodes_/);
+});
+
+test('public locator paths report unsafe editReadiness for stale exports', async () => {
+  const fixture = await createWorkflowFixture();
+  const stalePath = path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.nodeId}.py`);
+  await fs.writeFile(stalePath, 'print("stale")\n');
+
+  const list = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 53,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_files_list', arguments: { workflowId: fixture.workflowId } }
+  });
+  const listed = list.result.structuredContent.files.find(file => file.uri === fixture.codeUri);
+  assert.equal(listed.locator.status, 'stale_export');
+  assert.equal(listed.editReadiness.localLocatorReady, false);
+  assert.equal(listed.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(listed.editReadiness.platformPreflightRequired, true);
+
+  const read = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 54,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_file_read', arguments: { uri: fixture.codeUri } }
+  });
+  assert.equal(read.result.structuredContent.locator.status, 'stale_export');
+  assert.equal(read.result.structuredContent.editReadiness.localLocatorReady, false);
+  assert.equal(read.result.structuredContent.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(read.result.structuredContent.editReadiness.platformPreflightRequired, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(read.result.structuredContent, 'content'), false);
+  assertNoSourceLeak(read.result.structuredContent);
+
+  const resource = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 55,
+    method: 'resources/read',
+    params: { uri: fixture.codeUri }
+  });
+  const locator = JSON.parse(resource.result.contents[0].text);
+  assert.equal(locator.locator.status, 'stale_export');
+  assert.equal(locator.editReadiness.localLocatorReady, false);
+  assert.equal(locator.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(locator.editReadiness.platformPreflightRequired, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
+  assertNoSourceLeak(locator);
+  assert.equal(resource.result.contents[0].text.includes('print("stale")'), false);
 });
 
 test('all read-only tool outputs omit workflow source markers', async () => {
@@ -201,6 +254,10 @@ test('tools/call validate and observe do not echo proposed file content', async 
   assert.equal(validate.error, undefined);
   assertNoSourceLeak(validate.result.structuredContent);
   assert.equal(JSON.stringify(validate.result.structuredContent).includes(proposedContent), false);
+  assert.equal(validate.result.structuredContent.safeToEditScope, 'local-locator-only');
+  assert.equal(validate.result.structuredContent.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(validate.result.structuredContent.editReadiness.localLocatorReady, false);
+  assert.equal(validate.result.structuredContent.editReadiness.platformPreflightRequired, true);
 
   const observe = await handleJsonRpc({ ...fixture.config, settleStableReads: 1 }, {
     jsonrpc: '2.0',
@@ -366,6 +423,9 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.uri, fixture.codeUri);
   assert.equal(locator.kind, 'code');
   assert.equal(locator.locator.status, 'ready');
+  assert.equal(locator.editReadiness.localLocatorReady, true);
+  assert.equal(locator.editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(locator.editReadiness.platformPreflightRequired, true);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.match(locator.filesystemPath, /code_nodes_/);
@@ -380,6 +440,9 @@ test('resources/list and resources/read expose workflow file locators without so
   const setLocator = JSON.parse(setRead.result.contents[0].text);
   assert.equal(setLocator.kind, 'set');
   assert.equal(setLocator.locator.status, 'ready');
+  assert.equal(setLocator.editReadiness.localLocatorReady, true);
+  assert.equal(setLocator.editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(setLocator.editReadiness.platformPreflightRequired, true);
   assert.equal(Object.prototype.hasOwnProperty.call(setLocator, 'content'), false);
   assertNoSourceLeak(setLocator);
   assert.equal(setRead.result.contents[0].text.includes('{"ok":true}'), false);

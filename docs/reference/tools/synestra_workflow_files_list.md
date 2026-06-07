@@ -8,11 +8,11 @@ List extracted Code and Set(raw) files for one workflow resolved through `workfl
 
 ## Output
 
-Returns `files`, sorted by URI. Each item is an existing extracted Code or Set(raw) file from the workflow code directory and includes resource URI, kind, language for Code files, path metadata, ETag and locator status.
+Returns `files`, sorted by URI. Each item is an existing extracted Code or Set(raw) file from the workflow code directory and includes resource URI, kind, language for Code files, path metadata, ETag, locator status and `editReadiness`.
 
 ## Safety
 
-No file source content is returned. This is an existing-files list, not a complete expected-target inventory: missing Code/Set(raw) files do not appear here. Use `synestra_workflow_reconcile_status` for missing target counts and workflow-level parity. Archived workflow paths are rejected as controlled errors.
+No file source content is returned. This is an existing-files list, not a complete expected-target inventory: missing Code/Set(raw) files do not appear here. Use `synestra_workflow_reconcile_status` for missing target counts and workflow-level parity. Archived workflow paths are rejected as controlled errors. A ready local locator allows path inspection; external edits still require the platform file-layer gate to return `go`.
 
 ## Example
 

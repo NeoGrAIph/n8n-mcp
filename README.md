@@ -12,13 +12,13 @@ The active codebase is the lightweight `synestra-n8n-gitops-mcp` server. It is i
 
 Native n8n MCP is the source of truth for core n8n operations: workflow discovery/details/update, executions/tests, credentials, projects/folders, workflow builder, node/runtime semantics and data tables.
 
-Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics. Editing is done by normal filesystem tools after the MCP locator/parity checks pass; this server does not publish MCP write tools.
+Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n MCP does not cover: locating extracted Code files, locating Set(raw) files, reporting file-layer parity, Git/worktree checks, mount diagnostics and export/sync diagnostics. Editing is done by normal filesystem tools only after the MCP locator/parity checks pass and the platform Camel K/DB/files gate returns go; this server does not publish MCP write tools.
 
-The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language` and locator status, then use normal filesystem tools to inspect or edit the file.
+The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language`, locator status and `editReadiness`, then use normal filesystem tools to inspect the file. External edits require both local locator readiness and platform approval.
 
 `synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight, recovery candidate classifier and isolated DB snapshot render preview. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
 
-The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain file paths only when locator status is ready; otherwise run platform preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
+The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain inspectable file paths only when locator status is ready; require platform `go` before edits, otherwise run platform preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
 
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
@@ -45,7 +45,7 @@ synestra-n8n-workflows:///code/{workflowId}/{nodeId}.json
 synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
-Targets are resolved through `workflows/.index/<workflowId>.path`. A file is an edit candidate only when the returned locator status is `ready`.
+Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a local path candidate only when the returned locator status is `ready`; final external-edit permission requires the platform file-layer gate to return `fileLayerSafety.effectiveDecision=go` and `externalFileEditAllowed=true`.
 
 `filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
@@ -57,7 +57,7 @@ Important file semantics:
 
 ## Safety Contract
 
-Production writes are not supported in v1, and the main MCP contract is read-only. Use normal filesystem tools for approved dev edits, then re-check the file with `synestra_workflow_file_validate`, `synestra_workflow_sync_observe` or `synestra_workflow_reconcile_status`.
+Production writes are not supported in v1, and the main MCP contract is read-only. Use normal filesystem tools for approved dev edits only after both local locator readiness and platform approval, then re-check the file with `synestra_workflow_file_validate`, `synestra_workflow_sync_observe` or `synestra_workflow_reconcile_status`.
 
 DB snapshot render previews are separate platform recovery artifacts, not MCP file writes. They must be created with an explicit reviewed workflow id and remain outside `~/repo/n8n-workflows/*`.
 

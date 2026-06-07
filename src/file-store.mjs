@@ -41,11 +41,13 @@ export async function listWorkflowFiles(config, workflowId) {
     const meta = await statFile(config, filePath);
     if (set) {
       const file = { workflowId, nodeId: set[1], kind: 'set', uri: buildResourceUri('set', workflowId, set[1], 'set.json'), ...meta };
-      files.push({ ...file, locator: await targetNodeMetadata(config, { workflowId, nodeId: set[1], kind: 'set', ext: 'set.json' }, content) });
+      const locator = await targetNodeMetadata(config, { workflowId, nodeId: set[1], kind: 'set', ext: 'set.json' }, content);
+      files.push({ ...file, locator, editReadiness: externalEditReadiness(config, locator) });
     } else {
       const ext = code[2];
       const file = { workflowId, nodeId: code[1], kind: 'code', language: ext === 'py' ? 'python' : 'javascript', uri: buildResourceUri('code', workflowId, code[1], ext), ...meta };
-      files.push({ ...file, locator: await targetNodeMetadata(config, { workflowId, nodeId: code[1], kind: 'code', ext }, content) });
+      const locator = await targetNodeMetadata(config, { workflowId, nodeId: code[1], kind: 'code', ext }, content);
+      files.push({ ...file, locator, editReadiness: externalEditReadiness(config, locator) });
     }
   }
   return files.sort((a, b) => a.uri.localeCompare(b.uri));
@@ -192,7 +194,7 @@ export async function exportDiagnostics(config) {
     ],
     forbiddenActions: [
       'Do not treat MCP /health or tools/list as DB-to-files parity proof',
-      'Do not edit files whose locator status is not ready',
+      'Do not edit files whose locator status is not ready or whose platform file-layer gate is not go',
       'Do not use MCP diagnostics as permission for DB writes, Argo sync, workflow restart or files-to-API backfill'
     ],
     camelK: {
@@ -209,12 +211,14 @@ export async function locateWorkflowFile(config, uri) {
   const stats = await fs.stat(target.filePath);
   if (stats.size > config.maxFileBytes) throw new ToolError(`File exceeds max size: ${stats.size} > ${config.maxFileBytes}`, 'FILE_TOO_LARGE');
   const content = await fs.readFile(target.filePath, 'utf8');
+  const locator = await targetNodeMetadata(config, target, content);
   return {
     workflowId: target.workflowId,
     nodeId: target.nodeId,
     kind: target.kind,
     language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined,
-    locator: await targetNodeMetadata(config, target, content),
+    locator,
+    editReadiness: externalEditReadiness(config, locator),
     uri,
     ...(await statFile(config, target.filePath))
   };
@@ -239,14 +243,51 @@ export async function validateWorkflowFile(config, { uri, content }) {
   const locator = await targetNodeMetadata(config, target, value);
   const safeToEdit = locator.status === 'ready';
   if (!safeToEdit) diagnostics.push({ level: 'error', code: 'UNSAFE_LOCATOR_STATUS', locatorStatus: locator.status, message: `File-layer locator status is ${locator.status}` });
+  const editReadiness = externalEditReadiness(config, locator);
   return {
     uri,
     valid: validSyntax && safeToEdit,
     validSyntax,
     safeToEdit,
+    safeToEditScope: 'local-locator-only',
+    editReadiness,
     diagnostics,
     locator,
     target: { workflowId: target.workflowId, nodeId: target.nodeId, kind: target.kind, relativePath: relativePath(config, target.filePath), path: displayPath(config, target.filePath) }
+  };
+}
+
+function externalEditReadiness(config, locator) {
+  const localLocatorReady = locator?.status === 'ready';
+  return {
+    localLocatorReady,
+    localLocatorStatus: locator?.status || 'unknown',
+    localDecision: localLocatorReady ? 'locator-ready' : 'unsafe-locator',
+    effectiveDecision: localLocatorReady ? 'requires-platform-preflight' : 'no-go',
+    platformPreflightRequired: true,
+    externalEditAllowed: null,
+    sourceOfTruth: 'synestra-platform',
+    platformRepo: config.platformRepoDisplayRoot || '~/repo/synestra-platform',
+    requiredPlatformFields: [
+      'fileLayerSafety.effectiveDecision',
+      'fileLayerSafety.blockers',
+      'externalFileEditAllowed',
+      'dbFilesBackfillDryRun.dirtyArtifactSafety',
+      'debeziumCdcFreshness.status',
+      'debeziumLogRisk.overallStatus',
+      'applyForbiddenReasons'
+    ],
+    noGoSignals: [
+      'fileLayerSafety.effectiveDecision=no-go',
+      'externalFileEditAllowed=false',
+      'applyForbiddenReasons is non-empty',
+      'dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true',
+      'debeziumCdcFreshness.status=active_blocker|inconclusive|historical_blocker',
+      'debeziumLogRisk.overallStatus=active_blocker|inconclusive|historical_blocker'
+    ],
+    message: localLocatorReady
+      ? 'This MCP proved only the local file locator. Inspecting the filesystemPath is allowed; external edits require a go decision from the platform Camel K/DB/files readiness gate.'
+      : 'External edits are forbidden because the local file locator is not ready.'
   };
 }
 
@@ -465,7 +506,7 @@ function platformReadinessHandoff(config) {
     mcpMustNotWriteWorkflow: true,
     workflowIdRequiredForRenderPreview: true,
     nextAction: 'run-platform-readiness-gates',
-    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag, then inspect or edit with normal filesystem tools only when locator.status is ready.',
+    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. Inspecting the file with normal filesystem tools is allowed when locator.status is ready; external edits also require platform fileLayerSafety.effectiveDecision=go and externalFileEditAllowed=true.',
     usePlatformPreflightFields: [
       'fileLayerSafety.effectiveDecision',
       'fileLayerSafety.blockers',
