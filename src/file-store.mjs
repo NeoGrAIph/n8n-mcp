@@ -413,7 +413,25 @@ function platformReadinessChecks(config) {
       command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
       readOnly: true,
       requiredFor: ['production-file-layer-readiness'],
-      notes: ['Use --json instead of --summary-json for incident analysis or evidence archiving']
+      requiredFields: [
+        'decision',
+        'externalFileEditAllowed',
+        'applyForbiddenReasons',
+        'dbFilesBackfillDryRun.dirtyArtifactSafety',
+        'debeziumCdcFreshness.status',
+        'debeziumLogRisk.overallStatus'
+      ],
+      noGoSignals: [
+        'externalFileEditAllowed=false',
+        'dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true',
+        'debeziumCdcFreshness.status=active_blocker|inconclusive|historical_blocker',
+        'applyForbiddenReasons is non-empty'
+      ],
+      notes: [
+        'Use --json instead of --summary-json for incident analysis or evidence archiving',
+        'Docs-only dirty artifacts are review noise; DB workflow dirty artifacts remain hard blockers through dirtyArtifactSafety',
+        'A fresh Debezium problem log inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC is an active blocker; the exporter must have a quiet window before the signal can age into historical triage'
+      ]
     },
     {
       name: 'n8n-recovery-candidate-classifier',
@@ -448,7 +466,16 @@ function platformReadinessHandoff(config) {
     workflowIdRequiredForRenderPreview: true,
     nextAction: 'run-platform-readiness-gates',
     useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag, then inspect or edit with normal filesystem tools only when locator.status is ready.',
-    usePlatformRenderWhenNoGo: 'If Camel K/DB/files preflight is no-go or the locator is missing/stale/null, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
+    usePlatformPreflightFields: [
+      'fileLayerSafety.effectiveDecision',
+      'fileLayerSafety.blockers',
+      'externalFileEditAllowed',
+      'dbFilesBackfillDryRun.dirtyArtifactSafety',
+      'debeziumCdcFreshness.status',
+      'debeziumLogRisk.overallStatus',
+      'applyForbiddenReasons'
+    ],
+    usePlatformRenderWhenNoGo: 'If Camel K/DB/files preflight is no-go, fileLayerSafety.effectiveDecision is no-go, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
       `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
       `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,

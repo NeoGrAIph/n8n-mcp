@@ -158,6 +158,17 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.handoff.workflowIdRequiredForRenderPreview, true);
   assert.equal(diagnostics.productionReadiness.handoff.nextAction, 'run-platform-readiness-gates');
   assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /locator\.status is ready/);
+  assert.deepEqual(diagnostics.productionReadiness.handoff.usePlatformPreflightFields, [
+    'fileLayerSafety.effectiveDecision',
+    'fileLayerSafety.blockers',
+    'externalFileEditAllowed',
+    'dbFilesBackfillDryRun.dirtyArtifactSafety',
+    'debeziumCdcFreshness.status',
+    'debeziumLogRisk.overallStatus',
+    'applyForbiddenReasons'
+  ]);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.effectiveDecision is no-go/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[1], /preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
@@ -175,7 +186,20 @@ test('export diagnostics require platform preflight for production readiness', a
   const camelK = byName.get('camel-k-db-files-recovery-preflight');
   assert.equal(camelK.readOnly, true);
   assert.match(camelK.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
+  assert.deepEqual(camelK.requiredFields, [
+    'decision',
+    'externalFileEditAllowed',
+    'applyForbiddenReasons',
+    'dbFilesBackfillDryRun.dirtyArtifactSafety',
+    'debeziumCdcFreshness.status',
+    'debeziumLogRisk.overallStatus'
+  ]);
+  assert.match(camelK.noGoSignals.join('\n'), /dirtyArtifactSafety\.externalEditBlockedByDirtyArtifacts=true/);
+  assert.match(camelK.noGoSignals.join('\n'), /active_blocker\|inconclusive\|historical_blocker/);
   assert.match(camelK.notes.join('\n'), /Use --json instead/);
+  assert.match(camelK.notes.join('\n'), /Docs-only dirty artifacts/);
+  assert.match(camelK.notes.join('\n'), /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
+  assert.match(camelK.notes.join('\n'), /quiet window/);
   const classifier = byName.get('n8n-recovery-candidate-classifier');
   assert.equal(classifier.readOnly, true);
   assert.match(classifier.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/classify_n8n_recovery_candidates\.sh --env dev --json$/);
