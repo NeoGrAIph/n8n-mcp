@@ -10,9 +10,26 @@ No inputs.
 
 Returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.decision=requires-platform-preflight`, allowed and forbidden actions, and handoff commands for platform readiness checks.
 
+`productionReadiness.handoff` is a machine-readable routing contract:
+
+- `mcpMustNotWriteWorkflow=true`;
+- use MCP file/resource tools only to get `filesystemPath`, `etag` and locator status;
+- first run the aggregate platform readiness gate so native MCP, gateway hardening and Camel K/DB/files checks stay in scope;
+- when the locator is not ready or Camel K/DB/files preflight is no-go, run platform preflight, classifier and then a reviewed render preview;
+- render preview requires `--workflow-id '<reviewed-workflow-id>'` and writes sensitive artifacts outside the workflow root.
+
+Important handoff commands include:
+
+- `audit_n8n_two_mcp_production_readiness.sh` for the aggregate split-MCP gate;
+- `preflight_n8n_camelk_recovery.sh --summary-json` for compact Camel K/DB/files readiness evidence;
+- `classify_n8n_recovery_candidates.sh` for report-only recovery candidate grouping;
+- `render_n8n_db_files_backfill_candidates.sh --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json` for an isolated sensitive temp-dir preview after a workflow candidate has been reviewed.
+
 ## Safety
 
 This tool never claims production readiness from MCP-local state. Live native n8n MCP acceptance, gateway hardening, Camel K/Debezium health and n8n DB-to-files parity are platform responsibilities in `~/repo/synestra-platform`.
+
+The render preview handoff is not permission to write workflow files. It writes sensitive preview artifacts only outside the workflow root and is intended for human review of DB snapshot recovery candidates.
 
 ## Example
 

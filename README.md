@@ -16,7 +16,9 @@ Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n 
 
 The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language` and locator status, then use normal filesystem tools to inspect or edit the file.
 
-`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight and recovery candidate classifier. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
+`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight, recovery candidate classifier and isolated DB snapshot render preview. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
+
+The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain file paths only when locator status is ready; otherwise run platform preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
 
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
@@ -56,6 +58,8 @@ Important file semantics:
 ## Safety Contract
 
 Production writes are not supported in v1, and the main MCP contract is read-only. Use normal filesystem tools for approved dev edits, then re-check the file with `synestra_workflow_file_validate`, `synestra_workflow_sync_observe` or `synestra_workflow_reconcile_status`.
+
+DB snapshot render previews are separate platform recovery artifacts, not MCP file writes. They must be created with an explicit reviewed workflow id and remain outside `~/repo/n8n-workflows/*`.
 
 Do not put native n8n MCP tokens or Synestra MCP tokens into gateway adapter records, command arguments, logs or plaintext env stored by a control plane. Use SOPS/Kubernetes Secret backed files or an equivalent secret-backed injection path.
 

@@ -182,6 +182,7 @@ export async function exportDiagnostics(config) {
       decision: 'requires-platform-preflight',
       ready: false,
       reason: 'MCP can prove only local file locator state. Production readiness also requires live n8n DB, Camel K/Debezium and DB-to-files parity gates from the platform repository.',
+      handoff: platformReadinessHandoff(config),
       requiredChecks: platformReadinessChecks(config)
     },
     allowedActions: [
@@ -409,17 +410,56 @@ function platformReadinessChecks(config) {
     },
     {
       name: 'camel-k-db-files-recovery-preflight',
-      command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --json`,
+      command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
       readOnly: true,
-      requiredFor: ['production-file-layer-readiness']
+      requiredFor: ['production-file-layer-readiness'],
+      notes: ['Use --json instead of --summary-json for incident analysis or evidence archiving']
     },
     {
       name: 'n8n-recovery-candidate-classifier',
       command: `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
       readOnly: true,
       requiredFor: ['recovery-planning', 'db-files-risk-inventory']
+    },
+    {
+      name: 'n8n-db-files-render-candidate-preview',
+      command: `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`,
+      readOnly: true,
+      writesWorkflowRoot: false,
+      sensitiveArtifacts: true,
+      requiredFor: ['recovery-preview', 'db-files-human-review'],
+      notes: [
+        'Writes only sensitive preview artifacts under a fresh temp output root, never the mounted workflow root',
+        'Requires an explicit workflow id; prod bulk render is forbidden by the platform script',
+        'Use only after preflight/classifier identified a reviewed workflow candidate'
+      ]
     }
   ];
+}
+
+function platformReadinessHandoff(config) {
+  const repo = shellQuote(config.platformRepoDisplayRoot || '~/repo/synestra-platform');
+  const env = config.serviceEnv || 'dev';
+  return {
+    handoffKind: 'platform-readiness-required',
+    sourceOfTruth: 'synestra-platform',
+    platformRepo: config.platformRepoDisplayRoot || '~/repo/synestra-platform',
+    mcpMustNotWriteWorkflow: true,
+    workflowIdRequiredForRenderPreview: true,
+    nextAction: 'run-platform-readiness-gates',
+    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag, then inspect or edit with normal filesystem tools only when locator.status is ready.',
+    usePlatformRenderWhenNoGo: 'If Camel K/DB/files preflight is no-go or the locator is missing/stale/null, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
+    commandSequence: [
+      `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
+      `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
+      `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
+      `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`
+    ],
+    forbiddenActions: [
+      'Do not copy render preview artifacts into the workflow root without a separately approved recovery plan',
+      'Do not use MCP diagnostics as permission for DB writes, Argo sync, workflow restart or files-to-API backfill'
+    ]
+  };
 }
 
 function shellQuote(value) {
