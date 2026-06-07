@@ -27,6 +27,7 @@ Important handoff commands include:
 
 When reading platform output, treat these fields as the edit/readiness contract:
 
+- `fileLayerSafety.synestraMcpBridge` from the aggregate gate as the machine-readable bridge to local `editReadiness`;
 - `fileLayerSafety.effectiveDecision` and `fileLayerSafety.blockers` from the aggregate gate;
 - `externalFileEditAllowed` and `applyForbiddenReasons` from the Camel K/DB/files preflight;
 - `dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts` for dirty worktree classification;

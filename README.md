@@ -49,6 +49,8 @@ Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a l
 
 `filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
+`editReadiness.platformBridge.aggregateField=fileLayerSafety.synestraMcpBridge` links the local locator response to the platform aggregate readiness gate. The local MCP side must report `localLocatorReady=true`, `effectiveDecision=requires-platform-preflight`, `readOnlyInspectionAllowed=true` and `externalFilesystemEditAllowed=false`; final external-edit permission still requires platform `fileLayerSafety.effectiveDecision=go`, `fileLayerSafety.externalFileEditAllowed=true` and empty `fileLayerSafety.blockers`.
+
 Important file semantics:
 
 - Code `.py` files contain Python source from `parameters.pythonCode`.

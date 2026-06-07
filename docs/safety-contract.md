@@ -8,6 +8,8 @@ Production writes are not supported in v1. Dev edits are performed by normal fil
 
 MCP locator calls must not return Code/Set(raw) source content. They return paths, ETags and `editReadiness` so the caller can use normal filesystem tools for inspection and, only after platform approval, edits.
 
+`editReadiness.platformBridge` is the machine-readable join to the platform aggregate `fileLayerSafety.synestraMcpBridge` contract. It deliberately states that local locator readiness is not sufficient: MCP-side `externalFilesystemEditAllowed` is always `false`, ready locators set `readOnlyInspectionAllowed=true`, and external edits require `editReadiness.localLocatorReady=true`, `editReadiness.effectiveDecision=requires-platform-preflight`, `fileLayerSafety.effectiveDecision=go`, `fileLayerSafety.externalFileEditAllowed=true` and `fileLayerSafety.blockers=[]`.
+
 ETags are strong SHA-256 hashes of exact file bytes. Treat them only as stale-read detection for external filesystem tools and `synestra_workflow_sync_observe`; an ETag match does not grant write permission, bypass locator safety, or prove n8n DB/files production readiness.
 
 MCP health, `tools/list`, local mount diagnostics and export diagnostics are not production-readiness proof. Production readiness requires separate platform read-only gates for native n8n MCP acceptance, gateway hardening and Camel K/DB-to-files parity.

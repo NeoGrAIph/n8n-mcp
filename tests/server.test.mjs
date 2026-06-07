@@ -85,6 +85,11 @@ test('tools/call list returns workflow files', async () => {
   assert.equal(result.result.structuredContent.files[0].editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(result.result.structuredContent.files[0].editReadiness.platformPreflightRequired, true);
   assert.equal(result.result.structuredContent.files[0].editReadiness.externalEditAllowed, null);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
+  assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
 });
 
 test('tools/call returns workflow reconcile status', async () => {
@@ -117,6 +122,11 @@ test('tools/call file_read returns locator metadata without source content', asy
   assert.equal(file.editReadiness.localLocatorReady, true);
   assert.equal(file.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(file.editReadiness.platformPreflightRequired, true);
+  assert.equal(file.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(file.editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(file.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
+  assert.equal(file.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(file.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(Object.prototype.hasOwnProperty.call(file, 'content'), false);
   assert.match(file.filesystemPath, /code_nodes_/);
 });
@@ -137,6 +147,11 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(listed.editReadiness.localLocatorReady, false);
   assert.equal(listed.editReadiness.effectiveDecision, 'no-go');
   assert.equal(listed.editReadiness.platformPreflightRequired, true);
+  assert.equal(listed.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(listed.editReadiness.readOnlyInspectionAllowed, false);
+  assert.equal(listed.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
+  assert.equal(listed.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(listed.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
 
   const read = await handleJsonRpc(fixture.config, {
     jsonrpc: '2.0',
@@ -148,6 +163,11 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(read.result.structuredContent.editReadiness.localLocatorReady, false);
   assert.equal(read.result.structuredContent.editReadiness.effectiveDecision, 'no-go');
   assert.equal(read.result.structuredContent.editReadiness.platformPreflightRequired, true);
+  assert.equal(read.result.structuredContent.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(read.result.structuredContent.editReadiness.readOnlyInspectionAllowed, false);
+  assert.equal(read.result.structuredContent.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
+  assert.equal(read.result.structuredContent.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(read.result.structuredContent.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(Object.prototype.hasOwnProperty.call(read.result.structuredContent, 'content'), false);
   assertNoSourceLeak(read.result.structuredContent);
 
@@ -162,6 +182,11 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(locator.editReadiness.localLocatorReady, false);
   assert.equal(locator.editReadiness.effectiveDecision, 'no-go');
   assert.equal(locator.editReadiness.platformPreflightRequired, true);
+  assert.equal(locator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(locator.editReadiness.readOnlyInspectionAllowed, false);
+  assert.equal(locator.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
+  assert.equal(locator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(locator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.equal(resource.result.contents[0].text.includes('print("stale")'), false);
@@ -426,6 +451,11 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.editReadiness.localLocatorReady, true);
   assert.equal(locator.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(locator.editReadiness.platformPreflightRequired, true);
+  assert.equal(locator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(locator.editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(locator.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
+  assert.equal(locator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(locator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.match(locator.filesystemPath, /code_nodes_/);
@@ -443,6 +473,11 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(setLocator.editReadiness.localLocatorReady, true);
   assert.equal(setLocator.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(setLocator.editReadiness.platformPreflightRequired, true);
+  assert.equal(setLocator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(setLocator.editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(setLocator.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
+  assert.equal(setLocator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(setLocator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
   assert.equal(Object.prototype.hasOwnProperty.call(setLocator, 'content'), false);
   assertNoSourceLeak(setLocator);
   assert.equal(setRead.result.contents[0].text.includes('{"ok":true}'), false);
@@ -601,4 +636,30 @@ function assertNoSourceLeak(value) {
   ]) {
     assert.equal(serialized.includes(forbidden), false, `leaked marker: ${forbidden}`);
   }
+  assertNoSensitiveKeys(value);
+}
+
+function assertNoSensitiveKeys(value, pathParts = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertNoSensitiveKeys(item, [...pathParts, String(index)]));
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  for (const [key, child] of Object.entries(value)) {
+    const nextPath = [...pathParts, key];
+    const pathText = nextPath.join('.');
+    if (['expectedContent', 'pythonCode', 'jsCode', 'jsonOutput'].includes(key)) {
+      assert.fail(`leaked sensitive key: ${pathText}`);
+    }
+    if (key === 'content' && !isMcpProtocolContentPath(nextPath)) {
+      assert.fail(`leaked content key: ${pathText}`);
+    }
+    assertNoSensitiveKeys(child, nextPath);
+  }
+}
+
+function isMcpProtocolContentPath(pathParts) {
+  if (pathParts.length === 1 && pathParts[0] === 'content') return true;
+  if (pathParts.length >= 3 && pathParts.at(-3) === 'content' && /^\d+$/.test(pathParts.at(-2))) return true;
+  return false;
 }

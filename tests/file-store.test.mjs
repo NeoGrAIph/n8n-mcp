@@ -20,6 +20,19 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.equal(code.editReadiness.localLocatorReady, true);
   assert.equal(code.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(code.editReadiness.platformPreflightRequired, true);
+  assert.equal(code.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(code.editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(code.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
+  assert.equal(code.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
+  assert.equal(code.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.deepEqual(code.editReadiness.platformBridge.finalExternalEditAllowedRequires, [
+    'editReadiness.localLocatorReady=true',
+    'editReadiness.effectiveDecision=requires-platform-preflight',
+    'fileLayerSafety.effectiveDecision=go',
+    'fileLayerSafety.externalFileEditAllowed=true',
+    'fileLayerSafety.blockers=[]'
+  ]);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.synestraMcpBridge'), true);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
   assert.match(code.filesystemPath, /code_nodes_/);
@@ -169,6 +182,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.handoff.nextAction, 'run-platform-readiness-gates');
   assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /locator\.status is ready/);
   assert.deepEqual(diagnostics.productionReadiness.handoff.usePlatformPreflightFields, [
+    'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
     'fileLayerSafety.blockers',
     'externalFileEditAllowed',

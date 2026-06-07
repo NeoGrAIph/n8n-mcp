@@ -266,9 +266,26 @@ function externalEditReadiness(config, locator) {
     effectiveDecision: localLocatorReady ? 'requires-platform-preflight' : 'no-go',
     platformPreflightRequired: true,
     externalEditAllowed: null,
+    externalFilesystemEditAllowed: false,
+    readOnlyInspectionAllowed: localLocatorReady,
+    filesystemToolPolicy: localLocatorReady ? 'inspect-only-until-platform-go' : 'blocked-unsafe-locator',
     sourceOfTruth: 'synestra-platform',
     platformRepo: config.platformRepoDisplayRoot || '~/repo/synestra-platform',
+    platformBridge: {
+      aggregateField: 'fileLayerSafety.synestraMcpBridge',
+      expectedAggregateRequiredLocalEditReadinessEffectiveDecision: 'requires-platform-preflight',
+      expectedAggregateRequiredLocalLocatorStatus: 'ready',
+      localLocatorReadinessIsSufficient: false,
+      finalExternalEditAllowedRequires: [
+        'editReadiness.localLocatorReady=true',
+        'editReadiness.effectiveDecision=requires-platform-preflight',
+        'fileLayerSafety.effectiveDecision=go',
+        'fileLayerSafety.externalFileEditAllowed=true',
+        'fileLayerSafety.blockers=[]'
+      ]
+    },
     requiredPlatformFields: [
+      'fileLayerSafety.synestraMcpBridge',
       'fileLayerSafety.effectiveDecision',
       'fileLayerSafety.blockers',
       'externalFileEditAllowed',
@@ -278,6 +295,7 @@ function externalEditReadiness(config, locator) {
       'applyForbiddenReasons'
     ],
     noGoSignals: [
+      'fileLayerSafety.synestraMcpBridge.localLocatorReadinessIsSufficient=false',
       'fileLayerSafety.effectiveDecision=no-go',
       'externalFileEditAllowed=false',
       'applyForbiddenReasons is non-empty',
@@ -508,6 +526,7 @@ function platformReadinessHandoff(config) {
     nextAction: 'run-platform-readiness-gates',
     useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. Inspecting the file with normal filesystem tools is allowed when locator.status is ready; external edits also require platform fileLayerSafety.effectiveDecision=go and externalFileEditAllowed=true.',
     usePlatformPreflightFields: [
+      'fileLayerSafety.synestraMcpBridge',
       'fileLayerSafety.effectiveDecision',
       'fileLayerSafety.blockers',
       'externalFileEditAllowed',
