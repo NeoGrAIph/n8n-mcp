@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import fssync from 'node:fs';
 import path from 'node:path';
 import { InvalidParamsError, ToolError } from './errors.mjs';
+import { synestraBuildInfo } from './build-info.mjs';
 import { buildResourceUri, displayPath, relativePath, resolveTargetFile, resolveWorkflowDir } from './path-resolver.mjs';
 import { gitSummary, targetGitStatus } from './git-state.mjs';
 import { workflowIndexStatus } from './config.mjs';
@@ -178,6 +179,7 @@ export async function exportDiagnostics(config) {
   return {
     env: config.serviceEnv,
     readOnly: true,
+    build: synestraBuildInfo(),
     local,
     mcpLocatorReadiness,
     productionReadiness: {

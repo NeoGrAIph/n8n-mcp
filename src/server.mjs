@@ -1,11 +1,10 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
+import { serverInfo, synestraBuildInfo } from './build-info.mjs';
 import { readAuthToken } from './config.mjs';
 import { InvalidParamsError, toJsonRpcError } from './errors.mjs';
 import { listWorkflowResourcesWithDiagnostics, readWorkflowResource } from './file-store.mjs';
 import { callTool, toolsForConfig } from './tools.mjs';
-
-const SERVER_INFO = { name: 'synestra-n8n-gitops-mcp', version: '0.1.0' };
 
 export function createServer(config) {
   const authToken = readAuthToken(config);
@@ -58,7 +57,7 @@ async function handleSingleJsonRpc(config, message) {
     if (!hasId && message.method !== 'notifications/initialized') return undefined;
     switch (message.method) {
       case 'initialize':
-        return { jsonrpc: '2.0', id, result: { protocolVersion: message.params?.protocolVersion || '2024-11-05', capabilities: { tools: {}, resources: {} }, serverInfo: SERVER_INFO } };
+        return { jsonrpc: '2.0', id, result: { protocolVersion: message.params?.protocolVersion || '2024-11-05', capabilities: { tools: {}, resources: {} }, serverInfo: serverInfo(), _meta: { synestraBuild: synestraBuildInfo() } } };
       case 'notifications/initialized':
         return undefined;
       case 'tools/list':

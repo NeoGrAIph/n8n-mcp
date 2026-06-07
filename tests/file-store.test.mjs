@@ -182,6 +182,7 @@ test('export diagnostics require platform preflight for production readiness', a
   const fixture = await createWorkflowFixture();
   const diagnostics = await exportDiagnostics(fixture.config);
   assert.equal(diagnostics.readOnly, true);
+  assert.equal(diagnostics.build.packageVersion, '0.1.0');
   assert.equal(diagnostics.mcpLocatorReadiness.status, 'degraded');
   assert.equal(diagnostics.mcpLocatorReadiness.errorCount, 0);
   assert.equal(diagnostics.productionReadiness.ready, false);

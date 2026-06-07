@@ -10,6 +10,8 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   const fixture = await createWorkflowFixture();
   const init = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05' } });
   assert.equal(init.result.serverInfo.name, 'synestra-n8n-gitops-mcp');
+  assert.equal(init.result.serverInfo.version, '0.1.0');
+  assert.equal(init.result._meta.synestraBuild.packageVersion, '0.1.0');
   const tools = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   assert.equal(tools.result.tools.length, 8);
   assert.deepEqual(tools.result.tools.map(tool => tool.name).sort(), [
@@ -49,6 +51,44 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
   assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_replace'), false);
 });
+
+test('initialize exposes non-secret Synestra build metadata from environment', async () => {
+  const fixture = await createWorkflowFixture();
+  const previous = {
+    sourceRef: process.env.SYNESTRA_MCP_SOURCE_REF,
+    sourceCommit: process.env.SYNESTRA_MCP_SOURCE_COMMIT,
+    platformImageTag: process.env.SYNESTRA_MCP_PLATFORM_IMAGE_TAG,
+    platformCommit: process.env.SYNESTRA_MCP_PLATFORM_COMMIT,
+    buildNamespace: process.env.SYNESTRA_MCP_BUILD_NAMESPACE
+  };
+  try {
+    process.env.SYNESTRA_MCP_SOURCE_REF = 'abcdef1234567890';
+    process.env.SYNESTRA_MCP_SOURCE_COMMIT = 'abcdef1234567890abcdef1234567890abcdef12';
+    process.env.SYNESTRA_MCP_PLATFORM_IMAGE_TAG = 'main-r22';
+    process.env.SYNESTRA_MCP_PLATFORM_COMMIT = '1234567890abcdef1234567890abcdef12345678';
+    process.env.SYNESTRA_MCP_BUILD_NAMESPACE = 'synestra-platform';
+    const init = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 51, method: 'initialize', params: {} });
+    assert.deepEqual(init.result._meta.synestraBuild, {
+      packageVersion: '0.1.0',
+      sourceRef: 'abcdef1234567890',
+      sourceCommit: 'abcdef1234567890abcdef1234567890abcdef12',
+      platformImageTag: 'main-r22',
+      platformCommit: '1234567890abcdef1234567890abcdef12345678',
+      buildNamespace: 'synestra-platform'
+    });
+  } finally {
+    restoreEnv('SYNESTRA_MCP_SOURCE_REF', previous.sourceRef);
+    restoreEnv('SYNESTRA_MCP_SOURCE_COMMIT', previous.sourceCommit);
+    restoreEnv('SYNESTRA_MCP_PLATFORM_IMAGE_TAG', previous.platformImageTag);
+    restoreEnv('SYNESTRA_MCP_PLATFORM_COMMIT', previous.platformCommit);
+    restoreEnv('SYNESTRA_MCP_BUILD_NAMESPACE', previous.buildNamespace);
+  }
+});
+
+function restoreEnv(name, value) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
 
 test('tools/list remains Synestra-only and has no legacy or native aliases', async () => {
   const fixture = await createWorkflowFixture();
