@@ -74,3 +74,18 @@ test('list reports missing workflow JSON for orphan extracted files', async () =
   assert.equal(files.length, 2);
   assert.equal(files.every(file => file.locator.status === 'missing_workflow_json'), true);
 });
+
+test('empty workflow nodes are unsafe locator status', async () => {
+  const fixture = await createWorkflowFixture();
+  const workflowJson = path.join(fixture.root, 'development', `${fixture.workflowId}.fixture.json`);
+  const envelope = JSON.parse(await fs.readFile(workflowJson, 'utf8'));
+  envelope.workflow.nodes = [];
+  await fs.writeFile(workflowJson, JSON.stringify(envelope, null, 2));
+  const status = await reconcileWorkflowFiles(fixture.config, { workflowId: fixture.workflowId });
+  assert.equal(status.status, 'nodes_empty');
+  assert.equal(status.summary.nodes_empty, 1);
+  assert.equal(status.summary.ready, 0);
+  const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
+  assert.equal(files.length, 2);
+  assert.equal(files.every(file => file.locator.status === 'nodes_empty'), true);
+});

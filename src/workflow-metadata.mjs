@@ -22,6 +22,7 @@ export async function loadWorkflowMetadata(config, workflowId) {
   }
   const workflowData = envelope.workflow && typeof envelope.workflow === 'object' ? envelope.workflow : envelope;
   const nodes = Array.isArray(workflowData.nodes) ? workflowData.nodes : [];
+  const status = nodes.length === 0 ? 'nodes_empty' : 'ready';
   return {
     ...workflow,
     workflowJson,
@@ -29,7 +30,7 @@ export async function loadWorkflowMetadata(config, workflowId) {
     workflowData,
     nodes,
     targets: supportedTargets(workflowId, nodes),
-    status: 'ready'
+    status
   };
 }
 
@@ -44,9 +45,12 @@ export async function workflowReconcileStatus(config, workflowId) {
     nodeCount: metadata.nodes.length,
     supportedNodeCount: metadata.targets.length,
     targets: [],
-    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0, missing_workflow_json: 0, invalid_workflow_json: 0, null_set_raw_payload: 0 }
+    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0, missing_workflow_json: 0, invalid_workflow_json: 0, nodes_empty: 0, null_set_raw_payload: 0 }
   };
   if (metadata.error) result.error = metadata.error;
+  if (metadata.status !== 'ready' && Object.prototype.hasOwnProperty.call(result.summary, metadata.status)) {
+    result.summary[metadata.status] += 1;
+  }
   for (const target of metadata.targets) {
     const fileName = target.kind === 'set' ? `${target.nodeId}.set.json` : `${target.nodeId}.${target.ext}`;
     const filePath = path.join(metadata.codeDir, fileName);
