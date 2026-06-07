@@ -93,5 +93,4 @@ Relevant platform docs:
 - `~/repo/synestra-platform/docs/reference/mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/synestra-n8n-gitops-mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/mcp-gateway.md`
-- `~/repo/synestra-platform/docs/runbooks/mcp/n8n-two-mcp-production-readiness.md`
 - `docs/architecture-boundary.md`
