@@ -28,11 +28,16 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.deepEqual(code.editReadiness.platformBridge.finalExternalEditAllowedRequires, [
     'editReadiness.localLocatorReady=true',
     'editReadiness.effectiveDecision=requires-platform-preflight',
+    'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
     'fileLayerSafety.effectiveDecision=go',
     'fileLayerSafety.externalFileEditAllowed=true',
     'fileLayerSafety.blockers=[]'
   ]);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('nextActions'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.synestraMcpBridge'), true);
+  assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
+  assert.match(code.editReadiness.message, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
   assert.match(code.filesystemPath, /code_nodes_/);
@@ -181,16 +186,24 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.handoff.workflowIdRequiredForRenderPreview, true);
   assert.equal(diagnostics.productionReadiness.handoff.nextAction, 'run-platform-readiness-gates');
   assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /locator\.status is ready/);
+  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
   assert.deepEqual(diagnostics.productionReadiness.handoff.usePlatformPreflightFields, [
+    'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+    'filesystemToolGuard.failedChecks',
+    'filesystemToolGuard.checks',
     'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
     'fileLayerSafety.blockers',
     'externalFileEditAllowed',
+    'nextActions',
+    'nextActionSummary',
     'dbFilesBackfillDryRun.dirtyArtifactSafety',
     'debeziumCdcFreshness.status',
     'debeziumLogRisk.overallStatus',
     'applyForbiddenReasons'
   ]);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /filesystemToolGuard\.finalExternalFilesystemEditAllowed is false/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /follow platform nextActions/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.effectiveDecision is no-go/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
@@ -203,6 +216,14 @@ test('export diagnostics require platform preflight for production readiness', a
   const aggregate = byName.get('n8n-split-mcp-production-readiness');
   assert.equal(aggregate.readOnly, true);
   assert.deepEqual(aggregate.requiredFor, ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']);
+  assert.deepEqual(aggregate.requiredFields, [
+    'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+    'filesystemToolGuard.failedChecks',
+    'filesystemToolGuard.checks',
+    'fileLayerSafety.effectiveDecision',
+    'fileLayerSafety.blockers'
+  ]);
+  assert.match(aggregate.noGoSignals.join('\n'), /filesystemToolGuard\.finalExternalFilesystemEditAllowed=false/);
   assert.match(aggregate.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_two_mcp_production_readiness\.sh --env dev /);
   assert.match(aggregate.command, /--native-token-file '<secure-native-token-file>'/);
   assert.match(aggregate.command, /--safe-workflow-id '<disposable-or-known-safe-workflow-id>'/);
@@ -214,6 +235,8 @@ test('export diagnostics require platform preflight for production readiness', a
     'decision',
     'externalFileEditAllowed',
     'applyForbiddenReasons',
+    'nextActions',
+    'nextActionSummary',
     'dbFilesBackfillDryRun.dirtyArtifactSafety',
     'debeziumCdcFreshness.status',
     'debeziumLogRisk.overallStatus'

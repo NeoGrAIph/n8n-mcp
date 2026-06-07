@@ -15,6 +15,7 @@ Returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.
 - `mcpMustNotWriteWorkflow=true`;
 - use MCP file/resource tools only to get `filesystemPath`, `etag` and locator status;
 - first run the aggregate platform readiness gate so native MCP, gateway hardening and Camel K/DB/files checks stay in scope;
+- require `filesystemToolGuard.finalExternalFilesystemEditAllowed=true` before any normal filesystem edit;
 - when the locator is not ready or Camel K/DB/files preflight is no-go, run platform preflight, classifier and then a reviewed render preview;
 - render preview requires `--workflow-id '<reviewed-workflow-id>'` and writes sensitive artifacts outside the workflow root.
 
@@ -27,13 +28,15 @@ Important handoff commands include:
 
 When reading platform output, treat these fields as the edit/readiness contract:
 
+- `filesystemToolGuard.finalExternalFilesystemEditAllowed`, `filesystemToolGuard.failedChecks` and `filesystemToolGuard.checks` from the aggregate gate as the final external filesystem edit guard;
 - `fileLayerSafety.synestraMcpBridge` from the aggregate gate as the machine-readable bridge to local `editReadiness`;
 - `fileLayerSafety.effectiveDecision` and `fileLayerSafety.blockers` from the aggregate gate;
 - `externalFileEditAllowed` and `applyForbiddenReasons` from the Camel K/DB/files preflight;
+- `nextActions` and `nextActionSummary` from the Camel K/DB/files preflight for read-only remediation routing;
 - `dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts` for dirty worktree classification;
 - `debeziumCdcFreshness.status` and `debeziumLogRisk.overallStatus` for active/inconclusive/historical Debezium blockers.
 
-Any of these values blocks file edit readiness and production readiness claims: `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. In a no-go state, use the classifier and, only after review, an isolated render preview.
+Any of these values blocks file edit readiness and production readiness claims: `filesystemToolGuard.finalExternalFilesystemEditAllowed=false`, non-empty `filesystemToolGuard.failedChecks`, `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. In a no-go state, follow platform `nextActions`, use the classifier and, only after review, an isolated render preview.
 
 ## Safety
 

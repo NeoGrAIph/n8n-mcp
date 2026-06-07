@@ -279,22 +279,30 @@ function externalEditReadiness(config, locator) {
       finalExternalEditAllowedRequires: [
         'editReadiness.localLocatorReady=true',
         'editReadiness.effectiveDecision=requires-platform-preflight',
+        'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
         'fileLayerSafety.effectiveDecision=go',
         'fileLayerSafety.externalFileEditAllowed=true',
         'fileLayerSafety.blockers=[]'
       ]
     },
     requiredPlatformFields: [
+      'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+      'filesystemToolGuard.failedChecks',
+      'filesystemToolGuard.checks',
       'fileLayerSafety.synestraMcpBridge',
       'fileLayerSafety.effectiveDecision',
       'fileLayerSafety.blockers',
       'externalFileEditAllowed',
+      'nextActions',
+      'nextActionSummary',
       'dbFilesBackfillDryRun.dirtyArtifactSafety',
       'debeziumCdcFreshness.status',
       'debeziumLogRisk.overallStatus',
       'applyForbiddenReasons'
     ],
     noGoSignals: [
+      'filesystemToolGuard.finalExternalFilesystemEditAllowed=false',
+      'filesystemToolGuard.failedChecks is non-empty',
       'fileLayerSafety.synestraMcpBridge.localLocatorReadinessIsSufficient=false',
       'fileLayerSafety.effectiveDecision=no-go',
       'externalFileEditAllowed=false',
@@ -304,7 +312,7 @@ function externalEditReadiness(config, locator) {
       'debeziumLogRisk.overallStatus=active_blocker|inconclusive|historical_blocker'
     ],
     message: localLocatorReady
-      ? 'This MCP proved only the local file locator. Inspecting the filesystemPath is allowed; external edits require a go decision from the platform Camel K/DB/files readiness gate.'
+      ? 'This MCP proved only the local file locator. Inspecting the filesystemPath is allowed; external edits require filesystemToolGuard.finalExternalFilesystemEditAllowed=true from the platform aggregate readiness gate.'
       : 'External edits are forbidden because the local file locator is not ready.'
   };
 }
@@ -453,7 +461,19 @@ function platformReadinessChecks(config) {
       name: 'n8n-split-mcp-production-readiness',
       command: `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
       readOnly: true,
-      requiredFor: ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']
+      requiredFor: ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness'],
+      requiredFields: [
+        'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+        'filesystemToolGuard.failedChecks',
+        'filesystemToolGuard.checks',
+        'fileLayerSafety.effectiveDecision',
+        'fileLayerSafety.blockers'
+      ],
+      noGoSignals: [
+        'filesystemToolGuard.finalExternalFilesystemEditAllowed=false',
+        'filesystemToolGuard.failedChecks is non-empty',
+        'fileLayerSafety.effectiveDecision=no-go'
+      ]
     },
     {
       name: 'native-n8n-mcp-service-local-acceptance',
@@ -476,6 +496,8 @@ function platformReadinessChecks(config) {
         'decision',
         'externalFileEditAllowed',
         'applyForbiddenReasons',
+        'nextActions',
+        'nextActionSummary',
         'dbFilesBackfillDryRun.dirtyArtifactSafety',
         'debeziumCdcFreshness.status',
         'debeziumLogRisk.overallStatus'
@@ -524,18 +546,23 @@ function platformReadinessHandoff(config) {
     mcpMustNotWriteWorkflow: true,
     workflowIdRequiredForRenderPreview: true,
     nextAction: 'run-platform-readiness-gates',
-    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. Inspecting the file with normal filesystem tools is allowed when locator.status is ready; external edits also require platform fileLayerSafety.effectiveDecision=go and externalFileEditAllowed=true.',
+    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. Inspecting the file with normal filesystem tools is allowed when locator.status is ready; external edits require aggregate filesystemToolGuard.finalExternalFilesystemEditAllowed=true, not only a ready MCP locator.',
     usePlatformPreflightFields: [
+      'filesystemToolGuard.finalExternalFilesystemEditAllowed',
+      'filesystemToolGuard.failedChecks',
+      'filesystemToolGuard.checks',
       'fileLayerSafety.synestraMcpBridge',
       'fileLayerSafety.effectiveDecision',
       'fileLayerSafety.blockers',
       'externalFileEditAllowed',
+      'nextActions',
+      'nextActionSummary',
       'dbFilesBackfillDryRun.dirtyArtifactSafety',
       'debeziumCdcFreshness.status',
       'debeziumLogRisk.overallStatus',
       'applyForbiddenReasons'
     ],
-    usePlatformRenderWhenNoGo: 'If Camel K/DB/files preflight is no-go, fileLayerSafety.effectiveDecision is no-go, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
+    usePlatformRenderWhenNoGo: 'If filesystemToolGuard.finalExternalFilesystemEditAllowed is false, Camel K/DB/files preflight is no-go, fileLayerSafety.effectiveDecision is no-go, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
       `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
       `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,

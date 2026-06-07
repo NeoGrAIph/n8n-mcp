@@ -12,7 +12,7 @@ Returns locator metadata including `workflowId`, `nodeId`, `kind`, optional `lan
 
 `filesystemPath` is the host-facing path intended for normal filesystem tools. `containerPath` is diagnostic-only for the MCP container mount.
 
-`editReadiness.platformBridge.aggregateField` points to platform `fileLayerSafety.synestraMcpBridge`. A ready local locator sets `readOnlyInspectionAllowed=true` and `filesystemToolPolicy=inspect-only-until-platform-go`; MCP-side `externalFilesystemEditAllowed` remains `false`. Final external-edit permission requires the aggregate platform gate to return `fileLayerSafety.effectiveDecision=go`, `fileLayerSafety.externalFileEditAllowed=true` and empty `fileLayerSafety.blockers`.
+`editReadiness.platformBridge.aggregateField` points to platform `fileLayerSafety.synestraMcpBridge`. A ready local locator sets `readOnlyInspectionAllowed=true` and `filesystemToolPolicy=inspect-only-until-platform-go`; MCP-side `externalFilesystemEditAllowed` remains `false`. Final external-edit permission requires the aggregate platform gate to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
 
 ## Safety
 

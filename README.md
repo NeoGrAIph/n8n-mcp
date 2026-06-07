@@ -18,7 +18,7 @@ The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_
 
 `synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight, recovery candidate classifier and isolated DB snapshot render preview. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
 
-The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain inspectable file paths only when locator status is ready; require platform `go` before edits, otherwise run platform preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
+The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain inspectable file paths only when locator status is ready; require aggregate `filesystemToolGuard.finalExternalFilesystemEditAllowed=true` before edits, otherwise follow platform `nextActions`, preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
 
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
@@ -45,7 +45,7 @@ synestra-n8n-workflows:///code/{workflowId}/{nodeId}.json
 synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
-Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a local path candidate only when the returned locator status is `ready`; final external-edit permission requires the platform file-layer gate to return `fileLayerSafety.effectiveDecision=go` and `externalFileEditAllowed=true`.
+Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a local path candidate only when the returned locator status is `ready`; final external-edit permission requires the platform aggregate gate to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
 
 `filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
