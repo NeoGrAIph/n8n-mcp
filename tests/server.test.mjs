@@ -206,10 +206,39 @@ test('HTTP notification-only requests return no content', async () => {
   }
 });
 
+test('HTTP MCP endpoint enforces Bearer auth without leaking diagnostics', async () => {
+  const fixture = await createWorkflowFixture();
+  const tokenFile = path.join(await fs.mkdtemp(path.join(os.tmpdir(), 'synestra-mcp-token-')), 'token');
+  await fs.writeFile(tokenFile, 'test-token\n');
+  const server = createServer({ ...fixture.config, authTokenFile: tokenFile });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const port = server.address().port;
+    const payload = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} });
+    const missing = await fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
+    assert.equal(missing.status, 401);
+    assert.equal(missing.headers.get('www-authenticate'), 'Bearer realm="synestra-n8n-gitops-mcp"');
+    assert.deepEqual(await missing.json(), { error: 'unauthorized' });
+
+    const wrongSameLength = await fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST', headers: { Authorization: 'Bearer wrongtoken', 'Content-Type': 'application/json' }, body: payload });
+    assert.equal(wrongSameLength.status, 401);
+
+    const wrongDifferentLength = await fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST', headers: { Authorization: 'Bearer wrong', 'Content-Type': 'application/json' }, body: payload });
+    assert.equal(wrongDifferentLength.status, 401);
+
+    const ok = await fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST', headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' }, body: payload });
+    assert.equal(ok.status, 200);
+    assert.equal((await ok.json()).result.serverInfo.name, 'synestra-n8n-gitops-mcp');
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
 test('resources/list and resources/read expose workflow file locators without source content', async () => {
   const fixture = await createWorkflowFixture();
   const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 4, method: 'resources/list', params: {} });
   assert.equal(list.result.resources.length, 2);
+  assert.deepEqual(list.result._meta.summary, { indexedWorkflows: 1, resourceCount: 2, skippedWorkflowCount: 0 });
   assert.equal(list.result.resources.some(resource => resource.uri === fixture.codeUri), true);
   const listedCode = list.result.resources.find(resource => resource.uri === fixture.codeUri);
   assert.equal(listedCode.mimeType, 'text/x-python');
@@ -225,6 +254,17 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.match(locator.filesystemPath, /code_nodes_/);
   assert.notEqual(read.result.contents[0].text, 'print("before")\n');
   assert.match(read.result._meta.etag, /^[a-f0-9]{64}$/);
+});
+
+test('resources/list reports skipped workflows instead of hiding index problems', async () => {
+  const fixture = await createWorkflowFixture();
+  await fs.writeFile(path.join(fixture.root, '.index', 'MissingWF1.path'), 'missing-folder\n');
+  const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 41, method: 'resources/list', params: {} });
+  assert.equal(list.result.resources.length, 2);
+  assert.equal(list.result._meta.summary.indexedWorkflows, 2);
+  assert.equal(list.result._meta.summary.skippedWorkflowCount, 1);
+  assert.equal(list.result._meta.skippedWorkflows[0].workflowId, 'MissingWF1');
+  assert.equal(list.result._meta.skippedWorkflows[0].code, 'STALE_INDEX');
 });
 
 test('unauthenticated health endpoint is minimal', async () => {

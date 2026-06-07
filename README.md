@@ -16,6 +16,8 @@ Synestra n8n MCP extensions own only the GitOps/file-level gaps that native n8n 
 
 The MCP does not transport Code/Set(raw) source content. Use `synestra_workflow_file_read` or `resources/read` only to get locator metadata such as `filesystemPath`, `uri`, `etag`, `kind`, `language` and locator status, then use normal filesystem tools to inspect or edit the file.
 
+`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for platform Camel K/DB-to-files gates. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
+
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
 ## Tool Contract
@@ -67,6 +69,7 @@ Required runtime settings:
 - `SYNESTRA_MCP_WRITE_POLICY`: must be `off`.
 - `SYNESTRA_MCP_AUTH_TOKEN_FILE`: file containing the Bearer token.
 - `SYNESTRA_MCP_EXPECTED_BRANCH`: optional diagnostic context for Git status output; it does not enable writes.
+- `SYNESTRA_PLATFORM_DISPLAY_ROOT`: optional display path for platform readiness handoff commands, default `~/repo/synestra-platform`.
 
 ## Development
 

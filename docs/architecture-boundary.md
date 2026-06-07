@@ -23,6 +23,8 @@ Native workflow access is controlled by n8n's instance-level MCP settings, authe
 - observe file settle state after an external filesystem edit;
 - report local mount, Git status, export and parity diagnostics.
 
+Export diagnostics include handoff metadata for platform audits, but this server does not query Kubernetes, n8n DB, Camel K or Argo CD. Live native MCP acceptance, gateway hardening and DB-to-files parity remain platform responsibilities.
+
 The server is read-only. It must not expose native/core n8n tools and must not expose MCP write tools.
 
 ## Filesystem Tools

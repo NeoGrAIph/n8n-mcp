@@ -16,5 +16,6 @@ Runtime environment:
 - `SYNESTRA_MCP_MAX_FILE_BYTES`: maximum inspected workflow file size, default `262144`, clamped to `1..10485760`.
 - `SYNESTRA_MCP_SETTLE_TIMEOUT_MS`: default observe timeout, default `15000`, clamped to `100..120000`.
 - `SYNESTRA_MCP_SETTLE_STABLE_READS`: number of stable ETag reads required for observe, default `2`, clamped to `1..20`.
+- `SYNESTRA_PLATFORM_DISPLAY_ROOT`: optional display path used only in production-readiness handoff commands, default `~/repo/synestra-platform`.
 
 The main MCP server is read-only. Use normal filesystem tools for approved dev edits after locator/parity checks pass.

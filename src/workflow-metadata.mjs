@@ -10,10 +10,23 @@ export const SET_RAW_MIME = 'application/json';
 
 export async function loadWorkflowMetadata(config, workflowId) {
   const workflow = await resolveWorkflowDir(config, workflowId, { allowArchived: true, requireWorkflowJson: false });
-  const workflowJson = await findWorkflowJson(workflow.workflowDir, workflowId);
-  if (!workflowJson) {
+  const workflowJsonMatches = await findWorkflowJsonMatches(workflow.workflowDir, workflowId);
+  if (workflowJsonMatches.length === 0) {
     return { ...workflow, workflowJson: null, envelope: null, workflowData: null, nodes: [], targets: [], status: 'missing_workflow_json' };
   }
+  if (workflowJsonMatches.length > 1) {
+    return {
+      ...workflow,
+      workflowJson: null,
+      workflowJsonCandidates: workflowJsonMatches,
+      envelope: null,
+      workflowData: null,
+      nodes: [],
+      targets: [],
+      status: 'ambiguous_workflow_json'
+    };
+  }
+  const workflowJson = workflowJsonMatches[0];
   let envelope;
   try {
     envelope = JSON.parse(await fs.readFile(workflowJson, 'utf8'));
@@ -45,9 +58,10 @@ export async function workflowReconcileStatus(config, workflowId) {
     nodeCount: metadata.nodes.length,
     supportedNodeCount: metadata.targets.length,
     targets: [],
-    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0, missing_workflow_json: 0, invalid_workflow_json: 0, nodes_empty: 0, null_set_raw_payload: 0 }
+    summary: { ready: 0, missing_file: 0, stale_export: 0, unsupported_node_type: 0, missing_workflow_json: 0, ambiguous_workflow_json: 0, invalid_workflow_json: 0, nodes_empty: 0, null_set_raw_payload: 0 }
   };
   if (metadata.error) result.error = metadata.error;
+  if (metadata.workflowJsonCandidates) result.workflowJsonCandidates = metadata.workflowJsonCandidates.map(candidate => displayPath(config, candidate));
   if (metadata.status !== 'ready' && Object.prototype.hasOwnProperty.call(result.summary, metadata.status)) {
     result.summary[metadata.status] += 1;
   }
@@ -116,12 +130,14 @@ export function mimeTypeForFile(file) {
   return file.language === 'python' ? PYTHON_CODE_MIME : JS_CODE_MIME;
 }
 
-async function findWorkflowJson(workflowDir, workflowId) {
+async function findWorkflowJsonMatches(workflowDir, workflowId) {
   const entries = await fs.readdir(workflowDir, { withFileTypes: true }).catch(() => []);
   const escapedWorkflowId = workflowId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(`^${escapedWorkflowId}\\..+\\.json$`);
-  const matches = entries.filter(entry => entry.isFile() && re.test(entry.name) && !entry.name.endsWith('.hash')).map(entry => entry.name).sort();
-  return matches.length ? path.join(workflowDir, matches[0]) : null;
+  return entries
+    .filter(entry => entry.isFile() && re.test(entry.name) && !entry.name.endsWith('.hash'))
+    .map(entry => path.join(workflowDir, entry.name))
+    .sort();
 }
 
 function supportedTargets(workflowId, nodes) {
@@ -195,6 +211,7 @@ function workflowSummary(metadata) {
   return {
     status: metadata.status,
     workflowJson: metadata.workflowJson ? metadata.workflowJson : null,
+    workflowJsonCandidates: metadata.workflowJsonCandidates || undefined,
     name: metadata.workflowData?.name || metadata.envelope?.name || '',
     active: Boolean(metadata.envelope?.active ?? metadata.workflowData?.active ?? false),
     archived: Boolean(metadata.envelope?.archived ?? false)

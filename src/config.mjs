@@ -35,6 +35,7 @@ export function loadConfig(env = process.env) {
     gitRoot,
     displayRoot: env.N8N_WORKFLOWS_DISPLAY_ROOT || env.WORKFLOWS_DISPLAY_ROOT || root,
     expectedBranch: env.SYNESTRA_MCP_EXPECTED_BRANCH || '',
+    platformRepoDisplayRoot: env.SYNESTRA_PLATFORM_DISPLAY_ROOT || '~/repo/synestra-platform',
     maxFileBytes: readInteger(env.SYNESTRA_MCP_MAX_FILE_BYTES, 262144, 1, 10 * 1024 * 1024),
     settleTimeoutMs: readInteger(env.SYNESTRA_MCP_SETTLE_TIMEOUT_MS, 15000, 100, 120000),
     settleStableReads: readInteger(env.SYNESTRA_MCP_SETTLE_STABLE_READS, 2, 1, 20),

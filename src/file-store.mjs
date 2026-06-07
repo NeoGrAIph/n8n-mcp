@@ -52,13 +52,28 @@ export async function listWorkflowFiles(config, workflowId) {
 }
 
 export async function listWorkflowResources(config) {
+  return (await listWorkflowResourcesWithDiagnostics(config)).resources;
+}
+
+export async function listWorkflowResourcesWithDiagnostics(config) {
   const indexDir = path.join(config.root, '.index');
-  if (!fssync.existsSync(indexDir)) return [];
+  if (!fssync.existsSync(indexDir)) {
+    return {
+      resources: [],
+      _meta: {
+        skippedWorkflows: [],
+        summary: { indexedWorkflows: 0, resourceCount: 0, skippedWorkflowCount: 0 }
+      }
+    };
+  }
   const entries = await fs.readdir(indexDir, { withFileTypes: true });
   const resources = [];
+  const skippedWorkflows = [];
+  let indexedWorkflows = 0;
   for (const entry of entries) {
     if (!entry.isFile() || !entry.name.endsWith('.path')) continue;
     const workflowId = entry.name.slice(0, -'.path'.length);
+    indexedWorkflows += 1;
     try {
       for (const file of await listWorkflowFiles(config, workflowId)) {
         resources.push({
@@ -69,11 +84,27 @@ export async function listWorkflowResources(config) {
           annotations: { audience: ['assistant'], priority: 0.6 }
         });
       }
-    } catch {
-      continue;
+    } catch (error) {
+      skippedWorkflows.push({
+        workflowId,
+        code: error?.code || 'RESOURCE_LIST_WORKFLOW_ERROR',
+        message: error?.message || 'Unable to list workflow resources'
+      });
     }
   }
-  return resources.sort((a, b) => a.uri.localeCompare(b.uri));
+  resources.sort((a, b) => a.uri.localeCompare(b.uri));
+  skippedWorkflows.sort((a, b) => a.workflowId.localeCompare(b.workflowId));
+  return {
+    resources,
+    _meta: {
+      skippedWorkflows,
+      summary: {
+        indexedWorkflows,
+        resourceCount: resources.length,
+        skippedWorkflowCount: skippedWorkflows.length
+      }
+    }
+  };
 }
 
 export async function readWorkflowResource(config, uri) {
@@ -95,9 +126,34 @@ export async function readWorkflowResource(config, uri) {
 }
 
 export async function exportDiagnostics(config) {
+  const local = await mountDiagnostics(config);
+  const mcpLocatorReadiness = localLocatorReadiness(local);
   return {
-    local: await mountDiagnostics(config),
-    camelK: { availableInContainer: false, message: 'Use platform Camel K audit for live IntegrationPlatform and Debezium checks.' }
+    env: config.serviceEnv,
+    readOnly: true,
+    local,
+    mcpLocatorReadiness,
+    productionReadiness: {
+      decision: 'requires-platform-preflight',
+      ready: false,
+      reason: 'MCP can prove only local file locator state. Production readiness also requires live n8n DB, Camel K/Debezium and DB-to-files parity gates from the platform repository.',
+      requiredChecks: platformReadinessChecks(config)
+    },
+    allowedActions: [
+      'Use ready locator metadata to inspect files with external filesystem tools',
+      'Use synestra_workflow_reconcile_status for an exact workflow before any file edit',
+      'Run platform read-only Camel K and DB parity audits before claiming production readiness'
+    ],
+    forbiddenActions: [
+      'Do not treat MCP /health or tools/list as DB-to-files parity proof',
+      'Do not edit files whose locator status is not ready',
+      'Do not use MCP diagnostics as permission for DB writes, Argo sync, workflow restart or files-to-API backfill'
+    ],
+    camelK: {
+      availableInContainer: false,
+      message: 'Use platform Camel K audit for live IntegrationPlatform, Debezium slot/publication and DB-to-files parity checks.',
+      handoff: platformReadinessChecks(config)
+    }
   };
 }
 
@@ -123,18 +179,25 @@ export const readWorkflowFile = locateWorkflowFile;
 export async function validateWorkflowFile(config, { uri, content }) {
   const target = await resolveTargetFile(config, uri);
   const diagnostics = [];
+  let validSyntax = true;
   if (!fssync.existsSync(target.filePath)) diagnostics.push({ level: 'error', code: 'FILE_NOT_FOUND', message: 'Target file does not exist' });
   const value = content ?? (fssync.existsSync(target.filePath) ? await fs.readFile(target.filePath, 'utf8') : '');
   if (target.kind === 'set') {
     const syntax = setRawSyntax(value);
-    if (syntax === 'invalid_json') diagnostics.push({ level: 'error', code: 'INVALID_SET_JSON', message: 'Set(raw) content must be JSON or an n8n expression starting with =' });
+    if (syntax === 'invalid_json') {
+      validSyntax = false;
+      diagnostics.push({ level: 'error', code: 'INVALID_SET_JSON', message: 'Set(raw) content must be JSON or an n8n expression starting with =' });
+    }
     else diagnostics.push({ level: 'info', code: `SET_RAW_${syntax.toUpperCase()}`, message: `Set(raw) syntax: ${syntax}` });
   }
   const locator = await targetNodeMetadata(config, target, value);
-  if (locator.status !== 'ready') diagnostics.push({ level: 'warning', code: locator.status.toUpperCase(), message: `File-layer locator status is ${locator.status}` });
+  const safeToEdit = locator.status === 'ready';
+  if (!safeToEdit) diagnostics.push({ level: 'error', code: 'UNSAFE_LOCATOR_STATUS', locatorStatus: locator.status, message: `File-layer locator status is ${locator.status}` });
   return {
     uri,
-    valid: diagnostics.every(d => d.level !== 'error'),
+    valid: validSyntax && safeToEdit,
+    validSyntax,
+    safeToEdit,
     diagnostics,
     locator,
     target: { workflowId: target.workflowId, nodeId: target.nodeId, kind: target.kind, relativePath: relativePath(config, target.filePath), path: displayPath(config, target.filePath) }
@@ -250,6 +313,56 @@ async function scanWorkflowArtifacts(config) {
 
 function emptyArtifactSummary() {
   return { workflowJsonFiles: 0, codeDirectories: 0, codeFiles: 0, setFiles: 0, hashFiles: 0, scannedDirectories: 0, truncated: false };
+}
+
+function localLocatorReadiness(local) {
+  const issues = [];
+  if (!local.exists) issues.push({ severity: 'error', code: 'workflow_root_missing', message: 'Workflow root is not mounted or not readable' });
+  if (!local.index.exists) {
+    issues.push({
+      severity: local.index.degradedReadOnly ? 'warning' : 'error',
+      code: local.index.degradedReadOnly ? 'workflow_index_missing_degraded' : 'workflow_index_missing',
+      message: 'Workflow .index is required for canonical workflowId-to-folder resolution'
+    });
+  }
+  if (local.artifacts.truncated) issues.push({ severity: 'warning', code: 'artifact_scan_truncated', message: 'Artifact scan hit the directory limit' });
+  if (local.exists && local.artifacts.workflowJsonFiles === 0) issues.push({ severity: 'warning', code: 'no_workflow_json_files', message: 'No workflow JSON artifacts were found under the mounted root' });
+  if (local.exists && local.offsetFiles.length === 0) issues.push({ severity: 'warning', code: 'no_debezium_offset_files', message: 'No local Debezium offset files were found; sync freshness must be checked through platform audits' });
+  const errorCount = issues.filter(issue => issue.severity === 'error').length;
+  const warningCount = issues.filter(issue => issue.severity === 'warning').length;
+  return {
+    status: errorCount ? 'no-go' : (warningCount ? 'degraded' : 'ready'),
+    ready: errorCount === 0,
+    issueCount: issues.length,
+    errorCount,
+    warningCount,
+    issues
+  };
+}
+
+function platformReadinessChecks(config) {
+  const repo = config.platformRepoDisplayRoot || '~/repo/synestra-platform';
+  const env = config.serviceEnv || 'dev';
+  return [
+    {
+      name: 'native-n8n-mcp-service-local-acceptance',
+      command: `cd ${repo} && scripts/mcp/accept_native_n8n_mcp_service_local.sh --env ${env} --safe-workflow-id '<disposable-or-known-safe-workflow-id>'`,
+      readOnly: true,
+      requiredFor: ['native-mcp-readiness']
+    },
+    {
+      name: 'mcp-gateway-hardening',
+      command: `cd ${repo} && scripts/mcp/audit_mcp_gateway_hardening.sh --json`,
+      readOnly: true,
+      requiredFor: ['gateway-exposure']
+    },
+    {
+      name: 'camel-k-db-files-recovery-preflight',
+      command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --json`,
+      readOnly: true,
+      requiredFor: ['production-file-layer-readiness']
+    }
+  ];
 }
 
 function sleep(ms) {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
-import { listWorkflowFiles, readWorkflowFile, reconcileWorkflowFiles, validateWorkflowFile } from '../src/file-store.mjs';
+import { exportDiagnostics, listWorkflowFiles, readWorkflowFile, reconcileWorkflowFiles, validateWorkflowFile } from '../src/file-store.mjs';
 import { createWorkflowFixture } from './fixtures.mjs';
 
 test('lists and reads Code and Set(raw) files with ETags', async () => {
@@ -33,16 +33,23 @@ test('validates Set(raw) JSON content', async () => {
   const fixture = await createWorkflowFixture();
   const valid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri });
   assert.equal(valid.valid, true);
+  assert.equal(valid.validSyntax, true);
+  assert.equal(valid.safeToEdit, true);
   assert.equal(valid.locator.node.type, 'n8n-nodes-base.set');
   const invalid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '{bad' });
   assert.equal(invalid.valid, false);
+  assert.equal(invalid.validSyntax, false);
+  assert.equal(invalid.safeToEdit, false);
 });
 
 test('validates Set(raw) n8n expression content', async () => {
   const fixture = await createWorkflowFixture();
   const valid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '={{ { ok: true } }}' });
-  assert.equal(valid.valid, true);
+  assert.equal(valid.valid, false);
+  assert.equal(valid.validSyntax, true);
+  assert.equal(valid.safeToEdit, false);
   assert.equal(valid.diagnostics.some(item => item.code === 'SET_RAW_EXPRESSION'), true);
+  assert.equal(valid.diagnostics.some(item => item.code === 'UNSAFE_LOCATOR_STATUS'), true);
 });
 
 test('reconcile reports workflow file-layer parity', async () => {
@@ -88,4 +95,39 @@ test('empty workflow nodes are unsafe locator status', async () => {
   const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
   assert.equal(files.length, 2);
   assert.equal(files.every(file => file.locator.status === 'nodes_empty'), true);
+});
+
+test('ambiguous workflow JSON is an unsafe locator status', async () => {
+  const fixture = await createWorkflowFixture();
+  const workflowJson = path.join(fixture.root, 'development', `${fixture.workflowId}.duplicate.json`);
+  await fs.writeFile(workflowJson, JSON.stringify({ workflow: { nodes: [] } }, null, 2));
+  const status = await reconcileWorkflowFiles(fixture.config, { workflowId: fixture.workflowId });
+  assert.equal(status.status, 'ambiguous_workflow_json');
+  assert.equal(status.summary.ambiguous_workflow_json, 1);
+  assert.equal(status.targets.length, 0);
+  assert.equal(status.workflowJsonCandidates.length, 2);
+  const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
+  assert.equal(files.length, 2);
+  assert.equal(files.every(file => file.locator.status === 'ambiguous_workflow_json'), true);
+});
+
+test('export diagnostics require platform preflight for production readiness', async () => {
+  const fixture = await createWorkflowFixture();
+  const diagnostics = await exportDiagnostics(fixture.config);
+  assert.equal(diagnostics.readOnly, true);
+  assert.equal(diagnostics.mcpLocatorReadiness.status, 'degraded');
+  assert.equal(diagnostics.mcpLocatorReadiness.errorCount, 0);
+  assert.equal(diagnostics.productionReadiness.ready, false);
+  assert.equal(diagnostics.productionReadiness.decision, 'requires-platform-preflight');
+  assert.equal(diagnostics.camelK.availableInContainer, false);
+  assert.equal(
+    diagnostics.productionReadiness.requiredChecks.some(check => check.name === 'camel-k-db-files-recovery-preflight'),
+    true
+  );
+  assert.equal(
+    diagnostics.productionReadiness.requiredChecks.some(check => check.command.includes('preflight_n8n_camelk_recovery.sh --env dev --json')),
+    true
+  );
+  assert.equal(JSON.stringify(diagnostics).includes('print("before")'), false);
+  assert.equal(JSON.stringify(diagnostics).includes('{"ok":true}'), false);
 });

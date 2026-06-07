@@ -1,7 +1,8 @@
 import http from 'node:http';
+import crypto from 'node:crypto';
 import { readAuthToken } from './config.mjs';
 import { toJsonRpcError } from './errors.mjs';
-import { listWorkflowResources, readWorkflowResource } from './file-store.mjs';
+import { listWorkflowResourcesWithDiagnostics, readWorkflowResource } from './file-store.mjs';
 import { callTool, toolsForConfig } from './tools.mjs';
 
 const SERVER_INFO = { name: 'synestra-n8n-gitops-mcp', version: '0.1.0' };
@@ -62,7 +63,7 @@ async function handleSingleJsonRpc(config, message) {
       case 'tools/call':
         return { jsonrpc: '2.0', id, result: await callTool(config, message.params?.name, message.params?.arguments || {}) };
       case 'resources/list':
-        return { jsonrpc: '2.0', id, result: { resources: await listWorkflowResources(config) } };
+        return { jsonrpc: '2.0', id, result: await listWorkflowResourcesWithDiagnostics(config) };
       case 'resources/read':
         return { jsonrpc: '2.0', id, result: await readWorkflowResource(config, message.params?.uri) };
       default:
@@ -74,7 +75,10 @@ async function handleSingleJsonRpc(config, message) {
 }
 
 function isAuthorized(req, authToken) {
-  return !authToken || (req.headers.authorization || '') === `Bearer ${authToken}`;
+  if (!authToken) return true;
+  const expected = Buffer.from(`Bearer ${authToken}`);
+  const actual = Buffer.from(req.headers.authorization || '');
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 }
 
 function readBody(req) {
