@@ -12,6 +12,19 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   assert.equal(init.result.serverInfo.name, 'synestra-n8n-gitops-mcp');
   const tools = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   assert.equal(tools.result.tools.length, 8);
+  assert.deepEqual(tools.result.tools.map(tool => tool.name).sort(), [
+    'synestra_workflow_export_diagnostics',
+    'synestra_workflow_file_read',
+    'synestra_workflow_file_validate',
+    'synestra_workflow_files_list',
+    'synestra_workflow_files_status',
+    'synestra_workflow_mount_diagnostics',
+    'synestra_workflow_reconcile_status',
+    'synestra_workflow_sync_observe'
+  ]);
+  assert.equal(tools.result.tools.every(tool => tool.annotations?.readOnlyHint === true), true);
+  assert.equal(tools.result.tools.every(tool => tool.annotations?.destructiveHint === false), true);
+  assert.equal(tools.result.tools.every(tool => tool.annotations?.openWorldHint === false), true);
   const absentNativeOrWriteTools = [
     'update_workflow',
     'create_workflow',
@@ -35,6 +48,27 @@ test('initialize and tools/list expose Synestra-only tools', async () => {
   assert.equal(writeTools.result.tools.length, 8);
   assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_patch'), false);
   assert.equal(writeTools.result.tools.some(tool => tool.name === 'synestra_workflow_file_replace'), false);
+});
+
+test('tools/list remains Synestra-only and has no legacy or native aliases', async () => {
+  const fixture = await createWorkflowFixture();
+  const result = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 49, method: 'tools/list', params: {} });
+  const names = result.result.tools.map(tool => tool.name);
+  const forbiddenPrefixes = ['n8n_', 'native_', 'workflow_'];
+  const forbiddenExact = new Set([
+    'search_workflows',
+    'get_workflow_details',
+    'update_workflow',
+    'create_workflow',
+    'search_executions',
+    'list_credentials',
+    'synestra_workflow_file_patch',
+    'synestra_workflow_file_replace'
+  ]);
+  for (const name of names) {
+    assert.equal(forbiddenExact.has(name), false);
+    assert.equal(forbiddenPrefixes.some(prefix => name.startsWith(prefix)), false);
+  }
 });
 
 test('tools/call list returns workflow files', async () => {
@@ -78,6 +112,30 @@ test('tools/call file_read returns locator metadata without source content', asy
   assert.equal(file.locator.status, 'ready');
   assert.equal(Object.prototype.hasOwnProperty.call(file, 'content'), false);
   assert.match(file.filesystemPath, /code_nodes_/);
+});
+
+test('all read-only tool outputs omit workflow source markers', async () => {
+  const fixture = await createWorkflowFixture();
+  const calls = [
+    { name: 'synestra_workflow_files_status', arguments: {} },
+    { name: 'synestra_workflow_files_list', arguments: { workflowId: fixture.workflowId } },
+    { name: 'synestra_workflow_file_read', arguments: { uri: fixture.codeUri } },
+    { name: 'synestra_workflow_file_validate', arguments: { uri: fixture.codeUri } },
+    { name: 'synestra_workflow_reconcile_status', arguments: { workflowId: fixture.workflowId } },
+    { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContent: 'SYNESTRA_DO_NOT_ECHO_PROPOSED_CONTENT pythonCode jsCode jsonOutput expectedContent', timeoutMs: 100 } },
+    { name: 'synestra_workflow_mount_diagnostics', arguments: {} },
+    { name: 'synestra_workflow_export_diagnostics', arguments: {} }
+  ];
+  for (const call of calls) {
+    const result = await handleJsonRpc(fixture.config, {
+      jsonrpc: '2.0',
+      id: `no-leak-${call.name}`,
+      method: 'tools/call',
+      params: call
+    });
+    assert.equal(result.error, undefined, call.name);
+    assertNoSourceLeak(result.result.structuredContent);
+  }
 });
 
 test('tools/call validates arguments against published schemas', async () => {
@@ -133,7 +191,7 @@ test('tools/call refuses write tools in every config', async () => {
 
 test('tools/call validate and observe do not echo proposed file content', async () => {
   const fixture = await createWorkflowFixture();
-  const proposedContent = 'SYNESTRA_DO_NOT_ECHO_PROPOSED_CONTENT';
+  const proposedContent = 'SYNESTRA_DO_NOT_ECHO_PROPOSED_CONTENT pythonCode jsCode jsonOutput expectedContent';
   const validate = await handleJsonRpc(fixture.config, {
     jsonrpc: '2.0',
     id: 39,
@@ -141,6 +199,7 @@ test('tools/call validate and observe do not echo proposed file content', async 
     params: { name: 'synestra_workflow_file_validate', arguments: { uri: fixture.codeUri, content: proposedContent } }
   });
   assert.equal(validate.error, undefined);
+  assertNoSourceLeak(validate.result.structuredContent);
   assert.equal(JSON.stringify(validate.result.structuredContent).includes(proposedContent), false);
 
   const observe = await handleJsonRpc({ ...fixture.config, settleStableReads: 1 }, {
@@ -150,6 +209,7 @@ test('tools/call validate and observe do not echo proposed file content', async 
     params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContent: proposedContent, timeoutMs: 100 } }
   });
   assert.equal(observe.error, undefined);
+  assertNoSourceLeak(observe.result.structuredContent);
   assert.equal(JSON.stringify(observe.result.structuredContent).includes(proposedContent), false);
 });
 
@@ -263,9 +323,22 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.kind, 'code');
   assert.equal(locator.locator.status, 'ready');
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
+  assertNoSourceLeak(locator);
   assert.match(locator.filesystemPath, /code_nodes_/);
   assert.notEqual(read.result.contents[0].text, 'print("before")\n');
   assert.match(read.result._meta.etag, /^[a-f0-9]{64}$/);
+
+  const listedSet = list.result.resources.find(resource => resource.uri === fixture.setUri);
+  assert.equal(listedSet.mimeType, 'application/json');
+  const setRead = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 50, method: 'resources/read', params: { uri: fixture.setUri } });
+  assert.equal(setRead.result.contents[0].uri, fixture.setUri);
+  assert.equal(setRead.result.contents[0].mimeType, 'application/json');
+  const setLocator = JSON.parse(setRead.result.contents[0].text);
+  assert.equal(setLocator.kind, 'set');
+  assert.equal(setLocator.locator.status, 'ready');
+  assert.equal(Object.prototype.hasOwnProperty.call(setLocator, 'content'), false);
+  assertNoSourceLeak(setLocator);
+  assert.equal(setRead.result.contents[0].text.includes('{"ok":true}'), false);
 });
 
 test('resources/list paginates with opaque cursor and stable global summary', async () => {
@@ -340,6 +413,35 @@ test('resources/list reports skipped workflows instead of hiding index problems'
   assert.equal(list.result._meta.skippedWorkflows[0].code, 'STALE_INDEX');
 });
 
+test('resources/list paginates while preserving skipped workflow diagnostics', async () => {
+  const fixture = await createWorkflowFixture();
+  await addWorkflow(fixture, 'Bbbbbbbb22222222', '22222222-2222-4222-8222-222222222222', 'alpha');
+  await addWorkflow(fixture, 'Cccccccc33333333', '33333333-3333-4333-8333-333333333333', 'bravo');
+  await fs.writeFile(path.join(fixture.root, '.index', 'MissingWF1.path'), 'missing-folder\n');
+  const config = { ...fixture.config, resourceListLimit: 2 };
+  const first = await handleJsonRpc(config, { jsonrpc: '2.0', id: 51, method: 'resources/list', params: {} });
+  assert.equal(first.result.resources.length, 2);
+  assert.match(first.result.nextCursor, /^[A-Za-z0-9_-]+$/);
+  assert.deepEqual(first.result._meta.summary, {
+    indexedWorkflows: 4,
+    resourceCount: 4,
+    returnedResourceCount: 2,
+    pageOffset: 0,
+    pageLimit: 2,
+    hasNextPage: true,
+    skippedWorkflowCount: 1
+  });
+  assert.equal(first.result._meta.skippedWorkflows[0].workflowId, 'MissingWF1');
+
+  const second = await handleJsonRpc(config, { jsonrpc: '2.0', id: 52, method: 'resources/list', params: { cursor: first.result.nextCursor } });
+  assert.equal(second.result.resources.length, 2);
+  assert.equal(second.result.nextCursor, undefined);
+  assert.equal(second.result._meta.summary.indexedWorkflows, 4);
+  assert.equal(second.result._meta.summary.resourceCount, 4);
+  assert.equal(second.result._meta.summary.skippedWorkflowCount, 1);
+  assert.equal(second.result._meta.skippedWorkflows[0].workflowId, 'MissingWF1');
+});
+
 test('unauthenticated health endpoint is minimal', async () => {
   const fixture = await createWorkflowFixture();
   const tokenFile = path.join(await fs.mkdtemp(path.join(os.tmpdir(), 'synestra-mcp-token-')), 'token');
@@ -377,4 +479,19 @@ async function addWorkflow(fixture, workflowId, nodeId, name) {
     }
   }, null, 2));
   await fs.writeFile(path.join(codeDir, `${nodeId}.json`), `return [{ json: { name: '${name}' } }];\n`);
+}
+
+function assertNoSourceLeak(value) {
+  const serialized = JSON.stringify(value);
+  for (const forbidden of [
+    'print("before")',
+    '{"ok":true}',
+    'pythonCode',
+    'jsCode',
+    'jsonOutput',
+    'expectedContent',
+    'SYNESTRA_DO_NOT_ECHO_PROPOSED_CONTENT'
+  ]) {
+    assert.equal(serialized.includes(forbidden), false, `leaked marker: ${forbidden}`);
+  }
 }
