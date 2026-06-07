@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
-import { exportDiagnostics, listWorkflowFiles, readWorkflowFile, reconcileWorkflowFiles, validateWorkflowFile } from '../src/file-store.mjs';
+import { exportDiagnostics, listWorkflowFiles, observeWorkflowFile, readWorkflowFile, reconcileWorkflowFiles, validateWorkflowFile } from '../src/file-store.mjs';
 import { createWorkflowFixture } from './fixtures.mjs';
 
 test('lists and reads Code and Set(raw) files with ETags', async () => {
@@ -19,6 +20,21 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.match(code.filesystemPath, /code_nodes_/);
   assert.match(code.containerPath, /code_nodes_/);
   assert.match(code.etag, /^[a-f0-9]{64}$/);
+});
+
+test('ETag is a strong byte hash and observes external edits without echoing content', async () => {
+  const fixture = await createWorkflowFixture();
+  const before = await readWorkflowFile(fixture.config, fixture.codeUri);
+  const filePath = path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.nodeId}.py`);
+  await fs.writeFile(filePath, 'print("after")\n');
+  const after = await readWorkflowFile(fixture.config, fixture.codeUri);
+  assert.notEqual(after.etag, before.etag);
+  assert.equal(after.etag, crypto.createHash('sha256').update(await fs.readFile(filePath)).digest('hex'));
+  const observed = await observeWorkflowFile(fixture.config, { uri: fixture.codeUri, expectedEtag: before.etag, expectedContent: 'print("after")\n', timeoutMs: 100 });
+  assert.equal(observed.settled, true);
+  assert.equal(observed.etagMatches, false);
+  assert.equal(observed.contentMatches, true);
+  assert.equal(JSON.stringify(observed).includes('print("after")'), false);
 });
 
 test('list reports stale exports instead of ready locators', async () => {

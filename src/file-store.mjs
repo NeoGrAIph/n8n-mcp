@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import fssync from 'node:fs';
 import path from 'node:path';
-import { ToolError } from './errors.mjs';
+import { InvalidParamsError, ToolError } from './errors.mjs';
 import { buildResourceUri, displayPath, relativePath, resolveTargetFile, resolveWorkflowDir } from './path-resolver.mjs';
 import { gitSummary, targetGitStatus } from './git-state.mjs';
 import { workflowIndexStatus } from './config.mjs';
@@ -55,14 +55,24 @@ export async function listWorkflowResources(config) {
   return (await listWorkflowResourcesWithDiagnostics(config)).resources;
 }
 
-export async function listWorkflowResourcesWithDiagnostics(config) {
+export async function listWorkflowResourcesWithDiagnostics(config, params = {}) {
+  const cursor = decodeResourceListCursor(params.cursor);
+  const limit = config.resourceListLimit || 200;
   const indexDir = path.join(config.root, '.index');
   if (!fssync.existsSync(indexDir)) {
     return {
       resources: [],
       _meta: {
         skippedWorkflows: [],
-        summary: { indexedWorkflows: 0, resourceCount: 0, skippedWorkflowCount: 0 }
+        summary: {
+          indexedWorkflows: 0,
+          resourceCount: 0,
+          returnedResourceCount: 0,
+          pageOffset: 0,
+          pageLimit: limit,
+          hasNextPage: false,
+          skippedWorkflowCount: 0
+        }
       }
     };
   }
@@ -94,21 +104,56 @@ export async function listWorkflowResourcesWithDiagnostics(config) {
   }
   resources.sort((a, b) => a.uri.localeCompare(b.uri));
   skippedWorkflows.sort((a, b) => a.workflowId.localeCompare(b.workflowId));
+  const startOffset = cursor.afterUri ? resources.findIndex(resource => resource.uri > cursor.afterUri) : 0;
+  const pageOffset = startOffset < 0 ? resources.length : startOffset;
+  const page = resources.slice(pageOffset, pageOffset + limit);
+  const last = page.at(-1);
+  const nextCursor = last && pageOffset + page.length < resources.length ? encodeResourceListCursor(last.uri) : undefined;
   return {
-    resources,
+    resources: page,
+    ...(nextCursor ? { nextCursor } : {}),
     _meta: {
       skippedWorkflows,
       summary: {
         indexedWorkflows,
         resourceCount: resources.length,
+        returnedResourceCount: page.length,
+        pageOffset,
+        pageLimit: limit,
+        hasNextPage: Boolean(nextCursor),
         skippedWorkflowCount: skippedWorkflows.length
       }
     }
   };
 }
 
+function encodeResourceListCursor(afterUri) {
+  return Buffer.from(JSON.stringify({ v: 1, afterUri }), 'utf8').toString('base64url');
+}
+
+function decodeResourceListCursor(cursor) {
+  if (cursor === undefined || cursor === null || cursor === '') return { afterUri: '' };
+  if (typeof cursor !== 'string' || cursor.length > 256) throw new InvalidParamsError('Invalid resources/list cursor', { code: 'INVALID_CURSOR' });
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (parsed?.v !== 1 || typeof parsed.afterUri !== 'string' || parsed.afterUri.length > 512) throw new Error('bad cursor');
+    return { afterUri: parsed.afterUri };
+  } catch {
+    throw new InvalidParamsError('Invalid resources/list cursor', { code: 'INVALID_CURSOR' });
+  }
+}
+
 export async function readWorkflowResource(config, uri) {
-  const file = await locateWorkflowFile(config, uri);
+  if (typeof uri !== 'string' || uri.length === 0) throw new InvalidParamsError('resources/read requires params.uri', { code: 'INVALID_RESOURCE_URI' });
+  let file;
+  try {
+    file = await locateWorkflowFile(config, uri);
+  } catch (error) {
+    if (error instanceof ToolError && ['INVALID_URI', 'INVALID_WORKFLOW_ID', 'INVALID_NODE_ID'].includes(error.code)) {
+      throw new InvalidParamsError(error.message, { code: error.code });
+    }
+    throw error;
+  }
   return {
     _meta: {
       etag: file.etag,

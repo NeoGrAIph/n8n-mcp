@@ -59,6 +59,10 @@ test('tools/call returns workflow reconcile status', async () => {
   });
   assert.equal(result.result.structuredContent.summary.ready, 2);
   assert.equal(result.result.structuredContent.summary.missing_file, 0);
+  const serialized = JSON.stringify(result.result.structuredContent);
+  assert.equal(serialized.includes('print("before")'), false);
+  assert.equal(serialized.includes('{"ok":true}'), false);
+  assert.equal(serialized.includes('expectedContent'), false);
 });
 
 test('tools/call file_read returns locator metadata without source content', async () => {
@@ -238,7 +242,15 @@ test('resources/list and resources/read expose workflow file locators without so
   const fixture = await createWorkflowFixture();
   const list = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 4, method: 'resources/list', params: {} });
   assert.equal(list.result.resources.length, 2);
-  assert.deepEqual(list.result._meta.summary, { indexedWorkflows: 1, resourceCount: 2, skippedWorkflowCount: 0 });
+  assert.deepEqual(list.result._meta.summary, {
+    indexedWorkflows: 1,
+    resourceCount: 2,
+    returnedResourceCount: 2,
+    pageOffset: 0,
+    pageLimit: 200,
+    hasNextPage: false,
+    skippedWorkflowCount: 0
+  });
   assert.equal(list.result.resources.some(resource => resource.uri === fixture.codeUri), true);
   const listedCode = list.result.resources.find(resource => resource.uri === fixture.codeUri);
   assert.equal(listedCode.mimeType, 'text/x-python');
@@ -254,6 +266,67 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.match(locator.filesystemPath, /code_nodes_/);
   assert.notEqual(read.result.contents[0].text, 'print("before")\n');
   assert.match(read.result._meta.etag, /^[a-f0-9]{64}$/);
+});
+
+test('resources/list paginates with opaque cursor and stable global summary', async () => {
+  const fixture = await createWorkflowFixture();
+  await addWorkflow(fixture, 'Bbbbbbbb22222222', '22222222-2222-4222-8222-222222222222', 'alpha');
+  await addWorkflow(fixture, 'Cccccccc33333333', '33333333-3333-4333-8333-333333333333', 'bravo');
+  const config = { ...fixture.config, resourceListLimit: 2 };
+  const first = await handleJsonRpc(config, { jsonrpc: '2.0', id: 42, method: 'resources/list', params: {} });
+  assert.equal(first.result.resources.length, 2);
+  assert.match(first.result.nextCursor, /^[A-Za-z0-9_-]+$/);
+  assert.deepEqual(first.result._meta.summary, {
+    indexedWorkflows: 3,
+    resourceCount: 4,
+    returnedResourceCount: 2,
+    pageOffset: 0,
+    pageLimit: 2,
+    hasNextPage: true,
+    skippedWorkflowCount: 0
+  });
+
+  const second = await handleJsonRpc(config, { jsonrpc: '2.0', id: 43, method: 'resources/list', params: { cursor: first.result.nextCursor } });
+  assert.equal(second.result.resources.length, 2);
+  assert.equal(second.result.nextCursor, undefined);
+  assert.equal(second.result._meta.summary.resourceCount, 4);
+  assert.equal(second.result._meta.summary.pageOffset, 2);
+  assert.deepEqual(
+    [...first.result.resources, ...second.result.resources].map(resource => resource.uri),
+    [...first.result.resources, ...second.result.resources].map(resource => resource.uri).sort()
+  );
+});
+
+test('resources/list rejects invalid cursor as JSON-RPC invalid params', async () => {
+  const fixture = await createWorkflowFixture();
+  const result = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 44, method: 'resources/list', params: { cursor: 'not-a-valid-cursor' } });
+  assert.equal(result.error.code, -32602);
+  assert.equal(result.error.data.code, 'INVALID_CURSOR');
+});
+
+test('resources/list rejects non-object params as JSON-RPC invalid params', async () => {
+  const fixture = await createWorkflowFixture();
+  for (const params of ['bad', [], 1, true]) {
+    const result = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 48, method: 'resources/list', params });
+    assert.equal(result.error.code, -32602);
+    assert.equal(result.error.data.code, 'INVALID_PARAMS');
+  }
+});
+
+test('resources/read maps invalid URI and missing files to resource errors', async () => {
+  const fixture = await createWorkflowFixture();
+  const missingUri = `synestra-n8n-workflows:///code/${fixture.workflowId}/00000000-0000-0000-0000-000000000000.py`;
+  const missing = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 45, method: 'resources/read', params: { uri: missingUri } });
+  assert.equal(missing.error.code, -32002);
+  assert.equal(missing.error.data.code, 'FILE_NOT_FOUND');
+
+  const invalid = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 46, method: 'resources/read', params: { uri: 'not-a-resource-uri' } });
+  assert.equal(invalid.error.code, -32602);
+  assert.equal(invalid.error.data.code, 'INVALID_URI');
+
+  const missingParam = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 47, method: 'resources/read', params: {} });
+  assert.equal(missingParam.error.code, -32602);
+  assert.equal(missingParam.error.data.code, 'INVALID_RESOURCE_URI');
 });
 
 test('resources/list reports skipped workflows instead of hiding index problems', async () => {
@@ -282,3 +355,26 @@ test('unauthenticated health endpoint is minimal', async () => {
     await new Promise(resolve => server.close(resolve));
   }
 });
+
+async function addWorkflow(fixture, workflowId, nodeId, name) {
+  const workflowDir = path.join(fixture.root, 'development');
+  const codeDir = path.join(workflowDir, `code_nodes_${workflowId}`);
+  await fs.mkdir(codeDir, { recursive: true });
+  await fs.writeFile(path.join(fixture.root, '.index', `${workflowId}.path`), 'development\n');
+  await fs.writeFile(path.join(workflowDir, `${workflowId}.${name}.json`), JSON.stringify({
+    name,
+    workflow_id: workflowId,
+    workflow: {
+      name,
+      nodes: [{
+        id: nodeId,
+        name: `${name} Code`,
+        type: 'n8n-nodes-base.code',
+        parameters: { language: 'javaScript', jsCode: `return [{ json: { name: '${name}' } }];` }
+      }],
+      connections: {},
+      settings: {}
+    }
+  }, null, 2));
+  await fs.writeFile(path.join(codeDir, `${nodeId}.json`), `return [{ json: { name: '${name}' } }];\n`);
+}

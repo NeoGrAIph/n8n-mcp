@@ -72,7 +72,7 @@ export async function workflowReconcileStatus(config, workflowId) {
     const status = target.nullPayload ? 'null_set_raw_payload' : (file.exists ? (file.normalizedHashMatches ? 'ready' : 'stale_export') : 'missing_file');
     result.summary[status] += 1;
     result.targets.push({
-      ...target,
+      ...stripExpectedContent(target),
       uri: target.kind === 'set'
         ? buildResourceUri('set', workflowId, target.nodeId, 'set.json')
         : buildResourceUri('code', workflowId, target.nodeId, target.ext),

@@ -1,7 +1,7 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { readAuthToken } from './config.mjs';
-import { toJsonRpcError } from './errors.mjs';
+import { InvalidParamsError, toJsonRpcError } from './errors.mjs';
 import { listWorkflowResourcesWithDiagnostics, readWorkflowResource } from './file-store.mjs';
 import { callTool, toolsForConfig } from './tools.mjs';
 
@@ -63,7 +63,7 @@ async function handleSingleJsonRpc(config, message) {
       case 'tools/call':
         return { jsonrpc: '2.0', id, result: await callTool(config, message.params?.name, message.params?.arguments || {}) };
       case 'resources/list':
-        return { jsonrpc: '2.0', id, result: await listWorkflowResourcesWithDiagnostics(config) };
+        return { jsonrpc: '2.0', id, result: await listWorkflowResourcesWithDiagnostics(config, paramsObject(message.params, 'resources/list')) };
       case 'resources/read':
         return { jsonrpc: '2.0', id, result: await readWorkflowResource(config, message.params?.uri) };
       default:
@@ -72,6 +72,12 @@ async function handleSingleJsonRpc(config, message) {
   } catch (error) {
     return { jsonrpc: '2.0', id, error: toJsonRpcError(error) };
   }
+}
+
+function paramsObject(params, method) {
+  if (params === undefined || params === null) return {};
+  if (typeof params !== 'object' || Array.isArray(params)) throw new InvalidParamsError(`${method} params must be an object`, { code: 'INVALID_PARAMS' });
+  return params;
 }
 
 function isAuthorized(req, authToken) {

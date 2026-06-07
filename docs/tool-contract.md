@@ -4,7 +4,9 @@ Native n8n MCP owns core n8n operations. This server exposes only Synestra GitOp
 
 This server does not return Code/Set(raw) source content. `synestra_workflow_file_read` is a compatibility name for locator metadata: it returns `filesystemPath`, `containerPath`, `relativePath`, `uri`, `etag`, `kind`, `language` and locator status. `resources/read` returns the same locator metadata as JSON text with `mimeType: application/json`, not the underlying workflow file payload. `resources/list` may advertise the target file MIME type to help clients understand the external file kind, but `resources/read` is always a locator JSON payload.
 
-`resources/list` returns `resources` plus `_meta.summary` and `_meta.skippedWorkflows`. A skipped workflow means the index entry exists but that workflow could not be resolved/listed; clients must not treat the resource list as complete when `skippedWorkflowCount > 0`.
+`resources/list` returns a bounded page of `resources` plus `_meta.summary` and `_meta.skippedWorkflows`. Clients may pass the opaque `params.cursor` returned as `nextCursor` to fetch the next page. `_meta.summary.resourceCount`, `indexedWorkflows` and `skippedWorkflowCount` describe the full scanned catalog, while `returnedResourceCount`, `pageOffset`, `pageLimit` and `hasNextPage` describe the current page. A skipped workflow means the index entry exists but that workflow could not be resolved/listed; clients must not treat the resource list as complete when `skippedWorkflowCount > 0`.
+
+ETags are strong SHA-256 hashes of the exact target file bytes. They are read/observe concurrency tokens for external filesystem edits, not HTTP cache validators and not permission to write. Any external edit changes the ETag. No content normalization is applied to ETags; normalization status is reported separately by locator/reconcile diagnostics where relevant.
 
 Read-only tools:
 

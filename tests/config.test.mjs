@@ -35,3 +35,19 @@ test('config supports separate workflow git root for diagnostics', () => {
   assert.equal(config.root, '/repo/workflows');
   assert.equal(config.gitRoot, '/repo');
 });
+
+test('config clamps resources/list page limit', () => {
+  const low = loadConfig({
+    HOST: '127.0.0.1',
+    SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'true',
+    SYNESTRA_MCP_RESOURCE_LIST_LIMIT: '0'
+  });
+  assert.equal(low.resourceListLimit, 1);
+
+  const high = loadConfig({
+    HOST: '127.0.0.1',
+    SYNESTRA_MCP_ALLOW_UNAUTHENTICATED_LOCAL: 'true',
+    SYNESTRA_MCP_RESOURCE_LIST_LIMIT: '5000'
+  });
+  assert.equal(high.resourceListLimit, 1000);
+});

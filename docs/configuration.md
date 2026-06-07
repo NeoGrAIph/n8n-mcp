@@ -14,6 +14,7 @@ Runtime environment:
 - `SYNESTRA_MCP_ALLOW_MISSING_INDEX_READONLY`: allows startup in explicit degraded read-only mode when `workflows/.index` is missing.
 - `SYNESTRA_MCP_EXPECTED_BRANCH`: optional diagnostic context for Git status output; it does not enable writes and is not used to select source-of-truth behavior.
 - `SYNESTRA_MCP_MAX_FILE_BYTES`: maximum inspected workflow file size, default `262144`, clamped to `1..10485760`.
+- `SYNESTRA_MCP_RESOURCE_LIST_LIMIT`: maximum resources returned by one `resources/list` page, default `200`, clamped to `1..1000`.
 - `SYNESTRA_MCP_SETTLE_TIMEOUT_MS`: default observe timeout, default `15000`, clamped to `100..120000`.
 - `SYNESTRA_MCP_SETTLE_STABLE_READS`: number of stable ETag reads required for observe, default `2`, clamped to `1..20`.
 - `SYNESTRA_PLATFORM_DISPLAY_ROOT`: optional display path used only in production-readiness handoff commands, default `~/repo/synestra-platform`.

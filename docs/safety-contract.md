@@ -8,6 +8,8 @@ Production writes are not supported in v1. Dev edits are performed by normal fil
 
 MCP locator calls must not return Code/Set(raw) source content. They return paths and ETags so the caller can use normal filesystem tools for inspection and edits.
 
+ETags are strong SHA-256 hashes of exact file bytes. Treat them only as stale-read detection for external filesystem tools and `synestra_workflow_sync_observe`; an ETag match does not grant write permission, bypass locator safety, or prove n8n DB/files production readiness.
+
 MCP health, `tools/list`, local mount diagnostics and export diagnostics are not production-readiness proof. Production readiness requires separate platform read-only gates for native n8n MCP acceptance, gateway hardening and Camel K/DB-to-files parity.
 
 Unauthenticated `/health` returns only `{ "status": "ok" }`. Detailed diagnostics are MCP tools behind Bearer auth.
