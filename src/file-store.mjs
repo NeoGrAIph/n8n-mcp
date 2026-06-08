@@ -9,6 +9,8 @@ import { gitSummary, targetGitStatus } from './git-state.mjs';
 import { workflowIndexStatus } from './config.mjs';
 import { mimeTypeForFile, setRawSyntax, targetNodeMetadata, workflowReconcileStatus } from './workflow-metadata.mjs';
 
+const RESOURCE_PAYLOAD_KIND = 'locator-json';
+
 export function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
@@ -222,6 +224,7 @@ export async function locateWorkflowFile(config, uri) {
     kind: target.kind,
     language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined,
     locatorOnly: true,
+    resourcePayloadKind: RESOURCE_PAYLOAD_KIND,
     externalMimeType: mimeTypeForFile({ kind: target.kind, language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined }),
     externalFilesystemPathAvailableWhen: 'locator.status=ready',
     locator,
@@ -234,6 +237,7 @@ export async function locateWorkflowFile(config, uri) {
 function locatorOnlyResourceMeta(file) {
   return {
     locatorOnly: true,
+    resourcePayloadKind: RESOURCE_PAYLOAD_KIND,
     externalMimeType: mimeTypeForFile(file),
     externalFilesystemPathAvailableWhen: 'locator.status=ready',
     resourceReadMimeType: 'application/json'

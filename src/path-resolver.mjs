@@ -120,12 +120,12 @@ export async function findDuplicateCodeDirs(rootReal, workflowId, canonicalCodeD
       continue;
     }
     for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
       const full = path.join(current, entry.name);
       if (entry.name === `code_nodes_${workflowId}`) {
         if (path.resolve(full) !== canonical) duplicates.push(toPosix(path.relative(rootReal, path.resolve(full))));
         continue;
       }
+      if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
       queue.push(full);
     }
   }

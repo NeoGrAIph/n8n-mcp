@@ -556,6 +556,7 @@ test('resources/list and resources/read expose workflow file locators without so
   const listedCode = list.result.resources.find(resource => resource.uri === fixture.codeUri);
   assert.equal(listedCode.mimeType, 'text/x-python');
   assert.equal(listedCode._meta.locatorOnly, true);
+  assert.equal(listedCode._meta.resourcePayloadKind, 'locator-json');
   assert.equal(listedCode._meta.externalMimeType, 'text/x-python');
   assert.equal(listedCode._meta.externalFilesystemPathAvailableWhen, 'locator.status=ready');
   assert.equal(listedCode._meta.resourceReadMimeType, 'application/json');
@@ -564,6 +565,7 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(read.result.contents[0].mimeType, 'application/json');
   assert.notEqual(read.result.contents[0].mimeType, listedCode.mimeType);
   assert.equal(read.result._meta.locatorOnly, true);
+  assert.equal(read.result._meta.resourcePayloadKind, 'locator-json');
   assert.equal(read.result._meta.externalMimeType, 'text/x-python');
   assert.equal(read.result._meta.externalFilesystemPathAvailableWhen, 'locator.status=ready');
   assert.equal(read.result._meta.resourceReadMimeType, 'application/json');
@@ -571,6 +573,7 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.uri, fixture.codeUri);
   assert.equal(locator.kind, 'code');
   assert.equal(locator.locatorOnly, true);
+  assert.equal(locator.resourcePayloadKind, 'locator-json');
   assert.equal(locator.externalMimeType, 'text/x-python');
   assert.equal(locator.externalFilesystemPathAvailableWhen, 'locator.status=ready');
   assert.equal(locator.locator.status, 'ready');
@@ -597,15 +600,18 @@ test('resources/list and resources/read expose workflow file locators without so
   const listedSet = list.result.resources.find(resource => resource.uri === fixture.setUri);
   assert.equal(listedSet.mimeType, 'application/json');
   assert.equal(listedSet._meta.locatorOnly, true);
+  assert.equal(listedSet._meta.resourcePayloadKind, 'locator-json');
   assert.equal(listedSet._meta.externalMimeType, 'application/json');
   assert.equal(listedSet._meta.resourceReadMimeType, 'application/json');
   const setRead = await handleJsonRpc(fixture.config, { jsonrpc: '2.0', id: 50, method: 'resources/read', params: { uri: fixture.setUri } });
   assert.equal(setRead.result.contents[0].uri, fixture.setUri);
   assert.equal(setRead.result.contents[0].mimeType, 'application/json');
   assert.equal(setRead.result._meta.locatorOnly, true);
+  assert.equal(setRead.result._meta.resourcePayloadKind, 'locator-json');
   assert.equal(setRead.result._meta.externalMimeType, 'application/json');
   const setLocator = JSON.parse(setRead.result.contents[0].text);
   assert.equal(setLocator.kind, 'set');
+  assert.equal(setLocator.resourcePayloadKind, 'locator-json');
   assert.equal(setLocator.locator.status, 'ready');
   assert.equal(setLocator.editReadiness.localLocatorReady, true);
   assert.equal(setLocator.editReadiness.effectiveDecision, 'requires-platform-preflight');
