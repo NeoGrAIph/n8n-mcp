@@ -94,7 +94,8 @@ export async function listWorkflowResourcesWithDiagnostics(config, params = {}) 
           name: `${file.workflowId}/${file.nodeId}`,
           title: `${file.kind === 'set' ? 'Set(raw)' : 'Code'} file ${file.nodeId}`,
           mimeType: mimeTypeForFile(file),
-          annotations: { audience: ['assistant'], priority: 0.6 }
+          annotations: { audience: ['assistant'], priority: 0.6 },
+          _meta: locatorOnlyResourceMeta(file)
         });
       }
     } catch (error) {
@@ -159,6 +160,7 @@ export async function readWorkflowResource(config, uri) {
   }
   return {
     _meta: {
+      ...locatorOnlyResourceMeta(file),
       etag: file.etag,
       size: file.size,
       lastModified: file.lastModified,
@@ -219,10 +221,22 @@ export async function locateWorkflowFile(config, uri) {
     nodeId: target.nodeId,
     kind: target.kind,
     language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined,
+    locatorOnly: true,
+    externalMimeType: mimeTypeForFile({ kind: target.kind, language: target.kind === 'code' ? (target.ext === 'py' ? 'python' : 'javascript') : undefined }),
+    externalFilesystemPathAvailableWhen: 'locator.status=ready',
     locator,
     editReadiness: externalEditReadiness(config, locator),
     uri,
     ...(await statFile(config, target.filePath))
+  };
+}
+
+function locatorOnlyResourceMeta(file) {
+  return {
+    locatorOnly: true,
+    externalMimeType: mimeTypeForFile(file),
+    externalFilesystemPathAvailableWhen: 'locator.status=ready',
+    resourceReadMimeType: 'application/json'
   };
 }
 

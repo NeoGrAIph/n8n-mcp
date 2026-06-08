@@ -8,7 +8,7 @@ Locate one extracted Code or Set(raw) workflow file and return metadata for exte
 
 ## Output
 
-Returns locator metadata including `workflowId`, `nodeId`, `kind`, optional `language`, `uri`, `etag`, `size`, `lastModified`, `filesystemPath`, `containerPath`, `relativePath`, `locator.status` and `editReadiness`.
+Returns locator metadata including `workflowId`, `nodeId`, `kind`, optional `language`, `uri`, `etag`, `size`, `lastModified`, `filesystemPath`, `containerPath`, `relativePath`, `locator.status`, `editReadiness`, `locatorOnly=true`, `externalMimeType` and `externalFilesystemPathAvailableWhen=locator.status=ready`.
 
 `filesystemPath` is the host-facing path intended for normal filesystem tools. `containerPath` is diagnostic-only for the MCP container mount.
 
