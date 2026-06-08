@@ -84,8 +84,7 @@ Numeric environment values must be unsigned integer strings. Boolean environment
 ## Development
 
 ```bash
-npm test
-find src tests -name '*.mjs' -print0 | xargs -0 -n1 node --check
+npm run verify
 docker build -t synestra-n8n-gitops-mcp:local .
 sh tests/smoke.sh synestra-n8n-gitops-mcp:local
 ```
