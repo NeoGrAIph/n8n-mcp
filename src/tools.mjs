@@ -5,9 +5,9 @@ export const toolDefinitions = [
   tool('synestra_workflow_files_status', 'Return read-only GitOps status for workflow file mounts, .index and optional target URI.', true, { uri: stringProperty(512) }),
   tool('synestra_workflow_files_list', 'List existing Code and Set(raw) files for one workflow resolved through workflows/.index.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
   tool('synestra_workflow_file_read', 'Locate one existing Code or Set(raw) file by Synestra workflow resource URI and return filesystem path, ETag and locator status without file content.', true, { uri: stringProperty(512) }, ['uri']),
-  tool('synestra_workflow_file_validate', 'Validate an existing or proposed Code/Set(raw) file payload without writing it.', true, { uri: stringProperty(512), content: stringProperty(262144) }, ['uri']),
+  tool('synestra_workflow_file_validate', 'Validate an existing or proposed Code/Set(raw) file payload without writing it.', true, { uri: stringProperty(512), content: stringProperty(262144), contentSha256: sha256Property() }, ['uri']),
   tool('synestra_workflow_reconcile_status', 'Return read-only file-layer parity for one workflow: workflow JSON, .index, Code files and Set(raw) files.', true, { workflowId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,}$' } }, ['workflowId']),
-  tool('synestra_workflow_sync_observe', 'Observe a workflow file after an external filesystem edit and report ETag/content settle status.', true, { uri: stringProperty(512), expectedEtag: etagProperty(), expectedContent: stringProperty(262144), timeoutMs: { type: 'integer', minimum: 100, maximum: 120000 } }, ['uri']),
+  tool('synestra_workflow_sync_observe', 'Observe a workflow file after an external filesystem edit and report ETag/content settle status.', true, { uri: stringProperty(512), expectedEtag: etagProperty(), expectedContent: stringProperty(262144), expectedContentSha256: sha256Property(), timeoutMs: { type: 'integer', minimum: 100, maximum: 120000 } }, ['uri']),
   tool('synestra_workflow_mount_diagnostics', 'Return read-only local mount diagnostics for workflows, .index and Debezium offset files.', true, {}),
   tool('synestra_workflow_export_diagnostics', 'Return read-only local export diagnostics plus Camel K live-audit handoff metadata.', true, {})
 ];
@@ -70,6 +70,16 @@ function validateToolArguments(definition, args) {
     const property = properties[key];
     if (!property || value === undefined) continue;
     validateProperty(definition.name, key, value, property);
+  }
+  validateSemanticArgumentConflicts(definition.name, args);
+}
+
+function validateSemanticArgumentConflicts(toolName, args) {
+  if (toolName === 'synestra_workflow_file_validate' && args.content !== undefined && args.contentSha256 !== undefined) {
+    throw invalidArgs(toolName, 'content and contentSha256 are mutually exclusive');
+  }
+  if (toolName === 'synestra_workflow_sync_observe' && args.expectedContent !== undefined && args.expectedContentSha256 !== undefined) {
+    throw invalidArgs(toolName, 'expectedContent and expectedContentSha256 are mutually exclusive');
   }
 }
 
@@ -137,5 +147,9 @@ function stringProperty(maxLength) {
 }
 
 function etagProperty() {
+  return sha256Property();
+}
+
+function sha256Property() {
   return { type: 'string', pattern: '^[a-f0-9]{64}$' };
 }

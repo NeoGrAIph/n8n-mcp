@@ -242,12 +242,16 @@ function locatorOnlyResourceMeta(file) {
 
 export const readWorkflowFile = locateWorkflowFile;
 
-export async function validateWorkflowFile(config, { uri, content }) {
+export async function validateWorkflowFile(config, { uri, content, contentSha256 }) {
   const target = await resolveTargetFile(config, uri);
   const diagnostics = [];
   let validSyntax = true;
   if (!fssync.existsSync(target.filePath)) diagnostics.push({ level: 'error', code: 'FILE_NOT_FOUND', message: 'Target file does not exist' });
-  const value = content ?? (fssync.existsSync(target.filePath) ? await fs.readFile(target.filePath, 'utf8') : '');
+  const value = content ?? (fssync.existsSync(target.filePath) ? await readTargetFileContent(config, target.filePath) : '');
+  const contentSha256Matches = contentSha256 === undefined ? null : sha256(Buffer.from(value, 'utf8')) === contentSha256;
+  if (contentSha256Matches === false) {
+    diagnostics.push({ level: 'error', code: 'CONTENT_SHA256_MISMATCH', message: 'Content SHA-256 does not match the validation input bytes' });
+  }
   if (target.kind === 'set') {
     const syntax = setRawSyntax(value);
     if (syntax === 'invalid_json') {
@@ -262,10 +266,12 @@ export async function validateWorkflowFile(config, { uri, content }) {
   const editReadiness = externalEditReadiness(config, locator);
   return {
     uri,
-    valid: validSyntax && safeToEdit,
+    valid: validSyntax && safeToEdit && contentSha256Matches !== false,
     validSyntax,
     safeToEdit,
     safeToEditScope: 'local-locator-only',
+    validationInputSource: content === undefined ? 'current-file' : 'provided-content',
+    contentSha256Matches,
     editReadiness,
     diagnostics,
     locator,
@@ -346,7 +352,7 @@ function externalEditReadiness(config, locator) {
   };
 }
 
-export async function observeWorkflowFile(config, { uri, expectedEtag, expectedContent, timeoutMs }) {
+export async function observeWorkflowFile(config, { uri, expectedEtag, expectedContent, expectedContentSha256, timeoutMs }) {
   const started = Date.now();
   const timeout = Math.min(Math.max(Number(timeoutMs || config.settleTimeoutMs), 100), 120000);
   let stableReads = 0;
@@ -357,11 +363,11 @@ export async function observeWorkflowFile(config, { uri, expectedEtag, expectedC
     stableReads = last.etag === previousEtag ? stableReads + 1 : 1;
     previousEtag = last.etag;
     if (stableReads >= config.settleStableReads) {
-      return settleResult(config, uri, started, last, expectedEtag, expectedContent, true);
+      return settleResult(config, uri, started, last, expectedEtag, expectedContent, expectedContentSha256, true);
     }
     await sleep(250);
   }
-  return settleResult(config, uri, started, last, expectedEtag, expectedContent, false);
+  return settleResult(config, uri, started, last, expectedEtag, expectedContent, expectedContentSha256, false);
 }
 
 export async function mountDiagnostics(config) {
@@ -398,22 +404,35 @@ export async function reconcileWorkflowFiles(config, { workflowId }) {
   return workflowReconcileStatus(config, workflowId);
 }
 
-async function settleResult(config, uri, started, last, expectedEtag, expectedContent, settled) {
+async function settleResult(config, uri, started, last, expectedEtag, expectedContent, expectedContentSha256, settled) {
   const contentMatches = expectedContent === undefined || await workflowFileContentMatches(config, uri, expectedContent);
+  const contentSha256Matches = expectedContentSha256 === undefined || last?.etag === expectedContentSha256;
+  const diagnostics = [];
+  if (contentSha256Matches === false) {
+    diagnostics.push({ level: 'error', code: 'EXPECTED_CONTENT_SHA256_MISMATCH', message: 'Latest file SHA-256 does not match expected final content hash' });
+  }
   return {
     settled,
     elapsedMs: Date.now() - started,
     etag: last?.etag || null,
     contentMatches,
+    contentSha256Matches,
     etagMatches: expectedEtag === undefined || last?.etag === expectedEtag,
-    normalized: expectedContent !== undefined && !contentMatches
+    normalized: (expectedContent !== undefined && !contentMatches) || (expectedContentSha256 !== undefined && !contentSha256Matches),
+    diagnostics
   };
 }
 
 async function workflowFileContentMatches(config, uri, expectedContent) {
   const target = await resolveTargetFile(config, uri);
   if (!fssync.existsSync(target.filePath)) return false;
-  return await fs.readFile(target.filePath, 'utf8') === expectedContent;
+  return await readTargetFileContent(config, target.filePath) === expectedContent;
+}
+
+async function readTargetFileContent(config, filePath) {
+  const stats = await fs.stat(filePath);
+  if (stats.size > config.maxFileBytes) throw new ToolError(`File exceeds max size: ${stats.size} > ${config.maxFileBytes}`, 'FILE_TOO_LARGE');
+  return fs.readFile(filePath, 'utf8');
 }
 
 async function listDebeziumOffsetFiles(config) {

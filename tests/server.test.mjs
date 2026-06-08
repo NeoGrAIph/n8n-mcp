@@ -298,6 +298,42 @@ test('tools/call validates arguments against published schemas', async () => {
   });
   assert.equal(badPattern.error.data.code, 'INVALID_TOOL_ARGUMENTS');
   assert.match(badPattern.error.message, /expectedEtag does not match required pattern/);
+
+  const badContentHash = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 341,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_file_validate', arguments: { uri: fixture.codeUri, contentSha256: 'bad' } }
+  });
+  assert.equal(badContentHash.error.data.code, 'INVALID_TOOL_ARGUMENTS');
+  assert.match(badContentHash.error.message, /contentSha256 does not match required pattern/);
+
+  const badExpectedContentHash = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 342,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContentSha256: 'bad' } }
+  });
+  assert.equal(badExpectedContentHash.error.data.code, 'INVALID_TOOL_ARGUMENTS');
+  assert.match(badExpectedContentHash.error.message, /expectedContentSha256 does not match required pattern/);
+
+  const validateConflict = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 343,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_file_validate', arguments: { uri: fixture.codeUri, content: 'x', contentSha256: '0'.repeat(64) } }
+  });
+  assert.equal(validateConflict.error.data.code, 'INVALID_TOOL_ARGUMENTS');
+  assert.match(validateConflict.error.message, /content and contentSha256 are mutually exclusive/);
+
+  const observeConflict = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 344,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContent: 'x', expectedContentSha256: '0'.repeat(64) } }
+  });
+  assert.equal(observeConflict.error.data.code, 'INVALID_TOOL_ARGUMENTS');
+  assert.match(observeConflict.error.message, /expectedContent and expectedContentSha256 are mutually exclusive/);
 });
 
 test('tools/call refuses write tools in every config', async () => {
@@ -338,6 +374,18 @@ test('tools/call validate and observe do not echo proposed file content', async 
   assert.equal(observe.error, undefined);
   assertNoSourceLeak(observe.result.structuredContent);
   assert.equal(JSON.stringify(observe.result.structuredContent).includes(proposedContent), false);
+
+  const hashOnlyObserve = await handleJsonRpc({ ...fixture.config, settleStableReads: 1 }, {
+    jsonrpc: '2.0',
+    id: 401,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_sync_observe', arguments: { uri: fixture.codeUri, expectedContentSha256: '0'.repeat(64), timeoutMs: 100 } }
+  });
+  assert.equal(hashOnlyObserve.error, undefined);
+  assert.equal(hashOnlyObserve.result.structuredContent.contentMatches, true);
+  assert.equal(hashOnlyObserve.result.structuredContent.contentSha256Matches, false);
+  assert.equal(hashOnlyObserve.result.structuredContent.diagnostics.some(item => item.code === 'EXPECTED_CONTENT_SHA256_MISMATCH'), true);
+  assertNoSourceLeak(hashOnlyObserve.result.structuredContent);
 });
 
 test('tools/call returns tool execution failures as MCP tool errors', async () => {

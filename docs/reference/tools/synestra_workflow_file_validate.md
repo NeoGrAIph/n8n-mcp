@@ -6,14 +6,17 @@ Validate an existing or proposed Code/Set(raw) file payload without writing it. 
 
 - `uri` string, required. Synestra workflow resource URI for a Code or Set(raw) file.
 - `content` string, optional. Proposed payload to validate. If omitted, the current file content is read internally for validation and is not echoed back.
+- `contentSha256` string, optional. SHA-256 of the validation input bytes. When `content` is omitted, this is compared with the current file bytes; when `content` is provided, this is compared with that proposed payload.
+
+`content` and `contentSha256` are mutually exclusive. Hash-only validation checks exact bytes currently on disk; it cannot syntax-check an off-disk proposed payload that was not sent to MCP.
 
 ## Output
 
-Returns `valid`, `validSyntax`, `safeToEdit`, `safeToEditScope`, `editReadiness`, `diagnostics`, `locator` and `target`. For Set(raw), `validSyntax` reflects JSON/expression syntax. For Code files, `validSyntax` is not a language parser result; use external language tooling for Python/JavaScript checks. `safeToEdit` is the local file-layer locator eligibility gate only; final external-edit permission still requires the platform Camel K/DB/files gate.
+Returns `valid`, `validSyntax`, `safeToEdit`, `safeToEditScope`, `validationInputSource`, `contentSha256Matches`, `editReadiness`, `diagnostics`, `locator` and `target`. For Set(raw), `validSyntax` reflects JSON/expression syntax. For Code files, `validSyntax` is not a language parser result; use external language tooling for Python/JavaScript checks. `safeToEdit` is the local file-layer locator eligibility gate only; final external-edit permission still requires the platform Camel K/DB/files gate.
 
 ## Safety
 
-The tool does not write files and does not echo proposed content in `structuredContent`. For Set(raw), strict JSON and n8n expression strings starting with `=` are syntactically valid forms.
+The tool does not write files and does not echo proposed content in `structuredContent`. Prefer `contentSha256` for post-edit byte confirmation when syntax validation of a proposed payload is not needed. For Set(raw), strict JSON and n8n expression strings starting with `=` are syntactically valid forms.
 
 ## Example
 

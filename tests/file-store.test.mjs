@@ -63,7 +63,18 @@ test('ETag is a strong byte hash and observes external edits without echoing con
   assert.equal(observed.settled, true);
   assert.equal(observed.etagMatches, false);
   assert.equal(observed.contentMatches, true);
+  assert.equal(observed.contentSha256Matches, true);
   assert.equal(JSON.stringify(observed).includes('print("after")'), false);
+  const hashObserved = await observeWorkflowFile(fixture.config, { uri: fixture.codeUri, expectedContentSha256: after.etag, timeoutMs: 100 });
+  assert.equal(hashObserved.settled, true);
+  assert.equal(hashObserved.contentMatches, true);
+  assert.equal(hashObserved.contentSha256Matches, true);
+  assert.equal(hashObserved.normalized, false);
+  assert.deepEqual(hashObserved.diagnostics, []);
+  const hashMismatchObserved = await observeWorkflowFile(fixture.config, { uri: fixture.codeUri, expectedContentSha256: '0'.repeat(64), timeoutMs: 100 });
+  assert.equal(hashMismatchObserved.contentSha256Matches, false);
+  assert.equal(hashMismatchObserved.normalized, true);
+  assert.equal(hashMismatchObserved.diagnostics.some(item => item.code === 'EXPECTED_CONTENT_SHA256_MISMATCH'), true);
 });
 
 test('list reports stale exports instead of ready locators', async () => {
@@ -101,8 +112,21 @@ test('validates Set(raw) JSON content', async () => {
   assert.equal(valid.validSyntax, true);
   assert.equal(valid.safeToEdit, true);
   assert.equal(valid.safeToEditScope, 'local-locator-only');
+  assert.equal(valid.validationInputSource, 'current-file');
+  assert.equal(valid.contentSha256Matches, null);
   assert.equal(valid.editReadiness.effectiveDecision, 'requires-platform-preflight');
   assert.equal(valid.locator.node.type, 'n8n-nodes-base.set');
+  const setPath = path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.setNodeId}.set.json`);
+  const setHash = crypto.createHash('sha256').update(await fs.readFile(setPath)).digest('hex');
+  const hashValid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, contentSha256: setHash });
+  assert.equal(hashValid.valid, true);
+  assert.equal(hashValid.validationInputSource, 'current-file');
+  assert.equal(hashValid.contentSha256Matches, true);
+  const hashMismatch = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, contentSha256: '0'.repeat(64) });
+  assert.equal(hashMismatch.valid, false);
+  assert.equal(hashMismatch.validationInputSource, 'current-file');
+  assert.equal(hashMismatch.contentSha256Matches, false);
+  assert.equal(hashMismatch.diagnostics.some(item => item.code === 'CONTENT_SHA256_MISMATCH'), true);
   const invalid = await validateWorkflowFile(fixture.config, { uri: fixture.setUri, content: '{bad' });
   assert.equal(invalid.valid, false);
   assert.equal(invalid.validSyntax, false);

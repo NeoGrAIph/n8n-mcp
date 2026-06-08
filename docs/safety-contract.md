@@ -12,6 +12,8 @@ MCP locator calls must not return Code/Set(raw) source content. They return path
 
 ETags are strong SHA-256 hashes of exact file bytes. Treat them only as stale-read detection for external filesystem tools and `synestra_workflow_sync_observe`; an ETag match does not grant write permission, bypass locator safety, or prove n8n DB/files production readiness.
 
+Hash-only validation and observe fields reduce source ingress but do not grant write permission. `contentSha256` verifies current disk bytes when `content` is omitted; it cannot syntax-check an off-disk proposed payload. `expectedContentSha256` verifies the expected final file bytes after an external edit, while `expectedEtag` remains a stale-read token and is often the pre-edit hash.
+
 MCP health, `tools/list`, local mount diagnostics and export diagnostics are not production-readiness proof. Production readiness requires separate platform read-only gates for native n8n MCP acceptance, gateway hardening and Camel K/DB-to-files parity.
 
 Unauthenticated `/health` returns only `{ "status": "ok" }`. Detailed diagnostics are MCP tools behind Bearer auth.

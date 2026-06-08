@@ -37,7 +37,7 @@ Locator semantics:
 - `missing_file`, `stale_export`, `missing_workflow_json`, `ambiguous_workflow_json`, `invalid_workflow_json`, `nodes_empty`, `missing_node`, `unsupported_node_type`, and `null_set_raw_payload` are not safe file-edit targets.
 - Code `.json` resources are JavaScript source files from `parameters.jsCode`, not JSON documents.
 - Set(raw) resources may contain strict JSON or n8n expression content starting with `=`.
-- Validation and observe tools may accept proposed content for comparison, but they must not echo that content back in `structuredContent`.
+- Validation and observe tools may accept proposed content for comparison, but they must not echo that content back in `structuredContent`. Prefer `contentSha256` and `expectedContentSha256` for post-edit byte confirmation when callers can compute the hash outside MCP; these hash fields reduce source ingress and do not grant write permission.
 - `synestra_workflow_file_validate.valid` and `safeToEdit` are local locator gates only. The response includes `safeToEditScope=local-locator-only`; use `validSyntax` for syntax-only results, `safeToEdit` for local path eligibility, and platform readiness fields for final external-edit permission.
 - `synestra_workflow_export_diagnostics` returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.decision=requires-platform-preflight`, and read-only platform handoff commands. It must not claim production readiness from local MCP state alone.
 - The primary production gate is `~/repo/synestra-platform/scripts/mcp/audit_n8n_two_mcp_production_readiness.sh`, which combines native n8n MCP service-local acceptance, gateway hardening and Camel K/DB-to-files preflight checks.
