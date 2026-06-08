@@ -176,6 +176,28 @@ test('tools/call file_read returns locator metadata without source content', asy
   assert.match(file.filesystemPath, /code_nodes_/);
 });
 
+test('tools/call files_status target exposes host-facing path semantics', async () => {
+  const fixture = await createWorkflowFixture();
+  const result = await handleJsonRpc(fixture.config, {
+    jsonrpc: '2.0',
+    id: 56,
+    method: 'tools/call',
+    params: { name: 'synestra_workflow_files_status', arguments: { uri: fixture.codeUri } }
+  });
+  const target = result.result.structuredContent.target;
+  assert.equal(target.workflowId, fixture.workflowId);
+  assert.equal(target.nodeId, fixture.nodeId);
+  assert.equal(target.kind, 'code');
+  assert.equal(target.filesystemPath, target.path);
+  assert.match(target.filesystemPath, /^~\/repo\/n8n-workflows\/dev\/workflows\/development\/code_nodes_/);
+  assert.match(target.containerPath, /\/workflows\/development\/code_nodes_/);
+  assert.notEqual(target.containerPath, target.filesystemPath);
+  assert.match(target.relativePath, /^development\/code_nodes_/);
+  assert.equal(target.pathSemantics.path, 'legacy alias of filesystemPath');
+  assert.equal(target.pathSemantics.containerPath, 'MCP container mount path, diagnostic-only');
+  assertNoSourceLeak(target);
+});
+
 test('public locator paths report unsafe editReadiness for stale exports', async () => {
   const fixture = await createWorkflowFixture();
   const stalePath = path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.nodeId}.py`);

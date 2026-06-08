@@ -395,7 +395,22 @@ export async function filesStatus(config, args = {}) {
   };
   if (args.uri) {
     const target = await resolveTargetFile(config, args.uri, { allowArchived: true });
-    result.target = { workflowId: target.workflowId, nodeId: target.nodeId, kind: target.kind, archived: target.archived, path: target.filePath, git: await targetGitStatus(config, target.filePath) };
+    result.target = {
+      workflowId: target.workflowId,
+      nodeId: target.nodeId,
+      kind: target.kind,
+      archived: target.archived,
+      filesystemPath: displayPath(config, target.filePath),
+      containerPath: target.filePath,
+      relativePath: relativePath(config, target.filePath),
+      path: displayPath(config, target.filePath),
+      pathSemantics: {
+        filesystemPath: 'host-facing path for external filesystem tools',
+        containerPath: 'MCP container mount path, diagnostic-only',
+        path: 'legacy alias of filesystemPath'
+      },
+      git: await targetGitStatus(config, target.filePath)
+    };
   }
   return result;
 }
