@@ -105,7 +105,7 @@ export function relativePath(config, absolutePath) {
   return toPosix(path.relative(config.root, absolutePath));
 }
 
-async function findDuplicateCodeDirs(rootReal, workflowId, canonicalCodeDir) {
+export async function findDuplicateCodeDirs(rootReal, workflowId, canonicalCodeDir) {
   const canonical = path.resolve(canonicalCodeDir);
   const duplicates = [];
   const queue = [rootReal];

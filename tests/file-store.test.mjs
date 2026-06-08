@@ -202,6 +202,34 @@ test('ambiguous workflow JSON is an unsafe locator status', async () => {
   assert.equal(files.every(file => file.locator.status === 'ambiguous_workflow_json'), true);
 });
 
+test('duplicate workflow code directories block locator readiness', async () => {
+  const fixture = await createWorkflowFixture();
+  const duplicateDir = path.join(fixture.root, 'duplicates', `code_nodes_${fixture.workflowId}`);
+  await fs.mkdir(duplicateDir, { recursive: true });
+  await fs.writeFile(path.join(duplicateDir, `${fixture.nodeId}.py`), 'print("duplicate")\n');
+
+  const status = await reconcileWorkflowFiles(fixture.config, { workflowId: fixture.workflowId });
+  assert.equal(status.status, 'duplicate_code_dir');
+  assert.equal(status.summary.duplicate_code_dir, 2);
+  assert.equal(status.summary.ready, 0);
+  assert.equal(status.targets.length, 2);
+  assert.equal(status.targets.every(target => target.status === 'duplicate_code_dir'), true);
+  assert.equal(status.duplicateCodeDirs.length, 1);
+  assert.match(status.duplicateCodeDirs[0], /duplicates\/code_nodes_/);
+
+  const files = await listWorkflowFiles(fixture.config, fixture.workflowId);
+  assert.equal(files.length, 2);
+  assert.equal(files.every(file => file.locator.status === 'duplicate_code_dir'), true);
+  assert.equal(files.every(file => file.editReadiness.localLocatorReady === false), true);
+  assert.equal(files.every(file => file.editReadiness.readOnlyInspectionAllowed === false), true);
+
+  const read = await readWorkflowFile(fixture.config, fixture.codeUri);
+  assert.equal(read.locator.status, 'duplicate_code_dir');
+  assert.equal(read.editReadiness.effectiveDecision, 'no-go');
+  assert.equal(read.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
+  assert.equal(JSON.stringify(read).includes('print("duplicate")'), false);
+});
+
 test('export diagnostics require platform preflight for production readiness', async () => {
   const fixture = await createWorkflowFixture();
   const diagnostics = await exportDiagnostics(fixture.config);
