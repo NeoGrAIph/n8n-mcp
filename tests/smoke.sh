@@ -38,7 +38,42 @@ if [ "$STATUS" != "401" ]; then
   exit 1
 fi
 
-docker exec "$RUN_ID" node -e "fetch('http://127.0.0.1:3000/mcp', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer test-token' }, body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }) }).then(async r => { const j = await r.json(); if (r.status !== 200) process.exit(1); const names = j.result.tools.map(t => t.name); if (names.includes('synestra_workflow_file_patch') || names.includes('synestra_workflow_file_replace')) process.exit(1); if (!names.includes('synestra_workflow_file_read')) process.exit(1); }).catch(() => process.exit(1))"
+docker exec "$RUN_ID" node <<'NODE'
+const expected = [
+  'synestra_workflow_files_status',
+  'synestra_workflow_files_list',
+  'synestra_workflow_file_read',
+  'synestra_workflow_file_validate',
+  'synestra_workflow_reconcile_status',
+  'synestra_workflow_sync_observe',
+  'synestra_workflow_mount_diagnostics',
+  'synestra_workflow_export_diagnostics'
+];
+
+fetch('http://127.0.0.1:3000/mcp', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer test-token' },
+  body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' })
+}).then(async r => {
+  const j = await r.json();
+  if (r.status !== 200) throw new Error(`expected 200, got ${r.status}`);
+  const tools = j.result.tools;
+  const names = tools.map(t => t.name).sort();
+  const expectedNames = [...expected].sort();
+  if (JSON.stringify(names) !== JSON.stringify(expectedNames)) {
+    throw new Error(`unexpected tools: ${names.join(',')}`);
+  }
+  for (const tool of tools) {
+    if (!tool.annotations?.readOnlyHint) throw new Error(`${tool.name} is not marked read-only`);
+    if (tool.annotations?.destructiveHint) throw new Error(`${tool.name} is marked destructive`);
+    if (/^(n8n_|native_|workflow_)/.test(tool.name)) throw new Error(`${tool.name} uses a forbidden core/native prefix`);
+    if (/(patch|replace|write|create|update|delete)/.test(tool.name)) throw new Error(`${tool.name} looks like a write tool`);
+  }
+}).catch(error => {
+  console.error(error.message);
+  process.exit(1);
+});
+NODE
 
 if docker logs "$RUN_ID" 2>&1 | grep -q 'test-token'; then
   echo "auth token leaked into server logs" >&2
