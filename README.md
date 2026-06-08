@@ -47,11 +47,11 @@ synestra-n8n-workflows:///code/{workflowId}/{nodeId}.json
 synestra-n8n-workflows:///set/{workflowId}/{nodeId}.set.json
 ```
 
-Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a local path candidate only when the returned locator status is `ready`; final external-edit permission requires platform global prerequisites, verified `n8nDbContract`, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
+Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a local path candidate only when the returned locator status is `ready`; final external-edit permission requires platform global prerequisites, verified `n8nDbContract`, materializable file-layer readiness, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
 
 `filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
-`editReadiness.platformBridge.aggregateField=fileLayerSafety.synestraMcpBridge` links the local locator response to the platform aggregate readiness gate. The local MCP side must report `localLocatorReady=true`, `effectiveDecision=requires-platform-preflight`, `readOnlyInspectionAllowed=true` and `externalFilesystemEditAllowed=false`; final external-edit permission still requires platform `fileLayerSafety.effectiveDecision=go`, `fileLayerSafety.externalFileEditAllowed=true` and empty `fileLayerSafety.blockers`.
+`editReadiness.platformBridge.aggregateField=fileLayerSafety.synestraMcpBridge` links the local locator response to the platform aggregate readiness gate. The local MCP side must report `localLocatorReady=true`, `effectiveDecision=requires-platform-preflight`, `readOnlyInspectionAllowed=true` and `externalFilesystemEditAllowed=false`; final external-edit permission still requires platform `fileLayerSafety.materializableEffectiveDecision=go`, `fileLayerSafety.materializableExternalFileEditAllowed=true`, empty `fileLayerSafety.materializableBlockers`, verified DB contract and an exact target gate for the same URI/ETag.
 
 Important file semantics:
 
@@ -83,12 +83,20 @@ Required runtime settings:
 
 Numeric environment values must be unsigned integer strings. Boolean environment values must use documented true/false literals; malformed values fail startup.
 
+Use `.env.example` as a local-only template. Platform deployment must inject tokens through secret-backed files, not plaintext environment values or gateway adapter records.
+
+## HTTP Contract
+
+- `GET /health`: unauthenticated minimal liveness response.
+- `POST /mcp`: JSON-RPC MCP endpoint for `initialize`, `tools/list`, `tools/call`, `resources/list` and `resources/read`.
+
+See `docs/reference/http-endpoints.md` for authentication and response expectations.
+
 ## Development
 
 ```bash
 npm run verify
-docker build -t synestra-n8n-gitops-mcp:local .
-sh tests/smoke.sh synestra-n8n-gitops-mcp:local
+npm run smoke:docker
 ```
 
 ## Deployment Source Of Truth

@@ -22,3 +22,5 @@ Runtime environment:
 Numeric environment values must be unsigned integer strings. Boolean environment values must be one of `1`, `true`, `yes`, `on`, `0`, `false`, `no`, `off`. Valid out-of-range integers are clamped as documented; malformed numeric or boolean values fail startup.
 
 The main MCP server is read-only. Use normal filesystem tools for approved dev edits after locator/parity checks pass and the platform file-layer gate returns go.
+
+`.env.example` is a local-only template. Platform deployment must provide `SYNESTRA_MCP_AUTH_TOKEN_FILE` through a secret-backed file mount and must not store token values in plaintext environment variables, adapter records, command arguments or logs.
