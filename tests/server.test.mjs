@@ -703,6 +703,20 @@ test('resources/list reports skipped workflows instead of hiding index problems'
   assert.equal(list.result._meta.skippedWorkflows[0].code, 'STALE_INDEX');
 });
 
+test('resources/list reports oversized workflow files without leaking source content', async () => {
+  const fixture = await createWorkflowFixture();
+  const config = { ...fixture.config, maxFileBytes: 4 };
+  const list = await handleJsonRpc(config, { jsonrpc: '2.0', id: 49, method: 'resources/list', params: {} });
+  assert.equal(list.result.resources.length, 0);
+  assert.equal(list.result._meta.summary.indexedWorkflows, 1);
+  assert.equal(list.result._meta.summary.resourceCount, 0);
+  assert.equal(list.result._meta.summary.skippedWorkflowCount, 1);
+  assert.equal(list.result._meta.skippedWorkflows[0].workflowId, fixture.workflowId);
+  assert.equal(list.result._meta.skippedWorkflows[0].code, 'FILE_TOO_LARGE');
+  assert.equal(JSON.stringify(list).includes('print("before")'), false);
+  assert.equal(JSON.stringify(list).includes('{"ok":true}'), false);
+});
+
 test('resources/list paginates while preserving skipped workflow diagnostics', async () => {
   const fixture = await createWorkflowFixture();
   await addWorkflow(fixture, 'Bbbbbbbb22222222', '22222222-2222-4222-8222-222222222222', 'alpha');

@@ -16,8 +16,9 @@ export function sha256(buffer) {
 }
 
 export async function statFile(config, filePath) {
-  const buffer = await fs.readFile(filePath);
   const stats = await fs.stat(filePath);
+  if (stats.size > config.maxFileBytes) throw new ToolError(`File exceeds max size: ${stats.size} > ${config.maxFileBytes}`, 'FILE_TOO_LARGE');
+  const buffer = await fs.readFile(filePath);
   return {
     etag: sha256(buffer),
     size: stats.size,
@@ -40,8 +41,8 @@ export async function listWorkflowFiles(config, workflowId) {
     const set = entry.name.match(/^([0-9a-fA-F-]{36})\.set\.json$/);
     if (!code && !set) continue;
     const filePath = path.join(workflow.codeDir, entry.name);
-    const content = await fs.readFile(filePath, 'utf8');
     const meta = await statFile(config, filePath);
+    const content = await readTargetFileContent(config, filePath);
     if (set) {
       const file = { workflowId, nodeId: set[1], kind: 'set', uri: buildResourceUri('set', workflowId, set[1], 'set.json'), ...meta };
       const locator = await targetNodeMetadata(config, { workflowId, nodeId: set[1], kind: 'set', ext: 'set.json' }, content);
