@@ -51,7 +51,7 @@ Targets are resolved through `workflows/.index/<workflowId>.path`. A file is a l
 
 `filesystemPath` is the path intended for external filesystem tools. `containerPath` is the service's in-pod mount path and is included only for diagnostics.
 
-`editReadiness.platformBridge.aggregateField=fileLayerSafety.synestraMcpBridge` links the local locator response to the platform aggregate readiness gate. The local MCP side must report `localLocatorReady=true`, `effectiveDecision=requires-platform-preflight`, `readOnlyInspectionAllowed=true` and `externalFilesystemEditAllowed=false`; final external-edit permission still requires platform `fileLayerSafety.materializableEffectiveDecision=go`, `fileLayerSafety.materializableExternalFileEditAllowed=true`, empty `fileLayerSafety.materializableBlockers`, verified DB contract and an exact target gate for the same URI/ETag.
+`editReadiness.platformBridge.aggregateField=fileLayerSafety.synestraMcpBridge` links the local locator response to the platform aggregate readiness gate. The local MCP side must report `localLocatorReady=true`, `effectiveDecision=requires-platform-preflight`, `readOnlyInspectionAllowed=true` and `externalFilesystemEditAllowed=false`; `platformBridge.canonicalExternalEditRequirementField=finalMaterializableTargetEditAllowedRequires` points clients at the Code/Set(raw) edit contract. Final external-edit permission still requires platform `fileLayerSafety.materializableEffectiveDecision=go`, `fileLayerSafety.materializableExternalFileEditAllowed=true`, empty `fileLayerSafety.materializableBlockers`, verified DB contract and an exact target gate for the same URI/ETag.
 
 Important file semantics:
 

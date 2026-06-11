@@ -25,6 +25,8 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.equal(code.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
   assert.equal(code.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
   assert.equal(code.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.equal(code.editReadiness.platformBridge.canonicalExternalEditRequirementField, 'finalMaterializableTargetEditAllowedRequires');
+  assert.equal(code.editReadiness.platformBridge.globalProductionReadinessRequirementField, 'finalExternalEditAllowedRequires');
   assert.deepEqual(code.editReadiness.platformBridge.finalExternalEditAllowedRequires, [
     'editReadiness.localLocatorReady=true',
     'editReadiness.effectiveDecision=requires-platform-preflight',
@@ -35,13 +37,28 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
     'fileLayerSafety.blockers=[]',
     'fileLayerSafety.n8nDbContract.status=verified'
   ]);
+  assert.deepEqual(code.editReadiness.platformBridge.finalMaterializableTargetEditAllowedRequires, [
+    'editReadiness.localLocatorReady=true',
+    'editReadiness.effectiveDecision=requires-platform-preflight',
+    'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
+    'filesystemToolGuard.exactTargetGatePresent=true',
+    'fileLayerSafety.materializableEffectiveDecision=go',
+    'fileLayerSafety.materializableExternalFileEditAllowed=true',
+    'fileLayerSafety.materializableBlockers=[]',
+    'fileLayerSafety.n8nDbContract.status=verified'
+  ]);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableEffectiveDecision'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableExternalFileEditAllowed'), true);
+  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableBlockers'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('nextActions'), true);
   assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.synestraMcpBridge'), true);
   assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
   assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
+  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.materializableEffectiveDecision=no-go'), true);
+  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.materializableExternalFileEditAllowed=false'), true);
   assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.n8nDbContract.status!=verified'), true);
   assert.match(code.editReadiness.message, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
@@ -293,6 +310,9 @@ test('export diagnostics require platform preflight for production readiness', a
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
     'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
+    'fileLayerSafety.materializableEffectiveDecision',
+    'fileLayerSafety.materializableExternalFileEditAllowed',
+    'fileLayerSafety.materializableBlockers',
     'fileLayerSafety.blockers',
     'fileLayerSafety.blockerEvidence',
     'fileLayerSafety.targetReadinessGap',
@@ -321,7 +341,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /Prod workload sync requires a separate approved/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /filesystemToolGuard\.finalExternalFilesystemEditAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /follow platform nextActions/);
-  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.effectiveDecision is no-go/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.materializableEffectiveDecision is no-go/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json$/);
@@ -354,6 +374,9 @@ test('export diagnostics require platform preflight for production readiness', a
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
     'fileLayerSafety.effectiveDecision',
+    'fileLayerSafety.materializableEffectiveDecision',
+    'fileLayerSafety.materializableExternalFileEditAllowed',
+    'fileLayerSafety.materializableBlockers',
     'fileLayerSafety.blockers',
     'fileLayerSafety.n8nDbContract.status',
     'fileLayerSafety.n8nDbContract.schemaFingerprint',
