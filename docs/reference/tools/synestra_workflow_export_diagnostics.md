@@ -15,6 +15,7 @@ Returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.
 - `mcpMustNotWriteWorkflow=true`;
 - use MCP file/resource tools only to get `filesystemPath`, `etag` and locator status;
 - first run the aggregate platform readiness gate so native MCP, gateway hardening and Camel K/DB/files checks stay in scope;
+- before claiming native+extensions readiness, inspect `productionReadinessEvidence.gatewayStrict` from the aggregate gate and verify the deployed Synestra MCP image/source pin, `buildAcceptance`, `exportDiagnosticsAcceptance` and `canClaimProductionReadiness`;
 - require verified platform global prerequisites plus an exact-target gate for the same URI/ETag before any normal filesystem edit;
 - before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs, run the Camel K upgrade readiness audit and follow `upgradePolicy`;
 - when the locator is not ready or Camel K/DB/files preflight is no-go, run platform preflight, classifier and then a reviewed render preview;
@@ -31,6 +32,8 @@ Important handoff commands include:
 When reading platform output, treat these fields as the edit/readiness contract:
 
 - `filesystemToolGuard.finalExternalFilesystemEditAllowed`, `filesystemToolGuard.exactTargetGatePresent`, `filesystemToolGuard.blockerMatrix`, `filesystemToolGuard.failedChecks` and `filesystemToolGuard.checks` from the platform gate as the external filesystem edit guard;
+- `productionReadinessEvidence.canClaimProductionReadiness`, `canClaimExactTargetEditReadiness` and `productionReadinessEvidence.gatewayStrict` from the aggregate gate as the native+extensions readiness evidence;
+- `productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag`, `sourceRef`, `buildAcceptance.platformImageTagMatchesExpected`, `buildAcceptance.sourceRefMatchesExpected` and `exportDiagnosticsAcceptance` from the aggregate gate before trusting a deployed MCP handoff;
 - `fileLayerSafety.synestraMcpBridge` from the aggregate gate as the machine-readable bridge to local `editReadiness`;
 - `fileLayerSafety.effectiveDecision` and `fileLayerSafety.blockers` from the aggregate gate;
 - `externalFileEditAllowed` and `applyForbiddenReasons` from the Camel K/DB/files preflight;

@@ -280,6 +280,17 @@ test('export diagnostics require platform preflight for production readiness', a
     'filesystemToolGuard.failedChecks',
     'filesystemToolGuard.checks',
     'filesystemToolGuard.blockerMatrix',
+    'productionReadinessEvidence.canClaimProductionReadiness',
+    'productionReadinessEvidence.canClaimExactTargetEditReadiness',
+    'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
+    'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
+    'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
+    'productionReadinessEvidence.gatewayStrict.buildAcceptance.sourceRefMatchesExpected',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradeCheckPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradeCommandPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradePolicyFieldsPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
     'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
     'fileLayerSafety.blockers',
@@ -302,6 +313,9 @@ test('export diagnostics require platform preflight for production readiness', a
     'upgradePolicy.forbiddenActionsWhileNoGo',
     'applyForbiddenReasons'
   ]);
+  assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /productionReadinessEvidence\.gatewayStrict/);
+  assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /Synestra MCP image\/source pin/);
+  assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /canClaimExactTargetEditReadiness/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /audit_n8n_camelk_upgrade_readiness\.sh --json/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /normalDriftCorrectionAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /Prod workload sync requires a separate approved/);
@@ -328,6 +342,17 @@ test('export diagnostics require platform preflight for production readiness', a
     'filesystemToolGuard.failedChecks',
     'filesystemToolGuard.checks',
     'filesystemToolGuard.blockerMatrix',
+    'productionReadinessEvidence.canClaimProductionReadiness',
+    'productionReadinessEvidence.canClaimExactTargetEditReadiness',
+    'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
+    'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
+    'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
+    'productionReadinessEvidence.gatewayStrict.buildAcceptance.sourceRefMatchesExpected',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradeCheckPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradeCommandPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradePolicyFieldsPresent',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
+    'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
     'fileLayerSafety.effectiveDecision',
     'fileLayerSafety.blockers',
     'fileLayerSafety.n8nDbContract.status',
