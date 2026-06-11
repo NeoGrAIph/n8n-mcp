@@ -105,6 +105,7 @@ Platform deployment, image publishing, SOPS secrets, Argo CD Applications and ga
 
 Relevant platform docs:
 
+- `docs/explanation/SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md`
 - `~/repo/synestra-platform/docs/reference/mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/synestra-n8n-gitops-mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/mcp/mcp-gateway.md`

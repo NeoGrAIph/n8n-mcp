@@ -11,3 +11,4 @@ This repository contains only the Synestra n8n GitOps/file MCP extension. Legacy
 - [Configuration](./configuration.md)
 - [Platform Deployment](./platform-deployment.md)
 - [Architecture Boundary](./architecture-boundary.md)
+- [Synestra Platform GitOps n8n Workflows](./explanation/SYNESTRA_PLATFORM_GITOPS_N8N_WORKFLOWS.md)
