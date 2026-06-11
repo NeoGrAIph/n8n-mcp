@@ -18,9 +18,9 @@ The MCP does not return, persist or echo Code/Set(raw) source content. Use `syne
 
 For post-edit checks, prefer `contentSha256` and `expectedContentSha256` when the caller can compute hashes outside MCP. These fields verify exact bytes without sending source content to the MCP server; they do not replace syntax validation for an off-disk proposed payload and do not grant write permission.
 
-`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight, recovery candidate classifier and isolated DB snapshot render preview. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
+`synestra_workflow_export_diagnostics` reports local MCP locator readiness and explicit handoff commands for the platform aggregate readiness gate, Camel K/DB-to-files preflight, Camel K upgrade readiness audit, recovery candidate classifier and isolated DB snapshot render preview. It does not run Kubernetes checks from the MCP container and it never proves production readiness by itself.
 
-The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain inspectable file paths only when locator status is ready; require platform global prerequisites plus an exact-target gate for the same URI/ETag before edits, otherwise follow platform `nextActions`, preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
+The diagnostics output includes `productionReadiness.handoff`, a machine-readable routing contract for agents: use MCP/resource tools to obtain inspectable file paths only when locator status is ready; require platform global prerequisites plus an exact-target gate for the same URI/ETag before edits; run `audit_n8n_camelk_upgrade_readiness.sh --json` and follow `upgradePolicy` before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs; otherwise follow platform `nextActions`, preflight/classifier/render-preview commands and keep recovery artifacts outside the workflow root.
 
 The architecture boundary is deliberately narrow: native n8n MCP handles n8n semantics, this server handles Synestra file locators, and filesystem tools perform approved dev edits outside MCP.
 
@@ -62,6 +62,8 @@ Important file semantics:
 ## Safety Contract
 
 Production writes are not supported in v1, and the main MCP contract is read-only. Use normal filesystem tools for approved dev edits only after both local locator readiness and platform approval, then re-check the file with `synestra_workflow_file_validate`, `synestra_workflow_sync_observe` or `synestra_workflow_reconcile_status`.
+
+Camel K and Debezium changes are gated by platform upgrade evidence, not by this MCP. When `upgradePolicy.normalDriftCorrectionAllowed=false`, `prodSyncImpact.sourceOfTruth.decisionRequired=true` or `upgradePolicy.prodWorkloadSyncEligible=false`, do not infer permission to sync or restart workloads from local MCP readiness.
 
 DB snapshot render previews are separate platform recovery artifacts, not MCP file writes. They must be created with an explicit reviewed workflow id and remain outside `~/repo/n8n-workflows/*`.
 

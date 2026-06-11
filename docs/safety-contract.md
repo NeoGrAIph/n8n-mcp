@@ -16,6 +16,8 @@ Hash-only validation and observe fields reduce source ingress but do not grant w
 
 MCP health, `tools/list`, local mount diagnostics and export diagnostics are not production-readiness proof. Production readiness requires separate platform read-only gates for native n8n MCP acceptance, gateway hardening and Camel K/DB-to-files parity.
 
+Camel K operator/runtime changes, Debezium exporter syncs and n8n Camel K workload syncs require the platform `audit_n8n_camelk_upgrade_readiness.sh --json` evidence gate. Treat `upgradePolicy.normalDriftCorrectionAllowed=false`, non-empty `upgradePolicy.blockedByIssueCodes`, `upgradePolicy.prodWorkloadSyncEligible=false`, `prodSyncImpact.sourceOfTruth.decisionRequired=true` and `upgradePolicy.forbiddenActionsWhileNoGo` as binding blockers. This audit is still read-only evidence; it does not grant MCP permission to write workflow files, sync prod workloads or change n8n DB state.
+
 Unauthenticated `/health` returns only `{ "status": "ok" }`. Detailed diagnostics are MCP tools behind Bearer auth.
 
 Tokens must be read from secret-backed files. Do not store native n8n MCP tokens or Synestra MCP tokens in gateway adapter records, command arguments, logs, or plaintext control-plane environment records.

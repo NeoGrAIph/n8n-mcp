@@ -293,8 +293,18 @@ test('export diagnostics require platform preflight for production readiness', a
     'dbFilesBackfillDryRun.dirtyArtifactSafety',
     'debeziumCdcFreshness.status',
     'debeziumLogRisk.overallStatus',
+    'prodSyncImpact.sourceOfTruth.decisionRequired',
+    'prodSyncImpact.sourceOfTruth.blockerEvidence',
+    'upgradePolicy.normalDriftCorrectionAllowed',
+    'upgradePolicy.operatorSyncEligible',
+    'upgradePolicy.devWorkloadSyncEligible',
+    'upgradePolicy.prodWorkloadSyncEligible',
+    'upgradePolicy.forbiddenActionsWhileNoGo',
     'applyForbiddenReasons'
   ]);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /audit_n8n_camelk_upgrade_readiness\.sh --json/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /normalDriftCorrectionAllowed is false/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /Prod workload sync requires a separate approved/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /filesystemToolGuard\.finalExternalFilesystemEditAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /follow platform nextActions/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.effectiveDecision is no-go/);
@@ -302,7 +312,8 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[1], /preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
-  assert.match(diagnostics.productionReadiness.handoff.commandSequence[3], /--workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
+  assert.match(diagnostics.productionReadiness.handoff.commandSequence[2], /audit_n8n_camelk_upgrade_readiness\.sh --json$/);
+  assert.match(diagnostics.productionReadiness.handoff.commandSequence[4], /--workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
   assert.match(diagnostics.productionReadiness.handoff.forbiddenActions.join('\n'), /Do not copy render preview artifacts/);
   assert.equal(diagnostics.camelK.availableInContainer, false);
   const byName = new Map(diagnostics.productionReadiness.requiredChecks.map(check => [check.name, check]));
@@ -352,6 +363,37 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(camelK.notes.join('\n'), /Docs-only dirty artifacts/);
   assert.match(camelK.notes.join('\n'), /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(camelK.notes.join('\n'), /quiet window/);
+  const camelKUpgrade = byName.get('camel-k-upgrade-readiness-audit');
+  assert.equal(camelKUpgrade.readOnly, true);
+  assert.deepEqual(camelKUpgrade.requiredFor, ['camel-k-upgrade-planning', 'operator-sync-risk-review', 'production-file-layer-readiness']);
+  assert.match(camelKUpgrade.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_camelk_upgrade_readiness\.sh --json$/);
+  assert.deepEqual(camelKUpgrade.requiredFields, [
+    'decision',
+    'blockerEvidence',
+    'nextActions',
+    'nextActionSummary',
+    'prodSyncImpact.class',
+    'prodSyncImpact.sourceOfTruth.decisionRequired',
+    'prodSyncImpact.sourceOfTruth.blockerEvidence',
+    'upgradePolicy.readOnlyEvidenceOnly',
+    'upgradePolicy.operatorSyncEligible',
+    'upgradePolicy.operatorSyncRequiresReview',
+    'upgradePolicy.devWorkloadSyncEligible',
+    'upgradePolicy.prodWorkloadSyncEligible',
+    'upgradePolicy.prodWorkloadRequiresSeparateApproval',
+    'upgradePolicy.prodRecoverySyncRequiresApproval',
+    'upgradePolicy.normalDriftCorrectionAllowed',
+    'upgradePolicy.blockedByIssueCodes',
+    'upgradePolicy.warningsToReview',
+    'upgradePolicy.blockerEvidenceKeys',
+    'upgradePolicy.nextActionIds',
+    'upgradePolicy.forbiddenActionsWhileNoGo',
+    'upgradePolicy.prodApprovalScope'
+  ]);
+  assert.match(camelKUpgrade.noGoSignals.join('\n'), /prodSyncImpact\.sourceOfTruth\.decisionRequired=true/);
+  assert.match(camelKUpgrade.notes.join('\n'), /Debezium exporter syncs/);
+  assert.match(camelKUpgrade.notes.join('\n'), /read-only evidence only/);
+  assert.match(camelKUpgrade.notes.join('\n'), /Prod workload sync stays separately approved/);
   const classifier = byName.get('n8n-recovery-candidate-classifier');
   assert.equal(classifier.readOnly, true);
   assert.match(classifier.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/classify_n8n_recovery_candidates\.sh --env dev --json$/);

@@ -16,6 +16,7 @@ Returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.
 - use MCP file/resource tools only to get `filesystemPath`, `etag` and locator status;
 - first run the aggregate platform readiness gate so native MCP, gateway hardening and Camel K/DB/files checks stay in scope;
 - require verified platform global prerequisites plus an exact-target gate for the same URI/ETag before any normal filesystem edit;
+- before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs, run the Camel K upgrade readiness audit and follow `upgradePolicy`;
 - when the locator is not ready or Camel K/DB/files preflight is no-go, run platform preflight, classifier and then a reviewed render preview;
 - render preview requires `--workflow-id '<reviewed-workflow-id>'` and writes sensitive artifacts outside the workflow root.
 
@@ -23,6 +24,7 @@ Important handoff commands include:
 
 - `audit_n8n_two_mcp_production_readiness.sh` for the aggregate split-MCP gate;
 - `preflight_n8n_camelk_recovery.sh --summary-json` for compact Camel K/DB/files readiness evidence;
+- `audit_n8n_camelk_upgrade_readiness.sh --json` for Camel K operator/runtime, Debezium exporter and n8n Camel K workload sync policy;
 - `classify_n8n_recovery_candidates.sh` for report-only recovery candidate grouping;
 - `render_n8n_db_files_backfill_candidates.sh --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json` for an isolated sensitive temp-dir preview after a workflow candidate has been reviewed.
 
@@ -35,8 +37,10 @@ When reading platform output, treat these fields as the edit/readiness contract:
 - `nextActions` and `nextActionSummary` from the Camel K/DB/files preflight for read-only remediation routing;
 - `dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts` for dirty worktree classification;
 - `debeziumCdcFreshness.status` and `debeziumLogRisk.overallStatus` for active/inconclusive/historical Debezium blockers.
+- `upgradePolicy.normalDriftCorrectionAllowed`, `operatorSyncEligible`, `devWorkloadSyncEligible`, `prodWorkloadSyncEligible`, `blockedByIssueCodes`, `blockerEvidenceKeys`, `nextActionIds` and `forbiddenActionsWhileNoGo` from the Camel K upgrade readiness audit for sync/upgrade routing;
+- `prodSyncImpact.sourceOfTruth.decisionRequired` and `prodSyncImpact.sourceOfTruth.blockerEvidence` from the Camel K upgrade readiness audit when prod DB/files source-of-truth is unresolved.
 
-Any of these values blocks file edit readiness and production readiness claims: `filesystemToolGuard.finalExternalFilesystemEditAllowed=false`, `filesystemToolGuard.exactTargetGatePresent=false`, non-empty `filesystemToolGuard.failedChecks`, non-empty `filesystemToolGuard.blockerMatrix`, `n8nDbContract.status!=verified`, `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. In a no-go state, follow platform `nextActions`, use the classifier and, only after review, an isolated render preview.
+Any of these values blocks file edit readiness and production readiness claims: `filesystemToolGuard.finalExternalFilesystemEditAllowed=false`, `filesystemToolGuard.exactTargetGatePresent=false`, non-empty `filesystemToolGuard.failedChecks`, non-empty `filesystemToolGuard.blockerMatrix`, `n8nDbContract.status!=verified`, `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, `upgradePolicy.normalDriftCorrectionAllowed=false`, `prodSyncImpact.sourceOfTruth.decisionRequired=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. In a no-go state, follow platform `nextActions`, use the classifier and, only after review, an isolated render preview.
 
 ## Safety
 

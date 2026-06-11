@@ -598,6 +598,48 @@ function platformReadinessChecks(config) {
       ]
     },
     {
+      name: 'camel-k-upgrade-readiness-audit',
+      command: `cd ${repo} && scripts/mcp/audit_n8n_camelk_upgrade_readiness.sh --json`,
+      readOnly: true,
+      requiredFor: ['camel-k-upgrade-planning', 'operator-sync-risk-review', 'production-file-layer-readiness'],
+      requiredFields: [
+        'decision',
+        'blockerEvidence',
+        'nextActions',
+        'nextActionSummary',
+        'prodSyncImpact.class',
+        'prodSyncImpact.sourceOfTruth.decisionRequired',
+        'prodSyncImpact.sourceOfTruth.blockerEvidence',
+        'upgradePolicy.readOnlyEvidenceOnly',
+        'upgradePolicy.operatorSyncEligible',
+        'upgradePolicy.operatorSyncRequiresReview',
+        'upgradePolicy.devWorkloadSyncEligible',
+        'upgradePolicy.prodWorkloadSyncEligible',
+        'upgradePolicy.prodWorkloadRequiresSeparateApproval',
+        'upgradePolicy.prodRecoverySyncRequiresApproval',
+        'upgradePolicy.normalDriftCorrectionAllowed',
+        'upgradePolicy.blockedByIssueCodes',
+        'upgradePolicy.warningsToReview',
+        'upgradePolicy.blockerEvidenceKeys',
+        'upgradePolicy.nextActionIds',
+        'upgradePolicy.forbiddenActionsWhileNoGo',
+        'upgradePolicy.prodApprovalScope'
+      ],
+      noGoSignals: [
+        'decision=no-go',
+        'upgradePolicy.normalDriftCorrectionAllowed=false',
+        'upgradePolicy.operatorSyncEligible=false',
+        'upgradePolicy.prodWorkloadSyncEligible=false',
+        'upgradePolicy.blockedByIssueCodes is non-empty',
+        'prodSyncImpact.sourceOfTruth.decisionRequired=true'
+      ],
+      notes: [
+        'Run before planning Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs',
+        'The audit is read-only evidence only; upgradePolicy never grants MCP permission to write workflow files',
+        'Prod workload sync stays separately approved even when the audit is otherwise clean'
+      ]
+    },
+    {
       name: 'n8n-recovery-candidate-classifier',
       command: `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
       readOnly: true,
@@ -651,12 +693,21 @@ function platformReadinessHandoff(config) {
       'dbFilesBackfillDryRun.dirtyArtifactSafety',
       'debeziumCdcFreshness.status',
       'debeziumLogRisk.overallStatus',
+      'prodSyncImpact.sourceOfTruth.decisionRequired',
+      'prodSyncImpact.sourceOfTruth.blockerEvidence',
+      'upgradePolicy.normalDriftCorrectionAllowed',
+      'upgradePolicy.operatorSyncEligible',
+      'upgradePolicy.devWorkloadSyncEligible',
+      'upgradePolicy.prodWorkloadSyncEligible',
+      'upgradePolicy.forbiddenActionsWhileNoGo',
       'applyForbiddenReasons'
     ],
+    usePlatformUpgradePolicy: 'Before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs, run audit_n8n_camelk_upgrade_readiness.sh --json and follow upgradePolicy. While normalDriftCorrectionAllowed is false, treat upgradePolicy.blockedByIssueCodes, blockerEvidenceKeys, nextActionIds and forbiddenActionsWhileNoGo as binding. Prod workload sync requires a separate approved recovery/change window even if dev is clean.',
     usePlatformRenderWhenNoGo: 'If filesystemToolGuard.finalExternalFilesystemEditAllowed is false, exactTargetGatePresent is false, Camel K/DB/files preflight is no-go, fileLayerSafety.effectiveDecision is no-go, n8nDbContract is not verified, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
       `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json`,
       `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
+      `cd ${repo} && scripts/mcp/audit_n8n_camelk_upgrade_readiness.sh --json`,
       `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
       `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`
     ],
