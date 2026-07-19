@@ -336,7 +336,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /productionReadinessEvidence\.gatewayStrict/);
   assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /Synestra MCP image\/source pin/);
   assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /canClaimExactTargetEditReadiness/);
-  assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /audit_n8n_camelk_upgrade_readiness\.sh --json/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /scripts\/n8n\/audit_n8n_camelk_upgrade_readiness\.sh --json/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /normalDriftCorrectionAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /Prod workload sync requires a separate approved/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /filesystemToolGuard\.finalExternalFilesystemEditAllowed is false/);
