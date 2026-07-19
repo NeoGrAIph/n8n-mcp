@@ -603,7 +603,7 @@ function platformReadinessChecks(config) {
     },
     {
       name: 'camel-k-db-files-recovery-preflight',
-      command: `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
+      command: `cd ${repo} && scripts/n8n/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
       readOnly: true,
       requiredFor: ['production-file-layer-readiness'],
       requiredFields: [
@@ -634,7 +634,7 @@ function platformReadinessChecks(config) {
     },
     {
       name: 'camel-k-upgrade-readiness-audit',
-      command: `cd ${repo} && scripts/mcp/audit_n8n_camelk_upgrade_readiness.sh --json`,
+      command: `cd ${repo} && scripts/n8n/audit_n8n_camelk_upgrade_readiness.sh --json`,
       readOnly: true,
       requiredFor: ['camel-k-upgrade-planning', 'operator-sync-risk-review', 'production-file-layer-readiness'],
       requiredFields: [
@@ -676,13 +676,13 @@ function platformReadinessChecks(config) {
     },
     {
       name: 'n8n-recovery-candidate-classifier',
-      command: `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
+      command: `cd ${repo} && scripts/n8n/classify_n8n_recovery_candidates.sh --env ${env} --json`,
       readOnly: true,
       requiredFor: ['recovery-planning', 'db-files-risk-inventory']
     },
     {
       name: 'n8n-db-files-render-candidate-preview',
-      command: `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`,
+      command: `cd ${repo} && scripts/n8n/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`,
       readOnly: true,
       writesWorkflowRoot: false,
       sensitiveArtifacts: true,
@@ -756,10 +756,10 @@ function platformReadinessHandoff(config) {
     usePlatformRenderWhenNoGo: 'If filesystemToolGuard.finalExternalFilesystemEditAllowed is false, exactTargetGatePresent is false, Camel K/DB/files preflight is no-go, fileLayerSafety.materializableEffectiveDecision is no-go, n8nDbContract is not verified, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
       `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json`,
-      `cd ${repo} && scripts/mcp/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
-      `cd ${repo} && scripts/mcp/audit_n8n_camelk_upgrade_readiness.sh --json`,
-      `cd ${repo} && scripts/mcp/classify_n8n_recovery_candidates.sh --env ${env} --json`,
-      `cd ${repo} && scripts/mcp/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`
+      `cd ${repo} && scripts/n8n/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
+      `cd ${repo} && scripts/n8n/audit_n8n_camelk_upgrade_readiness.sh --json`,
+      `cd ${repo} && scripts/n8n/classify_n8n_recovery_candidates.sh --env ${env} --json`,
+      `cd ${repo} && scripts/n8n/render_n8n_db_files_backfill_candidates.sh --env ${env} --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json`
     ],
     forbiddenActions: [
       'Do not copy render preview artifacts into the workflow root without a separately approved recovery plan',

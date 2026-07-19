@@ -49,7 +49,7 @@ scripts/mcp/create_n8n_sync_allow_permit.sh --env dev --uri '<exact-synestra-uri
 - `~/repo/synestra-platform/docs/runbooks/mcp/synestra-n8n-gitops-mcp.md`
 - `~/repo/synestra-platform/docs/runbooks/workloads/n8n-camelk-recovery.md`
 - `~/repo/synestra-platform/scripts/mcp/audit_n8n_two_mcp_production_readiness.sh`
-- `~/repo/synestra-platform/scripts/mcp/preflight_n8n_camelk_recovery.sh`
+- `~/repo/synestra-platform/scripts/n8n/preflight_n8n_camelk_recovery.sh`
 - `~/repo/synestra-platform/scripts/mcp/audit_n8n_filesystem_edit_target.sh`
 - `~/repo/synestra-platform/scripts/mcp/create_n8n_sync_allow_permit.sh`
 

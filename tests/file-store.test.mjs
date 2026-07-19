@@ -390,7 +390,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(aggregate.command, / --json$/);
   const camelK = byName.get('camel-k-db-files-recovery-preflight');
   assert.equal(camelK.readOnly, true);
-  assert.match(camelK.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
+  assert.match(camelK.command, /^cd '~\/repo\/synestra-platform' && scripts\/n8n\/preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
   assert.deepEqual(camelK.requiredFields, [
     'decision',
     'externalFileEditAllowed',
@@ -414,7 +414,7 @@ test('export diagnostics require platform preflight for production readiness', a
   const camelKUpgrade = byName.get('camel-k-upgrade-readiness-audit');
   assert.equal(camelKUpgrade.readOnly, true);
   assert.deepEqual(camelKUpgrade.requiredFor, ['camel-k-upgrade-planning', 'operator-sync-risk-review', 'production-file-layer-readiness']);
-  assert.match(camelKUpgrade.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_camelk_upgrade_readiness\.sh --json$/);
+  assert.match(camelKUpgrade.command, /^cd '~\/repo\/synestra-platform' && scripts\/n8n\/audit_n8n_camelk_upgrade_readiness\.sh --json$/);
   assert.deepEqual(camelKUpgrade.requiredFields, [
     'decision',
     'blockerEvidence',
@@ -444,13 +444,13 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.match(camelKUpgrade.notes.join('\n'), /Prod workload sync stays separately approved/);
   const classifier = byName.get('n8n-recovery-candidate-classifier');
   assert.equal(classifier.readOnly, true);
-  assert.match(classifier.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/classify_n8n_recovery_candidates\.sh --env dev --json$/);
+  assert.match(classifier.command, /^cd '~\/repo\/synestra-platform' && scripts\/n8n\/classify_n8n_recovery_candidates\.sh --env dev --json$/);
   const renderPreview = byName.get('n8n-db-files-render-candidate-preview');
   assert.equal(renderPreview.readOnly, true);
   assert.equal(renderPreview.writesWorkflowRoot, false);
   assert.equal(renderPreview.sensitiveArtifacts, true);
   assert.deepEqual(renderPreview.requiredFor, ['recovery-preview', 'db-files-human-review']);
-  assert.match(renderPreview.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/render_n8n_db_files_backfill_candidates\.sh --env dev --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
+  assert.match(renderPreview.command, /^cd '~\/repo\/synestra-platform' && scripts\/n8n\/render_n8n_db_files_backfill_candidates\.sh --env dev --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
   assert.equal(JSON.stringify(diagnostics).includes('print("before")'), false);
   assert.equal(JSON.stringify(diagnostics).includes('{"ok":true}'), false);
 });
