@@ -12,7 +12,7 @@ Validate an existing or proposed Code/Set(raw) file payload without writing it. 
 
 ## Output
 
-Returns `valid`, `validSyntax`, `safeToEdit`, `safeToEditScope`, `validationInputSource`, `contentSha256Matches`, `editReadiness`, `diagnostics`, `locator` and `target`. For Set(raw), `validSyntax` reflects JSON/expression syntax. For Code files, `validSyntax` is not a language parser result; use external language tooling for Python/JavaScript checks. `safeToEdit` is the local file-layer locator eligibility gate only; final external-edit permission still requires the platform Camel K/DB/files gate.
+Returns `valid`, `validSyntax`, `safeToEdit`, `safeToEditScope`, `validationInputSource`, `contentSha256Matches`, `editReadiness`, `diagnostics`, `locator` and `target`. For Set(raw), `validSyntax` reflects JSON/expression syntax. For Code files, `validSyntax` is not a language parser result; use external language tooling for Python/JavaScript checks. `safeToEdit` is the local file-layer locator eligibility gate. A ready dev target reports automatic sync-on-save eligibility; live controller health remains a separate platform diagnostic concern.
 
 ## Safety
 

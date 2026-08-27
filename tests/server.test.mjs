@@ -122,22 +122,17 @@ test('tools/call list returns workflow files', async () => {
   assert.equal(result.result.structuredContent.files.length, 2);
   assert.equal(result.result.structuredContent.files[0].locator.status, 'ready');
   assert.equal(result.result.structuredContent.files[0].editReadiness.localLocatorReady, true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.effectiveDecision, 'requires-platform-preflight');
-  assert.equal(result.result.structuredContent.files[0].editReadiness.platformPreflightRequired, true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.externalEditAllowed, null);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.effectiveDecision, 'auto-sync-on-save');
+  assert.equal(result.result.structuredContent.files[0].editReadiness.platformPreflightRequired, false);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.externalEditAllowed, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.externalFilesystemEditAllowed, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.autoSyncOnSave, true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.autoSyncRuntimeHealthVerified, false);
   assert.equal(result.result.structuredContent.files[0].editReadiness.readOnlyInspectionAllowed, true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
-  assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.platformBridge.canonicalExternalEditRequirementField, 'finalMaterializableTargetEditAllowedRequires');
-  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableEffectiveDecision'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableExternalFileEditAllowed'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
-  assert.equal(result.result.structuredContent.files[0].editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
+  assert.equal(result.result.structuredContent.files[0].editReadiness.filesystemToolPolicy, 'edit-with-auto-sync-on-save');
+  assert.equal(Object.prototype.hasOwnProperty.call(result.result.structuredContent.files[0].editReadiness, 'platformBridge'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(result.result.structuredContent.files[0].editReadiness, 'requiredPlatformFields'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(result.result.structuredContent.files[0].editReadiness, 'noGoSignals'), false);
 });
 
 test('tools/call returns workflow reconcile status', async () => {
@@ -168,13 +163,14 @@ test('tools/call file_read returns locator metadata without source content', asy
   assert.equal(file.uri, fixture.codeUri);
   assert.equal(file.locator.status, 'ready');
   assert.equal(file.editReadiness.localLocatorReady, true);
-  assert.equal(file.editReadiness.effectiveDecision, 'requires-platform-preflight');
-  assert.equal(file.editReadiness.platformPreflightRequired, true);
-  assert.equal(file.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(file.editReadiness.effectiveDecision, 'auto-sync-on-save');
+  assert.equal(file.editReadiness.platformPreflightRequired, false);
+  assert.equal(file.editReadiness.externalFilesystemEditAllowed, true);
+  assert.equal(file.editReadiness.autoSyncOnSave, true);
+  assert.equal(file.editReadiness.autoSyncRuntimeHealthVerified, false);
   assert.equal(file.editReadiness.readOnlyInspectionAllowed, true);
-  assert.equal(file.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
-  assert.equal(file.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(file.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.equal(file.editReadiness.filesystemToolPolicy, 'edit-with-auto-sync-on-save');
+  assert.equal(Object.prototype.hasOwnProperty.call(file.editReadiness, 'platformBridge'), false);
   assert.equal(Object.prototype.hasOwnProperty.call(file, 'content'), false);
   assert.match(file.filesystemPath, /code_nodes_/);
 });
@@ -216,12 +212,12 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(listed.locator.status, 'stale_export');
   assert.equal(listed.editReadiness.localLocatorReady, false);
   assert.equal(listed.editReadiness.effectiveDecision, 'no-go');
-  assert.equal(listed.editReadiness.platformPreflightRequired, true);
+  assert.equal(listed.editReadiness.platformPreflightRequired, false);
   assert.equal(listed.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(listed.editReadiness.autoSyncOnSave, false);
   assert.equal(listed.editReadiness.readOnlyInspectionAllowed, false);
   assert.equal(listed.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
-  assert.equal(listed.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(listed.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.equal(Object.prototype.hasOwnProperty.call(listed.editReadiness, 'platformBridge'), false);
 
   const read = await handleJsonRpc(fixture.config, {
     jsonrpc: '2.0',
@@ -232,12 +228,12 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(read.result.structuredContent.locator.status, 'stale_export');
   assert.equal(read.result.structuredContent.editReadiness.localLocatorReady, false);
   assert.equal(read.result.structuredContent.editReadiness.effectiveDecision, 'no-go');
-  assert.equal(read.result.structuredContent.editReadiness.platformPreflightRequired, true);
+  assert.equal(read.result.structuredContent.editReadiness.platformPreflightRequired, false);
   assert.equal(read.result.structuredContent.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(read.result.structuredContent.editReadiness.autoSyncOnSave, false);
   assert.equal(read.result.structuredContent.editReadiness.readOnlyInspectionAllowed, false);
   assert.equal(read.result.structuredContent.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
-  assert.equal(read.result.structuredContent.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(read.result.structuredContent.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.equal(Object.prototype.hasOwnProperty.call(read.result.structuredContent.editReadiness, 'platformBridge'), false);
   assert.equal(Object.prototype.hasOwnProperty.call(read.result.structuredContent, 'content'), false);
   assertNoSourceLeak(read.result.structuredContent);
 
@@ -251,12 +247,12 @@ test('public locator paths report unsafe editReadiness for stale exports', async
   assert.equal(locator.locator.status, 'stale_export');
   assert.equal(locator.editReadiness.localLocatorReady, false);
   assert.equal(locator.editReadiness.effectiveDecision, 'no-go');
-  assert.equal(locator.editReadiness.platformPreflightRequired, true);
+  assert.equal(locator.editReadiness.platformPreflightRequired, false);
   assert.equal(locator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(locator.editReadiness.autoSyncOnSave, false);
   assert.equal(locator.editReadiness.readOnlyInspectionAllowed, false);
   assert.equal(locator.editReadiness.filesystemToolPolicy, 'blocked-unsafe-locator');
-  assert.equal(locator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(locator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
+  assert.equal(Object.prototype.hasOwnProperty.call(locator.editReadiness, 'platformBridge'), false);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.equal(resource.result.contents[0].text.includes('print("stale")'), false);
@@ -388,7 +384,7 @@ test('tools/call validate and observe do not echo proposed file content', async 
   assert.equal(validate.result.structuredContent.safeToEditScope, 'local-locator-only');
   assert.equal(validate.result.structuredContent.editReadiness.effectiveDecision, 'no-go');
   assert.equal(validate.result.structuredContent.editReadiness.localLocatorReady, false);
-  assert.equal(validate.result.structuredContent.editReadiness.platformPreflightRequired, true);
+  assert.equal(validate.result.structuredContent.editReadiness.platformPreflightRequired, false);
 
   const observe = await handleJsonRpc({ ...fixture.config, settleStableReads: 1 }, {
     jsonrpc: '2.0',
@@ -581,22 +577,16 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(locator.externalFilesystemPathAvailableWhen, 'locator.status=ready');
   assert.equal(locator.locator.status, 'ready');
   assert.equal(locator.editReadiness.localLocatorReady, true);
-  assert.equal(locator.editReadiness.effectiveDecision, 'requires-platform-preflight');
-  assert.equal(locator.editReadiness.platformPreflightRequired, true);
-  assert.equal(locator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(locator.editReadiness.effectiveDecision, 'auto-sync-on-save');
+  assert.equal(locator.editReadiness.platformPreflightRequired, false);
+  assert.equal(locator.editReadiness.externalFilesystemEditAllowed, true);
+  assert.equal(locator.editReadiness.autoSyncOnSave, true);
+  assert.equal(locator.editReadiness.autoSyncRuntimeHealthVerified, false);
   assert.equal(locator.editReadiness.readOnlyInspectionAllowed, true);
-  assert.equal(locator.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
-  assert.equal(locator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(locator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
-  assert.equal(locator.editReadiness.platformBridge.canonicalExternalEditRequirementField, 'finalMaterializableTargetEditAllowedRequires');
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableEffectiveDecision'), true);
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableExternalFileEditAllowed'), true);
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
-  assert.equal(locator.editReadiness.requiredPlatformFields.includes('nextActions'), true);
-  assert.equal(locator.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
-  assert.equal(locator.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
+  assert.equal(locator.editReadiness.filesystemToolPolicy, 'edit-with-auto-sync-on-save');
+  assert.equal(Object.prototype.hasOwnProperty.call(locator.editReadiness, 'platformBridge'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(locator.editReadiness, 'requiredPlatformFields'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(locator.editReadiness, 'noGoSignals'), false);
   assert.equal(Object.prototype.hasOwnProperty.call(locator, 'content'), false);
   assertNoSourceLeak(locator);
   assert.match(locator.filesystemPath, /code_nodes_/);
@@ -620,21 +610,16 @@ test('resources/list and resources/read expose workflow file locators without so
   assert.equal(setLocator.resourcePayloadKind, 'locator-json');
   assert.equal(setLocator.locator.status, 'ready');
   assert.equal(setLocator.editReadiness.localLocatorReady, true);
-  assert.equal(setLocator.editReadiness.effectiveDecision, 'requires-platform-preflight');
-  assert.equal(setLocator.editReadiness.platformPreflightRequired, true);
-  assert.equal(setLocator.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(setLocator.editReadiness.effectiveDecision, 'auto-sync-on-save');
+  assert.equal(setLocator.editReadiness.platformPreflightRequired, false);
+  assert.equal(setLocator.editReadiness.externalFilesystemEditAllowed, true);
+  assert.equal(setLocator.editReadiness.autoSyncOnSave, true);
+  assert.equal(setLocator.editReadiness.autoSyncRuntimeHealthVerified, false);
   assert.equal(setLocator.editReadiness.readOnlyInspectionAllowed, true);
-  assert.equal(setLocator.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
-  assert.equal(setLocator.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(setLocator.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
-  assert.equal(setLocator.editReadiness.platformBridge.canonicalExternalEditRequirementField, 'finalMaterializableTargetEditAllowedRequires');
-  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
-  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
-  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableEffectiveDecision'), true);
-  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableExternalFileEditAllowed'), true);
-  assert.equal(setLocator.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
-  assert.equal(setLocator.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
-  assert.equal(setLocator.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
+  assert.equal(setLocator.editReadiness.filesystemToolPolicy, 'edit-with-auto-sync-on-save');
+  assert.equal(Object.prototype.hasOwnProperty.call(setLocator.editReadiness, 'platformBridge'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(setLocator.editReadiness, 'requiredPlatformFields'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(setLocator.editReadiness, 'noGoSignals'), false);
   assert.equal(Object.prototype.hasOwnProperty.call(setLocator, 'content'), false);
   assertNoSourceLeak(setLocator);
   assert.equal(setRead.result.contents[0].text.includes('{"ok":true}'), false);

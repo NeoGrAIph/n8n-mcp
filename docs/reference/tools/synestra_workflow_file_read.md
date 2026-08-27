@@ -12,11 +12,11 @@ Returns locator metadata including `workflowId`, `nodeId`, `kind`, optional `lan
 
 `filesystemPath` is the host-facing path intended for normal filesystem tools. `containerPath` is diagnostic-only for the MCP container mount.
 
-`editReadiness.platformBridge.aggregateField` points to platform `fileLayerSafety.synestraMcpBridge`. A ready local locator sets `readOnlyInspectionAllowed=true` and `filesystemToolPolicy=inspect-only-until-platform-go`; MCP-side `externalFilesystemEditAllowed` remains `false`. For Code/Set(raw) edits, follow `platformBridge.canonicalExternalEditRequirementField=finalMaterializableTargetEditAllowedRequires`. Final external-edit permission requires platform materializable file-layer readiness, verified `n8nDbContract`, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
+For a ready dev locator, `editReadiness` reports `effectiveDecision=auto-sync-on-save`, `externalFilesystemEditAllowed=true`, `autoSyncOnSave=true`, `platformPreflightRequired=false` and `filesystemToolPolicy=edit-with-auto-sync-on-save`. `autoSyncRuntimeHealthVerified=false` makes clear that this local result does not prove the deployed controller is healthy; use export/platform diagnostics for runtime evidence. Ready non-dev locators remain inspect-only.
 
 ## Safety
 
-No Code, JavaScript, Python or Set(raw) payload is returned. A target can be inspected only when `locator.status` is `ready`; all other statuses are unsafe for external edits. `editReadiness.effectiveDecision=requires-platform-preflight` means the local locator is ready but final edit permission still requires the platform Camel K/DB/files gate.
+No Code, JavaScript, Python or Set(raw) payload is returned. A target can be inspected only when `locator.status` is `ready`; all other statuses are unsafe for external edits. This MCP remains read-only even when it reports that normal filesystem editing is allowed.
 
 ## Example
 

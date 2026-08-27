@@ -7,7 +7,7 @@ This document is the stable repository-local entrypoint for agents that need to 
 - Native n8n MCP owns core n8n semantics and API-backed operations: workflow discovery/details/update, executions/tests, credentials, projects/folders, workflow builder, node/runtime semantics and data tables.
 - `synestra-n8n-gitops-mcp` owns only local GitOps/file locator metadata for extracted Code and Set(raw) nodes.
 - This server is read-only. It returns locator metadata, paths, ETags, readiness state and platform handoff commands; it does not return Code/Set(raw) source content and does not expose MCP write tools.
-- Normal filesystem tools perform approved dev edits outside MCP, and only after both the local locator and the platform exact-target gate approve the same URI/ETag.
+- Normal filesystem tools perform ready dev Code/Set(raw) edits outside MCP; the dev sync controller is configured to apply valid changes to n8n automatically on save.
 
 ## Workflow File Layout
 
@@ -23,7 +23,7 @@ Runtime state files are DB/materializer state, not manual source-of-truth artifa
 
 ## Readiness Handoff
 
-MCP-local readiness is not production readiness. A ready locator means the exact file path is inspectable; it does not grant write permission.
+MCP-local readiness is not production readiness or live sync-controller health. A ready dev locator grants local filesystem edit eligibility and reports `autoSyncOnSave=true`; ready prod locators remain inspect-only.
 
 For global readiness, use the platform aggregate gate:
 
@@ -32,17 +32,7 @@ cd ~/repo/synestra-platform
 scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env dev --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json
 ```
 
-For a specific dev file edit, rerun the same gate with the exact URI/ETag and require `productionReadinessEvidence.canClaimExactTargetEditReadiness=true`:
-
-```bash
-scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env dev --uri '<exact-synestra-uri>' --expected-etag '<pre-edit-sha256>' --json
-```
-
-Then create the runtime one-shot permit through the platform script. Do not create `.sync-allow` files manually.
-
-```bash
-scripts/mcp/create_n8n_sync_allow_permit.sh --env dev --uri '<exact-synestra-uri>' --expected-etag '<pre-edit-sha256>' --target-json /tmp/n8n-target-gate.json --readiness-json /tmp/n8n-readiness-gate.json --hmac-key-file '<secure-hmac-key-file>' --json
-```
+No additional action is required after saving a ready dev Code/Set(raw) file. Use the aggregate gate only for deployed MCP, gateway, controller, Camel K, DB/files and CDC health evidence; local locator readiness alone does not prove those runtime components are healthy.
 
 ## Platform References
 
@@ -50,6 +40,3 @@ scripts/mcp/create_n8n_sync_allow_permit.sh --env dev --uri '<exact-synestra-uri
 - `~/repo/synestra-platform/docs/runbooks/workloads/n8n-camelk-recovery.md`
 - `~/repo/synestra-platform/scripts/mcp/audit_n8n_two_mcp_production_readiness.sh`
 - `~/repo/synestra-platform/scripts/n8n/preflight_n8n_camelk_recovery.sh`
-- `~/repo/synestra-platform/scripts/mcp/audit_n8n_filesystem_edit_target.sh`
-- `~/repo/synestra-platform/scripts/mcp/create_n8n_sync_allow_permit.sh`
-

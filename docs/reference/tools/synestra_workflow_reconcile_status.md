@@ -12,7 +12,7 @@ Returns workflow status, summary counts and target-level statuses. Common unsafe
 
 ## Safety
 
-No Code/Set(raw) source content is returned. Use this tool before any external filesystem edit; only exact target statuses of `ready` are local file-layer candidates, and final edit permission still requires platform materializable file-layer readiness, verified `n8nDbContract`, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
+No Code/Set(raw) source content is returned. Use this tool before any external filesystem edit; only target statuses of `ready` are local file-layer candidates. In dev, ready Code/Set(raw) targets are eligible for normal filesystem edits and automatic sync on save is configured by contract. This readiness does not prove live controller health.
 
 ## Example
 

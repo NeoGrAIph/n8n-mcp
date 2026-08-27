@@ -12,7 +12,7 @@ Returns `files`, sorted by URI. Each item is an existing extracted Code or Set(r
 
 ## Safety
 
-No file source content is returned. This is an existing-files list, not a complete expected-target inventory: missing Code/Set(raw) files do not appear here. Use `synestra_workflow_reconcile_status` for missing target counts and workflow-level parity. Archived workflow paths are rejected as controlled errors. A ready local locator allows path inspection; external edits still require platform materializable file-layer readiness, verified `n8nDbContract`, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`.
+No file source content is returned. This is an existing-files list, not a complete expected-target inventory: missing Code/Set(raw) files do not appear here. Use `synestra_workflow_reconcile_status` for missing target counts and workflow-level parity. Archived workflow paths are rejected as controlled errors. A ready dev locator allows normal filesystem edits with sync-on-save configured by the dev contract; ready non-dev locators are inspect-only, and runtime health requires separate platform diagnostics.
 
 ## Example
 

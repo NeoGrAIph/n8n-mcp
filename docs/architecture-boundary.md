@@ -29,7 +29,7 @@ The server is read-only. It must not expose native/core n8n tools and must not e
 
 ## Filesystem Tools
 
-Approved dev edits are performed by normal filesystem tools, not by this MCP server. A file is a local path candidate only when locator or reconcile status for the exact workflow/node is `ready`; final external-edit permission also requires platform global prerequisites, verified `n8nDbContract`, and an exact-target gate for the same URI/ETag to return `filesystemToolGuard.finalExternalFilesystemEditAllowed=true`. After an edit, use read-only validation, observe or reconcile calls to verify the result.
+Approved dev edits are performed by normal filesystem tools, not by this MCP server. A Code/Set(raw) file is eligible only when locator or reconcile status for the workflow/node is `ready`; ready dev locators report automatic sync-on-save eligibility without a platform preflight. This local contract does not prove that the live sync controller is healthy, so use platform diagnostics for runtime verification. After an edit, use read-only validation, observe or reconcile calls to verify the result.
 
 Production writes are outside the v1 contract.
 

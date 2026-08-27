@@ -16,7 +16,7 @@ Returns local mount/artifact state, `mcpLocatorReadiness`, `productionReadiness.
 - use MCP file/resource tools only to get `filesystemPath`, `etag` and locator status;
 - first run the aggregate platform readiness gate so native MCP, gateway hardening and Camel K/DB/files checks stay in scope;
 - before claiming native+extensions readiness, inspect `productionReadinessEvidence.gatewayStrict` from the aggregate gate and verify the deployed Synestra MCP image/source pin, `buildAcceptance`, `exportDiagnosticsAcceptance` and `canClaimProductionReadiness`;
-- require verified platform global prerequisites plus an exact-target gate for the same URI/ETag before any normal filesystem edit;
+- use ready dev locator metadata for filesystem edit eligibility, while using platform diagnostics separately to verify live sync-controller and file-layer health;
 - before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs, run the Camel K upgrade readiness audit and follow `upgradePolicy`;
 - when the locator is not ready or Camel K/DB/files preflight is no-go, run platform preflight, classifier and then a reviewed render preview;
 - render preview requires `--workflow-id '<reviewed-workflow-id>'` and writes sensitive artifacts outside the workflow root.
@@ -29,14 +29,11 @@ Important handoff commands include:
 - `classify_n8n_recovery_candidates.sh` for report-only recovery candidate grouping;
 - `render_n8n_db_files_backfill_candidates.sh --workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json` for an isolated sensitive temp-dir preview after a workflow candidate has been reviewed.
 
-When reading platform output, treat these fields as the edit/readiness contract:
+When reading platform output, treat these fields as the production/runtime readiness contract:
 
-- `filesystemToolGuard.finalExternalFilesystemEditAllowed`, `filesystemToolGuard.exactTargetGatePresent`, `filesystemToolGuard.blockerMatrix`, `filesystemToolGuard.failedChecks` and `filesystemToolGuard.checks` from the platform gate as the external filesystem edit guard;
-- `productionReadinessEvidence.canClaimProductionReadiness`, `canClaimExactTargetEditReadiness` and `productionReadinessEvidence.gatewayStrict` from the aggregate gate as the native+extensions readiness evidence;
+- `productionReadinessEvidence.canClaimProductionReadiness` and `productionReadinessEvidence.gatewayStrict` from the aggregate gate as the native+extensions readiness evidence;
 - `productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag`, `sourceRef`, `buildAcceptance.platformImageTagMatchesExpected`, `buildAcceptance.sourceRefMatchesExpected` and `exportDiagnosticsAcceptance` from the aggregate gate before trusting a deployed MCP handoff;
-- `fileLayerSafety.synestraMcpBridge` from the aggregate gate as the machine-readable bridge to local `editReadiness`;
 - `fileLayerSafety.effectiveDecision` and `fileLayerSafety.blockers` from the aggregate gate;
-- `fileLayerSafety.materializableEffectiveDecision`, `fileLayerSafety.materializableExternalFileEditAllowed` and `fileLayerSafety.materializableBlockers` from the aggregate gate as the Code/Set(raw) target edit contract;
 - `externalFileEditAllowed` and `applyForbiddenReasons` from the Camel K/DB/files preflight;
 - `nextActions` and `nextActionSummary` from the Camel K/DB/files preflight for read-only remediation routing;
 - `dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts` for dirty worktree classification;
@@ -44,7 +41,7 @@ When reading platform output, treat these fields as the edit/readiness contract:
 - `upgradePolicy.normalDriftCorrectionAllowed`, `operatorSyncEligible`, `devWorkloadSyncEligible`, `prodWorkloadSyncEligible`, `blockedByIssueCodes`, `blockerEvidenceKeys`, `nextActionIds` and `forbiddenActionsWhileNoGo` from the Camel K upgrade readiness audit for sync/upgrade routing;
 - `prodSyncImpact.sourceOfTruth.decisionRequired` and `prodSyncImpact.sourceOfTruth.blockerEvidence` from the Camel K upgrade readiness audit when prod DB/files source-of-truth is unresolved.
 
-Any of these values blocks file edit readiness and production readiness claims: `filesystemToolGuard.finalExternalFilesystemEditAllowed=false`, `filesystemToolGuard.exactTargetGatePresent=false`, non-empty `filesystemToolGuard.failedChecks`, non-empty `filesystemToolGuard.blockerMatrix`, `n8nDbContract.status!=verified`, `fileLayerSafety.materializableEffectiveDecision!=go`, `fileLayerSafety.materializableExternalFileEditAllowed!=true`, non-empty `fileLayerSafety.materializableBlockers`, `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, `upgradePolicy.normalDriftCorrectionAllowed=false`, `prodSyncImpact.sourceOfTruth.decisionRequired=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. In a no-go state, follow platform `nextActions`, use the classifier and, only after review, an isolated render preview.
+Any of these values blocks production/runtime readiness claims or recovery operations: `n8nDbContract.status!=verified`, `fileLayerSafety.effectiveDecision!=go`, non-empty `fileLayerSafety.blockers`, `externalFileEditAllowed=false`, non-empty `applyForbiddenReasons`, `dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true`, `upgradePolicy.normalDriftCorrectionAllowed=false`, `prodSyncImpact.sourceOfTruth.decisionRequired=true`, or `debeziumCdcFreshness.status` in `active_blocker`, `inconclusive` or `historical_blocker`. They do not replace the dev locator eligibility contract. In a no-go state, follow platform `nextActions`, use the classifier and, only after review, an isolated render preview.
 
 ## Safety
 

@@ -195,13 +195,13 @@ export async function exportDiagnostics(config) {
       requiredChecks: platformReadinessChecks(config)
     },
     allowedActions: [
-      'Use ready locator metadata to inspect files with external filesystem tools',
+      'Use ready locator metadata to inspect files and, in dev, edit eligible Code/Set(raw) files with external filesystem tools',
       'Use synestra_workflow_reconcile_status for an exact workflow before any file edit',
       'Run platform read-only Camel K and DB parity audits before claiming production readiness'
     ],
     forbiddenActions: [
       'Do not treat MCP /health or tools/list as DB-to-files parity proof',
-      'Do not edit files whose locator status is not ready or whose platform file-layer gate is not go',
+      'Do not edit files whose locator status is not ready, and do not edit workflow files outside dev',
       'Do not use MCP diagnostics as permission for DB writes, Argo sync, workflow restart or files-to-API backfill'
     ],
     camelK: {
@@ -266,8 +266,10 @@ export async function validateWorkflowFile(config, { uri, content, contentSha256
     else diagnostics.push({ level: 'info', code: `SET_RAW_${syntax.toUpperCase()}`, message: `Set(raw) syntax: ${syntax}` });
   }
   const locator = await targetNodeMetadata(config, target, value);
-  const safeToEdit = locator.status === 'ready';
-  if (!safeToEdit) diagnostics.push({ level: 'error', code: 'UNSAFE_LOCATOR_STATUS', locatorStatus: locator.status, message: `File-layer locator status is ${locator.status}` });
+  const locatorReady = locator.status === 'ready';
+  const safeToEdit = locatorReady && config.serviceEnv === 'dev';
+  if (!locatorReady) diagnostics.push({ level: 'error', code: 'UNSAFE_LOCATOR_STATUS', locatorStatus: locator.status, message: `File-layer locator status is ${locator.status}` });
+  else if (!safeToEdit) diagnostics.push({ level: 'error', code: 'NON_DEV_EDIT_FORBIDDEN', message: 'External workflow file edits are allowed only in dev' });
   const editReadiness = externalEditReadiness(config, locator);
   return {
     uri,
@@ -286,92 +288,25 @@ export async function validateWorkflowFile(config, { uri, content, contentSha256
 
 function externalEditReadiness(config, locator) {
   const localLocatorReady = locator?.status === 'ready';
+  const devAutoSyncEligible = localLocatorReady && config.serviceEnv === 'dev';
   return {
     localLocatorReady,
     localLocatorStatus: locator?.status || 'unknown',
     localDecision: localLocatorReady ? 'locator-ready' : 'unsafe-locator',
-    effectiveDecision: localLocatorReady ? 'requires-platform-preflight' : 'no-go',
-    platformPreflightRequired: true,
-    externalEditAllowed: null,
-    externalFilesystemEditAllowed: false,
+    effectiveDecision: devAutoSyncEligible ? 'auto-sync-on-save' : (localLocatorReady ? 'inspect-only' : 'no-go'),
+    platformPreflightRequired: false,
+    externalEditAllowed: devAutoSyncEligible,
+    externalFilesystemEditAllowed: devAutoSyncEligible,
+    autoSyncOnSave: devAutoSyncEligible,
+    autoSyncRuntimeHealthVerified: false,
     readOnlyInspectionAllowed: localLocatorReady,
-    filesystemToolPolicy: localLocatorReady ? 'inspect-only-until-platform-go' : 'blocked-unsafe-locator',
-    sourceOfTruth: 'synestra-platform',
-    platformRepo: config.platformRepoDisplayRoot || '~/repo/synestra-platform',
-    platformBridge: {
-      aggregateField: 'fileLayerSafety.synestraMcpBridge',
-      expectedAggregateRequiredLocalEditReadinessEffectiveDecision: 'requires-platform-preflight',
-      expectedAggregateRequiredLocalLocatorStatus: 'ready',
-      localLocatorReadinessIsSufficient: false,
-      canonicalExternalEditRequirementField: 'finalMaterializableTargetEditAllowedRequires',
-      globalProductionReadinessRequirementField: 'finalExternalEditAllowedRequires',
-      finalExternalEditAllowedRequires: [
-        'editReadiness.localLocatorReady=true',
-        'editReadiness.effectiveDecision=requires-platform-preflight',
-        'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
-        'filesystemToolGuard.exactTargetGatePresent=true',
-        'fileLayerSafety.effectiveDecision=go',
-        'fileLayerSafety.externalFileEditAllowed=true',
-        'fileLayerSafety.blockers=[]',
-        'fileLayerSafety.n8nDbContract.status=verified'
-      ],
-      finalMaterializableTargetEditAllowedRequires: [
-        'editReadiness.localLocatorReady=true',
-        'editReadiness.effectiveDecision=requires-platform-preflight',
-        'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
-        'filesystemToolGuard.exactTargetGatePresent=true',
-        'fileLayerSafety.materializableEffectiveDecision=go',
-        'fileLayerSafety.materializableExternalFileEditAllowed=true',
-        'fileLayerSafety.materializableBlockers=[]',
-        'fileLayerSafety.n8nDbContract.status=verified'
-      ]
-    },
-    requiredPlatformFields: [
-      'filesystemToolGuard.finalExternalFilesystemEditAllowed',
-      'filesystemToolGuard.globalExternalEditPrerequisitesMet',
-      'filesystemToolGuard.exactTargetGateRequired',
-      'filesystemToolGuard.exactTargetGatePresent',
-      'filesystemToolGuard.failedChecks',
-      'filesystemToolGuard.checks',
-      'filesystemToolGuard.blockerMatrix',
-      'fileLayerSafety.synestraMcpBridge',
-      'fileLayerSafety.effectiveDecision',
-      'fileLayerSafety.materializableEffectiveDecision',
-      'fileLayerSafety.materializableExternalFileEditAllowed',
-      'fileLayerSafety.materializableBlockers',
-      'fileLayerSafety.blockers',
-      'fileLayerSafety.blockerEvidence',
-      'fileLayerSafety.targetReadinessGap',
-      'fileLayerSafety.n8nDbContract.status',
-      'fileLayerSafety.n8nDbContract.schemaFingerprint',
-      'externalFileEditAllowed',
-      'nextActions',
-      'nextActionSummary',
-      'dbFilesBackfillDryRun.dirtyArtifactSafety',
-      'debeziumCdcFreshness.status',
-      'debeziumLogRisk.overallStatus',
-      'applyForbiddenReasons'
-    ],
-    noGoSignals: [
-      'filesystemToolGuard.finalExternalFilesystemEditAllowed=false',
-      'filesystemToolGuard.exactTargetGatePresent=false',
-      'filesystemToolGuard.failedChecks is non-empty',
-      'filesystemToolGuard.blockerMatrix is non-empty',
-      'fileLayerSafety.synestraMcpBridge.localLocatorReadinessIsSufficient=false',
-      'fileLayerSafety.effectiveDecision=no-go',
-      'fileLayerSafety.materializableEffectiveDecision=no-go',
-      'fileLayerSafety.materializableExternalFileEditAllowed=false',
-      'fileLayerSafety.materializableBlockers is non-empty',
-      'fileLayerSafety.n8nDbContract.status!=verified',
-      'externalFileEditAllowed=false',
-      'applyForbiddenReasons is non-empty',
-      'dbFilesBackfillDryRun.dirtyArtifactSafety.externalEditBlockedByDirtyArtifacts=true',
-      'debeziumCdcFreshness.status=active_blocker|inconclusive|historical_blocker',
-      'debeziumLogRisk.overallStatus=active_blocker|inconclusive|historical_blocker'
-    ],
-    message: localLocatorReady
-      ? 'This MCP proved only the local file locator. Inspecting the filesystemPath is allowed; external edits require platform materializable file-layer readiness plus an exact-target gate for this URI/ETag, reported as filesystemToolGuard.finalExternalFilesystemEditAllowed=true.'
-      : 'External edits are forbidden because the local file locator is not ready.'
+    filesystemToolPolicy: devAutoSyncEligible ? 'edit-with-auto-sync-on-save' : (localLocatorReady ? 'inspect-only-non-dev' : 'blocked-unsafe-locator'),
+    sourceOfTruth: config.serviceEnv === 'dev' ? 'n8n-dev-bidirectional-sync' : 'n8n-read-only-file-projection',
+    message: devAutoSyncEligible
+      ? 'The local locator is ready. External filesystem edits are allowed and auto-sync on save is configured by the dev contract for valid Code/Set(raw) changes. This MCP remains read-only and does not prove live sync-controller health; use platform diagnostics for runtime verification.'
+      : (localLocatorReady
+          ? 'The local locator is ready for inspection, but external filesystem edits and auto-sync on save are available only in dev.'
+          : 'External edits are forbidden because the local file locator is not ready.')
   };
 }
 
@@ -549,15 +484,7 @@ function platformReadinessChecks(config) {
       readOnly: true,
       requiredFor: ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness'],
       requiredFields: [
-        'filesystemToolGuard.finalExternalFilesystemEditAllowed',
-        'filesystemToolGuard.globalExternalEditPrerequisitesMet',
-        'filesystemToolGuard.exactTargetGateRequired',
-        'filesystemToolGuard.exactTargetGatePresent',
-        'filesystemToolGuard.failedChecks',
-        'filesystemToolGuard.checks',
-        'filesystemToolGuard.blockerMatrix',
         'productionReadinessEvidence.canClaimProductionReadiness',
-        'productionReadinessEvidence.canClaimExactTargetEditReadiness',
         'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
         'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
         'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
@@ -568,9 +495,6 @@ function platformReadinessChecks(config) {
         'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
         'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
         'fileLayerSafety.effectiveDecision',
-        'fileLayerSafety.materializableEffectiveDecision',
-        'fileLayerSafety.materializableExternalFileEditAllowed',
-        'fileLayerSafety.materializableBlockers',
         'fileLayerSafety.blockers',
         'fileLayerSafety.n8nDbContract.status',
         'fileLayerSafety.n8nDbContract.schemaFingerprint',
@@ -578,15 +502,9 @@ function platformReadinessChecks(config) {
         'fileLayerSafety.targetReadinessGap'
       ],
       noGoSignals: [
-        'filesystemToolGuard.finalExternalFilesystemEditAllowed=false',
-        'filesystemToolGuard.exactTargetGatePresent=false',
-        'filesystemToolGuard.failedChecks is non-empty',
-        'filesystemToolGuard.blockerMatrix is non-empty',
         'fileLayerSafety.n8nDbContract.status!=verified',
         'fileLayerSafety.effectiveDecision=no-go',
-        'fileLayerSafety.materializableEffectiveDecision=no-go',
-        'fileLayerSafety.materializableExternalFileEditAllowed=false',
-        'fileLayerSafety.materializableBlockers is non-empty'
+        'fileLayerSafety.blockers is non-empty'
       ]
     },
     {
@@ -706,17 +624,9 @@ function platformReadinessHandoff(config) {
     mcpMustNotWriteWorkflow: true,
     workflowIdRequiredForRenderPreview: true,
     nextAction: 'run-platform-readiness-gates',
-    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. Inspecting the file with normal filesystem tools is allowed when locator.status is ready; external edits require platform global prerequisites plus an exact-target gate for this URI/ETag; a ready MCP locator or sampled aggregate locator is not enough.',
+    useFilesToolWhenLocatorReady: 'Use synestra_workflow_file_read or resources/read to get filesystemPath/etag. When locator.status is ready, normal filesystem tools may inspect the file. In dev they may also edit Code/Set(raw), with automatic sync on save configured by contract; live controller health must be verified with platform diagnostics.',
     usePlatformPreflightFields: [
-      'filesystemToolGuard.finalExternalFilesystemEditAllowed',
-      'filesystemToolGuard.globalExternalEditPrerequisitesMet',
-      'filesystemToolGuard.exactTargetGateRequired',
-      'filesystemToolGuard.exactTargetGatePresent',
-      'filesystemToolGuard.failedChecks',
-      'filesystemToolGuard.checks',
-      'filesystemToolGuard.blockerMatrix',
       'productionReadinessEvidence.canClaimProductionReadiness',
-      'productionReadinessEvidence.canClaimExactTargetEditReadiness',
       'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
       'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
       'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
@@ -726,11 +636,7 @@ function platformReadinessHandoff(config) {
       'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradePolicyFieldsPresent',
       'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
       'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
-      'fileLayerSafety.synestraMcpBridge',
       'fileLayerSafety.effectiveDecision',
-      'fileLayerSafety.materializableEffectiveDecision',
-      'fileLayerSafety.materializableExternalFileEditAllowed',
-      'fileLayerSafety.materializableBlockers',
       'fileLayerSafety.blockers',
       'fileLayerSafety.blockerEvidence',
       'fileLayerSafety.targetReadinessGap',
@@ -751,11 +657,11 @@ function platformReadinessHandoff(config) {
       'upgradePolicy.forbiddenActionsWhileNoGo',
       'applyForbiddenReasons'
     ],
-    useAggregateEvidence: 'Before claiming native+extensions readiness, inspect productionReadinessEvidence.gatewayStrict from audit_n8n_two_mcp_production_readiness.sh --json. Verify the deployed Synestra MCP image/source pin, buildAcceptance, exportDiagnosticsAcceptance and canClaimProductionReadiness; for an external file edit also require canClaimExactTargetEditReadiness for the same URI/ETag.',
+    useAggregateEvidence: 'Before claiming native+extensions readiness, inspect productionReadinessEvidence.gatewayStrict from audit_n8n_two_mcp_production_readiness.sh --json. Verify the deployed Synestra MCP image/source pin, buildAcceptance, exportDiagnosticsAcceptance and canClaimProductionReadiness.',
     usePlatformUpgradePolicy: 'Before Camel K operator/runtime changes, Debezium exporter syncs or n8n Camel K workload syncs, run scripts/n8n/audit_n8n_camelk_upgrade_readiness.sh --json and follow upgradePolicy. While normalDriftCorrectionAllowed is false, treat upgradePolicy.blockedByIssueCodes, blockerEvidenceKeys, nextActionIds and forbiddenActionsWhileNoGo as binding. Prod workload sync requires a separate approved recovery/change window even if dev is clean.',
-    usePlatformRenderWhenNoGo: 'If filesystemToolGuard.finalExternalFilesystemEditAllowed is false, exactTargetGatePresent is false, Camel K/DB/files preflight is no-go, fileLayerSafety.materializableEffectiveDecision is no-go, n8nDbContract is not verified, dirtyArtifactSafety blocks edits, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
+    usePlatformRenderWhenNoGo: 'If Camel K/DB/files preflight is no-go, n8nDbContract is not verified, dirtyArtifactSafety blocks recovery, Debezium freshness is active/inconclusive/historical, a Debezium problem log is still inside N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC, or the locator is missing/stale/null, follow platform nextActions, run classifier first and render a reviewed workflow candidate only to an isolated temp output root.',
     commandSequence: [
-      `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json`,
+      `cd ${repo} && scripts/mcp/audit_n8n_two_mcp_production_readiness.sh --env ${env} --native-token-file '<secure-native-token-file>' --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json`,
       `cd ${repo} && scripts/n8n/preflight_n8n_camelk_recovery.sh --env ${env} --summary-json`,
       `cd ${repo} && scripts/n8n/audit_n8n_camelk_upgrade_readiness.sh --json`,
       `cd ${repo} && scripts/n8n/classify_n8n_recovery_candidates.sh --env ${env} --json`,

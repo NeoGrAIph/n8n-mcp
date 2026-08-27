@@ -12,55 +12,26 @@ test('lists and reads Code and Set(raw) files with ETags', async () => {
   assert.equal(files.length, 2);
   assert.equal(files.every(file => file.locator.status === 'ready'), true);
   assert.equal(files.every(file => file.editReadiness.localLocatorReady === true), true);
-  assert.equal(files.every(file => file.editReadiness.effectiveDecision === 'requires-platform-preflight'), true);
+  assert.equal(files.every(file => file.editReadiness.effectiveDecision === 'auto-sync-on-save'), true);
   const code = await readWorkflowFile(fixture.config, fixture.codeUri);
   assert.equal(code.kind, 'code');
   assert.equal(code.language, 'python');
   assert.equal(code.locator.status, 'ready');
   assert.equal(code.editReadiness.localLocatorReady, true);
-  assert.equal(code.editReadiness.effectiveDecision, 'requires-platform-preflight');
-  assert.equal(code.editReadiness.platformPreflightRequired, true);
-  assert.equal(code.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(code.editReadiness.effectiveDecision, 'auto-sync-on-save');
+  assert.equal(code.editReadiness.platformPreflightRequired, false);
+  assert.equal(code.editReadiness.externalEditAllowed, true);
+  assert.equal(code.editReadiness.externalFilesystemEditAllowed, true);
+  assert.equal(code.editReadiness.autoSyncOnSave, true);
+  assert.equal(code.editReadiness.autoSyncRuntimeHealthVerified, false);
   assert.equal(code.editReadiness.readOnlyInspectionAllowed, true);
-  assert.equal(code.editReadiness.filesystemToolPolicy, 'inspect-only-until-platform-go');
-  assert.equal(code.editReadiness.platformBridge.aggregateField, 'fileLayerSafety.synestraMcpBridge');
-  assert.equal(code.editReadiness.platformBridge.localLocatorReadinessIsSufficient, false);
-  assert.equal(code.editReadiness.platformBridge.canonicalExternalEditRequirementField, 'finalMaterializableTargetEditAllowedRequires');
-  assert.equal(code.editReadiness.platformBridge.globalProductionReadinessRequirementField, 'finalExternalEditAllowedRequires');
-  assert.deepEqual(code.editReadiness.platformBridge.finalExternalEditAllowedRequires, [
-    'editReadiness.localLocatorReady=true',
-    'editReadiness.effectiveDecision=requires-platform-preflight',
-    'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
-    'filesystemToolGuard.exactTargetGatePresent=true',
-    'fileLayerSafety.effectiveDecision=go',
-    'fileLayerSafety.externalFileEditAllowed=true',
-    'fileLayerSafety.blockers=[]',
-    'fileLayerSafety.n8nDbContract.status=verified'
-  ]);
-  assert.deepEqual(code.editReadiness.platformBridge.finalMaterializableTargetEditAllowedRequires, [
-    'editReadiness.localLocatorReady=true',
-    'editReadiness.effectiveDecision=requires-platform-preflight',
-    'filesystemToolGuard.finalExternalFilesystemEditAllowed=true',
-    'filesystemToolGuard.exactTargetGatePresent=true',
-    'fileLayerSafety.materializableEffectiveDecision=go',
-    'fileLayerSafety.materializableExternalFileEditAllowed=true',
-    'fileLayerSafety.materializableBlockers=[]',
-    'fileLayerSafety.n8nDbContract.status=verified'
-  ]);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('filesystemToolGuard.exactTargetGatePresent'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableEffectiveDecision'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableExternalFileEditAllowed'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.materializableBlockers'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.n8nDbContract.status'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('nextActions'), true);
-  assert.equal(code.editReadiness.requiredPlatformFields.includes('fileLayerSafety.synestraMcpBridge'), true);
-  assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.finalExternalFilesystemEditAllowed=false'), true);
-  assert.equal(code.editReadiness.noGoSignals.includes('filesystemToolGuard.exactTargetGatePresent=false'), true);
-  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.materializableEffectiveDecision=no-go'), true);
-  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.materializableExternalFileEditAllowed=false'), true);
-  assert.equal(code.editReadiness.noGoSignals.includes('fileLayerSafety.n8nDbContract.status!=verified'), true);
-  assert.match(code.editReadiness.message, /filesystemToolGuard\.finalExternalFilesystemEditAllowed=true/);
+  assert.equal(code.editReadiness.filesystemToolPolicy, 'edit-with-auto-sync-on-save');
+  assert.equal(code.editReadiness.sourceOfTruth, 'n8n-dev-bidirectional-sync');
+  assert.equal(Object.prototype.hasOwnProperty.call(code.editReadiness, 'platformBridge'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(code.editReadiness, 'requiredPlatformFields'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(code.editReadiness, 'noGoSignals'), false);
+  assert.match(code.editReadiness.message, /auto-sync on save is configured by the dev contract/);
+  assert.match(code.editReadiness.message, /does not prove live sync-controller health/);
   assert.equal(code.locator.node.type, 'n8n-nodes-base.code');
   assert.equal(Object.prototype.hasOwnProperty.call(code, 'content'), false);
   assert.match(code.filesystemPath, /code_nodes_/);
@@ -94,6 +65,27 @@ test('ETag is a strong byte hash and observes external edits without echoing con
   assert.equal(hashMismatchObserved.diagnostics.some(item => item.code === 'EXPECTED_CONTENT_SHA256_MISMATCH'), true);
 });
 
+test('ready prod locators remain inspect-only without auto-sync', async () => {
+  const fixture = await createWorkflowFixture();
+  const prodConfig = { ...fixture.config, serviceEnv: 'prod' };
+  const code = await readWorkflowFile(prodConfig, fixture.codeUri);
+  assert.equal(code.locator.status, 'ready');
+  assert.equal(code.editReadiness.localLocatorReady, true);
+  assert.equal(code.editReadiness.effectiveDecision, 'inspect-only');
+  assert.equal(code.editReadiness.platformPreflightRequired, false);
+  assert.equal(code.editReadiness.externalEditAllowed, false);
+  assert.equal(code.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(code.editReadiness.autoSyncOnSave, false);
+  assert.equal(code.editReadiness.readOnlyInspectionAllowed, true);
+  assert.equal(code.editReadiness.filesystemToolPolicy, 'inspect-only-non-dev');
+  assert.equal(code.editReadiness.sourceOfTruth, 'n8n-read-only-file-projection');
+  assert.match(code.editReadiness.message, /available only in dev/);
+  const validation = await validateWorkflowFile(prodConfig, { uri: fixture.codeUri });
+  assert.equal(validation.valid, false);
+  assert.equal(validation.safeToEdit, false);
+  assert.equal(validation.diagnostics.some(item => item.code === 'NON_DEV_EDIT_FORBIDDEN'), true);
+});
+
 test('list reports stale exports instead of ready locators', async () => {
   const fixture = await createWorkflowFixture();
   await fs.writeFile(path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.nodeId}.py`), 'print("stale")\n');
@@ -102,7 +94,9 @@ test('list reports stale exports instead of ready locators', async () => {
   assert.equal(code.locator.status, 'stale_export');
   assert.equal(code.editReadiness.localLocatorReady, false);
   assert.equal(code.editReadiness.effectiveDecision, 'no-go');
-  assert.equal(code.editReadiness.platformPreflightRequired, true);
+  assert.equal(code.editReadiness.platformPreflightRequired, false);
+  assert.equal(code.editReadiness.externalFilesystemEditAllowed, false);
+  assert.equal(code.editReadiness.autoSyncOnSave, false);
 });
 
 test('locator metadata redacts expected content on stale kind or extension mismatch', async () => {
@@ -131,7 +125,7 @@ test('validates Set(raw) JSON content', async () => {
   assert.equal(valid.safeToEditScope, 'local-locator-only');
   assert.equal(valid.validationInputSource, 'current-file');
   assert.equal(valid.contentSha256Matches, null);
-  assert.equal(valid.editReadiness.effectiveDecision, 'requires-platform-preflight');
+  assert.equal(valid.editReadiness.effectiveDecision, 'auto-sync-on-save');
   assert.equal(valid.locator.node.type, 'n8n-nodes-base.set');
   const setPath = path.join(fixture.root, 'development', `code_nodes_${fixture.workflowId}`, `${fixture.setNodeId}.set.json`);
   const setHash = crypto.createHash('sha256').update(await fs.readFile(setPath)).digest('hex');
@@ -287,18 +281,10 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(diagnostics.productionReadiness.handoff.workflowIdRequiredForRenderPreview, true);
   assert.equal(diagnostics.productionReadiness.handoff.nextAction, 'run-platform-readiness-gates');
   assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /locator\.status is ready/);
-  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /exact-target gate/);
-  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /sampled aggregate locator is not enough/);
+  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /automatic sync on save configured by contract/);
+  assert.match(diagnostics.productionReadiness.handoff.useFilesToolWhenLocatorReady, /live controller health must be verified with platform diagnostics/);
   assert.deepEqual(diagnostics.productionReadiness.handoff.usePlatformPreflightFields, [
-    'filesystemToolGuard.finalExternalFilesystemEditAllowed',
-    'filesystemToolGuard.globalExternalEditPrerequisitesMet',
-    'filesystemToolGuard.exactTargetGateRequired',
-    'filesystemToolGuard.exactTargetGatePresent',
-    'filesystemToolGuard.failedChecks',
-    'filesystemToolGuard.checks',
-    'filesystemToolGuard.blockerMatrix',
     'productionReadinessEvidence.canClaimProductionReadiness',
-    'productionReadinessEvidence.canClaimExactTargetEditReadiness',
     'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
     'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
     'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
@@ -308,11 +294,7 @@ test('export diagnostics require platform preflight for production readiness', a
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.upgradePolicyFieldsPresent',
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
-    'fileLayerSafety.synestraMcpBridge',
     'fileLayerSafety.effectiveDecision',
-    'fileLayerSafety.materializableEffectiveDecision',
-    'fileLayerSafety.materializableExternalFileEditAllowed',
-    'fileLayerSafety.materializableBlockers',
     'fileLayerSafety.blockers',
     'fileLayerSafety.blockerEvidence',
     'fileLayerSafety.targetReadinessGap',
@@ -335,16 +317,15 @@ test('export diagnostics require platform preflight for production readiness', a
   ]);
   assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /productionReadinessEvidence\.gatewayStrict/);
   assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /Synestra MCP image\/source pin/);
-  assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /canClaimExactTargetEditReadiness/);
+  assert.match(diagnostics.productionReadiness.handoff.useAggregateEvidence, /canClaimProductionReadiness/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /scripts\/n8n\/audit_n8n_camelk_upgrade_readiness\.sh --json/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /normalDriftCorrectionAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformUpgradePolicy, /Prod workload sync requires a separate approved/);
-  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /filesystemToolGuard\.finalExternalFilesystemEditAllowed is false/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /follow platform nextActions/);
-  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /fileLayerSafety\.materializableEffectiveDecision is no-go/);
+  assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /n8nDbContract is not verified/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /N8N_CAMELK_LOG_ACTIVE_WINDOW_SEC/);
   assert.match(diagnostics.productionReadiness.handoff.usePlatformRenderWhenNoGo, /classifier first/);
-  assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --uri '<same-uri>' --expected-etag '<pre-edit-etag>' --json$/);
+  assert.match(diagnostics.productionReadiness.handoff.commandSequence[0], /audit_n8n_two_mcp_production_readiness\.sh --env dev .* --safe-workflow-id '<disposable-or-known-safe-workflow-id>' --json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[1], /preflight_n8n_camelk_recovery\.sh --env dev --summary-json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[2], /audit_n8n_camelk_upgrade_readiness\.sh --json$/);
   assert.match(diagnostics.productionReadiness.handoff.commandSequence[4], /--workflow-id '<reviewed-workflow-id>' --render-no-go-candidates-for-review --json$/);
@@ -355,15 +336,7 @@ test('export diagnostics require platform preflight for production readiness', a
   assert.equal(aggregate.readOnly, true);
   assert.deepEqual(aggregate.requiredFor, ['production-readiness', 'native-mcp-readiness', 'gateway-exposure', 'production-file-layer-readiness']);
   assert.deepEqual(aggregate.requiredFields, [
-    'filesystemToolGuard.finalExternalFilesystemEditAllowed',
-    'filesystemToolGuard.globalExternalEditPrerequisitesMet',
-    'filesystemToolGuard.exactTargetGateRequired',
-    'filesystemToolGuard.exactTargetGatePresent',
-    'filesystemToolGuard.failedChecks',
-    'filesystemToolGuard.checks',
-    'filesystemToolGuard.blockerMatrix',
     'productionReadinessEvidence.canClaimProductionReadiness',
-    'productionReadinessEvidence.canClaimExactTargetEditReadiness',
     'productionReadinessEvidence.gatewayStrict.synestraBuild.platformImageTag',
     'productionReadinessEvidence.gatewayStrict.synestraBuild.sourceRef',
     'productionReadinessEvidence.gatewayStrict.buildAcceptance.platformImageTagMatchesExpected',
@@ -374,16 +347,13 @@ test('export diagnostics require platform preflight for production readiness', a
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.mcpMustNotWriteWorkflow',
     'productionReadinessEvidence.gatewayStrict.exportDiagnosticsAcceptance.returnsSourceContent',
     'fileLayerSafety.effectiveDecision',
-    'fileLayerSafety.materializableEffectiveDecision',
-    'fileLayerSafety.materializableExternalFileEditAllowed',
-    'fileLayerSafety.materializableBlockers',
     'fileLayerSafety.blockers',
     'fileLayerSafety.n8nDbContract.status',
     'fileLayerSafety.n8nDbContract.schemaFingerprint',
     'fileLayerSafety.blockerEvidence',
     'fileLayerSafety.targetReadinessGap'
   ]);
-  assert.match(aggregate.noGoSignals.join('\n'), /filesystemToolGuard\.finalExternalFilesystemEditAllowed=false/);
+  assert.match(aggregate.noGoSignals.join('\n'), /fileLayerSafety\.n8nDbContract\.status!=verified/);
   assert.match(aggregate.command, /^cd '~\/repo\/synestra-platform' && scripts\/mcp\/audit_n8n_two_mcp_production_readiness\.sh --env dev /);
   assert.match(aggregate.command, /--native-token-file '<secure-native-token-file>'/);
   assert.match(aggregate.command, /--safe-workflow-id '<disposable-or-known-safe-workflow-id>'/);
